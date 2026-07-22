@@ -1,0 +1,157 @@
+<svg width="1366" height="768" viewBox="0 0 1366 768" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="pageBg" x1="0" y1="0" x2="1366" y2="768" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0C0F14"/>
+      <stop offset="1" stop-color="#11161D"/>
+    </linearGradient>
+    <linearGradient id="mapBg" x1="24" y1="16" x2="1056" y2="752" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#141A22"/>
+      <stop offset="1" stop-color="#0F141B"/>
+    </linearGradient>
+    <linearGradient id="sidebarBg" x1="1056" y1="16" x2="1342" y2="752" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#171D25"/>
+      <stop offset="1" stop-color="#10151C"/>
+    </linearGradient>
+    <linearGradient id="pillPending" x1="0" y1="0" x2="0" y2="1" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFBE5C"/>
+      <stop offset="1" stop-color="#E58B18"/>
+    </linearGradient>
+    <linearGradient id="pillApproved" x1="0" y1="0" x2="0" y2="1" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#66D18A"/>
+      <stop offset="1" stop-color="#2B9F59"/>
+    </linearGradient>
+    <linearGradient id="pillRejected" x1="0" y1="0" x2="0" y2="1" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F07A7A"/>
+      <stop offset="1" stop-color="#D14E4E"/>
+    </linearGradient>
+    <filter id="shadow" x="-30" y="-30" width="1426" height="828" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="16" stdDeviation="20" flood-color="#000000" flood-opacity="0.18"/>
+    </filter>
+    <filter id="softShadow" x="-40" y="-40" width="500" height="500" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="10" stdDeviation="14" flood-color="#000000" flood-opacity="0.22"/>
+    </filter>
+    <pattern id="grid" width="48" height="48" patternUnits="userSpaceOnUse">
+      <path d="M 48 0 H 0 V 48" fill="none" stroke="#8390A4" stroke-opacity="0.18" stroke-width="1"/>
+    </pattern>
+  </defs>
+
+  <rect width="1366" height="768" fill="url(#pageBg)"/>
+
+  <rect width="1366" height="768" fill="#000000" fill-opacity="0.12"/>
+
+  <g filter="url(#shadow)">
+    <rect x="24" y="16" width="1318" height="736" rx="28" fill="url(#mapBg)"/>
+    <rect x="1056" y="16" width="286" height="736" rx="28" fill="url(#sidebarBg)"/>
+    <line x1="1056" y1="16" x2="1056" y2="752" stroke="#2A3442" stroke-width="4"/>
+  </g>
+
+  <!-- Map background -->
+  <rect x="24" y="16" width="1032" height="736" rx="28" fill="url(#mapBg)"/>
+  <rect x="24" y="16" width="1032" height="736" rx="28" fill="url(#grid)" opacity="0.9"/>
+
+  <!-- Header overlay -->
+  <g filter="url(#softShadow)">
+    <rect x="56" y="42" width="430" height="64" rx="20" fill="#0F141B" fill-opacity="0.76" stroke="#273142"/>
+    <text x="86" y="77" font-family="Inter, Arial, sans-serif" font-size="20" font-weight="600" fill="#F4F7FB">POI sélectionné</text>
+    <text x="86" y="98" font-family="Inter, Arial, sans-serif" font-size="12" fill="#98A4B5">Vue détail ouverte après clic sur un point</text>
+    <rect x="344" y="56" width="122" height="36" rx="18" fill="#111A24" stroke="#2A3442"/>
+    <text x="405" y="79" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="13" font-weight="600" fill="#F4F7FB">Mode détail</text>
+  </g>
+
+  <!-- Selected marker and pulse -->
+  <circle cx="545" cy="278" r="38" fill="#FFBE5C" fill-opacity="0.08"/>
+  <circle cx="545" cy="278" r="24" fill="#FFBE5C" fill-opacity="0.14"/>
+  <circle cx="545" cy="278" r="10" fill="#FFBE5C"/>
+  <circle cx="545" cy="278" r="4" fill="#FFFFFF"/>
+
+  <!-- Tooltip / detail bubble -->
+  <g filter="url(#softShadow)">
+    <path d="M330 116C318 116 308 126 308 138V292C308 304 318 314 330 314H912C924 314 934 304 934 292V138C934 126 924 116 912 116H330Z" fill="#050505"/>
+    <path d="M592 314L565 360L538 314H592Z" fill="#050505"/>
+
+    <rect x="334" y="136" width="184" height="28" rx="14" fill="#111A24" stroke="#2A3442"/>
+    <text x="426" y="155" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="12" font-weight="700" fill="#F4F7FB">Point d’intérêt</text>
+
+    <text x="334" y="198" font-family="Inter, Arial, sans-serif" font-size="22" font-weight="700" fill="#FFFFFF">Central Park Bench</text>
+    <text x="334" y="222" font-family="Inter, Arial, sans-serif" font-size="12" fill="#A7B2C2">Zone nord • visible sur la carte • 12 utilisateurs</text>
+
+    <rect x="334" y="236" width="76" height="24" rx="12" fill="url(#pillPending)"/>
+    <text x="372" y="253" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="12" font-weight="700" fill="#FFFFFF">PENDING</text>
+
+    <rect x="334" y="278" width="170" height="20" rx="10" fill="#111A24" stroke="#2A3442"/>
+    <text x="348" y="292" font-family="Inter, Arial, sans-serif" font-size="11" fill="#93A0B2">Créé par</text>
+    <text x="396" y="292" font-family="Inter, Arial, sans-serif" font-size="11" font-weight="600" fill="#F4F7FB">alice@example.com</text>
+
+    <rect x="520" y="136" width="374" height="156" rx="20" fill="#0D1218" stroke="#253042"/>
+    <text x="544" y="166" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="700" fill="#F4F7FB">Description</text>
+    <path d="M544 178H874" stroke="#273142" stroke-width="1.5"/>
+    <text x="544" y="206" font-family="Inter, Arial, sans-serif" font-size="13" fill="#C7D0DE">Point de rencontre principal proche du sentier.</text>
+    <text x="544" y="228" font-family="Inter, Arial, sans-serif" font-size="13" fill="#C7D0DE">Bonne visibilité, fréquenté par plusieurs groupes.</text>
+    <text x="544" y="255" font-family="Inter, Arial, sans-serif" font-size="12" fill="#93A0B2">Dernière mise à jour : aujourd’hui à 09:24</text>
+
+    <rect x="520" y="248" width="96" height="32" rx="16" fill="#111A24" stroke="#2A3442"/>
+    <text x="568" y="268" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="12" font-weight="600" fill="#F4F7FB">ID #42</text>
+
+    <rect x="334" y="330" width="160" height="32" rx="16" fill="#111A24" stroke="#2A3442"/>
+    <text x="354" y="350" font-family="Inter, Arial, sans-serif" font-size="12" font-weight="600" fill="#F4F7FB">12 utilisateurs</text>
+    <text x="430" y="350" font-family="Inter, Arial, sans-serif" font-size="12" fill="#93A0B2">• 4 en ligne</text>
+
+    <rect x="520" y="330" width="104" height="40" rx="20" fill="url(#pillApproved)"/>
+    <text x="572" y="355" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="13" font-weight="700" fill="#FFFFFF">Valider</text>
+
+    <rect x="634" y="330" width="104" height="40" rx="20" fill="url(#pillRejected)"/>
+    <text x="686" y="355" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="13" font-weight="700" fill="#FFFFFF">Refuser</text>
+
+    <rect x="748" y="330" width="146" height="40" rx="20" fill="#111A24" stroke="#2A3442"/>
+    <text x="821" y="355" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="13" font-weight="600" fill="#F4F7FB">Voir les utilisateurs</text>
+
+    <rect x="334" y="382" width="560" height="58" rx="18" fill="#111A24" stroke="#2A3442"/>
+    <text x="356" y="407" font-family="Inter, Arial, sans-serif" font-size="13" font-weight="700" fill="#F4F7FB">Utilisateurs liés</text>
+    <text x="356" y="428" font-family="Inter, Arial, sans-serif" font-size="12" fill="#93A0B2">Alice, Ben, Chloé, Dina</text>
+  </g>
+
+  <!-- Subtle map points in the background -->
+  <path d="M370 241C432 194 510 216 566 254C623 292 678 334 754 318C811 306 849 266 904 270" stroke="#9FB0C6" stroke-opacity="0.28" stroke-width="3" stroke-dasharray="8 10"/>
+  <circle cx="368" cy="242" r="8" fill="#66D18A"/>
+  <circle cx="742" cy="320" r="8" fill="#6FA8FF"/>
+  <circle cx="884" cy="270" r="8" fill="#F07A7A"/>
+
+  <!-- Sidebar -->
+  <text x="1104" y="80" font-family="Inter, Arial, sans-serif" font-size="34" font-weight="700" fill="#F4F7FB">USER</text>
+  <circle cx="1302" cy="68" r="28" fill="#0B0F14" stroke="#2A3442"/>
+  <rect x="1080" y="100" width="32" height="32" rx="10" fill="#F4F7FB"/>
+  <rect x="1122" y="100" width="110" height="32" rx="16" fill="#F4F7FB" fill-opacity="0.08" stroke="#2A3442"/>
+  <text x="1138" y="122" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="600" fill="#D8E2EF">Admin</text>
+  <text x="1240" y="122" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="600" fill="#93A0B2">12 points</text>
+
+  <text x="1080" y="184" font-family="Inter, Arial, sans-serif" font-size="30" font-weight="600" fill="#F4F7FB">Détail POI</text>
+  <text x="1080" y="210" font-family="Inter, Arial, sans-serif" font-size="14" fill="#98A4B5">État ouvert après clic</text>
+
+  <g filter="url(#softShadow)">
+    <rect x="1080" y="232" width="234" height="132" rx="22" fill="#10161E" stroke="#2A3442"/>
+    <text x="1104" y="262" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="700" fill="#F4F7FB">Infos rapides</text>
+    <text x="1104" y="288" font-family="Inter, Arial, sans-serif" font-size="13" fill="#93A0B2">Statut: pending</text>
+    <text x="1104" y="312" font-family="Inter, Arial, sans-serif" font-size="13" fill="#93A0B2">Lieu: zone nord</text>
+    <text x="1104" y="336" font-family="Inter, Arial, sans-serif" font-size="13" fill="#93A0B2">Utilisateurs: 12</text>
+    <text x="1104" y="358" font-family="Inter, Arial, sans-serif" font-size="13" fill="#93A0B2">Dernière action: 12 min</text>
+  </g>
+
+  <g filter="url(#softShadow)">
+    <rect x="1080" y="382" width="234" height="104" rx="22" fill="#10161E" stroke="#2A3442"/>
+    <text x="1104" y="412" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="700" fill="#F4F7FB">Utilisateurs</text>
+    <text x="1104" y="438" font-family="Inter, Arial, sans-serif" font-size="13" fill="#93A0B2">Alice, Ben, Chloé</text>
+    <text x="1104" y="462" font-family="Inter, Arial, sans-serif" font-size="13" fill="#93A0B2">4 connectés maintenant</text>
+  </g>
+
+  <g filter="url(#softShadow)">
+    <rect x="1080" y="504" width="234" height="86" rx="22" fill="#0B0F14" stroke="#2A3442"/>
+    <text x="1197" y="536" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="600" fill="#F4F7FB">Validation admin</text>
+    <text x="1197" y="558" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="12" fill="#93A0B2">Aucun validateur encore</text>
+  </g>
+
+  <g filter="url(#softShadow)">
+    <rect x="1080" y="612" width="234" height="74" rx="22" fill="#111A24" stroke="#2A3442"/>
+    <text x="1197" y="642" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="600" fill="#F4F7FB">Actions rapides</text>
+    <text x="1197" y="664" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="12" fill="#93A0B2">Modifier • Ouvrir • Fermer</text>
+  </g>
+</svg>
