@@ -53,7 +53,7 @@
         afin qu'ils participent a l'activite
 
     - LUD - 003 : En tant que president d'association
-        je veux **presenter mon association**
+        je veux **creer une page de presentation de mon association**
         afin de montrer l'impact de l'association sur la vie de quartier
     
     - LUD - 004 : En tant que president d'association
@@ -63,7 +63,13 @@
 ## APRES :
 
    - LUD - 005 : En tant que president d'association
-        je veux   
+        je veux **charger des photos**
+        afin de montrer les resultats de l'activite
+
+   - LUD - 006 : En tant que president d'association
+        je veux **extraire des informations sur les activites passees**
+        afin de m'aider a faire un bilan de mon activite
+
 
 # Alexandra - La libraire, commercante independante
 
@@ -79,14 +85,20 @@
 
 # TABLEAU RECAP :
 
-|   ID   |          Story          | MVP |
-|--------|-------------------------|-----|
-|CAM 001 | Decouvrir les actions   | :white_check_mark:  |
-|CAM 002 | Filtrer                 | :white_check_mark:  |
-|CAM 003 | Voir le detail          | :white_check_mark:  |
-|CAM 004 | Verifier les horaires   | :white_check_mark:  |
-|CAM 005 | S'inscrire              | :white_check_mark:  |
-|CAM 006 | Recevoir un rappel      | :white_check_mark:  |
-|CAM 007 | Poster des photos       | :white_check_mark:  |
-|CAM 008 | Partager sur les reseaux| :x:                 |
-|CAM 009 | Suivre un theme         | :x:                 |
+|        ID        |          Story          | MVP |      Module Transcendance      |
+|------------------|-------------------------|-----|--------------------------------|
+|CAM 001           | Decouvrir les actions   | :white_check_mark:  |
+|CAM 002           | Filtrer                 | :white_check_mark:  |
+|CAM 003           | Voir le detail          | :white_check_mark:  |
+|CAM 004           | Verifier les horaires   | :white_check_mark:  |
+|CAM 005           | S'inscrire              | :white_check_mark:  |
+|CAM 006           | Recevoir un rappel      | :white_check_mark:  |
+|CAM 007 - LUD 005 | Poster des photos       | :white_check_mark:  |
+|CAM 008           | Partager sur les reseaux| :x:                 |
+|CAM 009           | Suivre un theme         | :x:                 |
+|LUD 001           | Creer une action        | :white_check_mark:  |
+|LUD 002           | Gerer les inscriptions  | :white_check_mark:  |
+|LUD 003           | Presenter l'asso        | :white_check_mark:  |
+|LUD 004           | Notifier les inscrits   | :white_check_mark:  |
+|LUD 006           | Extraire des donnees    | :x:                 |
+
