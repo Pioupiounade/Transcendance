@@ -80,10 +80,10 @@ Supporting libraries :
 - Socket.IO-----> Real-time communication -> lib qui permet une communication bidirectionnelle, en temps reel et basee sur les evenements entre un client et un serveur.
 
 Supporting libraries :
-- Swagger -> 
+- Swagger -> lib qui permet de concevoir, documenter et tester des API REST. La documentation evolue en meme temps que le systeme et enregistre automatiquement les modifications.
 
 ### Database
-- PostgreSQL-------> Data persistence
+- PostgreSQL-------> Data persistence -> Base de donnees.
 - Prisma ORM-------> Database abstraction
 
 ### Infrastructure
