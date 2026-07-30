@@ -61,6 +61,41 @@ The whole application is containerized with Docker Compose to ensure a reproduci
 
 ## 2. Technical Stack
 
+Technical Stack : L'ensemble des technologies (langages, frameworks, bases de donnees...etc) utiliser pour faire fonctionnel le logiciel. Elle se structure autour de deux composantes majeurs : le front-end (interface utilisateur) et le back-end (logique serveur).
+Le front-end est visible pour l'utilisateur et utilise HTML, CSS, JavaScript. Le back-end est non visible par l'utilisateur final mais est la compostante centrale. Il gere la logique metier, les operations complexes, la gestion des bases de donnees et les API. 
+Les choix faits pour la stack technique impactent direcement la velocite de developpement, la capacite d'evolution (scalabilite) de l'application, son niveau de securite, sa facilite de maintenance et les couts operationnels a long terme. 
+
+### Frontend
+- React ----> User Interface -> Construire l'interface utilisateur
+- TypeScript ----> Static typing -> Langage qui demande plus de precisions que le Javascript et recommande pour les grands projets. Les erreurs sont detectees des l'ecriture du code et la compilation.
+
+Supporting libraries :
+- React Router -> lib qui permet de gerer la navigation et le routage d'une application web
+- TanStack Query -> lib puissante qui sert à récupérer, mettre en cache, synchroniser et mettre à jour des données distantes (provenant d'un serveur) dans une application web.
+- Leaflet -> lib qui permet d'afficher des cartes interactives en se connectant a des fournisseurs comment OpenStreetMap.
+- CSS framework (TBD)
+
+### Backend
+- NestJS-------> Business logic & REST API -> framework a conception modulaire, utilise pour creer des API
+- Socket.IO-----> Real-time communication -> lib qui permet une communication bidirectionnelle, en temps reel et basee sur les evenements entre un client et un serveur.
+
+Supporting libraries :
+- Swagger -> 
+
+### Database
+- PostgreSQL-------> Data persistence
+- Prisma ORM-------> Database abstraction
+
+### Infrastructure
+- Docker---------> Containerization
+- Docker Compose--> Multi-container orchestration
+- Nginx-------> Reverse proxy & HTTPS
+
+### Testing
+- Jest
+- React Testing Library
+- Supertest
+
 ## 3. System Architecture
 
 ## 4. Frontend Architecture
