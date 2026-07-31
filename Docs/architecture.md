@@ -98,22 +98,43 @@ Supporting libraries :
 
 ## 3. System Architecture
 
+-> Expliquer comment les differentes parties de l'application cooperent + 2/3 flux generaux
+
+
 
 
 ## 4. Frontend Architecture
 
+-> Comment le code React sera organise et comment le frontend remplira ses responsabilites
+
 ## 5. Backend Architecture
+
+->Comment NestJS organise la logique metier
 
 ## 6. Database Architecture
 
+-> Description des donnees stockees, comment elles sont reliees, les regles qui garantissent la coherence.
+
 ## 7. API Design
+
+-> Definition des conventions de l'API REST
 
 ## 8. Real-time Communication
 
+-> Quelles fonctions utilisent Socket.IO, comment les connexions sont organisees et comment les donnees restent coherentes.
+
 ## 9. File Storage
+
+-> Ou sont stockes les fichiers et comment leur upload et securise
 
 ## 10. Security
 
+-> Les principales menaces et les mecanismes prevus pour la protection de l'application
+
 ## 11. Deployment
 
+-> Comment lancer l'application, son exposition en HTTPS
+
 ## 12. Future Evolutions
+
+-> Les evolutions possibles.
