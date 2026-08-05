@@ -100,16 +100,99 @@ Supporting libraries :
 
 -> Expliquer comment les differentes parties de l'application cooperent + 2/3 flux generaux
 
+Le projet suit une architecture client - serveur, en couches, avec un front-end, back-end et une base de donnees.
+Un seul backend avec NestJS qui contient plusieurs modules independants :
+- utilisateurs
+- actions
+- messages
+- notifications
 
+Presentation layer
+-> React affiche l’interface et recueille les actions de l’utilisateur.
 
+Communication layer
+-> REST transporte les requêtes classiques.
+-> WebSockets transportent les événements temps réel.
+
+Application layer
+-> NestJS applique les règles métier, les validations et les permissions.
+
+Persistence layer
+-> Prisma fournit l’accès aux données.
+
+Data layer
+-> PostgreSQL conserve les données persistantes.
+-> Le stockage média conserve les fichiers.
+
+Exemple de flux CREATION D'UNE ACTION:
+
+Utilisateur
+→ formulaire React --> Front
+→ requête REST --> Front
+→ validation NestJS --> Back
+→ écriture avec Prisma --> BDD
+→ PostgreSQL --> BDD
+→ réponse vers React --> Front
 
 ## 4. Frontend Architecture
 
 -> Comment le code React sera organise et comment le frontend remplira ses responsabilites
 
+Que fait le front-end ? :
+- Afficher les pages
+- Recuperer les donnees de l'API
+- Gerer la navigation
+- Afficher les etats de chargement et les erreurs
+- envoyer les formulaires
+- gerer la session cote interface
+- recevoir les evenements de Socket.IO
+- afficher la carte
+
+Organisation :
+
+frontend/src/
+├── pages/ --> ecrans correspondant aux routes
+├── components/ --> elements reutilisables (boutons, cartes, modales)
+├── features/ --> code regroupe par domaine metier (actions, chat)
+├── services/ --> appels a l'API
+├── hooks/ --> logique React reutilisable
+├── contexts/ --> donnees globales (l'utilisateur connecte)
+├── types/ --> defintions Typescript
+├── assets/ --> images et icones
+└── tests/
+
+Composants minimum :
+- Bouton
+- Champs de formulaire
+- cadre d'action
+- avatar
+- modale
+- badge
+- notification
+- chargeur
+- message d'erreur
+- selecteur de categorie
+
 ## 5. Backend Architecture
 
 ->Comment NestJS organise la logique metier
+
+Les modules :
+
+AuthModule
+UsersModule
+OrganizationsModule
+ActionsModule
+SuggestionsModule
+ParticipationsModule
+CommentsModule
+ChatModule
+NotificationsModule
+MediaModule
+AdminModule
+CategoriesModule
+
+
 
 ## 6. Database Architecture
 
