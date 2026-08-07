@@ -3,11 +3,28 @@
 
 // Get a free hosted Postgres database in seconds: `npx create-db`
 
+
+// Le generateur detemine quels assets seront generes lors de l'execution de la commande `prisma generate`
 generator client {
+// generateur a utiliser pour creer le client Prisma. Ici le generateur officiel.
   provider = "prisma-client"
+// le chemin vers le dossier dans lequel Prisme sera genere.
   output   = "../generated/prisma"
 }
 
 datasource db {
+// le connecteur vers la bdd
   provider = "postgresql"
+// l'url de connexion a la base de donnees - specifier l'URL dans le fichier .env
+  url = env("DATABASE_URL")
+}
+
+// Modeles de donnees = une table
+
+model User {
+	// Fields
+}
+
+model Post {
+	// Fields
 }
