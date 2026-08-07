@@ -20,11 +20,15 @@
     USERS ||--o{ USER_INTERESTS : has
     INTERESTS ||--o{ USER_INTERESTS : selected_by
 
+    USERS ||--o{ FRIENDSHIPS : sends
+    USERS ||--o{ FRIENDSHIPS : receives
+
     USERS {
         bigint user_id PK "1"
         text email UK "alice@example.com"
         text password_hash "hashed password"
         text role "user | admin | moderator"
+		text account_status "active | suspended | deactivated"
         int points "0"
         timestamptz created_at "2026-07-22 10:00:00+00"
         timestamptz updated_at "2026-07-22 10:15:00+00"
@@ -83,6 +87,14 @@
         timestamptz updated_at "2026-07-22 10:15:00+00"
     }
 
+	FRIENDSHIPS {
+    	bigint requester_id PK,FK "References USERS"
+    	bigint addressee_id PK,FK "References USERS"
+    	text status "pending | accepted | rejected | blocked"
+    	timestamptz created_at "2026-07-22"
+    	timestamptz accepted_at "Optional"
+	}
+
     INTERESTS {
         bigint interest_id PK "1"
         text name UK "Environment"
@@ -101,6 +113,15 @@
 - `role` can be something like `user` or `admin`.
 - `points` should default to `0`.
 - `status` lets an action stays `pending` until an admin approves it.
-- `validated_by_user_id` stores which admin approved the POI.
+- `validated_by_user_id` stores which admin approved the action.
 - `participations` is the join table that lets one action list several users.
 - `location` can be a PostGIS geography point if you want map queries later.
+- A `user` has one `profile`.
+- A `user` can participate in several `actions`.
+- A `user` can belong to several `organizations`.
+- An `organization` can have several `members`.
+- A `user` can select several `interests`.
+- `USER_INTERESTS` is the join table between `users` and `interests`.
+- A `friendship` links two users and has a status such as `pending`, `accepted`, `rejected`, or `blocked`.
+- User account status is separate from the user role.
+- Organization status is separate from membership status.
