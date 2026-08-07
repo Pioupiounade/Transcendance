@@ -22,9 +22,113 @@ datasource db {
 // Modeles de donnees = une table
 
 model User {
+	id                  Bigint    @id @default(autoincrement()) 
+  email               String    @unique
+  password_hash       String
+  role                Role_App  @default(USER)    
+  points              Int
+  created_at          DateTime  @default(now())
+  updated_at          DateTime  @default(now())
+
+  profile             Profile?
+  actions             Action[] @relation("ActionCreator")
+  validations         Action[] @relation("ActionValidator")
+
+  participations      Participation[]
+  organizationMembers OrganizationMember[]
+  createdOrganizations Organization[]
+  interests           UserInterest[] 
+
+}
+
+model Profile {
+  userId              BigInt @id
+  username            String
+  description         String?
+  profilePicture      String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Organizations {
+	organization_id Bigint    @id @default(autoincrement())
+  title           String
+  description     String
+ 
+  adress          String
+  location        Float[]
+ 
+  creatorId       Bigint    @relation(Fields:[creator_id], references:i[id])
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @default(now())
+
+}
+
+model Action {
+	actionId             Bigint           @id @default(autoincrement())
+  title                String
+  description          String
+ 
+  creatorId            Bigint        
+  organizationId       Bigint?        
+ 
+  location             Float[]
+  status               Action_Status    @default(PENDING)
+ 
+  category             Category
+  imagesList           String[]
+ 
+  validatedByUserId    Boolean          @default(false)
+  validatedAt          DateTime         @default(now())
+  scheduledAt          DateTime         @default(now())
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @default(now())
+ 
+  participations       Participations[]  
+}
+
+model Organization_Members {
+	organization_id       Bigint 
+  used_id               Bigint
+  status                Member_Status @default(PENDING)
+  validated_by_org_man  Boolean       @default(false)
+  validated_at          DateTime      @default(now())
+  role                  Role_Org      @default(MEMBER)
+  created_at            DateTime      @default(now())
+  updated_at            DateTime      @default(now())  
+
+}
+
+model Participations {
 	// Fields
 }
 
-model Post {
-	// Fields
+enum Role_App {
+  USER
+  ADMIN
+  MODERATOR
+}
+
+enum Role_Org {
+  MEMBER
+  MANAGER
+  OWNER
+}
+
+enum Action_Status {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum Member_Status {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum Category {
+ SOCIAL
+ ENVIRONMENT
+ CULTURAL
 }
