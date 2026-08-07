@@ -4,13 +4,13 @@
 
 ```mermaid
    erDiagram
-   
-   USERS ||--|| PROFILES : has
 
-    USERS ||--o{ ACTION : creates
-    USERS ||--o{ ACTION : validates
+	USERS ||--|| PROFILES : has
+
+    USERS ||--o{ ACTIONS : creates
+    USERS ||--o{ ACTIONS : validates
     USERS ||--o{ PARTICIPATIONS : participates
-    ACTION ||--o{ PARTICIPATION : has
+    ACTIONS ||--o{ PARTICIPATIONS : has
 
     USERS ||--o{ ORGANIZATIONS : creates
     USERS ||--o{ ORGANIZATION_MEMBERS : belongs_to

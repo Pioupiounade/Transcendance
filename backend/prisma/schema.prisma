@@ -22,22 +22,22 @@ datasource db {
 // Modeles de donnees = une table
 
 model User {
-	id                  Bigint    @id @default(autoincrement()) 
-  email               String    @unique
-  password_hash       String
-  role                Role_App  @default(USER)    
-  points              Int
-  created_at          DateTime  @default(now())
-  updated_at          DateTime  @default(now())
+	id                    Bigint            @id @default(autoincrement()) 
+  email                 String            @unique
+  password_hash         String
+  role                  Role_App          @default(USER)    
+  points                Int
+  created_at            DateTime          @default(now())
+  updated_at            DateTime          @default(now())
 
-  profile             Profile?
-  actions             Action[] @relation("ActionCreator")
-  validations         Action[] @relation("ActionValidator")
+  profile               Profile?
+  actions               Action[]          @relation("ActionCreator")
+  validations           Action[]          @relation("ActionValidator")
 
-  participations      Participation[]
-  organizationMembers OrganizationMember[]
-  createdOrganizations Organization[]
-  interests           UserInterest[] 
+  participations        Participation[]
+  organizationMembers   OrganizationMember[]
+  createdOrganizations  Organization[]
+  interests             UserInterest[] 
 
 }
 
@@ -51,7 +51,7 @@ model Profile {
 }
 
 model Organizations {
-	organization_id Bigint    @id @default(autoincrement())
+  organization_id Bigint    @id @default(autoincrement())
   title           String
   description     String
  
