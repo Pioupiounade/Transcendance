@@ -1,0 +1,269 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+// Le generateur detemine quels assets seront generes lors de l'execution de la commande `prisma generate`
+generator client {
+  // generateur a utiliser pour creer le client Prisma. Ici le generateur officiel.
+  provider = "prisma-client"
+  // le chemin vers le dossier dans lequel Prisme sera genere.
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  // le connecteur vers la bdd
+  provider = "postgresql"
+}
+
+// Modeles de donnees = une table
+
+// --------------------------------------------------
+// USERS
+// --------------------------------------------------
+
+model User {
+  // 1. Champs réellement stockés en base
+  user_id        BigInt        @id @default(autoincrement())
+  email          String        @unique
+  password_hash  String
+  role           RoleApp       @default(USER)
+  account_status AccountStatus @default(ACTIVE)
+  points         Int           @default(0)
+  created_at     DateTime      @default(now())
+  updated_at     DateTime      @updatedAt
+
+  // 2. Champs de relation Prisma
+  profile Profile?
+
+  actions     Action[] @relation("ActionCreator")
+  validations Action[] @relation("ActionValidator")
+
+  Participations Participation[]
+
+  organization_members  OrganizationMember[]
+  created_organizations Organization[]       @relation("OrganizationCreator")
+  interests             UserInterest[]
+
+  sent_friend_requests     Friendship[] @relation("FriendshipRequester")
+  received_friend_requests Friendship[] @relation("FriendshipAddressee")
+}
+
+// --------------------------------------------------
+// PROFILE
+// --------------------------------------------------
+
+model Profile {
+  // 1. Champs réellement stockés en base
+  user_id         BigInt  @id
+  username        String
+  description     String?
+  profile_picture String?
+
+  // 2. Champs de relation Prisma
+  user User @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+}
+
+// --------------------------------------------------
+// INTERESTS
+// --------------------------------------------------
+
+model Interest {
+  // 1. Champs réellement stockés en base
+  interest_id BigInt @id @default(autoincrement())
+  name        String @unique
+
+  // 2. Champs de relation Prisma
+  users UserInterest[]
+}
+
+model UserInterest {
+  // 1. Champs réellement stockés en base
+  user_id     BigInt
+  interest_id BigInt
+
+  // 2. Champs de relation Prisma
+  //les objets user et interst pour recuperer l'integralite des champs
+  user     User     @relation(fields: [user_id], references: [user_id])
+  interest Interest @relation(fields: [interest_id], references: [interest_id])
+
+  @@id([user_id, interest_id])
+}
+
+// --------------------------------------------------
+// ORGANIZATION
+// --------------------------------------------------
+
+model Organization {
+  // 1. Champs réellement stockés en base
+  organization_id     BigInt             @id @default(autoincrement())
+  title               String
+  description         String
+  organization_status OrganizationStatus @default(ACTIVE)
+
+  address  String
+  location Float[]
+
+  creator_id BigInt
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  // 2. Champs de relation Prisma
+  creator User                 @relation("OrganizationCreator", fields: [creator_id], references: [user_id])
+  members OrganizationMember[]
+  actions Action[]
+}
+
+// --------------------------------------------------
+// ORGANIZATION MEMBERS
+// --------------------------------------------------
+
+model OrganizationMember {
+  // 1. Champs réellement stockés en base
+  organization_id BigInt
+  user_id         BigInt
+
+  status MemberStatus @default(PENDING)
+  role   RoleOrg      @default(MEMBER)
+
+  validated_by_org_man Boolean   @default(false)
+  validated_at         DateTime? @default(now())
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  // 2. Champs de relation Prisma
+  organization Organization @relation(fields: [organization_id], references: [organization_id])
+
+  user User @relation(fields: [user_id], references: [user_id])
+
+  @@id([organization_id, user_id])
+}
+
+// --------------------------------------------------
+// ACTIONS
+// --------------------------------------------------
+
+model Action {
+  // 1. Champs réellement stockés en base
+  action_id   BigInt @id @default(autoincrement())
+  title       String
+  description String
+
+  creator_id      BigInt
+  organization_id BigInt?
+
+  location   Float[]
+  status     ActionStatus @default(PENDING)
+  category   Category
+  imagesList String[]
+
+  validated_by_user_id BigInt?
+  validated_at         DateTime? @default(now())
+
+  scheduled_at DateTime
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  // 2. Champs de relation Prisma
+  creator User @relation("ActionCreator", fields: [creator_id], references: [user_id])
+
+  validator User? @relation("ActionValidator", fields: [validated_by_user_id], references: [user_id])
+
+  organization Organization? @relation(fields: [organization_id], references: [organization_id])
+
+  participation Participation[]
+}
+
+// --------------------------------------------------
+// PARTICIPATIONS
+// --------------------------------------------------
+
+model Participation {
+  // 1. Champs réellement stockés en base
+  action_id BigInt
+  user_id   BigInt
+
+  created_at DateTime @default(now())
+
+  // 2. Champs de relation Prisma
+  action Action @relation(fields: [action_id], references: [action_id])
+  user   User   @relation(fields: [user_id], references: [user_id])
+
+  @@id([action_id, user_id])
+}
+
+// --------------------------------------------------
+// FRIENDSHIPS
+// --------------------------------------------------
+
+model Friendship {
+  // 1. Champs réellement stockés en base
+  requester_id BigInt
+  addressee_id BigInt
+
+  status FriendshipStatus @default(PENDING)
+
+  created_at  DateTime  @default(now())
+  accepted_at DateTime?
+
+  // 2. Champs de relation Prisma
+  requester User @relation("FriendshipRequester", fields: [requester_id], references: [user_id])
+  addressee User @relation("FriendshipAddressee", fields: [addressee_id], references: [user_id])
+
+  @@id([requester_id, addressee_id])
+}
+
+// --------------------------------------------------
+// ENUMS
+// --------------------------------------------------
+
+enum RoleApp {
+  USER
+  ADMIN
+  MODERATOR
+}
+
+enum RoleOrg {
+  MEMBER
+  MANAGER
+  OWNER
+}
+
+enum ActionStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum MemberStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum Category {
+  SOCIAL
+  ENVIRONMENT
+  CULTURAL
+}
+
+enum FriendshipStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  BLOCKED
+}
+
+enum AccountStatus {
+  ACTIVE
+  SUSPENDED
+  DEACTIVATED
+}
+
+enum OrganizationStatus {
+  ACTIVE
+  SUSPENDED
+  CLOSED
+}

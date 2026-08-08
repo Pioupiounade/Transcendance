@@ -31,9 +31,55 @@ services:
       timeout: 5s
       retries: 5
 
+  backend:
+    build:
+     context: ../backend
+     dockerfile: ../docker/backend/Dockerfile
+
+    container_name: pioupiounades-backend
+
+    restart: unless-stopped
+
+    ports:
+      - "3000:3000"
+
+    volumes:
+      - ../backend:/app
+      - backend_node_modules:/app/node_modules
+
+    networks:
+      - pioupiounades_network
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  frontend:
+    build:
+     context: ../frontend
+     dockerfile: ../docker/frontend/Dockerfile
+
+    container_name: pioupiounades-frontend
+
+    restart: unless-stopped
+
+    ports:
+      - "5173:5173"
+
+    volumes:
+      - ../frontend:/app
+      - frontend_node_modules:/app/node_modules
+
+    networks:
+      - pioupiounades_network
+
+    depends_on:
+      - backend
+
 volumes:
   postgres_data:
-
+  backend_node_modules:
+  frontend_node_modules:
 networks:
   pioupiounades_network:
     driver: bridge
