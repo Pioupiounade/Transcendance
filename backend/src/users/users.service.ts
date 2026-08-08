@@ -61,6 +61,7 @@ export class UsersService {
     };
   }
 
+  //4. mettre a jour les donnees dl'utilisateur
   async update(id: string, data: UpdateUserDto) {
     const user = await this.prisma.user.update({
       where: {
@@ -80,4 +81,23 @@ export class UsersService {
       user_id: safeUser.user_id.toString(),
     };
   }
+
+//5. desactiver un utilisateur
+  async deactivate(id: string) {
+  const user = await this.prisma.user.update({
+    where: {
+      user_id: BigInt(id),
+    },
+    data: {
+      account_status: 'DEACTIVATED',
+    },
+  });
+
+  const { password_hash, ...safeUser } = user;
+
+  return {
+    ...safeUser,
+    user_id: safeUser.user_id.toString(),
+  };
+}
 }
