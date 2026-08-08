@@ -253,13 +253,23 @@ Features:
 | Module | Points |
 |---------|-------:|
 | Web Frameworks | 2 |
-| ORM | 1 |
-| Standard User Management | 2 |
 | Real-time Features | 2 |
 | User Interaction | 2 |
+| ORM | 1 |
+| Advanced Search | 1 |
 | Notification System | 1 |
 | File Upload | 1 |
-| Advanced Search | 1 |
+| Standard User Management | 2 |
 | Organization System | 2 |
 
-## **Total: 16 points**
+## **Total: 14 points**
+
+to be discussed :
+| Data export and import functionality | 1 |
+| GDPR Compliance feature | 1 |
+| Support for additional browsers | 1 |
+| Advanced analytics dashboard with data visualization | 2 |
+
+
+## **Total: 19 points**
+

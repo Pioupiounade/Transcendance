@@ -9,6 +9,7 @@ generator client {
   provider = "prisma-client"
   // le chemin vers le dossier dans lequel Prisme sera genere.
   output   = "../generated/prisma"
+  moduleFormat = "cjs"
 }
 
 datasource db {
