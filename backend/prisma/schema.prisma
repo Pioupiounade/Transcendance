@@ -22,9 +22,74 @@ datasource db {
 // Modeles de donnees = une table
 
 model User {
+	id              Bigint    @id @default(autoincrement())
+  email           String    @unique
+  username        String
+  password_hash   String
+  role            String    
+  points          Bigint
+  created_at      DateTime  @default(now())
+  updated_at      DateTime  @default(now())
+
+}
+
+model Organizations {
+	organization_id Bigint  @id @default(autoincrement())
+  title           String
+  description     String
+  adress          String
+  location        Float[]
+  creator_id      Bigint   @relation(Fields:[creator_id], references:i[id])
+  created_at      DateTime  @default(now())
+  updated_at      DateTime  @default(now())
+
+}
+
+model Actions {
+	action_id             Bigint        @id @default(autoincrement())
+  title                 String
+  description           String
+  creator_id            Bigint        @relation(Fields:[creator_id], references:[id])
+  organization_id       Bigint        @relation(Fields:[organization_id], references:[id])
+  location              Float[]
+  status                Action_Status @default(PENDING)
+  category              Category
+  images_list           String[]
+  validated_by_user_id  Boolean       @default(false)
+  validated_at          DateTime      @default(now())
+  scheduled_at          DateTime      @default(now())
+  created_at            DateTime      @default(now())
+  updated_at            DateTime      @default(now())  
+}
+
+model Organization_Members {
 	// Fields
 }
 
-model Post {
+model Participations {
 	// Fields
+}
+
+enum Role_App {
+  USER
+  ADMIN
+  MODERATOR
+}
+
+enum Role_Org {
+  MEMBER
+  MANAGER
+  OWNER
+}
+
+enum Action_Status {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum Category {
+ SOCIAL
+ ENVIRONMENT
+ CULTURAL
 }
