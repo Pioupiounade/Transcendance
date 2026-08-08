@@ -24,32 +24,31 @@ datasource db {
 
 model User {
   // 1. Champs réellement stockés en base
-  user_id                   BigInt             @id @default(autoincrement())
-  email                     String             @unique
-  password_hash             String
-  role                      RoleApp            @default(USER)
-  account_status            AccountStatus      @default(ACTIVE)
-  points                    Int                @default(0)
-  created_at                DateTime           @default(now())
-  updated_at                DateTime           @updatedAt
-  point_transactions        PointTransaction[]
+  user_id        BigInt        @id @default(autoincrement())
+  email          String        @unique
+  password_hash  String
+  role           RoleApp       @default(USER)
+  account_status AccountStatus @default(ACTIVE)
+  points         Int           @default(0)
+  created_at     DateTime      @default(now())
+  updated_at     DateTime      @updatedAt
 
   // 2. Champs de relation Prisma
   profile Profile?
 
-  actions                  Action[]             @relation("ActionCreator")
-  validations              Action[]             @relation("ActionValidator")
+  actions     Action[] @relation("ActionCreator")
+  validations Action[] @relation("ActionValidator")
 
   Participations Participation[]
 
-  organization_members     OrganizationMember[]
-  created_organizations    Organization[]       @relation("OrganizationCreator")
-  interests                UserInterest[]
+  organization_members  OrganizationMember[]
+  created_organizations Organization[]       @relation("OrganizationCreator")
+  interests             UserInterest[]
 
-  sent_friend_requests     Friendship[]         @relation("FriendshipRequester")
-  received_friend_requests Friendship[]         @relation("FriendshipAddressee")
+  sent_friend_requests     Friendship[] @relation("FriendshipRequester")
+  received_friend_requests Friendship[] @relation("FriendshipAddressee")
 
-  point_transactions       PointTransaction[]
+  point_transactions PointTransaction[]
 }
 
 // --------------------------------------------------
@@ -58,13 +57,13 @@ model User {
 
 model Profile {
   // 1. Champs réellement stockés en base
-  user_id         BigInt    @id
+  user_id         BigInt  @id
   username        String
   description     String?
   profile_picture String?
 
   // 2. Champs de relation Prisma
-  user            User      @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+  user User @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
 }
 
 // --------------------------------------------------
@@ -73,11 +72,11 @@ model Profile {
 
 model Interest {
   // 1. Champs réellement stockés en base
-  interest_id BigInt             @id @default(autoincrement())
-  name        String             @unique
+  interest_id BigInt @id @default(autoincrement())
+  name        String @unique
 
   // 2. Champs de relation Prisma
-  users       UserInterest[]
+  users UserInterest[]
 }
 
 model UserInterest {
@@ -87,8 +86,8 @@ model UserInterest {
 
   // 2. Champs de relation Prisma
   //les objets user et interst pour recuperer l'integralite des champs
-  user          User             @relation(fields: [user_id], references: [user_id])
-  interest      Interest         @relation(fields: [interest_id], references: [interest_id])
+  user     User     @relation(fields: [user_id], references: [user_id])
+  interest Interest @relation(fields: [interest_id], references: [interest_id])
 
   @@id([user_id, interest_id])
 }
@@ -99,22 +98,22 @@ model UserInterest {
 
 model Organization {
   // 1. Champs réellement stockés en base
-  organization_id     BigInt                @id @default(autoincrement())
+  organization_id     BigInt             @id @default(autoincrement())
   title               String
   description         String
-  organization_status OrganizationStatus    @default(ACTIVE)
+  organization_status OrganizationStatus @default(ACTIVE)
 
-  address             String
-  location            Float[]
+  address  String
+  location Float[]
 
-  creator_id          BigInt
-  created_at          DateTime              @default(now())
-  updated_at          DateTime              @updatedAt
+  creator_id BigInt
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 
   // 2. Champs de relation Prisma
-  creator             User                  @relation("OrganizationCreator", fields: [creator_id], references: [user_id])
-  members             OrganizationMember[]
-  actions             Action[]
+  creator User                 @relation("OrganizationCreator", fields: [creator_id], references: [user_id])
+  members OrganizationMember[]
+  actions Action[]
 }
 
 // --------------------------------------------------
@@ -123,22 +122,22 @@ model Organization {
 
 model OrganizationMember {
   // 1. Champs réellement stockés en base
-  organization_id      BigInt
-  user_id              BigInt
+  organization_id BigInt
+  user_id         BigInt
 
   status MemberStatus @default(PENDING)
-  role                 RoleOrg      @default(MEMBER)
+  role   RoleOrg      @default(MEMBER)
 
-  validated_by_org_man Boolean      @default(false)
-  validated_at         DateTime?    @default(now())
+  validated_by_org_man Boolean   @default(false)
+  validated_at         DateTime? @default(now())
 
-  created_at           DateTime     @default(now())
-  updated_at           DateTime     @updatedAt
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 
   // 2. Champs de relation Prisma
-  organization         Organization @relation(fields: [organization_id], references: [organization_id])
+  organization Organization @relation(fields: [organization_id], references: [organization_id])
 
-  user                 User         @relation(fields: [user_id], references: [user_id])
+  user User @relation(fields: [user_id], references: [user_id])
 
   @@id([organization_id, user_id])
 }
@@ -149,34 +148,34 @@ model OrganizationMember {
 
 model Action {
   // 1. Champs réellement stockés en base
-  action_id       BigInt        @id @default(autoincrement())
-  title           String
-  description     String
+  action_id   BigInt @id @default(autoincrement())
+  title       String
+  description String
 
   creator_id      BigInt
   organization_id BigInt?
 
-  location        Float[]
-  status          ActionStatus  @default(PENDING)
-  category        Category
-  imagesList      String[]
+  location   Float[]
+  status     ActionStatus @default(PENDING)
+  category   Category
+  imagesList String[]
 
   validated_by_user_id BigInt?
-  validated_at    DateTime?     @default(now())
+  validated_at         DateTime? @default(now())
 
-  scheduled_at    DateTime
+  scheduled_at DateTime
 
-  created_at      DateTime      @default(now())
-  updated_at      DateTime      @updatedAt
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 
   // 2. Champs de relation Prisma
-  creator         User          @relation("ActionCreator", fields: [creator_id], references: [user_id])
+  creator User @relation("ActionCreator", fields: [creator_id], references: [user_id])
 
-  validator       User?         @relation("ActionValidator", fields: [validated_by_user_id], references: [user_id])
+  validator User? @relation("ActionValidator", fields: [validated_by_user_id], references: [user_id])
 
-  organization    Organization? @relation(fields: [organization_id], references: [organization_id])
+  organization Organization? @relation(fields: [organization_id], references: [organization_id])
 
-  participation   Participation[]
+  participation Participation[]
 }
 
 // --------------------------------------------------
@@ -185,14 +184,14 @@ model Action {
 
 model Participation {
   // 1. Champs réellement stockés en base
-  action_id  BigInt
-  user_id    BigInt
+  action_id BigInt
+  user_id   BigInt
 
   created_at DateTime @default(now())
 
   // 2. Champs de relation Prisma
-  action     Action   @relation(fields: [action_id], references: [action_id])
-  user       User     @relation(fields: [user_id], references: [user_id])
+  action Action @relation(fields: [action_id], references: [action_id])
+  user   User   @relation(fields: [user_id], references: [user_id])
 
   @@id([action_id, user_id])
 }
@@ -206,14 +205,14 @@ model Friendship {
   requester_id BigInt
   addressee_id BigInt
 
-  status       FriendshipStatus @default(PENDING)
+  status FriendshipStatus @default(PENDING)
 
-  created_at   DateTime  @default(now())
-  accepted_at  DateTime?
+  created_at  DateTime  @default(now())
+  accepted_at DateTime?
 
   // 2. Champs de relation Prisma
-  requester    User      @relation("FriendshipRequester", fields: [requester_id], references: [user_id])
-  addressee    User      @relation("FriendshipAddressee", fields: [addressee_id], references: [user_id])
+  requester User @relation("FriendshipRequester", fields: [requester_id], references: [user_id])
+  addressee User @relation("FriendshipAddressee", fields: [addressee_id], references: [user_id])
 
   @@id([requester_id, addressee_id])
 }
@@ -224,14 +223,14 @@ model Friendship {
 
 model PointTransaction {
   // 1. Champs réellement stockés en base
-  point_transaction_id  BigInt      @id @default(autoincrement())
-  user_id               BigInt
-  points                Int
-  reason                PointReason
-  created_at            DateTime     @default(now())
+  point_transaction_id BigInt      @id @default(autoincrement())
+  user_id              BigInt
+  points               Int
+  reason               PointReason
+  created_at           DateTime    @default(now())
 
   // 2. Champs de relation Prisma
-  user                  User         @relation(fields: [user_id], references: [user_id])
+  user User @relation(fields: [user_id], references: [user_id])
 }
 
 // --------------------------------------------------
