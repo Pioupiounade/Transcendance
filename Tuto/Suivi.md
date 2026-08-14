@@ -176,3 +176,7 @@ Suivi des actions :
     - pour verifier que c'est bon, saisis la commande :
     ``` cd backend
         npm run build ```
+
+10. Creer le module et le service pour `Action`
+    - Idem -> generer le module, service et le controller. Il faut ensuite remplir les fichiers puir npm run build et tester avec    curl.
+    
