@@ -1,8 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateOrganizationDto } from './dto/create-organization.dto';
-// import { UpdateUserDto } from './dto/update-user.dto';
-import * as argon2 from 'argon2';
+import { UpdateOrganizationDto } from './dto/update-organization.dto';
 
 @Injectable()
 export class OrganizationsService {
@@ -10,91 +9,92 @@ export class OrganizationsService {
   constructor(private prisma: PrismaService) {}
 
 //1. recuperer toutes les organisations
-  async findAll() {
-    const organisations = await this.prisma.organization.findMany();
+async findAll() {
+  const organizations = await this.prisma.organization.findMany();
 
-    return organization_id: organization.organization_id.toString();
-    };
-  }
-
-  //2. hasher le mdp - creer le nouvel utilisateur - l'id se genere automatiquement
-  async create(data: CreateUserDto) {
-    const password_hash = await argon2.hash(data.password);
-
-    const createdUser = await this.prisma.user.create({
-      data: {
-        email: data.email,
-        password_hash,
-      },
-    });
-
-    const { password_hash: _, ...user } = createdUser;
-
-    return {
-      ...user,
-      user_id: user.user_id.toString(),
-    };
-  }
-
-  //3. recupere un utilisateur grace a son id
+  return organizations.map((organization) => ({
+    ...organization,
+    organization_id: organization.organization_id.toString(),
+    creator_id: organization.creator_id.toString(),
+  }));
+}
+   //2. recupere une organisation grace a son id
   async findOne(id: string) { // Nest JS recupere l'id de l'URL comme un string
-    const user = await this.prisma.user.findUnique({
+    const organization = await this.prisma.organization.findUnique({
       where: {
-        user_id: BigInt(id), // cherche dans la PostgreSQL apres avoir converti le string en BigInt
+        organization_id: BigInt(id), // cherche dans la PostgreSQL apres avoir converti le string en BigInt
       },
     });
 
-    if(!user) {
-      throw new NotFoundException('User not found');
+    if(!organization) {
+      throw new NotFoundException('Organization not found');
     }
     
-    // On retire le password_hash
-    const { password_hash, ...safeUser } = user;
-
-    // On retourne l'utilisateur avec son BigInt converti en string
+     // On retourne l'utilisateur avec son BigInt converti en string
     return {
-      ...safeUser,
-      user_id: safeUser.user_id.toString(),
+      ...organization,
+      organization_id: organization.organization_id.toString(),
+      creator_id: organization.creator_id.toString(),
     };
   }
 
-  //4. mettre a jour les donnees dl'utilisateur
-  async update(id: string, data: UpdateUserDto) {
-    const user = await this.prisma.user.update({
+  //3. creer une nouvelle organisation
+  async create(data: CreateOrganizationDto) {
+
+    const createdOrganization = await this.prisma.organization.create({
+      data: {
+        title: data.title,
+        description: data.description,
+        address: data.address,
+        location: data.location,
+        creator_id: BigInt(data.creator_id),
+      },
+    });
+
+    return {
+      ...createdOrganization,
+      organization_id: createdOrganization.organization_id.toString(),
+      creator_id: createdOrganization.creator_id.toString(),
+    };
+  }
+
+  //4. mettre a jour les donnees de l'organisation
+  async update(id: string, data: UpdateOrganizationDto) {
+    const organization = await this.prisma.organization.update({
       where: {
-        user_id: BigInt(id),
+        organization_id: BigInt(id),
       },
       data: {
-        email:data.email,
+        title:data.title,
+        description:data.description,
+        address:data.address,
+        location:data.location,
       },
     });
     
-    // On retire le password_hash
-    const { password_hash, ...safeUser } = user;
-
     // On retourne l'utilisateur avec son BigInt converti en string
     return {
-      ...safeUser,
-      user_id: safeUser.user_id.toString(),
+      ...organization,
+      organization_id: organization.organization_id.toString(),
+      creator_id: organization.creator_id.toString(),
     };
   }
 
-//5. desactiver un utilisateur
+//5. desactiver une organisation
   async deactivate(id: string) {
-  const user = await this.prisma.user.update({
+  const organization = await this.prisma.organization.update({
     where: {
-      user_id: BigInt(id),
+      organization_id: BigInt(id),
     },
     data: {
-      account_status: 'DEACTIVATED',
+      organization_status: 'CLOSED',
     },
   });
 
-  const { password_hash, ...safeUser } = user;
-
   return {
-    ...safeUser,
-    user_id: safeUser.user_id.toString(),
+    ...organization,
+    organization_id: organization.organization_id.toString(),
+    creator_id:organization.creator_id.toString(),
   };
 }
 }

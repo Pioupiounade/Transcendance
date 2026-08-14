@@ -172,4 +172,7 @@ Suivi des actions :
     - modifier les fichier `users.service.ts` et `users.controller,ts`
 
 9. Creer le module et le service pour `Organization`
-    - 
+    - il faut recreer les meme fichier .ts et les meme flux : creer, afficher tous, retrouver a partir d'un id, modifier, desactiver
+    - pour verifier que c'est bon, saisis la commande :
+    ``` cd backend
+        npm run build ```

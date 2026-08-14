@@ -17,5 +17,5 @@ export class CreateOrganizationDto {
   location!: number[];
 
   @IsInt()
-  creator_id!: number[];
+  creator_id!: number;
 }
