@@ -9,6 +9,7 @@ generator client {
   provider = "prisma-client"
   // le chemin vers le dossier dans lequel Prisme sera genere.
   output   = "../generated/prisma"
+  moduleFormat = "cjs"
 }
 
 datasource db {
@@ -47,6 +48,8 @@ model User {
 
   sent_friend_requests     Friendship[] @relation("FriendshipRequester")
   received_friend_requests Friendship[] @relation("FriendshipAddressee")
+
+  point_transactions PointTransaction[]
 }
 
 // --------------------------------------------------
@@ -216,6 +219,22 @@ model Friendship {
 }
 
 // --------------------------------------------------
+// POINTS
+// --------------------------------------------------
+
+model PointTransaction {
+  // 1. Champs réellement stockés en base
+  point_transaction_id BigInt      @id @default(autoincrement())
+  user_id              BigInt
+  points               Int
+  reason               PointReason
+  created_at           DateTime    @default(now())
+
+  // 2. Champs de relation Prisma
+  user User @relation(fields: [user_id], references: [user_id])
+}
+
+// --------------------------------------------------
 // ENUMS
 // --------------------------------------------------
 
@@ -266,4 +285,17 @@ enum OrganizationStatus {
   ACTIVE
   SUSPENDED
   CLOSED
+}
+
+enum PointReason {
+  ACTION_CREATED
+  ACTION_COMPLETED
+  ACTION_PARTICIPATED
+  ORGANIZATION_JOINED
+}
+
+enum PiouPiouStatus {
+  PETIT_PIOUPIOU
+  GRAND_PIOUPIOU
+  PIOUPIOU_OR
 }

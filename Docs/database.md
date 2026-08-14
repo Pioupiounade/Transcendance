@@ -3,9 +3,8 @@
 ## Visual schema
 
 ```mermaid
-   erDiagram
-
-	USERS ||--|| PROFILES : has
+erDiagram
+    USERS ||--|| PROFILES : has
 
     USERS ||--o{ ACTIONS : creates
     USERS ||--o{ ACTIONS : validates
@@ -23,15 +22,17 @@
     USERS ||--o{ FRIENDSHIPS : sends
     USERS ||--o{ FRIENDSHIPS : receives
 
+    USERS ||--o{ POINT_TRANSACTIONS : earns
+
     USERS {
         bigint user_id PK "1"
         text email UK "alice@example.com"
         text password_hash "hashed password"
         text role "user | admin | moderator"
-		text account_status "active | suspended | deactivated"
+        text account_status "active | suspended | deactivated"
         int points "0"
-        timestamptz created_at "2026-07-22 10:00:00+00"
-        timestamptz updated_at "2026-07-22 10:15:00+00"
+        timestamptz created_at "2026-07-22"
+        timestamptz updated_at "2026-07-22"
     }
 
     PROFILES {
@@ -46,54 +47,54 @@
         text title "Neighborhood cleanup"
         text description "Citizen cleaning action"
         bigint creator_id FK "References USERS"
-        bigint organization_id FK "Optional - References ORGANIZATIONS"
-        geography location "POINT(-73.9654 40.7829)"
+        bigint organization_id FK "Optional"
+        geography location "POINT"
         text status "pending | approved | rejected"
         text category "environment | social | cultural"
         text images_list "image1.jpg, image2.jpg"
-        bigint validated_by_user_id FK "Optional - References USERS"
+        bigint validated_by_user_id FK "Optional"
         timestamptz validated_at "Optional"
-        timestamptz scheduled_at "2026-08-15 10:00:00+00"
-        timestamptz created_at "2026-07-22 10:45:00+00"
-        timestamptz updated_at "2026-07-22 11:00:00+00"
+        timestamptz scheduled_at "2026-08-15"
+        timestamptz created_at "2026-07-22"
+        timestamptz updated_at "2026-07-22"
     }
 
     PARTICIPATIONS {
         bigint action_id PK,FK "References ACTIONS"
         bigint user_id PK,FK "References USERS"
-        text role "member"
-        timestamptz created_at "2026-07-22 10:50:00+00"
+        timestamptz created_at "2026-07-22"
     }
 
     ORGANIZATIONS {
         bigint organization_id PK "1"
         text title "Save the environment"
         text description "This NGO cleans the neighborhood"
+        text organization_status "active | suspended | closed"
         text address "4 rue de la Boissiere"
-        geography location "POINT(-73.9654 40.7829)"
+        geography location "POINT"
         bigint creator_id FK "References USERS"
-        timestamptz created_at "2026-07-22 10:00:00+00"
-        timestamptz updated_at "2026-07-22 10:15:00+00"
+        timestamptz created_at "2026-07-22"
+        timestamptz updated_at "2026-07-22"
     }
 
     ORGANIZATION_MEMBERS {
         bigint organization_id PK,FK "References ORGANIZATIONS"
         bigint user_id PK,FK "References USERS"
         text status "pending | approved | rejected"
-        bigint validated_by_user_id FK "Optional - References USERS"
+        boolean validated_by_org_man "false | true"
         timestamptz validated_at "Optional"
         text role "member | manager | owner"
-        timestamptz created_at "2026-07-22 10:00:00+00"
-        timestamptz updated_at "2026-07-22 10:15:00+00"
+        timestamptz created_at "2026-07-22"
+        timestamptz updated_at "2026-07-22"
     }
 
-	FRIENDSHIPS {
-    	bigint requester_id PK,FK "References USERS"
-    	bigint addressee_id PK,FK "References USERS"
-    	text status "pending | accepted | rejected | blocked"
-    	timestamptz created_at "2026-07-22"
-    	timestamptz accepted_at "Optional"
-	}
+    FRIENDSHIPS {
+        bigint requester_id PK,FK "References USERS"
+        bigint addressee_id PK,FK "References USERS"
+        text status "pending | accepted | rejected | blocked"
+        timestamptz created_at "2026-07-22"
+        timestamptz accepted_at "Optional"
+    }
 
     INTERESTS {
         bigint interest_id PK "1"
@@ -103,6 +104,14 @@
     USER_INTERESTS {
         bigint user_id PK,FK "References USERS"
         bigint interest_id PK,FK "References INTERESTS"
+    }
+
+    POINT_TRANSACTIONS {
+        bigint point_transaction_id PK "1"
+        bigint user_id FK "References USERS"
+        int points "10"
+        text reason "action_created | action_completed | action_participated | organization_joined"
+        timestamptz created_at "2026-07-22"
     }
 ```
 
@@ -125,3 +134,9 @@
 - A `friendship` links two users and has a status such as `pending`, `accepted`, `rejected`, or `blocked`.
 - User account status is separate from the user role.
 - Organization status is separate from membership status.
+- `POINT_TRANSACTIONS` stores the history of points earned by users.
+- `USERS.points` stores the current total for quick access.
+- The user status level is derived from the points total:
+  - `< 70`: Petit PiouPiou
+  - `70-209`: Grand PiouPiou
+  - `>= 210`: PiouPiou d'Or
