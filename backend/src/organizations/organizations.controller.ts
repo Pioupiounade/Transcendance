@@ -1,39 +1,71 @@
-import { Body, Controller, Get, Post, Param, Patch } from '@nestjs/common';
+import { Body, Controller, Get, Post, Param, Patch, Query } from '@nestjs/common';
 import { OrganizationsService } from './organizations.service';
 import { CreateOrganizationDto } from './dto/create-organization.dto';
 import { UpdateOrganizationDto } from './dto/update-organization.dto';
 
-//Quand une requete HTTP GET arrive sur la route Organizations = J'execute la methode findAll()
-@Controller('organizations') // route /Organizations
+@Controller('organizations')
 export class OrganizationsController {
-// J'injecte UsersService dans UsersController
-    constructor(private organizationsService: OrganizationsService) {} 
-  
-    @Get() // si requete GET
-    findAll() { // execute cette methode
-        return this.organizationsService.findAll(); // retourne le resultat de la methode
+  constructor(
+    private organizationsService: OrganizationsService,
+  ) {}
+
+  @Get()
+  findAll(
+    @Query('creator_id') creatorId?: string,
+    @Query('lat') lat?: string,
+    @Query('lng') lng?: string,
+    @Query('radius') radius?: string,
+  ) {
+    if (creatorId) {
+      return this.organizationsService.findByCreator(creatorId);
     }
 
-    @Get(':id')
-    findOne(@Param('id') id: string) {
-        return this.organizationsService.findOne(id);
+    if (lat && lng && radius) {
+      return this.organizationsService.findByRadius(
+        Number(lat),
+        Number(lng),
+        Number(radius),
+      );
     }
 
-    @Post() // si requet POST
-    create(@Body() data: CreateOrganizationDto) { //execute la methode create() et recupere ces donnees dans data
-        return this.organizationsService.create(data);
-    }
+    return this.organizationsService.findAll();
+  }
 
-    @Patch(':id')
-    update(
-        @Param('id') id:string,
-        @Body() data: UpdateOrganizationDto,
-    ) {
-        return this.organizationsService.update(id, data);
-    }
+  @Get('search')
+  search(@Query('q') q: string) {
+    return this.organizationsService.searchByName(q);
+  }
 
-    @Patch(':id/deactivate')
-    deactivate(@Param('id') id: string) {
-        return this.organizationsService.deactivate(id);
-    }
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.organizationsService.findOne(id);
+  }
+
+  @Post()
+  create(@Body() data: CreateOrganizationDto) {
+    return this.organizationsService.create(data);
+  }
+
+  @Patch(':id')
+  update(
+    @Param('id') id: string,
+    @Body() data: UpdateOrganizationDto,
+  ) {
+    // currentUserId à ajouter quand l'auth sera branchée
+  }
+
+  @Patch(':id/suspend')
+  suspend(@Param('id') id: string) {
+    // currentUserId à ajouter quand l'auth sera branchée
+  }
+
+  @Patch(':id/deactivate')
+  deactivate(@Param('id') id: string) {
+    // currentUserId à ajouter quand l'auth sera branchée
+  }
+
+  @Patch(':id/reactivate')
+  reactivate(@Param('id') id: string) {
+    // currentUserId à ajouter quand l'auth sera branchée
+  }
 }

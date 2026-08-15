@@ -2,38 +2,55 @@ import { Body, Controller, Get, Post, Param, Patch } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { UpdatePasswordDto } from './dto/update-password.dto';
 
-//Quand une requete HTTP GET arrive sur la route Users = J'execute la methode findAll()
-@Controller('users') // route /users
+@Controller('users')
 export class UsersController {
-// J'injecte UsersService dans UsersController
-    constructor(private usersService: UsersService) {} 
-  
-    @Get() // si requete GET
-    findAll() { // execute cette methode
-        return this.usersService.findAll(); // retourne le resultat de la methode
-    }
+  constructor(private usersService: UsersService) {}
 
-    @Get(':id')
-    findOne(@Param('id') id: string) {
-        return this.usersService.findOne(id);
-    }
+  @Get()
+  findAll() {
+    return this.usersService.findAll();
+  }
 
-    @Post() // si requet POST
-    create(@Body() data: CreateUserDto) { //execute la methode create() et recupere ces donnees dans data
-        return this.usersService.create(data);
-    }
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.usersService.findOne(id);
+  }
 
-    @Patch(':id')
-    update(
-        @Param('id') id:string,
-        @Body() data: UpdateUserDto,
-    ) {
-        return this.usersService.updateEmail(id, data);
-    }
+  @Post()
+  create(@Body() data: CreateUserDto) {
+    return this.usersService.create(data);
+  }
 
-    @Patch(':id/deactivate')
-    deactivate(@Param('id') id: string) {
-        return this.usersService.deactivate(id);
-    }
+  @Patch(':id/email')
+  updateEmail(
+    @Param('id') id: string,
+    @Body() data: UpdateUserDto,
+  ) {
+    return this.usersService.updateEmail(id, data);
+  }
+
+  @Patch(':id/password')
+  updatePassword(
+    @Param('id') id: string,
+    @Body() data: UpdatePasswordDto,
+  ) {
+    return this.usersService.updatePassword(id, data);
+  }
+
+  @Patch(':id/deactivate')
+  deactivate(@Param('id') id: string) {
+    return this.usersService.deactivate(id);
+  }
+
+  @Patch(':id/suspend')
+  suspend(@Param('id') id: string) {
+    return this.usersService.suspend(id);
+  }
+
+  @Patch(':id/reactivate')
+  reactivate(@Param('id') id: string) {
+    return this.usersService.reactivate(id);
+  }
 }

@@ -156,6 +156,8 @@ model Action {
   creator_id      BigInt
   organization_id BigInt?
 
+  min_participants Int?
+  max_participants Int?
   location   Float[]
   status     ActionStatus @default(PENDING)
   category   Category
