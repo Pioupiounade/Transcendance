@@ -29,7 +29,7 @@ export class UsersController {
         @Param('id') id:string,
         @Body() data: UpdateUserDto,
     ) {
-        return this.usersService.update(id, data);
+        return this.usersService.updateEmail(id, data);
     }
 
     @Patch(':id/deactivate')

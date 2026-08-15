@@ -1,8 +1,10 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { UpdatePasswordDto } from './dto/update-password.dto';
 import * as argon2 from 'argon2';
+import { AccountStatus } from '../../generated/prisma/client';
 
 @Injectable()
 export class UsersService {
@@ -61,8 +63,8 @@ export class UsersService {
     };
   }
 
-  //4. mettre a jour les donnees dl'utilisateur
-  async update(id: string, data: UpdateUserDto) {
+  //4. mettre a jour l'adresse mail
+  async updateEmail(id: string, data: UpdateUserDto) {
     const user = await this.prisma.user.update({
       where: {
         user_id: BigInt(id),
@@ -82,14 +84,35 @@ export class UsersService {
     };
   }
 
-//5. desactiver un utilisateur
+  //5. mettre a jour le mdp
+  async updatePassword(id: string, data: UpdatePasswordDto) {
+    const password_hash = await argon2.hash(data.password);
+
+    const user = await this.prisma.user.update({
+      where: {
+        user_id: BigInt(id),
+      },
+      data: {
+        password_hash,
+      },
+    });
+
+    const { password_hash: _, ...safeUser } = user;
+
+    return {
+      ...safeUser,
+      user_id: safeUser.user_id.toString(),
+    };
+  }
+
+//6. desactiver un utilisateur
   async deactivate(id: string) {
   const user = await this.prisma.user.update({
     where: {
       user_id: BigInt(id),
     },
     data: {
-      account_status: 'DEACTIVATED',
+      account_status: AccountStatus.DEACTIVATED,
     },
   });
 
@@ -100,4 +123,58 @@ export class UsersService {
     user_id: safeUser.user_id.toString(),
   };
 }
+
+//7. suspendre un utilisateur
+  async suspend(id: string) {
+    const updatedUser = await this.prisma.user.update({
+      where: {
+        user_id: BigInt(id),
+      },
+      data: {
+        account_status: AccountStatus.SUSPENDED,
+      },
+    });
+
+    const { password_hash: _, ...safeUser } = updatedUser;
+
+    return {
+      ...safeUser,
+      user_id: safeUser.user_id.toString(),
+    };
+  }
+
+//8. Reactiver un utilisateur
+  async reactivate(id: string) {
+      const user = await this.prisma.user.findUnique({
+      where: {
+        user_id: BigInt(id),
+      },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    if (user.account_status !== AccountStatus.SUSPENDED) {
+      throw new BadRequestException(
+        'Only a suspended account can be reactivated',
+      );
+    }
+    const updatedUser = await this.prisma.user.update({
+      where: {
+        user_id: BigInt(id),
+      },
+      data: {
+        account_status: AccountStatus.ACTIVE,
+      },
+    });
+
+    const { password_hash: _, ...safeUser } = updatedUser;
+
+    return {
+      ...safeUser,
+      user_id: safeUser.user_id.toString(),
+    };
+  }
+
 }
