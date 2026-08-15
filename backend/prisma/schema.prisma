@@ -6,9 +6,9 @@
 // Le generateur detemine quels assets seront generes lors de l'execution de la commande `prisma generate`
 generator client {
   // generateur a utiliser pour creer le client Prisma. Ici le generateur officiel.
-  provider = "prisma-client"
+  provider     = "prisma-client"
   // le chemin vers le dossier dans lequel Prisme sera genere.
-  output   = "../generated/prisma"
+  output       = "../generated/prisma"
   moduleFormat = "cjs"
 }
 
@@ -159,7 +159,7 @@ model Action {
   location   Float[]
   status     ActionStatus @default(PENDING)
   category   Category
-  imagesList String[]
+  imagesList String[]     @default([])
 
   validated_by_user_id BigInt?
   validated_at         DateTime? @default(now())
@@ -254,6 +254,8 @@ enum ActionStatus {
   PENDING
   APPROVED
   REJECTED
+  CANCELLED
+  COMPLETED
 }
 
 enum MemberStatus {

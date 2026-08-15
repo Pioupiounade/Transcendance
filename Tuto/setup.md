@@ -28,3 +28,9 @@ Quand je m'installe sur un nouvel ordi:
 ```
     curl http://localhost:3000/users
 ```
+
+-> lancer prisma sur un navigateur
+```
+    cd backend
+    npx prisma studio
+```

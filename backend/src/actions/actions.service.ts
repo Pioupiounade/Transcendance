@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateActionDto } from './dto/create-action.dto';
 import { UpdateActionDto } from './dto/update-action.dto';
@@ -37,13 +37,13 @@ async findAll() {
       throw new NotFoundException('Action not found');
     }
     
-    return actions.map((action) => ({
+    return {
       ...action,
       action_id: action.action_id.toString(),
       creator_id: action.creator_id.toString(),
       organization_id: action.organization_id?.toString() ?? null,
       validated_by_user_id: action.validated_by_user_id?.toString() ?? null,
-      }));
+      };
   }
 
 //3. recupere des actions par organization
@@ -160,43 +160,106 @@ async findAll() {
       };
   }
 
-  //4. mettre a jour les donnees de l'organisation
-  async update(id: string, data: UpdateOrganizationDto) {
-    const organization = await this.prisma.organization.update({
+  //8. mettre a jour les donnees de l'action
+  async update(id: string, data: UpdateActionDto) {
+    const action = await this.prisma.action.update({
       where: {
-        organization_id: BigInt(id),
+        action_id: BigInt(id),
       },
       data: {
-        title:data.title,
-        description:data.description,
-        address:data.address,
-        location:data.location,
+        title: data.title,
+        description: data.description,
+        organization_id: data.organization_id? BigInt(data.organization_id) : undefined,
+        location: data.location,
+        category: data.category,
+        imagesList: data.imagesList,
+        scheduled_at: data.scheduled_at? new Date(data.scheduled_at) : undefined,
       },
     });
     
-    // On retourne l'utilisateur avec son BigInt converti en string
     return {
-      ...organization,
-      organization_id: organization.organization_id.toString(),
-      creator_id: organization.creator_id.toString(),
+      ...action,
+      action_id: action.action_id.toString(),
+      creator_id: action.creator_id.toString(),
+      organization_id: action.organization_id?.toString() ?? null,
+      validated_by_user_id: action.validated_by_user_id?.toString() ?? null,
+      };
+  }
+
+//9. annuler une action
+  async cancel(id: string) {
+    const action = await this.prisma.action.findUnique({
+      where: {
+        action_id: BigInt(id),
+      },
+    });
+
+    if (!action) {
+      throw new NotFoundException('Action not found');
+    }
+
+    if (
+      action.status !== ActionStatus.PENDING &&
+      action.status !== ActionStatus.APPROVED
+    ) {
+      throw new BadRequestException(
+        'This action can no longer be cancelled',
+      );
+    }
+
+    const updatedAction = await this.prisma.action.update({
+      where: {
+        action_id: BigInt(id),
+      },
+      data: {
+        status: ActionStatus.CANCELLED,
+      },
+    });
+
+    return {
+      ...updatedAction,
+      action_id: updatedAction.action_id.toString(),
+      creator_id: updatedAction.creator_id.toString(),
+      organization_id: updatedAction.organization_id?.toString() ?? null,
+      validated_by_user_id:
+        updatedAction.validated_by_user_id?.toString() ?? null,
     };
   }
 
-//5. desactiver une organisation
-  async deactivate(id: string) {
-  const organization = await this.prisma.organization.update({
-    where: {
-      organization_id: BigInt(id),
-    },
-    data: {
-      organization_status: 'CLOSED',
-    },
-  });
+//10. terminer une action
+  async complete(id: string) {
+    const action = await this.prisma.action.findUnique({
+      where: {
+        action_id: BigInt(id),
+      },
+    });
 
-  return {
-    ...organization,
-    organization_id: organization.organization_id.toString(),
-    creator_id:organization.creator_id.toString(),
-  };
-}
+    if (!action) {
+      throw new NotFoundException('Action not found');
+    }
+
+    if (action.status !== ActionStatus.APPROVED) {
+      throw new BadRequestException(
+        'Only an approved action can be completed',
+      );
+    }
+
+    const updatedAction = await this.prisma.action.update({
+      where: {
+        action_id: BigInt(id),
+      },
+      data: {
+        status: ActionStatus.COMPLETED,
+      },
+    });
+
+    return {
+      ...updatedAction,
+      action_id: updatedAction.action_id.toString(),
+      creator_id: updatedAction.creator_id.toString(),
+      organization_id: updatedAction.organization_id?.toString() ?? null,
+      validated_by_user_id:
+        updatedAction.validated_by_user_id?.toString() ?? null,
+    };
+  }
 }

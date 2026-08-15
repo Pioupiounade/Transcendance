@@ -1,5 +1,5 @@
 import { IsString, IsArray, ArrayMinSize, ArrayMaxSize, IsNumber, IsInt, IsDateString, IsOptional, IsEnum } from 'class-validator';
-import { Category } from '../../generated/prisma/client';
+import { Category } from '../../../generated/prisma/client';
 
 export class CreateActionDto {
   @IsString() // doit etre une chaine de caractere
