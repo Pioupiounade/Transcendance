@@ -158,10 +158,10 @@ model Action {
 
   min_participants Int?
   max_participants Int?
-  location   Float[]
-  status     ActionStatus @default(PENDING)
-  category   Category
-  imagesList String[]     @default([])
+  location         Float[]
+  status           ActionStatus @default(PENDING)
+  category         Category
+  imagesList       String[]     @default([])
 
   validated_by_user_id BigInt?
   validated_at         DateTime? @default(now())

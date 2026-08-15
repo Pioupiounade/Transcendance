@@ -48,7 +48,7 @@
         - Get the actions by status
         - Get the action by area
         - Create a new action -> USER should be active
-        - Update the action -> only by ADMIN or CREATOR, MANAGER, OWNER of the organization if there is one
+        - Update the action -> only by ADMIN or CREATOR, MANAGER, OWNER of the organization if there is one, a rejected/cancelled/completed action can't be updated.
         - Approve the action ->  only by ADMIN or CREATOR, MANAGER, OWNER of the organization if there is one, a approved/rejected/cancelled/completed action can't be completed
         - Cancel the action -> only by ADMIN or CREATOR, MANAGER, OWNER of the organization if there is one, a rejected/completed action can't be cancelled.
         - Complete the action -> only by ADMIN or CREATOR, MANAGER, OWNER of the organization if there is one, a pending/rejected/cancelled action can't be completed

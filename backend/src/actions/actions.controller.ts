@@ -5,60 +5,75 @@ import { UpdateActionDto } from './dto/update-action.dto';
 import { Category, ActionStatus } from '../../generated/prisma/client';
 
 @Controller('actions')
-    export class ActionsController {
-    constructor(private actionsService: ActionsService) {}
+export class ActionsController {
+  constructor(private actionsService: ActionsService) {}
 
-    @Get()
-    findAll(
-     @Query('organization_id') organizationId?: string,
-     @Query('category') category?: Category,
-     @Query('creator_id') creatorId?: string,
-     @Query('status') status?: ActionStatus,
-    ) {
-        if (organizationId) {
-            return this.actionsService.findByOrganization(organizationId);
-        }
-
-        if (category) {
-            return this.actionsService.findByCategory(category);
-        }
-
-        if (creatorId) {
-            return this.actionsService.findByCreator(creatorId);
-        }
-
-        if (status) {
-            return this.actionsService.findByStatus(status);
-        }
-
-        return this.actionsService.findAll();
+  @Get()
+  findAll(
+    @Query('organization_id') organizationId?: string,
+    @Query('category') category?: Category,
+    @Query('creator_id') creatorId?: string,
+    @Query('status') status?: ActionStatus,
+  ) {
+    if (organizationId) {
+      return this.actionsService.findByOrganization(organizationId);
     }
 
-    @Get(':id')
-    findOne(@Param('id') id: string) {
-        return this.actionsService.findOne(id);
+    if (category) {
+      return this.actionsService.findByCategory(category);
     }
 
-    @Post()
-    create(@Body() data:CreateActionDto) {
-        return this.actionsService.create(data);
+    if (creatorId) {
+      return this.actionsService.findByCreator(creatorId);
     }
 
-    @Patch(':id')
-    update(
-        @Param('id') id : string,
-        @Body() data: UpdateActionDto,
-    ) {
-        return this.actionsService.update(id, data);
+    if (status) {
+      return this.actionsService.findByStatus(status);
     }
 
-    @Patch(':id/cancel')
-    cancel(@Param('id') id:string) {
-        return this.actionsService.cancel(id);
-    }
+    return this.actionsService.findAll();
+  }
 
-    @Patch(':id/complete')
-    complete(@Param('id') id:string) {
-        return this.actionsService.complete(id);
-    }   
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.actionsService.findOne(id);
+  }
+
+  @Post()
+  create(@Body() data: CreateActionDto) {
+    return this.actionsService.create(data);
+  }
+
+  @Patch(':id')
+  update(
+    @Param('id') id: string,
+    @Body() data: UpdateActionDto,
+    @Query('current_user_id') currentUserId: string,
+  ) {
+    return this.actionsService.update(id, data, currentUserId);
+  }
+
+  @Patch(':id/approve')
+  approve(
+    @Param('id') id: string,
+    @Query('current_user_id') currentUserId: string,
+  ) {
+    return this.actionsService.approve(id, currentUserId);
+  }
+
+  @Patch(':id/cancel')
+  cancel(
+    @Param('id') id: string,
+    @Query('current_user_id') currentUserId: string,
+  ) {
+    return this.actionsService.cancel(id, currentUserId);
+  }
+
+  @Patch(':id/complete')
+  complete(
+    @Param('id') id: string,
+    @Query('current_user_id') currentUserId: string,
+  ) {
+    return this.actionsService.complete(id, currentUserId);
+  }
 }
