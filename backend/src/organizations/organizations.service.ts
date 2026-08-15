@@ -30,7 +30,7 @@ async findAll() {
       throw new NotFoundException('Organization not found');
     }
     
-     // On retourne l'utilisateur avec son BigInt converti en string
+     // On retourne l'organisation avec son BigInt converti en string
     return {
       ...organization,
       organization_id: organization.organization_id.toString(),
