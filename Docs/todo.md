@@ -1,13 +1,5 @@
 ORM ->
 
-* Finaliser `Actions`
-
-  * ajouter les règles métier liées aux statuts ;
-  * vérifier les rôles/statuts des utilisateurs avant certaines opérations ;
-  * ajouter `min_participants` / `max_participants` si tu gardes cette idée ;
-  * ajouter la migration Prisma correspondante ;
-  * tester les transitions `PENDING / APPROVED / REJECTED / CANCELLED / COMPLETED`.
-
 * Finaliser les relations autour des utilisateurs
 
   * `Profiles`

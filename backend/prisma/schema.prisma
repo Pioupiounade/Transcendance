@@ -59,9 +59,11 @@ model User {
 model Profile {
   // 1. Champs réellement stockés en base
   user_id         BigInt  @id
-  username        String
+  username        String  @unique
   description     String?
   profile_picture String?
+  location        Float[]
+  visibility      ProfileVisibility @default(PUBLIC)
 
   // 2. Champs de relation Prisma
   user User @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
@@ -302,4 +304,10 @@ enum PiouPiouStatus {
   PETIT_PIOUPIOU
   GRAND_PIOUPIOU
   PIOUPIOU_OR
+}
+
+enum ProfileVisibility {
+  PUBLIC
+  PRIVATE
+  FRIENDS_ONLY
 }

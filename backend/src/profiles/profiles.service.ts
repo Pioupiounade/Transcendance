@@ -1,0 +1,191 @@
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
+import { CreateProfileDto } from './dto/create-profile.dto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
+import { ProfileVisibility, AccountStatus } from '../../generated/prisma/client';
+
+@Injectable()
+export class ProfilesService {
+
+    constructor(private prisma: PrismaService) {}
+
+//Trouver tous les profils publics des utilisateurs actifs
+async findAll() {
+  const profiles = await this.prisma.profile.findMany({
+    where: {
+      visibility: ProfileVisibility.PUBLIC,
+      user: {
+        account_status: AccountStatus.ACTIVE,
+      },
+    },
+  });
+
+  return profiles.map(({ location, ...profile }) => ({ //retirer location de la reponse retournee par la fonction
+    ...profile,
+    user_id: profile.user_id.toString(),
+  }));
+}
+
+//Trouver un profil specifique avec l'user_id
+async findOne(userId: string) {
+  const profile = await this.prisma.profile.findUnique({
+    where: {
+      user_id: BigInt(userId),
+    },
+    include: {
+      user: true,
+    },
+  });
+
+  if (!profile) {
+    throw new NotFoundException('Profile not found');
+  }
+
+  if (
+    profile.visibility !== ProfileVisibility.PUBLIC ||
+    profile.user.account_status !== AccountStatus.ACTIVE
+  ) {
+    throw new NotFoundException('Profile not found');
+  }
+
+  const { location, user, ...safeProfile } = profile;
+
+  return {
+    ...safeProfile,
+    user_id: safeProfile.user_id.toString(),
+  };
+}
+
+//Trouver un profil specifique avec le username
+ async findByUsername(query: string) {
+  const profiles = await this.prisma.profile.findMany({
+      where: {
+        username: {
+          contains: query,
+          mode: 'insensitive',
+        },
+        visibility: ProfileVisibility.PUBLIC,
+        user: {
+            account_status: AccountStatus.ACTIVE,
+        },
+      },
+      take: 15,
+    });
+
+  return profiles.map(({ location, ...profile }) => ({ //retirer location de la reponse retournee par la fonction
+    ...profile,
+    user_id: profile.user_id.toString(),
+  }));
+}
+
+
+//Creer un nouveau profil
+async create(currentUserId: string, data: CreateProfileDto) {
+  const user = await this.prisma.user.findUnique({
+    where: {
+      user_id: BigInt(currentUserId),
+    },
+  });
+
+  if (!user) {
+    throw new NotFoundException('User not found');
+  }
+
+  if (user.account_status !== AccountStatus.ACTIVE) {
+    throw new BadRequestException('Only an active user can create a profile');
+  }
+
+  const existingProfile = await this.prisma.profile.findUnique({
+    where: {
+      user_id: BigInt(currentUserId),
+    },
+  });
+
+  if (existingProfile) {
+    throw new BadRequestException('User already has a profile');
+  }
+
+  const createdProfile = await this.prisma.profile.create({
+    data: {
+      user_id: BigInt(currentUserId),
+      username: data.username,
+      description: data.description,
+      profile_picture: data.profile_picture,
+      location: data.location,
+      visibility: data.visibility,
+    },
+  });
+
+  const { location, ...safeProfile } = createdProfile;
+
+  return {
+    ...safeProfile,
+    user_id: safeProfile.user_id.toString(),
+  };
+}
+
+//Mettre a jour un profil
+async updateProfile(currentUserId: string, data: UpdateProfileDto) {
+  const user = await this.prisma.user.findUnique({
+    where: {
+      user_id: BigInt(currentUserId),
+    },
+  });
+
+  if (!user) {
+    throw new NotFoundException('User not found');
+  }
+
+  if (user.account_status !== AccountStatus.ACTIVE) {
+    throw new BadRequestException('Only an active user can change a profile');
+  }
+
+  const existingProfile = await this.prisma.profile.findUnique({
+    where: {
+      user_id: BigInt(currentUserId),
+    },
+  });
+
+  if (!existingProfile) {
+    throw new NotFoundException('Profile does not exist');
+  }
+
+  const updatedProfile = await this.prisma.profile.update({
+    where: {
+      user_id: BigInt(currentUserId),
+    },
+    data: {
+      username: data.username,
+      description: data.description,
+      profile_picture: data.profile_picture,
+      location: data.location,
+      visibility: data.visibility,
+    },
+  });
+
+  const { location, ...safeProfile } = updatedProfile;
+
+  return {
+    ...safeProfile,
+    user_id: safeProfile.user_id.toString(),
+  };
+}
+
+//Trouver son propre profil specifique
+async findOwnProfile(currentUserId: string) {
+  const profile = await this.prisma.profile.findUnique({
+    where: {
+      user_id: BigInt(currentUserId),
+    },
+  });
+
+  if (!profile) {
+    throw new NotFoundException('Profile not found');
+  }
+
+  return {
+    ...profile,
+    user_id: profile.user_id.toString(),
+  };
+}
+}

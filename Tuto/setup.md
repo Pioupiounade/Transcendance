@@ -34,3 +34,10 @@ Quand je m'installe sur un nouvel ordi:
     cd backend
     npx prisma studio
 ```
+-> creer un nouveau module, service, controller
+```
+    npx nest generate module nom
+    npx nest generate service nom
+    npx nest generate controller nom
+```
+

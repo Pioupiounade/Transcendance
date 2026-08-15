@@ -40,6 +40,9 @@ erDiagram
         text username "Alice"
         text description "I love neighborhood initiatives"
         text profile_picture "avatar.jpg"
+        geography location "POINT"
+        text visibility "public | private | friends only"
+
     }
 
     ACTIONS {
@@ -48,6 +51,8 @@ erDiagram
         text description "Citizen cleaning action"
         bigint creator_id FK "References USERS"
         bigint organization_id FK "Optional"
+        int min_participants "10"
+        int max_participants "20"
         geography location "POINT"
         text status "pending | approved | rejected"
         text category "environment | social | cultural"

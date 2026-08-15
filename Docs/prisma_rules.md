@@ -53,4 +53,29 @@
         - Cancel the action -> only by ADMIN or CREATOR, MANAGER, OWNER of the organization if there is one, a rejected/completed action can't be cancelled.
         - Complete the action -> only by ADMIN or CREATOR, MANAGER, OWNER of the organization if there is one, a pending/rejected/cancelled action can't be completed
     
+## Profiles :
 
+   - Mandatory fields for new profiles creations:
+        `username`, `location`
+   - `username` should be unique
+   - `location` is used for internal purposes only and will never be visible for the other users
+   -  only active and non suspended profiles will be visible
+   - Methods :
+        - Get all the profiles
+        - Get a specific profile with the user_id
+        - Get a specific profile by username with autofilling completion
+        - Create a new profile -> USER can create only his own profile (1 max), USER should be active
+        - Update his profile -> USER can update his profile only, USER should be active
+        - Get my own profile -> USER can find his own profile even if PRIVATE, USER should be active
+
+## Interests :
+
+## UserInterests :
+
+## OrganizationMembers :
+
+## Participations :
+
+## Friendships :
+
+## Points Transactions :
