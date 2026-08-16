@@ -1,11 +1,5 @@
 ORM ->
 
-* Finaliser les relations autour des utilisateurs
-
-  * `Interests`
-  * `UserInterests`
-  * vérifier qu’un utilisateur peut consulter/modifier son profil et ses intérêts selon les règles prévues.
-
 * Implémenter `Friendships`
 
   * envoyer une demande ;
@@ -46,13 +40,7 @@ ORM ->
 
   * recherche utilisateur par `username` ;
   * autocomplétion utilisateur ;
-  * recherche organisation par nom ;
-  * recherche organisation par rayon ;
-  * recherche action par catégorie ;
-  * créateur ;
-  * organisation ;
-  * statut ;
-  * éventuellement texte, date et zone géographique ;
+  * recherche actions par date
   * permettre plus tard la combinaison de plusieurs filtres.
 
 * Vérifier toutes les contraintes Prisma

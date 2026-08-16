@@ -17,7 +17,6 @@ erDiagram
     ORGANIZATIONS ||--o{ ACTIONS : organizes
 
     USERS ||--o{ USER_INTERESTS : has
-    INTERESTS ||--o{ USER_INTERESTS : selected_by
 
     USERS ||--o{ FRIENDSHIPS : sends
     USERS ||--o{ FRIENDSHIPS : receives
@@ -101,14 +100,9 @@ erDiagram
         timestamptz accepted_at "Optional"
     }
 
-    INTERESTS {
-        bigint interest_id PK "1"
-        text name UK "Environment"
-    }
-
     USER_INTERESTS {
         bigint user_id PK,FK "References USERS"
-        bigint interest_id PK,FK "References INTERESTS"
+        text InterestCategory "Select from InterestCategory enum"
     }
 
     POINT_TRANSACTIONS {

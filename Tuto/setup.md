@@ -46,4 +46,11 @@ Quand je m'installe sur un nouvel ordi:
     npx prisma format
     npx prisma validate
     npx prisma migrate dev --name nom_explicit_de_la_modification
+    npx prisma generate
+```
+
+-> verifier que prisma compile bien
+``` 
+    cd backend
+    npm run build
 ```

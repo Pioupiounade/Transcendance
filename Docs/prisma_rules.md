@@ -68,9 +68,25 @@
         - Update his profile -> USER can update his profile only, USER should be active
         - Get my own profile -> USER can find his own profile even if PRIVATE, USER should be active
 
-## Interests :
-
 ## UserInterests :
+
+   - Users can declare only interests from the `InterestCategory` enum.
+   - Each interest matches a category from the enum `Category`
+   - Mandatory fields : None are manually entered
+   - Categories :
+          - ENVIRONMENT = ENV_FLOWER_POWER = Environment - flower power
+          - ENVIRONMENT = ENV_CLEAN = Environment - let's clean
+          - ENVIRONMENT = ENV_DO = Environment - let's do (-> like other but related to the environment)
+          - SOCIAL = SOCIAL_SHARE = Social - let's share
+          - SOCIAL = SOCIAL_MEET = Social - let's meet
+          - SOCIAL = SOCIAL_DO = Social - let's do (-> like other but related to a social activity)
+          - CULTURAL = CULTURAL_LEARN = Cultural - let's learn
+          - CULTURAL = CULTURAL_CREATE = Cultural - let's create 
+          - CULTURAL = CULTRUAL_DO = Cultural - let's do (-> liket other but related to a cultural activity)
+   - Methods :
+          - Select interest -> USER should be ACTIVE, interest can be selected one time only
+          - Remove interest -> USER should be ACTIVE
+          - Get selected interests of the user -> USER should be ACTIVE
 
 ## OrganizationMembers :
 
