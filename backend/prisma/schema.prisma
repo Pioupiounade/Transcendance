@@ -52,6 +52,8 @@ model User {
   friendships_as_user1 Friendship[] @relation("FriendshipUser1")
   friendships_as_user2 Friendship[] @relation("FriendshipUser2")
 
+  blocked_friendships Friendship[] @relation("FriendshipBlocker")
+
   point_transactions PointTransaction[]
 }
 
@@ -216,10 +218,14 @@ model Friendship {
 
   status FriendshipStatus @default(ACTIVE)
 
+  blocked_by_user_id BigInt?
+
   created_at DateTime @default(now())
 
   user1 User @relation("FriendshipUser1", fields: [user1_id], references: [user_id])
   user2 User @relation("FriendshipUser2", fields: [user2_id], references: [user_id])
+
+  blocked_by User? @relation("FriendshipBlocker", fields: [blocked_by_user_id], references: [user_id])
 
   @@id([user1_id, user2_id])
 }

@@ -1,14 +1,5 @@
 ORM ->
 
-* Implémenter `Friendships`
-
-  * envoyer une demande ;
-  * accepter ;
-  * refuser ;
-  * bloquer ;
-  * éventuellement supprimer une amitié ;
-  * vérifier les transitions de statut.
-
 * Implémenter `Participations`
 
   * rejoindre une action ;
