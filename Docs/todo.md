@@ -222,7 +222,31 @@ ORM ->
   * accepter/refuser ;
   * blocage si prévu ;
   * participation aux actions ;
-  * affichage des relations côté frontend.
+  * affichage des relations côté frontend ;
+
+* **Messagerie privée entre amis**
+
+  * permettre l’envoi de messages uniquement entre utilisateurs ayant une `Friendship ACTIVE` ;
+  * empêcher l’envoi de messages si l’amitié est supprimée ou `BLOCKED` ;
+  * modèle `Conversation` pour représenter une conversation entre deux amis ;
+  * modèle `Message` avec conversation, expéditeur, contenu et date d’envoi ;
+  * créer ou récupérer une conversation entre deux amis ;
+  * envoyer un message ;
+  * récupérer l’historique des messages d’une conversation ;
+  * récupérer la liste de ses conversations ;
+  * vérifier que seuls les participants peuvent accéder à une conversation ;
+  * gestion du statut lu / non lu des messages ;
+  * compteur de messages non lus ;
+  * intégration WebSocket pour recevoir les nouveaux messages en temps réel ;
+  * mise à jour du statut lu en temps réel si nécessaire ;
+  * gestion du comportement lorsqu’un utilisateur bloque ou supprime un ami ;
+  * frontend : liste des conversations ;
+  * frontend : affichage d’une conversation ;
+  * frontend : envoi et réception des messages ;
+  * frontend : indicateur de nouveaux messages / messages non lus ;
+  * tests des permissions d’accès aux conversations ;
+  * tests du blocage et de la suppression d’une amitié ;
+  * tests de l’envoi et de la réception des messages en temps réel.
 
 * **Organization System**
 

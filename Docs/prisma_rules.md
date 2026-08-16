@@ -88,10 +88,29 @@
           - Remove interest -> USER should be ACTIVE
           - Get selected interests of the user -> USER should be ACTIVE
 
+## FriendRequest :
+
+   - Mandatory fields : None are manually entered
+   - Methods :
+         - Send a new friend request -> sender should be ACTIVE, receiver should be ACTIVE with no pending/accepted/blocked request, not possible to send another request if PENDING, ACCEPTED, BLOCKED already exists 
+         - See all my recevied pending friends requests
+         - See all my sent pending friends requests
+         - Accept the friend request -> sender should be ACTIVE, previous status must be PENDING
+         - Reject the friend request -> sender should be ACTIVE, previous status must be PENDING
+ 
+
+## Friendship :
+
+   - Mandatory fields : None are manually entered
+   - Methods :
+        - See all my friends -> display username, avatar
+        - See all my blocked friends
+        - Block the friend -> sender should be ACTIVE, previous status must be ACTIVE
+        - Unblock the friend -> sender should be ACTIVE, previous status must be BLOCKED
+        - Remove friend -> user should be ACTIVE, friendship status ACCEPTED
+
 ## OrganizationMembers :
 
 ## Participations :
-
-## Friendships :
 
 ## Points Transactions :

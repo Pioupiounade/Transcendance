@@ -7,9 +7,11 @@ import { OrganizationsModule } from './organizations/organizations.module';
 import { ActionsModule } from './actions/actions.module';
 import { ProfilesModule } from './profiles/profiles.module';
 import { InterestsModule } from './interests/interests.module';
+import { FriendRequestsModule } from './friend-requests/friend-requests.module';
+import { FriendshipsModule } from './friendships/friendships.module';
 
 @Module({
-  imports: [PrismaModule, UsersModule, OrganizationsModule, ActionsModule, ProfilesModule, InterestsModule],
+  imports: [PrismaModule, UsersModule, OrganizationsModule, ActionsModule, ProfilesModule, InterestsModule, FriendRequestsModule, FriendshipsModule],
   controllers: [AppController],
   providers: [AppService],
 })

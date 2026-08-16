@@ -46,8 +46,11 @@ model User {
   created_organizations Organization[]       @relation("OrganizationCreator")
   interests             UserInterest[]
 
-  sent_friend_requests     Friendship[] @relation("FriendshipRequester")
-  received_friend_requests Friendship[] @relation("FriendshipAddressee")
+  sent_friend_requests     FriendRequest[] @relation("FriendRequestRequester")
+  received_friend_requests FriendRequest[] @relation("FriendRequestAddressee")
+
+  friendships_as_user1 Friendship[] @relation("FriendshipUser1")
+  friendships_as_user2 Friendship[] @relation("FriendshipUser2")
 
   point_transactions PointTransaction[]
 }
@@ -192,21 +195,33 @@ model Participation {
 // FRIENDSHIPS
 // --------------------------------------------------
 
-model Friendship {
-  // 1. Champs réellement stockés en base
+model FriendRequest {
+  friend_request_id BigInt @id @default(autoincrement())
+
   requester_id BigInt
   addressee_id BigInt
 
-  status FriendshipStatus @default(PENDING)
+  status FriendRequestStatus @default(PENDING)
 
-  created_at  DateTime  @default(now())
-  accepted_at DateTime?
+  created_at   DateTime  @default(now())
+  responded_at DateTime?
 
-  // 2. Champs de relation Prisma
-  requester User @relation("FriendshipRequester", fields: [requester_id], references: [user_id])
-  addressee User @relation("FriendshipAddressee", fields: [addressee_id], references: [user_id])
+  requester User @relation("FriendRequestRequester", fields: [requester_id], references: [user_id])
+  addressee User @relation("FriendRequestAddressee", fields: [addressee_id], references: [user_id])
+}
 
-  @@id([requester_id, addressee_id])
+model Friendship {
+  user1_id BigInt
+  user2_id BigInt
+
+  status FriendshipStatus @default(ACTIVE)
+
+  created_at DateTime @default(now())
+
+  user1 User @relation("FriendshipUser1", fields: [user1_id], references: [user_id])
+  user2 User @relation("FriendshipUser2", fields: [user2_id], references: [user_id])
+
+  @@id([user1_id, user2_id])
 }
 
 // --------------------------------------------------
@@ -275,10 +290,14 @@ enum InterestCategory {
   CULTURAL_DO
 }
 
-enum FriendshipStatus {
+enum FriendRequestStatus {
   PENDING
   ACCEPTED
   REJECTED
+}
+
+enum FriendshipStatus {
+  ACTIVE
   BLOCKED
 }
 
