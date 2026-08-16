@@ -109,10 +109,20 @@
         - Unblock the friend -> sender should be ACTIVE, previous status must be BLOCKED
         - Remove friend -> user should be ACTIVE, friendship status ACCEPTED
 
+## Participations :
+
+   - Mandatory fields : None are manuallr entered
+   - Methods :
+        - Participate to an action -> USER should be ACTIVE, action should exist and be PENDING, current participants = max - 1, only one participation by USER, create participation
+        - Cancel participation to an action -> USER should be ACTIVE, suscribed to the action, action should exist and should be PENDING, delete the participation
+        - Cancel blocked/suspended user -> USER participation should be cancelled if the USER is deactivated or suspended, action should be PENDING
+        - Get all the participants to the action -> USER should be ACTIVE, action status should be PENDING, APPROVED or COMPLETED
+        - Get all the actions a participants did -> USER should be ACTIVE, actions status should be PENDING, APPROVED or COMPLETED
+
 ## OrganizationMembers :
 
 
 
-## Participations :
+
 
 ## Points Transactions :

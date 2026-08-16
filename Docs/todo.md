@@ -1,15 +1,5 @@
 ORM ->
 
-* Implémenter `Participations`
-
-  * rejoindre une action ;
-  * quitter une action ;
-  * lister les participants d’une action ;
-  * lister les actions auxquelles participe un utilisateur ;
-  * empêcher les doublons ;
-  * vérifier `max_participants` ;
-  * éventuellement tenir compte de `min_participants`.
-
 * Implémenter `OrganizationMembers`
 
   * demander à rejoindre une organisation ;
