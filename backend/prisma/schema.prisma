@@ -58,8 +58,8 @@ model User {
 
 model Profile {
   // 1. Champs réellement stockés en base
-  user_id         BigInt  @id
-  username        String  @unique
+  user_id         BigInt            @id
+  username        String            @unique
   description     String?
   profile_picture String?
   location        Float[]

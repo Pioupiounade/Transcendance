@@ -24,6 +24,17 @@ export class UsersService {
 
   //2. hasher le mdp - creer le nouvel utilisateur - l'id se genere automatiquement
   async create(data: CreateUserDto) {
+  
+    const existingUser = await this.prisma.user.findUnique({
+      where: {
+        email: data.email,
+      },
+    });
+
+    if (existingUser) {
+      throw new BadRequestException('Email is already used');
+    }
+
     const password_hash = await argon2.hash(data.password);
 
     const createdUser = await this.prisma.user.create({
@@ -65,6 +76,18 @@ export class UsersService {
 
   //4. mettre a jour l'adresse mail
   async updateEmail(id: string, data: UpdateUserDto) {
+    if (data.email) {
+      const existingUser = await this.prisma.user.findUnique({
+        where: {
+          email: data.email,
+        },
+      });
+
+    if (existingUser && existingUser.user_id !== BigInt(id)) {
+      throw new BadRequestException('Email is already used');
+      }
+    }
+
     const user = await this.prisma.user.update({
       where: {
         user_id: BigInt(id),

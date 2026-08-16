@@ -41,3 +41,9 @@ Quand je m'installe sur un nouvel ordi:
     npx nest generate controller nom
 ```
 
+-> migrer prismascheme
+```
+    npx prisma format
+    npx prisma validate
+    npx prisma migrate dev --name nom_explicit_de_la_modification
+```

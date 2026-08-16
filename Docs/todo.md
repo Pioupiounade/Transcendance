@@ -2,7 +2,6 @@ ORM ->
 
 * Finaliser les relations autour des utilisateurs
 
-  * `Profiles`
   * `Interests`
   * `UserInterests`
   * vérifier qu’un utilisateur peut consulter/modifier son profil et ses intérêts selon les règles prévues.

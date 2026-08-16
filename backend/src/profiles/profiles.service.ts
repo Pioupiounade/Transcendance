@@ -105,6 +105,18 @@ async create(currentUserId: string, data: CreateProfileDto) {
     throw new BadRequestException('User already has a profile');
   }
 
+  const existingUsername = await this.prisma.profile.findUnique({
+    where: {
+      username: data.username,
+    },
+  });
+
+  if (existingUsername) {
+    throw new BadRequestException(
+      'Username is already taken',
+    );
+  }
+
   const createdProfile = await this.prisma.profile.create({
     data: {
       user_id: BigInt(currentUserId),
@@ -150,6 +162,23 @@ async updateProfile(currentUserId: string, data: UpdateProfileDto) {
     throw new NotFoundException('Profile does not exist');
   }
 
+  if (data.username) {
+    const existingUsername = await this.prisma.profile.findUnique({
+      where: {
+        username: data.username,
+      },
+    });
+
+    if (
+      existingUsername &&
+      existingUsername.user_id !== BigInt(currentUserId)
+    ) {
+      throw new BadRequestException(
+        'Username is already taken',
+      );
+    }
+  }
+  
   const updatedProfile = await this.prisma.profile.update({
     where: {
       user_id: BigInt(currentUserId),
