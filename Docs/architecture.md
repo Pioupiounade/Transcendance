@@ -214,6 +214,27 @@ CategoriesModule
 
 -> Les principales menaces et les mecanismes prevus pour la protection de l'application
 
+### 10.1 Authorization & Roles (RBAC)
+
+The platform implements Role-Based Access Control (RBAC) across frontend and backend services:
+
+- **USER (Resident):**
+  - Create and manage their own community actions.
+  - Participate in approved actions.
+  - Manage personal profile, interests, and friend requests.
+  - Create and manage neighborhood organizations.
+
+- **MODERATOR:**
+  - Includes all standard **USER** capabilities.
+  - Review submitted actions and update lifecycle status (`approved` / `rejected`).
+  - Access to moderation queue and flagged neighborhood content.
+
+- **ADMIN:**
+  - Full system administration privileges.
+  - Manage user account lifecycle (e.g., set status to `suspended` or `deactivated`).
+  - Moderate organizations and override platform settings.
+  - Access to global platform metrics and audit logs.
+
 ## 11. Deployment
 
 -> Comment lancer l'application, son exposition en HTTPS
