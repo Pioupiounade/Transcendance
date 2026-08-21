@@ -139,3 +139,20 @@ erDiagram
   - `< 70`: Petit PiouPiou
   - `70-209`: Grand PiouPiou
   - `>= 210`: PiouPiou d'Or
+ 
+## Enumerations
+
+| Type | Values | Description |
+| :--- | :--- | :--- |
+| **Role** | `user`, `admin`, `moderator` | Level of permissions of the user in the platform. |
+| **AccountStatus** | `active`, `suspended`, `deactivated` | Current lifecycle state of the user account. |
+| **ProfileVisibility** | `public`, `private`, `friends only` | Visibility of the user's profile information. |
+| **ActionStatus** | `pending`, `approved`, `rejected` | Lifecycle state of a community action proposal. |
+| **ActionCategory** | `social`, `cultural`, `ecology`, `animals`, `other` | Classification category for actions. |
+| **InterestCategory** | `social`, `cultural`, `ecology`, `animals`, `other` | Categories of interest selectable by users. |
+| **OrganizationStatus**| `active`, `suspended`, `closed` | Operational status of an organization. |
+| **OrgMemberStatus** | `pending`, `approved`, `rejected` | Membership request status within an organization. |
+| **OrgMemberRole** | `member`, `manager`, `owner` | Role and privilege level within an organization. |
+| **FriendshipStatus** | `pending`, `accepted`, `rejected`, `blocked` | Current status of the relationship between two users. |
+| **PointReason** | `action_created`, `action_completed`, `action_participated`, `organization_joined` | Valid reasons for awarding civic points. |
+| **UserLevel** | `petit_pioupiou`, `grand_pioupiou`, `pioupiou_d_or` | Derived civic tier based on total points accumulated (< 70, 70–209, >= 210). |
