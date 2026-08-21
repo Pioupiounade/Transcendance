@@ -78,18 +78,27 @@ La carte permet de visualiser les activites suggerees, crees dans le quartier. A
 - Feature : Creer une action / suggestion depuis la carte
 - Feature : Localiser une action / suggestion
 
+
 ## Epic 8 - Administration
 
-La panneau d'administration permet de piloter le bon fonctionnement de la plateforme.
+Le panneau d'administration permet de piloter la gouvernance globale, la sécurité des accès et le bon fonctionnement de la plateforme.
 
-- Feature : Voir la liste des utilisateurs
+- Feature : Voir la liste des utilisateurs et gérer leur statut (actif, suspendu, désactivé)
 - Feature : Emvoyer un message aux utilisateurs
-- Feature : Bloquer un compte
-- Feature : Debloquer un compte
-- Feature : Consulter, masquer une activite
-- Feature : Consulter. marquer une suggestion
-- Feature : Moderer les commentaires
-- Feature : Moderer les photos
-- Feature : Traiter les signalements envoyes pas les utilisateurs
-- Feature : Gerer les categories d'action
-- Feature : Attribuer/retirer un role administrateur/moderateur
+- Feature : Bloquer / Débloquer un compte utilisateur
+- Feature : Gérer les organisations (validation, suspension, fermeture)
+- Feature : Gérer les catégories d'action
+- Feature : Attribuer / retirer un rôle (Utilisateur, Modérateur, Administrateur)
+
+
+## Epic 9 - Modération
+
+Les outils de modération permettent de vérifier le contenu généré par les utilisateurs et d'assurer le respect de la charte de la communauté.
+
+- Feature : Consulter la file d'attente des actions soumises (statuts: pending, approved, rejected)
+- Feature : Valider / Rejeter une action citoyenne
+- Feature : Consulter / Masquer une activité
+- Feature : Consulter / Masquer une suggestion
+- Feature : Modérer les commentaires
+- Feature : Modérer les photos
+- Feature : Traiter les signalements envoyés par les utilisateurs
