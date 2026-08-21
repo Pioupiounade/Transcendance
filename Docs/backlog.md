@@ -41,12 +41,12 @@ Les utilisateurs s'inscrivent directement aux activites qui les interesse. La ge
 
 ## Epic 4 - Communication
 
-Les createurs des activites peuvent envoyer des informations et communiquer avec/entre les participants.
+La plateforme permet aux utilisateurs et aux organisateurs d'échanger, de s'entraider et de coordonner les actions citoyennes.
 
-- Feature : Envoi de message a un utilisateur
-- Feature : Envoi de message a un groupe d'utilisateurs (ex: participants inscrits)
-- Feature : Commentaire sur la page de l'action
-- Feature : Commentaire sur le profil d'une organisation
+- Feature : Envoi de message privé entre utilisateurs (messagerie 1-à-1 en temps réel)
+- Feature : Envoi de message groupé aux participants d'une action (réservé à l'organisateur)
+- Feature : Commentaire public sur la page d'une action
+- Feature : Commentaire public sur le profil d'une organisation
 
 ## Epic 5 - Photos
 
