@@ -148,8 +148,8 @@ erDiagram
 | **AccountStatus** | `active`, `suspended`, `deactivated` | Current lifecycle state of the user account. |
 | **ProfileVisibility** | `public`, `private`, `friends only` | Visibility of the user's profile information. |
 | **ActionStatus** | `pending`, `approved`, `rejected` | Lifecycle state of a community action proposal. |
-| **ActionCategory** | `social`, `cultural`, `ecology`, `animals`, `other` | Classification category for actions. |
-| **InterestCategory** | `social`, `cultural`, `ecology`, `animals`, `other` | Categories of interest selectable by users. |
+| **ActionCategory** | `environment`, `social`, `cultural`| Classification category for actions. |
+| **InterestCategory** | `environment`, `social`, `cultural` | Categories of interest selectable by users. |
 | **OrganizationStatus**| `active`, `suspended`, `closed` | Operational status of an organization. |
 | **OrgMemberStatus** | `pending`, `approved`, `rejected` | Membership request status within an organization. |
 | **OrgMemberRole** | `member`, `manager`, `owner` | Role and privilege level within an organization. |
