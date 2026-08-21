@@ -214,28 +214,28 @@ CategoriesModule
 
 -> Les principales menaces et les mecanismes prevus pour la protection de l'application
 
-### 10.1 Authorization & Roles (RBAC)
+### 10.1 Autorisations et Rôles (RBAC)
 
-The platform implements Role-Based Access Control (RBAC) across frontend and backend services:
+La plateforme implémente un contrôle d'accès basé sur les rôles (RBAC) côté frontend et backend :
 
-- **USER (Resident):**
-  - Create and manage their own community actions.
-  - Participate in approved actions.
-  - Manage personal profile, interests, and friend requests.
-  - Create and manage neighborhood organizations.
+- **USER (Habitant) :**
+  - Créer et gérer ses propres actions de quartier.
+  - Participer aux actions validées.
+  - Gérer son profil personnel, ses centres d'intérêt et ses demandes d'amis.
+  - Créer et administrer des organisations de quartier.
 
-- **MODERATOR:**
-  - Includes all standard **USER** capabilities.
-  - Review submitted actions and update lifecycle status (`approved` / `rejected`).
-  - Access to moderation queue and flagged neighborhood content.
+- **MODERATOR (Modérateur) :**
+  - Dispose de toutes les fonctionnalités d'un **USER**.
+  - Examiner les actions soumises et modifier leur statut (`approved` / `rejected`).
+  - Accéder à la file de modération et aux signalements de la communauté.
 
-- **ADMIN:**
-  - Full system administration privileges.
-  - Manage user account lifecycle (e.g., set status to `suspended` or `deactivated`).
-  - Moderate organizations and override platform settings.
-  - Access to global platform metrics and audit logs.
-
-## 11. Deployment
+- **ADMIN (Administrateur) :**
+  - Accès complet à l'administration du système.
+  - Gérer le cycle de vie des comptes utilisateurs (ex. passer le statut à `suspended` ou `deactivated`).
+  - Modérer les organisations et modifier les paramètres globaux de la plateforme.
+  - Consulter les métriques globales et les journaux d'activité.
+  
+  ## 11. Deployment
 
 -> Comment lancer l'application, son exposition en HTTPS
 
