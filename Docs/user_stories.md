@@ -151,6 +151,37 @@
           je veux **garder un lien avec les voisins que j'ai rencontres**
           afin de faire d'autres choses sympas ensemble
 
+
+# Socle Technique & Utilisateurs
+
+## AVANT :
+
+   - SOC - 001 : En tant que visiteur
+        je veux **créer un compte et me connecter**
+        afin d'accéder aux fonctionnalités de la plateforme
+
+   - SOC - 002 : En tant qu'utilisateur connecté
+        je veux **éditer mon profil (nom, bio, photo)**
+        afin de me présenter aux voisins
+
+   - SOC - 003 : En tant qu'utilisateur connecté
+        je veux **sélectionner mes centres d'intérêt**
+        afin de découvrir des activités adaptées à mes goûts
+
+   - SOC - 004 : En tant qu'utilisateur connecté
+        je veux **modifier mon mot de passe**
+        afin de sécuriser mon compte
+
+## APRES :
+
+   - SOC - 005 : En tant qu'utilisateur connecté
+        je veux **envoyer et accepter des demandes d'amis**
+        afin de garder le contact avec les personnes rencontrées
+
+   - SOC - 006 : En tant qu'utilisateur connecté
+        je veux **bloquer un utilisateur indésirable**
+        afin de préserver ma tranquillité et ma sécurité sur la plateforme
+
 # TABLEAU RECAP :
 
 |               ID               |             Story               | MVP |
@@ -172,3 +203,6 @@
 |LUD 007                         | Proposer une adhesion           | :x:                 |
 |DOM 003                         | Localiser des points a embellir | :white_check_mark:  |
 |DOM 010                         | Suivre un utilisateur           | :x:                 |
+|SOC 001 / SOC 004               | Inscription, connexion & mot de.| :white_check_mark:  |
+|SOC 002 / SOC 003               | Profil & centres d'intérêt      | :white_check_mark:  |
+|SOC 005 / SOC 006               | Amis & blocage d'utilisateurs   |:white_check_mark:   |
