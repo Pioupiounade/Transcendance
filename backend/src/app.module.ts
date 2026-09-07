@@ -10,10 +10,11 @@ import { InterestsModule } from './interests/interests.module';
 import { FriendRequestsModule } from './friend-requests/friend-requests.module';
 import { FriendshipsModule } from './friendships/friendships.module';
 import { ParticipationsModule } from './participations/participations.module';
+import { AuthModule } from './auth/auth.module';
 
 
 @Module({
-  imports: [PrismaModule, UsersModule, OrganizationsModule, ActionsModule, ProfilesModule, InterestsModule, FriendRequestsModule, FriendshipsModule, ParticipationsModule],
+  imports: [PrismaModule, AuthModule, UsersModule, OrganizationsModule, ActionsModule, ProfilesModule, InterestsModule, FriendRequestsModule, FriendshipsModule, ParticipationsModule],
   controllers: [AppController],
   providers: [AppService],
 })
