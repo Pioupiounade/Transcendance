@@ -151,6 +151,74 @@
           je veux **garder un lien avec les voisins que j'ai rencontres**
           afin de faire d'autres choses sympas ensemble
 
+
+# Socle Technique & Utilisateurs
+
+## AVANT :
+
+   - SOC - 001 : En tant que visiteur
+        je veux **créer un compte et me connecter**
+        afin d'accéder aux fonctionnalités de la plateforme
+
+   - SOC - 002 : En tant qu'utilisateur connecté
+        je veux **éditer mon profil (nom, bio, photo)**
+        afin de me présenter aux voisins
+
+   - SOC - 003 : En tant qu'utilisateur connecté
+        je veux **sélectionner mes centres d'intérêt**
+        afin de découvrir des activités adaptées à mes goûts
+
+   - SOC - 004 : En tant qu'utilisateur connecté
+        je veux **modifier mon mot de passe**
+        afin de sécuriser mon compte
+
+## APRES :
+
+   - SOC - 005 : En tant qu'utilisateur connecté
+        je veux **envoyer et accepter des demandes d'amis**
+        afin de garder le contact avec les personnes rencontrées
+
+   - SOC - 006 : En tant qu'utilisateur connecté
+        je veux **bloquer un utilisateur indésirable**
+        afin de préserver ma tranquillité et ma sécurité sur la plateforme
+
+# Marc - Le Moderateur de la plateforme
+
+## GESTION DU CONTENU :
+
+   - MOD - 001 : En tant que moderateur
+        je veux **voir la liste des actions en attente de validation**
+        afin de verifier leur conformite avec la charte du quartier
+
+   - MOD - 002 : En tant que moderateur
+        je veux **approuver ou rejeter une action proposee**
+        afin de garantir la qualite et la securite des activites publiees
+
+   - MOD - 003 : En tant que moderateur
+        je veux **consulter les contenus et signalements de la communaute**
+        afin de moderer les propos inappropries et maintenir un espace bienveillant
+
+
+# Sophie - L'Administratrice de la plateforme
+
+## GESTION DE LA PLATEFORME :
+
+   - ADM - 001 : En tant qu'administratrice
+        je veux **gerer le statut des comptes utilisateurs (suspendre, reactiver, supprimer)**
+        afin de faire respecter le reglement et gerer les demandes de suppression
+
+   - ADM - 002 : En tant qu'administratrice
+        je veux **valider, suspendre ou fermer des organisations**
+        afin de m'assurer que seules les structures legitimes operent sur la plateforme
+
+   - ADM - 003 : En tant qu'administratrice
+        je veux **attribuer les roles (utilisateur, moderateur, administrateur)**
+        afin de deleguer les taches de moderation a des membres de confiance
+
+   - ADM - 004 : En tant qu'administratrice
+        je veux **acceder au tableau de bord avec les metriques globales de la plateforme**
+        afin de suivre l'activite et la sante globale de la communaute
+
 # TABLEAU RECAP :
 
 |               ID               |             Story               | MVP |
@@ -172,3 +240,9 @@
 |LUD 007                         | Proposer une adhesion           | :x:                 |
 |DOM 003                         | Localiser des points a embellir | :white_check_mark:  |
 |DOM 010                         | Suivre un utilisateur           | :x:                 |
+|MOD 001-MOD 002                 | Valider/Rejeter une action      | :white_check_mark:  |
+|MOD 003                         | Traiter les signalements        | :x:                 |
+|ADM 001                         | Gerer le statut des comptes     | :white_check_mark:  |
+|ADM 002                         | Gerer les organisations         | :white_check_mark:  |
+|ADM 003                         | Gerer les roles d'acces         | :white_check_mark:  |
+|ADM 004                         | Tableau de bord administrateur  | :white_check_mark:  |

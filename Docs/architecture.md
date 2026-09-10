@@ -214,7 +214,28 @@ CategoriesModule
 
 -> Les principales menaces et les mecanismes prevus pour la protection de l'application
 
-## 11. Deployment
+### 10.1 Autorisations et Rôles (RBAC)
+
+La plateforme implémente un contrôle d'accès basé sur les rôles (RBAC) côté frontend et backend :
+
+- **USER (Habitant) :**
+  - Créer et gérer ses propres actions de quartier.
+  - Participer aux actions validées.
+  - Gérer son profil personnel, ses centres d'intérêt et ses demandes d'amis.
+  - Créer et administrer des organisations de quartier.
+
+- **MODERATOR (Modérateur) :**
+  - Dispose de toutes les fonctionnalités d'un **USER**.
+  - Examiner les actions soumises et modifier leur statut (`approved` / `rejected`).
+  - Accéder à la file de modération et aux signalements de la communauté.
+
+- **ADMIN (Administrateur) :**
+  - Accès complet à l'administration du système.
+  - Gérer le cycle de vie des comptes utilisateurs (ex. passer le statut à `suspended` ou `deactivated`).
+  - Modérer les organisations et modifier les paramètres globaux de la plateforme.
+  - Consulter les métriques globales et les journaux d'activité.
+  
+  ## 11. Deployment
 
 -> Comment lancer l'application, son exposition en HTTPS
 
