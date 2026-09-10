@@ -31,7 +31,7 @@
         - Update the organization -> only the CREATOR of the organization, a MANAGER or OWNER can update the information ->**to be corrected when authentification is done***
         - Suspend the organization -> only an ADMIN can -> **to be corrected when authentification is done***
         - Deactivate the organization -> only ADMIN, CREATOR of the organization,  a MANAGER or OWNER -> **to be corrected when authentification is done***
-        - Reactivatie the organization : -> **to be corrected when authentification is done***
+        - Reactivate the organization : -> **to be corrected when authentification is done***
             -> if the account was deactivated, both ADMIN, CREATOR of the organization, a MANAGER or OWNER
             -> if the account was suspended, only and ADMIN can
 
@@ -111,7 +111,7 @@
 
 ## Participations :
 
-   - Mandatory fields : None are manuallr entered
+   - Mandatory fields : None are manually entered
    - Methods :
         - Participate to an action -> USER should be ACTIVE, action should exist and be PENDING, current participants = max - 1, only one participation by USER, create participation
         - Cancel participation to an action -> USER should be ACTIVE, suscribed to the action, action should exist and should be PENDING, delete the participation
