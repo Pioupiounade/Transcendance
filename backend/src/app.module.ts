@@ -14,7 +14,18 @@ import { AuthModule } from './auth/auth.module';
 
 
 @Module({
-  imports: [PrismaModule, AuthModule, UsersModule, OrganizationsModule, ActionsModule, ProfilesModule, InterestsModule, FriendRequestsModule, FriendshipsModule, ParticipationsModule],
+  imports: [
+    AuthModule,
+    PrismaModule,
+    AuthModule,
+    UsersModule,
+    OrganizationsModule,
+    ActionsModule,
+    ProfilesModule,
+    InterestsModule,
+    FriendRequestsModule,
+    FriendshipsModule,
+    ParticipationsModule],
   controllers: [AppController],
   providers: [AppService],
 })

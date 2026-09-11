@@ -52,6 +52,18 @@ export class UsersService {
     };
   }
 
+  async findOneByEmail(email: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { email},
+    });
+
+    if (!user) {
+      return null;
+    }
+
+    return user;
+  }
+
   //3. recupere un utilisateur grace a son id
   async findOne(id: string) { // Nest JS recupere l'id de l'URL comme un string
     const user = await this.prisma.user.findUnique({
