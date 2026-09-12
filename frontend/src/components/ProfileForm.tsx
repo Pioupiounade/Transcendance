@@ -75,7 +75,7 @@ export const ProfilePage = () => {
             value={formData.location}
             onChange={handleChange}
             required
-            placeholder="e.g. Saint-Cyprien, Toulouse"
+            placeholder="e.g. Montmartre, Paris"
           />
           <div className="help" style={{ marginTop: '4px' }}>
             <svg className="ic" viewBox="0 0 24 24">
@@ -83,7 +83,6 @@ export const ProfilePage = () => {
               <line x1="12" y1="16" x2="12" y2="12"></line>
               <line x1="12" y1="8" x2="12.01" y2="8"></line>
             </svg>
-            <span>Internal purposes only. Never visible to other users.</span>
           </div>
 
           {/* Profile Role */}
@@ -113,7 +112,7 @@ export const ProfilePage = () => {
           {/* Submit Button */}
           <div style={{ marginTop: '24px' }}>
             <button type="submit" className="btn btn--primary btn--block btn--l">
-              Save Changes
+              Save
             </button>
           </div>
         </form>
