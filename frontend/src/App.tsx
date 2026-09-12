@@ -1,11 +1,11 @@
-import { ProfileForm } from './components/ProfileForm';
-import './App.css';
+import React from 'react';
+import { ProfilePage } from './components/ProfileForm';
 
 function App() {
   return (
-    <main>
-      <ProfileForm />
-    </main>
+    <div>
+      <ProfilePage />
+    </div>
   );
 }
 

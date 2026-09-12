@@ -1,15 +1,16 @@
 import React, { useState } from 'react';
 import type { UserProfile } from '../types/profile';
-import './ProfileForm.css';
 
-export const ProfileForm = () => {
+export const ProfilePage = () => {
+  // Local state holding the profile form data
   const [formData, setFormData] = useState<UserProfile>({
     username: '',
-    email: '',
+    location: '',
     bio: '',
     profileType: 'CITIZEN',
   });
 
+  // Handle inputs, select, and textarea updates
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
@@ -20,72 +21,103 @@ export const ProfileForm = () => {
     });
   };
 
+  // Handle form submission
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Datos listos para enviar al backend:', formData);
-    alert('Perfil guardado localmente');
+    console.log('Ready to send to backend API:', formData);
+    alert(`Profile saved for @${formData.username}`);
   };
 
   return (
-    <form onSubmit={handleSubmit} className="profile-form">
-      <h2>Create / Edit Profile</h2>
-
-      <div className="form-group">
-        <label htmlFor="username">Username:</label>
-        <input
-          type="text"
-          id="username"
-          name="username"
-          value={formData.username}
-          onChange={handleChange}
-          required
-          className="form-input"
-        />
+    <main className="profile-page">
+      {/* 1. Top Cover Banner */}
+      <div className="profile-cover">
+        <div className="scene" />
       </div>
 
-      <div className="form-group">
-        <label htmlFor="email">Email:</label>
-        <input
-          type="email"
-          id="email"
-          name="email"
-          value={formData.email}
-          onChange={handleChange}
-          required
-          className="form-input"
-        />
+      {/* 2. Header with Avatar & User Intro */}
+      <div className="profile-head">
+        <div className="profile-avatar avatar">
+          AL
+        </div>
+        <div className="profile-name">
+          <h1>My Profile</h1>
+        </div>
+        <p>Manage your account info and neighborhood preferences.</p>
       </div>
 
-      <div className="form-group">
-        <label htmlFor="profileType">Profile Type:</label>
-        <select
-          id="profileType"
-          name="profileType"
-          value={formData.profileType}
-          onChange={handleChange}
-          className="form-input"
-        >
-          <option value="CITIZEN">Citizen</option>
-          <option value="ASSOCIATION">Association</option>
-          <option value="MERCHANT">Merchant</option>
-        </select>
-      </div>
+      {/* 3. Main Form Container */}
+      <div style={{ marginTop: '24px', maxWidth: '640px', margin: '24px auto 0' }}>
+        <form onSubmit={handleSubmit} className="panel edit-fields">
+          <h2>Edit Profile</h2>
+          <p style={{ marginBottom: '16px', color: 'var(--muted)' }}>
+            Fields marked with * are required.
+          </p>
 
-      <div className="form-group">
-        <label htmlFor="bio">Bio:</label>
-        <textarea
-          id="bio"
-          name="bio"
-          value={formData.bio}
-          onChange={handleChange}
-          rows={3}
-          className="form-input"
-        />
-      </div>
+          {/* Username (Required & Unique) */}
+          <label htmlFor="username">Username *</label>
+          <input
+            type="text"
+            id="username"
+            name="username"
+            value={formData.username}
+            onChange={handleChange}
+            required
+            placeholder="e.g. lennox"
+          />
 
-      <button type="submit" className="form-button">
-        Save Profile
-      </button>
-    </form>
+          {/* Location (Required & Private) */}
+          <label htmlFor="location">Location *</label>
+          <input
+            type="text"
+            id="location"
+            name="location"
+            value={formData.location}
+            onChange={handleChange}
+            required
+            placeholder="e.g. Saint-Cyprien, Toulouse"
+          />
+          <div className="help" style={{ marginTop: '4px' }}>
+            <svg className="ic" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="16" x2="12" y2="12"></line>
+              <line x1="12" y1="8" x2="12.01" y2="8"></line>
+            </svg>
+            <span>Internal purposes only. Never visible to other users.</span>
+          </div>
+
+          {/* Profile Role */}
+          <label htmlFor="profileType">Neighborhood Role</label>
+          <select
+            id="profileType"
+            name="profileType"
+            value={formData.profileType}
+            onChange={handleChange}
+          >
+            <option value="CITIZEN">Citizen</option>
+            <option value="ASSOCIATION">Association</option>
+            <option value="MERCHANT">Merchant</option>
+          </select>
+
+          {/* Bio (Optional) */}
+          <label htmlFor="bio">Bio (Optional)</label>
+          <textarea
+            id="bio"
+            name="bio"
+            value={formData.bio}
+            onChange={handleChange}
+            rows={4}
+            placeholder="Tell us a little bit about yourself..."
+          />
+
+          {/* Submit Button */}
+          <div style={{ marginTop: '24px' }}>
+            <button type="submit" className="btn btn--primary btn--block btn--l">
+              Save Changes
+            </button>
+          </div>
+        </form>
+      </div>
+    </main>
   );
 };
