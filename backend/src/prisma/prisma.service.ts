@@ -13,11 +13,44 @@ import { PrismaPg } from '@prisma/adapter-pg';
 //
 // PrismaService hérite de PrismaClient grâce à "extends".
 
+// @Injectable()
+// export class PrismaService extends PrismaClient {
+//   constructor() {
+//     const adapter = new PrismaPg({
+//       connectionString: process.env.DATABASE_URL as string,
+//     });
+
+//     super({ adapter });
+//   }
+// }
+
+// @Injectable()
+// export class PrismaService extends PrismaClient {
+//   constructor() {
+//     console.log(
+//       'DATABASE_URL définie :',
+//       !!process.env.DATABASE_URL
+//     );
+
+//     const adapter = new PrismaPg({
+//       connectionString: process.env.DATABASE_URL as string,
+//     });
+
+//     super({ adapter });
+//   }
+// }
+
 @Injectable()
 export class PrismaService extends PrismaClient {
   constructor() {
+    const databaseUrl = process.env.DATABASE_URL;
+
+    if (!databaseUrl) {
+      throw new Error('DATABASE_URL is not defined');
+    }
+
     const adapter = new PrismaPg({
-      connectionString: process.env.DATABASE_URL as string,
+      connectionString: databaseUrl,
     });
 
     super({ adapter });

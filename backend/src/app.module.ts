@@ -1,4 +1,6 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
@@ -11,9 +13,22 @@ import { FriendRequestsModule } from './friend-requests/friend-requests.module';
 import { FriendshipsModule } from './friendships/friendships.module';
 import { ParticipationsModule } from './participations/participations.module';
 
-
 @Module({
-  imports: [PrismaModule, UsersModule, OrganizationsModule, ActionsModule, ProfilesModule, InterestsModule, FriendRequestsModule, FriendshipsModule, ParticipationsModule],
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
+
+    PrismaModule,
+    UsersModule,
+    OrganizationsModule,
+    ActionsModule,
+    ProfilesModule,
+    InterestsModule,
+    FriendRequestsModule,
+    FriendshipsModule,
+    ParticipationsModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })
