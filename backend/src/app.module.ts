@@ -13,6 +13,7 @@ import { FriendRequestsModule } from './friend-requests/friend-requests.module';
 import { FriendshipsModule } from './friendships/friendships.module';
 import { ParticipationsModule } from './participations/participations.module';
 import { OrganizationmembersModule } from './organizationmembers/organizationmembers.module';
+import { PointtransactionModule } from './pointtransaction/pointtransaction.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { OrganizationmembersModule } from './organizationmembers/organizationmem
     FriendshipsModule,
     ParticipationsModule,
     OrganizationmembersModule,
+    PointtransactionModule,
   ],
   controllers: [AppController],
   providers: [AppService],
