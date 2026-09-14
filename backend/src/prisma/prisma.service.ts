@@ -16,17 +16,45 @@ dotenv.config();
 //
 // PrismaService hérite de PrismaClient grâce à "extends".
 
+// @Injectable()
+// export class PrismaService extends PrismaClient {
+//   constructor() {
+//     const adapter = new PrismaPg({
+//       connectionString: process.env.DATABASE_URL as string,
+//     });
+
+//     super({ adapter });
+//   }
+// }
+
+// @Injectable()
+// export class PrismaService extends PrismaClient {
+//   constructor() {
+//     console.log(
+//       'DATABASE_URL définie :',
+//       !!process.env.DATABASE_URL
+//     );
+
+//     const adapter = new PrismaPg({
+//       connectionString: process.env.DATABASE_URL as string,
+//     });
+
+//     super({ adapter });
+//   }
+// }
+
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
   constructor() {
-    const connectionString = process.env.DATABASE_URL;
+    const databaseUrl = process.env.DATABASE_URL;
 
-    if (!connectionString) {
-      throw new Error('DATABASE_URL is not defined in the environment variables.');
+    if (!databaseUrl) {
+      throw new Error('DATABASE_URL is not defined');
     }
 
-    const pool = new Pool({ connectionString });
-    const adapter = new PrismaPg(pool);
+    const adapter = new PrismaPg({
+      connectionString: databaseUrl,
+    });
 
     super({ adapter });
   }
