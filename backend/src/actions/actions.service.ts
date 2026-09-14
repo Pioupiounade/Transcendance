@@ -284,7 +284,7 @@ async findAll() {
           },
         });
 
-      isManagerOrOwner = membership?.status === MemberStatus.APPROVED &&
+      isManagerOrOwner = membership?.status === MemberStatus.ACTIVE &&
         (membership.role === RoleOrg.MANAGER || membership.role === RoleOrg.OWNER);
     }
 
@@ -374,7 +374,7 @@ async findAll() {
           },
         });
 
-      isManagerOrOwner = membership?.status === MemberStatus.APPROVED &&
+      isManagerOrOwner = membership?.status === MemberStatus.ACTIVE &&
         (membership.role === RoleOrg.MANAGER || membership.role === RoleOrg.OWNER);
     }
 
@@ -455,7 +455,7 @@ async findAll() {
           },
         });
 
-      isManagerOrOwner = membership?.status === MemberStatus.APPROVED &&
+      isManagerOrOwner = membership?.status === MemberStatus.ACTIVE &&
         (membership.role === RoleOrg.MANAGER || membership.role === RoleOrg.OWNER);
 
       if (organization.organization_status !== OrganizationStatus.ACTIVE && !isAdmin) {
@@ -547,7 +547,7 @@ async findAll() {
       });
 
       isManagerOrOwner =
-        membership?.status === MemberStatus.APPROVED &&
+        membership?.status === MemberStatus.ACTIVE &&
         (
           membership.role === RoleOrg.MANAGER ||
           membership.role === RoleOrg.OWNER
