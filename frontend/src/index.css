@@ -1149,8 +1149,8 @@ button:disabled {
   position: relative;
 }
 .profile-avatar {
-  width: 90px;
-  height: 90px;
+  width: 100px;
+  height: 100px;
   font-size: 30px;
   margin-top: -44px;
   position: relative;

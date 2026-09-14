@@ -1,60 +1,169 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import type { UserProfile } from '../types/profile';
 
-export const ProfilePage = () => {
-  // Local state holding the profile form data
+export const ProfileForm = () => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [geoLoading, setGeoLoading] = useState(false);
+
+  // Errores específicos por campo
+  const [avatarError, setAvatarError] = useState<string | null>(null);
+  const [usernameError, setUsernameError] = useState<string | null>(null);
+  const [locationError, setLocationError] = useState<string | null>(null);
+
   const [formData, setFormData] = useState<UserProfile>({
     username: '',
-    location: '',
-    bio: '',
-    profileType: 'CITIZEN',
+    location: null,
+    description: '',
+    visibility: 'PUBLIC',
+    profilePicture: '',
   });
 
-  // Handle inputs, select, and textarea updates
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
+
+    let sanitizedValue = value;
+    if (name === 'username') {
+      setUsernameError(null);
+      sanitizedValue = value
+        .toLowerCase()
+        .replace(/[^a-z0-9_]/g, '')
+        .slice(0, 15);
+    }
+
     setFormData({
       ...formData,
-      [name]: value,
+      [name]: sanitizedValue,
     });
   };
 
-  // Handle form submission
+  const handleDetectLocation = () => {
+    setLocationError(null);
+
+    if (!navigator.geolocation) {
+      setLocationError('Geolocation is not supported by your browser.');
+      return;
+    }
+
+    setGeoLoading(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        setFormData((prev) => ({
+          ...prev,
+          location: { latitude, longitude },
+        }));
+        setGeoLoading(false);
+      },
+      (err) => {
+        setGeoLoading(false);
+        setLocationError(
+          err.code === 1
+            ? 'Location permission denied in browser settings.'
+            : 'Unable to retrieve location coordinates.'
+        );
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  };
+
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setAvatarError(null);
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    e.target.value = '';
+
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      setAvatarError('Invalid file format. Only JPG, PNG, and WebP are allowed.');
+      return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      setAvatarError('Image exceeds the 2 MB limit.');
+      return;
+    }
+
+    setFormData((prev) => ({
+      ...prev,
+      profilePicture: URL.createObjectURL(file),
+    }));
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Ready to send to backend API:', formData);
-    alert(`Profile saved for @${formData.username}`);
+    setUsernameError(null);
+    setLocationError(null);
+
+    let hasError = false;
+
+    if (!/^[a-z0-9_]{4,15}$/.test(formData.username)) {
+      setUsernameError('Username must be 4 to 15 characters (letters, numbers, _).');
+      hasError = true;
+    }
+
+    if (!formData.location) {
+      setLocationError('Please set your neighborhood to find nearby initiatives.');
+      hasError = true;
+    }
+
+    if (hasError) return;
+
+    const payload = {
+      ...formData,
+      location: `POINT(${formData.location.longitude} ${formData.location.latitude})`,
+    };
+
+    console.log('Payload ready for PostGIS:', payload);
   };
 
   return (
     <main className="profile-page">
-      {/* 1. Top Cover Banner */}
-      <div className="profile-cover">
-        <div className="scene" />
-      </div>
 
-      {/* 2. Header with Avatar & User Intro */}
-      <div className="profile-head">
-        <div className="profile-avatar avatar">
-          AL
-        </div>
-        <div className="profile-name">
-          <h1>My Profile</h1>
-        </div>
-        <p>Manage your account info and neighborhood preferences.</p>
-      </div>
+      <div className="card panel edit-fields">
+        {/* Cabecera unificada: Avatar + Título */}
+        <div className="header-actions">
+          <div
+            className="profile-avatar avatar"
+            onClick={() => fileInputRef.current?.click()}
+            title="Click to change photo"
+          >
+            {formData.profilePicture ? (
+              <img
+                src={formData.profilePicture}
+                alt="Profile preview"
+                className="scene"
+              />
+            ) : (
+              <span>{formData.username ? formData.username.slice(0, 2).toUpperCase() : 'AL'}</span>
+            )}
+          </div>
 
-      {/* 3. Main Form Container */}
-      <div style={{ marginTop: '24px', maxWidth: '640px', margin: '24px auto 0' }}>
-        <form onSubmit={handleSubmit} className="panel edit-fields">
-          <h2>Edit Profile</h2>
-          <p style={{ marginBottom: '16px', color: 'var(--muted)' }}>
+          <h1>Profile Settings</h1>
+        </div>
+
+        {avatarError && (
+          <div className="help help--error">
+            <span>{avatarError}</span>
+          </div>
+        )}
+
+        <input
+          type="file"
+          ref={fileInputRef}
+          onChange={handleAvatarChange}
+          accept="image/png, image/jpeg, image/webp"
+          hidden
+        />
+
+        <form onSubmit={handleSubmit} noValidate>
+          <p className="lead">
             Fields marked with * are required.
           </p>
 
-          {/* Username (Required & Unique) */}
+          {/* Username */}
           <label htmlFor="username">Username *</label>
           <input
             type="text"
@@ -62,57 +171,71 @@ export const ProfilePage = () => {
             name="username"
             value={formData.username}
             onChange={handleChange}
-            required
-            placeholder="e.g. lennox"
+            placeholder="e.g. lennox_92"
           />
+          {usernameError && (
+            <div className="help help--error">
+              <span>{usernameError}</span>
+            </div>
+          )}
 
-          {/* Location (Required & Private) */}
-          <label htmlFor="location">Location *</label>
-          <input
-            type="text"
-            id="location"
-            name="location"
-            value={formData.location}
-            onChange={handleChange}
-            required
-            placeholder="e.g. Montmartre, Paris"
-          />
-          <div className="help" style={{ marginTop: '4px' }}>
-            <svg className="ic" viewBox="0 0 24 24">
-              <circle cx="12" cy="12" r="10"></circle>
-              <line x1="12" y1="16" x2="12" y2="12"></line>
-              <line x1="12" y1="8" x2="12.01" y2="8"></line>
-            </svg>
+          {/* Location */}
+          <label htmlFor="neighborhood-btn">Neighborhood *</label>
+          <div>
+            <button
+              type="button"
+              id="neighborhood-btn"
+              className="btn btn--secondary"
+              onClick={handleDetectLocation}
+              disabled={geoLoading}
+            >
+              {geoLoading ? 'Finding your area...' : '📍 Set my neighborhood'}
+            </button>
+
+            {formData.location && (
+              <div className="form__ok">
+                <span>✓ Neighborhood set</span>
+              </div>
+            )}
           </div>
 
-          {/* Profile Role */}
-          <label htmlFor="profileType">Neighborhood Role</label>
+          {locationError && (
+            <div className="help help--error">
+              <span>{locationError}</span>
+            </div>
+          )}
+
+          {/* Visibility */}
+          <label htmlFor="visibility">Profile Visibility</label>
           <select
-            id="profileType"
-            name="profileType"
-            value={formData.profileType}
+            id="visibility"
+            name="visibility"
+            value={formData.visibility}
             onChange={handleChange}
           >
-            <option value="CITIZEN">Citizen</option>
-            <option value="ASSOCIATION">Association</option>
-            <option value="MERCHANT">Merchant</option>
+            <option value="PUBLIC">Public</option>
+            <option value="PRIVATE">Private</option>
+            <option value="FRIENDS_ONLY">Friends Only</option>
           </select>
 
-          {/* Bio (Optional) */}
-          <label htmlFor="bio">Bio (Optional)</label>
+          {/* Description */}
+          <label htmlFor="description">Description (Optional)</label>
           <textarea
-            id="bio"
-            name="bio"
-            value={formData.bio}
+            id="description"
+            name="description"
+            value={formData.description}
             onChange={handleChange}
             rows={4}
+            maxLength={300}
             placeholder="Tell us a little bit about yourself..."
           />
+          <div className="help" style={{ justifyContent: 'flex-end' }}>
+            <span>{formData.description ? formData.description.length : 0} / 300</span>
+          </div>
 
-          {/* Submit Button */}
-          <div style={{ marginTop: '24px' }}>
+          <div className="form__submit">
             <button type="submit" className="btn btn--primary btn--block btn--l">
-              Save
+              Save Changes
             </button>
           </div>
         </form>
