@@ -202,7 +202,7 @@ export class OrganizationsService {
 
     const isCreator = organization.creator_id === BigInt(currentUserId);
 
-    const isManagerOrOwner = membership?.status === MemberStatus.APPROVED &&
+    const isManagerOrOwner = membership?.status === MemberStatus.ACTIVE &&
       (
         membership.role === RoleOrg.MANAGER ||
         membership.role === RoleOrg.OWNER
@@ -315,7 +315,7 @@ export class OrganizationsService {
 
     const isCreator = organization.creator_id === BigInt(currentUserId);
 
-    const isManagerOrOwner = membership?.status === MemberStatus.APPROVED &&
+    const isManagerOrOwner = membership?.status === MemberStatus.ACTIVE &&
       (
         membership.role === RoleOrg.MANAGER ||
         membership.role === RoleOrg.OWNER
@@ -388,7 +388,7 @@ export class OrganizationsService {
       organization.creator_id === BigInt(currentUserId);
 
     const isManagerOrOwner =
-      membership?.status === MemberStatus.APPROVED &&
+      membership?.status === MemberStatus.ACTIVE &&
       (
         membership.role === RoleOrg.MANAGER ||
         membership.role === RoleOrg.OWNER

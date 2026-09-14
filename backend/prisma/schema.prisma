@@ -272,8 +272,9 @@ enum ActionStatus {
 
 enum MemberStatus {
   PENDING
-  APPROVED
+  ACTIVE
   REJECTED
+  BANNED
 }
 
 enum Category {
