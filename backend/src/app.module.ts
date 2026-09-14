@@ -12,6 +12,7 @@ import { InterestsModule } from './interests/interests.module';
 import { FriendRequestsModule } from './friend-requests/friend-requests.module';
 import { FriendshipsModule } from './friendships/friendships.module';
 import { ParticipationsModule } from './participations/participations.module';
+import { OrganizationmembersModule } from './organizationmembers/organizationmembers.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { ParticipationsModule } from './participations/participations.module';
     FriendRequestsModule,
     FriendshipsModule,
     ParticipationsModule,
+    OrganizationmembersModule,
   ],
   controllers: [AppController],
   providers: [AppService],
