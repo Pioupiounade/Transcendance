@@ -272,8 +272,9 @@ enum ActionStatus {
 
 enum MemberStatus {
   PENDING
-  APPROVED
+  ACTIVE
   REJECTED
+  BANNED
 }
 
 enum Category {
@@ -320,10 +321,12 @@ enum OrganizationStatus {
 }
 
 enum PointReason {
-  ACTION_CREATED
   ACTION_COMPLETED
   ACTION_PARTICIPATED
+  ACTION_PARTICIPANTS
   ORGANIZATION_JOINED
+  USER_SUSPENDED
+  USER_BANNED
 }
 
 enum PiouPiouStatus {
