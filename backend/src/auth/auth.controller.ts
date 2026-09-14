@@ -2,7 +2,7 @@ import { Body, Controller, Post, HttpCode, HttpStatus, UseGuards } from '@nestjs
 import { AuthService } from './auth.service';
 import { CreateUserDto } from '../users/dto/create-user.dto';
 import { LoginDto } from './dto/login.dto';
-//import { JwtAuthGuard } from '../guards/jwt-auth.guard';
+import { JwtAuthGuard } from './guard/jwt-auth-guard';
 
 @Controller('auth')
 export class AuthController {
@@ -19,7 +19,7 @@ export class AuthController {
 		return this.authService.login(dto.email, dto.password);
 	}
 
-	//@UseGuards(JwtAuthGuard)
+	@UseGuards(JwtAuthGuard)
 	@Post('logout')
 	@HttpCode(HttpStatus.OK)
 	logout() {
