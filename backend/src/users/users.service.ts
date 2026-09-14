@@ -24,10 +24,11 @@ export class UsersService {
 
   //2. hasher le mdp - creer le nouvel utilisateur - l'id se genere automatiquement
   async create(data: CreateUserDto) {
+    const email = data.email.toLowerCase(); // Convert email to lowercase
   
     const existingUser = await this.prisma.user.findUnique({
       where: {
-        email: data.email,
+        email: email,
       },
     });
 
@@ -39,7 +40,7 @@ export class UsersService {
 
     const createdUser = await this.prisma.user.create({
       data: {
-        email: data.email,
+        email: email,
         password_hash,
       },
     });
@@ -54,7 +55,7 @@ export class UsersService {
 
   async findOneByEmail(email: string) {
     const user = await this.prisma.user.findUnique({
-      where: { email},
+      where: { email: email.toLowerCase() },
     });
 
     if (!user) {
@@ -72,7 +73,7 @@ export class UsersService {
       },
     });
 
-    if(!user) {
+    if (!user) {
       throw new NotFoundException('User not found');
     }
     
@@ -88,10 +89,11 @@ export class UsersService {
 
   //4. mettre a jour l'adresse mail
   async updateEmail(id: string, data: UpdateUserDto) {
+    const email = data.email?.toLowerCase(); // Convert email to lowercase
     if (data.email) {
       const existingUser = await this.prisma.user.findUnique({
         where: {
-          email: data.email,
+          email: email,
         },
       });
 
@@ -105,7 +107,7 @@ export class UsersService {
         user_id: BigInt(id),
       },
       data: {
-        email:data.email,
+        email: email,
       },
     });
     

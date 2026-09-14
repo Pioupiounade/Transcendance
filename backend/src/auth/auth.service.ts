@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
 import { CreateUserDto } from '../users/dto/create-user.dto';
@@ -31,16 +31,16 @@ export class AuthService {
 	async login(email: string, password: string) {
 		const user = await this.usersService.findOneByEmail(email);
 		if (!user) {
-			throw new Error('Invalid Identifiers');
+			throw new UnauthorizedException('Invalid credentials');
 		}
 
 		const isPasswordValid = await argon2.verify(user.password_hash, password);
 		if (!isPasswordValid) {
-			throw new Error('Invalid Identifiers');
+			throw new UnauthorizedException('Invalid credentials');
 		}
 
 		const token = await this.jwtService.signAsync({
-			id: user.user_id,
+			id: user.user_id.toString(),
 			email: user.email,
 			role: user.role,
 		});
@@ -54,5 +54,9 @@ export class AuthService {
 			},
 			token,
 		};
+	}
+	
+	async logout() {
+		return { message: 'Logout successful' };
 	}
 }

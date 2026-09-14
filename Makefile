@@ -4,7 +4,10 @@ COMPOSE = docker compose -f docker/docker-compose.yml
 all: up
 
 up:
-	$(COMPOSE) up -d --build
+	$(COMPOSE) up -d
+
+uplogs:
+	$(COMPOSE) up
 
 down:
 	$(COMPOSE) down
