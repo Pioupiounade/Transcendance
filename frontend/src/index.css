@@ -1152,8 +1152,18 @@ button:disabled {
   width: 100px;
   height: 100px;
   font-size: 30px;
-  margin-top: -44px;
+  margin-top: 0;
   position: relative;
+  border-radius: 50%;
+  overflow: hidden;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.profile-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 .profile-name {
   display: flex;

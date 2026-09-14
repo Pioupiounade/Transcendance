@@ -5,7 +5,7 @@ export const ProfileForm = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [geoLoading, setGeoLoading] = useState(false);
 
-  // Errores específicos por campo
+  // Field-specific validation errors
   const [avatarError, setAvatarError] = useState<string | null>(null);
   const [usernameError, setUsernameError] = useState<string | null>(null);
   const [locationError, setLocationError] = useState<string | null>(null);
@@ -60,7 +60,7 @@ export const ProfileForm = () => {
         setGeoLoading(false);
         setLocationError(
           err.code === 1
-            ? 'Location permission denied in browser settings.'
+            ? 'Please allow to access your location to find nearby initiatives.'
             : 'Unable to retrieve location coordinates.'
         );
       },
@@ -121,9 +121,8 @@ export const ProfileForm = () => {
 
   return (
     <main className="profile-page">
-
       <div className="card panel edit-fields">
-        {/* Cabecera unificada: Avatar + Título */}
+        {/* Unified header: Avatar and title */}
         <div className="header-actions">
           <div
             className="profile-avatar avatar"
@@ -159,7 +158,7 @@ export const ProfileForm = () => {
         />
 
         <form onSubmit={handleSubmit} noValidate>
-          <p className="lead">
+          <p className="help">
             Fields marked with * are required.
           </p>
 
