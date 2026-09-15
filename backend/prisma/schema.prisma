@@ -240,6 +240,7 @@ model PointTransaction {
   user_id              BigInt
   points               Int
   reason               PointReason
+  event_key            String      @unique
   created_at           DateTime    @default(now())
 
   // 2. Champs de relation Prisma
@@ -326,7 +327,7 @@ enum PointReason {
   ACTION_PARTICIPANTS
   ORGANIZATION_JOINED
   USER_SUSPENDED
-  USER_BANNED
+  USER_BANNED_FROM_ORG
 }
 
 enum PiouPiouStatus {
