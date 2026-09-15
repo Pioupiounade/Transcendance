@@ -241,10 +241,17 @@ async mySentRequests(currentUserId: string) {
     },
     include: {
         addressee: {
-        include: {
-            profile: true,
+        select: {
+            user_id: true,
+
+            profile: {
+            select: {
+                username: true,
+                profile_picture: true,
+            },
+            },
         },
-        },
+        }
     },
     });
 
@@ -283,9 +290,16 @@ async myReceivedRequests(currentUserId: string) {
     },
     include: {
         requester: {
-        include: {
-            profile: true,
-        },
+            select: {
+                user_id: true,
+
+                profile: {
+                select: {
+                    username: true,
+                    profile_picture: true,
+                },
+                },
+            },
         },
     },
     });

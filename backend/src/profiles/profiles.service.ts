@@ -33,8 +33,12 @@ async findOne(userId: string) {
       user_id: BigInt(userId),
     },
     include: {
-      user: true,
-    },
+      user: {
+        select: {
+          account_status: true,
+        },
+      },
+    }
   });
 
   if (!profile) {

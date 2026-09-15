@@ -121,8 +121,31 @@
 
 ## OrganizationMembers :
 
-
-
-
+ - Mandatory fields : None are manually entered
+ - Methods :
+     - Find a specific member by username with autofilling completion
+     - Get all the active members of the organization (information is public, not need to make it private)
+     - Get all the members (active, banned, pending, rejected) of the organization (information available for manager, owner and admin only)
+     - Find all the organizations the member is part of -> the user should be active
+     - Add a user to an organization -> User be ACTIVEm, not already a member, ADMIN, ADMIN of the organization
+     - Approve / Deny the membership request -> User be ACTIVE, ADMIN, ADMIN of the organization, request must be pending
+     - Remove a user from an organization -> User be ACTIVE, ADMIN, ADMIN of the organization
+     - Ban a user from an organization -> User be ACTIVE, ADMIN, ADMIN of the organization
+     - Join an organization -> User must be ACTIVE, must not have been banned from the organization, the organization should be active.
+     - Leave an organization -> User must be ACTIVE, member of the organization, the organization should be active.
+     - Members can't ban themselves and last admin can't leave if the orgnanization is still active
+     - Promote member to manager -> owner and admin can, should be active, org and users are active, users is not banned. 
+     - Demote manager to member -> owner and admin can, should be active, org and user are active, user is not banned. 
+     - Transfer ownership -> owner and admin can, should be active, org and user are active, user is not banned. previous owner becomes a regular user and should be promoted again to become an admin.
 
 ## Points Transactions :
+
+
+     - Only active users can get rewarded. The connected organizations should be active.
+     - Created action is completed -> +20 points
+     - Partipate to a completed action -> +10 points
+     - Points for completed action creator by participant -> +5 points
+     - Organization gets new member -> +5 points
+     - User gets suspended -> -50 points
+     - User gets banned from organization -> -15 points
+     - only ADMIN can manually add points
