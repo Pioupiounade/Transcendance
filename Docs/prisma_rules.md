@@ -140,12 +140,20 @@
 
 ## Points Transactions :
 
-
      - Only active users can get rewarded. The connected organizations should be active.
-     - Created action is completed -> +20 points
-     - Partipate to a completed action -> +10 points
-     - Points for completed action creator by participant -> +5 points
-     - Organization gets new member -> +5 points
-     - User gets suspended -> -50 points
-     - User gets banned from organization -> -15 points
-     - only ADMIN can manually add points
+     - Get the number of points of a user
+     - Display the transaction history of a user (admin and own user can)
+
+     Created action is completed     ACTION_COMPLETED     +20 créateur
+     Partipate to a completed action ACTION_PARTICIPATED  +10 participant
+     Points for completed action     ACTION_PARTICIPANTS  +5 créateur / participant
+
+     Organization gets new member      ORGANIZATION_MEMBER_JOINED      +5 owner
+     Organization members leaves       ORGANIZATION_MEMBER_LEFT        -5 owner
+     Organization members is removed   ORGANIZATION_MEMBER_REMOVED     -5 owner
+     Organization members is banned    ORGANIZATION_MEMBER_BANNED      -5 owner
+
+     User gets suspended                USER_SUSPENDED                 -50 user
+     User gets banned from organization USER_BANNED_FROM_ORGANIZATION  -15 user
+
+     only ADMIN can manually adjust points ADMIN_ADJUSTMENT               +/-X user
