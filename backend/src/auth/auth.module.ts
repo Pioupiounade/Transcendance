@@ -4,10 +4,13 @@ import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { UsersModule } from '../users/users.module';
 import { JwtStrategy } from './strategy/jwt.strategy';
-import { JwtAuthGuard } from './guard/jwt-auth-guard';
+import { JwtRefreshStrategy } from './strategy/jwt-refresh.strategy';
+import { JwtAuthGuard } from './guards/jwt-auth-guard';
+import { PrismaModule } from '../prisma/prisma.module';
 
 @Module({
   imports: [
+    PrismaModule,
     UsersModule,
     JwtModule.register({
       global: true,
@@ -15,8 +18,8 @@ import { JwtAuthGuard } from './guard/jwt-auth-guard';
       signOptions: { expiresIn: '7d' },
     }),
   ],
-  providers: [AuthController, AuthService, JwtStrategy, JwtAuthGuard],
+  providers: [AuthController, AuthService, JwtStrategy, JwtRefreshStrategy, JwtAuthGuard],
   controllers: [AuthController],
-  exports: [AuthService, JwtStrategy, JwtAuthGuard],
+  exports: [AuthService, JwtStrategy, JwtRefreshStrategy, JwtAuthGuard],
 })
 export class AuthModule {}
