@@ -1,11 +1,14 @@
 import { Injectable, NotFoundException, BadRequestException, ForbiddenException, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { AccountStatus, RoleApp, RoleOrg, MemberStatus, OrganizationStatus } from '../../generated/prisma/client';
-
+import { PointtransactionService } from '../pointtransaction/pointtransaction.service';
 
 @Injectable()
 export class OrganizationmembersService {
-    constructor(private prisma: PrismaService) {}
+    constructor(
+        private prisma: PrismaService,
+        private pointtransactionService: PointtransactionService,
+    ) {}
 
 // Find a specific member by username
     async findMemberByUsername(organizationId: bigint, username: string) {
@@ -275,7 +278,7 @@ export class OrganizationmembersService {
      throw new ConflictException('A membership request for this user has already been rejected');
     }
 
-    return this.prisma.organizationMember.create({
+    const membership = await this.prisma.organizationMember.create({
         data: {
         organization_id: organizationId,
         user_id: targetUserId,
@@ -285,6 +288,13 @@ export class OrganizationmembersService {
         validated_at: new Date(),
         },
     });
+
+    await this.pointtransactionService.rewardOwnerForNewMember(
+    organizationId,
+    targetUserId,
+    );
+
+    return membership;
     }
 
 // Remove a user from an organization
@@ -362,7 +372,9 @@ export class OrganizationmembersService {
         }
     }
 
-    return this.prisma.organizationMember.delete({
+    const membershipCreatedAt = targetMembership.created_at;
+
+    const removedMembership = await this.prisma.organizationMember.delete({
         where: {
         organization_id_user_id: {
             organization_id: organizationId,
@@ -370,6 +382,14 @@ export class OrganizationmembersService {
         },
         },
     });
+
+    await this.pointtransactionService.penalizeOwnerForMemberRemoval(
+    organizationId,
+    targetUserId,
+    membershipCreatedAt,
+    );
+
+    return removedMembership;
     }
 
 // Ban a user from an organization
@@ -448,7 +468,9 @@ export class OrganizationmembersService {
         }
     }
 
-    return this.prisma.organizationMember.update({
+    const membershipCreatedAt = targetMembership.created_at;
+
+    const bannedMembership = await this.prisma.organizationMember.update({
         where: {
         organization_id_user_id: {
             organization_id: organizationId,
@@ -459,6 +481,20 @@ export class OrganizationmembersService {
         status: MemberStatus.BANNED,
         },
     });
+
+    await this.pointtransactionService.penalizeOwnerForMemberBan(
+    organizationId,
+    targetUserId,
+    membershipCreatedAt,
+    );
+
+    await this.pointtransactionService.penalizeBannedUser(
+    organizationId,
+    targetUserId,
+    membershipCreatedAt,
+    );
+
+    return bannedMembership;
     }
 
 // Join an organization
@@ -563,7 +599,7 @@ export class OrganizationmembersService {
         throw new BadRequestException('Target user is not active');
     }
 
-    return this.prisma.organizationMember.update({
+    const updatedMembership = await this.prisma.organizationMember.update({
         where: {
         organization_id_user_id: {
             organization_id: organizationId,
@@ -577,6 +613,13 @@ export class OrganizationmembersService {
         validated_at: new Date(),
         },
     });
+
+    await this.pointtransactionService.rewardOwnerForNewMember(
+    organizationId,
+    targetUserId,
+    );
+
+    return updatedMembership;
     }
 
 // Deny a membership request
@@ -669,7 +712,9 @@ export class OrganizationmembersService {
         throw new ForbiddenException('The owner must transfer ownership before leaving the organization');
     }
 
-    return this.prisma.organizationMember.delete({
+    const membershipCreatedAt = membership.created_at;
+
+    const removedMembership = await this.prisma.organizationMember.delete({
         where: {
         organization_id_user_id: {
             organization_id: organizationId,
@@ -677,6 +722,14 @@ export class OrganizationmembersService {
         },
         },
     });
+
+    await this.pointtransactionService.penalizeOwnerForMemberLeaving(
+    organizationId,
+    userId,
+    membershipCreatedAt,
+    );
+
+    return removedMembership;
     }
 
 // Helper pour checker que c'est le owner ou l'admin

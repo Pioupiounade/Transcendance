@@ -5,11 +5,15 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
 import * as argon2 from 'argon2';
 import { AccountStatus } from '../../generated/prisma/client';
+import { PointtransactionService } from '../pointtransaction/pointtransaction.service';
 
 @Injectable()
 export class UsersService {
 // UsersService recoit PrismaService par injection. 
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private pointtransactionService: PointtransactionService,
+  ) {}
 
 // Utllise this.prisma pour recuperer les Users dans PostgreSQL. Cette methode metier accede reellement a la BDD via Prisma
 //1. recuperer tous les utilisateurs
@@ -157,6 +161,10 @@ export class UsersService {
         account_status: AccountStatus.SUSPENDED,
       },
     });
+
+    await this.pointtransactionService.penalizeSuspendedUser(
+      BigInt(id),
+    );
 
     const { password_hash: _, ...safeUser } = updatedUser;
 

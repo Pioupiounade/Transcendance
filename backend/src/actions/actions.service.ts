@@ -4,11 +4,16 @@ import { CreateActionDto } from './dto/create-action.dto';
 import { UpdateActionDto } from './dto/update-action.dto';
 import { Category } from '../../generated/prisma/client';
 import { ActionStatus, OrganizationStatus, RoleApp, RoleOrg, MemberStatus, AccountStatus } from '../../generated/prisma/client';
+import { PointtransactionService } from '../pointtransaction/pointtransaction.service';
+
 
 @Injectable()
 export class ActionsService {
  
-  constructor(private prisma: PrismaService) {}
+  constructor(
+      private prisma: PrismaService,
+      private pointtransactionService: PointtransactionService,
+ ) {}
 
 //1. recuperer toutes les actions
 // GET /actions
@@ -566,6 +571,28 @@ async findAll() {
         status: ActionStatus.COMPLETED,
       },
     });
+
+        await this.pointtransactionService.rewardActionCompleted(
+      BigInt(id),
+    );
+
+        const participations = await this.prisma.participation.findMany({
+      where: {
+        action_id: BigInt(id),
+      },
+    });
+
+    for (const participation of participations) {
+      await this.pointtransactionService.rewardParticipation(
+        BigInt(id),
+        participation.user_id,
+      );
+
+      await this.pointtransactionService.rewardCreatorForParticipant(
+        BigInt(id),
+        participation.user_id,
+      );
+    }    
 
     return {
       ...updatedAction,
