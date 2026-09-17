@@ -52,10 +52,12 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
             </div>
 
             <div>
-              <h1 style={{ margin: 0 }}>@{profile.username}</h1>
+              <h1 style={{ margin: 0, fontSize: 'clamp(1rem, 4vw, 1.5rem)', wordBreak: 'break-word' }}>
+                @{profile.username}
+                </h1>
               {profile.location && (
                 <p className="help" style={{ margin: '4px 0 0' }}>
-                  📍 Neighborhood verified
+                  Neighborhood verified
                 </p>
               )}
             </div>

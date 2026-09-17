@@ -640,7 +640,7 @@ button:disabled {
   gap: 12px;
 }
 .card.panel {
-  min-width: 430px; /* Ajuste la valeur (ex: 320px, 380px, 400px) selon tes besoins */
+  min-width: 0;
   width: 100%;
 }
 .avatar {
@@ -1661,6 +1661,18 @@ button:disabled {
     content: "✏️";
     font-size: 1.1rem;
     line-height: 1;
+  }
+  .profile-page {
+    padding: 12px;
+    box-sizing: border-box;
+    width: 100%;
+  }
+  .card.panel {
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 18px 14px;
+    box-sizing: border-box;
   }
 }
 @media print {
