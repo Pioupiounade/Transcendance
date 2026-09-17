@@ -11,5 +11,6 @@ import { PointtransactionModule } from '../pointtransaction/pointtransaction.mod
   ],
   providers: [UsersService],
   controllers: [UsersController],
+  exports: [UsersService],
 })
 export class UsersModule {}

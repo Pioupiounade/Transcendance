@@ -33,6 +33,7 @@ model User {
   points         Int           @default(0)
   created_at     DateTime      @default(now())
   updated_at     DateTime      @updatedAt
+  refresh_token  String?
 
   // 2. Champs de relation Prisma
   profile Profile?

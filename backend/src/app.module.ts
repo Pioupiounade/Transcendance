@@ -14,6 +14,7 @@ import { FriendshipsModule } from './friendships/friendships.module';
 import { ParticipationsModule } from './participations/participations.module';
 import { OrganizationmembersModule } from './organizationmembers/organizationmembers.module';
 import { PointtransactionModule } from './pointtransaction/pointtransaction.module';
+import { AuthModule } from "./auth/auth.module";
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { PointtransactionModule } from './pointtransaction/pointtransaction.modu
     ParticipationsModule,
     OrganizationmembersModule,
     PointtransactionModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],

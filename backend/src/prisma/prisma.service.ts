@@ -2,10 +2,13 @@
 // j'importe le Prismaclient
 // j'importe l'adapter qui permet a Prisma de communique avec PostgreSQL
 
-import { Injectable } from '@nestjs/common';
+import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import { PrismaClient } from '../../generated/prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
+import { Pool } from 'pg'
+import * as dotenv from 'dotenv';
 
+dotenv.config();
 
 // J'applique le décorateur Injectable à PrismaService.
 // Cela indique à NestJS que cette classe peut être gérée
@@ -41,7 +44,7 @@ import { PrismaPg } from '@prisma/adapter-pg';
 // }
 
 @Injectable()
-export class PrismaService extends PrismaClient {
+export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
   constructor() {
     const databaseUrl = process.env.DATABASE_URL;
 
@@ -54,5 +57,13 @@ export class PrismaService extends PrismaClient {
     });
 
     super({ adapter });
+  }
+
+  async onModuleInit() {
+    await this.$connect();
+  }
+
+  async onModuleDestroy() {
+    await this.$disconnect();
   }
 }
