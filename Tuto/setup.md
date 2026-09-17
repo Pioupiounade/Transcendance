@@ -54,3 +54,8 @@ Quand je m'installe sur un nouvel ordi:
     cd backend
     npm run build
 ```
+
+-> lancer prisma
+```
+    npm run start:dev
+```
