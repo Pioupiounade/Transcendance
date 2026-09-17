@@ -125,12 +125,21 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({
     if (hasError) return;
 
     // Pasa los datos validados hacia App.tsx
-    onSave(formData);
+    const payload = {
+      ...formData,
+      location: formData.location 
+        ? `POINT(${formData.location.longitude} ${formData.location.latitude})` 
+        : null,
+    };
+    onSave(payload as unknown as UserProfile);
+
+    console.log('Payload ready for PostGIS:', payload);
   };
 
   return (
     <main className="profile-page">
       <div className="card panel edit-fields">
+        {/* Unified header: Avatar and title */}
         <div className="header-actions">
           <div
             className="profile-avatar avatar"
@@ -141,6 +150,7 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({
               <img
                 src={formData.profilePicture}
                 alt="Profile preview"
+                className="scene"
               />
             ) : (
               <span>{formData.username ? formData.username.slice(0, 2).toUpperCase() : 'AL'}</span>
