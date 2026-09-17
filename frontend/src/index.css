@@ -1455,6 +1455,7 @@ button:disabled {
   background: white;
   font: inherit;
   color: var(--ink);
+  resize: vertical;
 }
 @media (min-width: 1500px) {
   .map-layout {
