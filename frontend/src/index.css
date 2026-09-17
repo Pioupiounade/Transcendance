@@ -639,6 +639,10 @@ button:disabled {
   align-items: center;
   gap: 12px;
 }
+.card.panel {
+  min-width: 0;
+  width: 100%;
+}
 .avatar {
   display: inline-flex;
   align-items: center;
@@ -1480,7 +1484,7 @@ button:disabled {
     font-size: 22px;
   }
   .header-actions > .btn {
-    display: none;
+    display: inline-flex;
   }
   .dashboard {
     padding: 24px;
@@ -1642,6 +1646,34 @@ button:disabled {
   .stats {
     justify-content: space-between;
     gap: 8px;
+  }
+}
+@media (max-width: 500px) {
+  .profile-page .profile-edit-button {
+    min-width: 44px;
+    width: 44px;
+    padding: 0;
+    border-radius: 999px;
+  }
+  .profile-page .profile-edit-button .btn-label {
+    display: none;
+  }
+  .profile-page .profile-edit-button::before {
+    content: "✏️";
+    font-size: 1.1rem;
+    line-height: 1;
+  }
+  .profile-page {
+    padding: 12px;
+    box-sizing: border-box;
+    width: 100%;
+  }
+  .card.panel {
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 18px 14px;
+    box-sizing: border-box;
   }
 }
 @media print {

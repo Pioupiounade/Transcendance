@@ -1,7 +1,17 @@
 import React, { useState, useRef } from 'react';
 import type { UserProfile } from '../types/profile';
 
-export const ProfileForm = () => {
+interface ProfileFormProps {
+  initialData?: UserProfile;
+  onSave: (updatedProfile: UserProfile) => void;
+  onCancel: () => void;
+}
+
+export const ProfileForm: React.FC<ProfileFormProps> = ({
+  initialData,
+  onSave,
+  onCancel,
+}) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [geoLoading, setGeoLoading] = useState(false);
 
@@ -10,13 +20,16 @@ export const ProfileForm = () => {
   const [usernameError, setUsernameError] = useState<string | null>(null);
   const [locationError, setLocationError] = useState<string | null>(null);
 
-  const [formData, setFormData] = useState<UserProfile>({
-    username: '',
-    location: null,
-    description: '',
-    visibility: 'PUBLIC',
-    profilePicture: '',
-  });
+  // Inicia con los datos recibidos o valores por defecto
+  const [formData, setFormData] = useState<UserProfile>(
+    initialData || {
+      username: '',
+      location: null,
+      description: '',
+      visibility: 'PUBLIC',
+      profilePicture: '',
+    }
+  );
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
@@ -60,7 +73,7 @@ export const ProfileForm = () => {
         setGeoLoading(false);
         setLocationError(
           err.code === 1
-            ? 'Please allow to access your location to find nearby initiatives.'
+            ? 'Please allow access to your location to find nearby initiatives.'
             : 'Unable to retrieve location coordinates.'
         );
       },
@@ -111,10 +124,14 @@ export const ProfileForm = () => {
 
     if (hasError) return;
 
+    // Pasa los datos validados hacia App.tsx
     const payload = {
       ...formData,
-      location: `POINT(${formData.location.longitude} ${formData.location.latitude})`,
+      location: formData.location 
+        ? `POINT(${formData.location.longitude} ${formData.location.latitude})` 
+        : null,
     };
+    onSave(payload as unknown as UserProfile);
 
     console.log('Payload ready for PostGIS:', payload);
   };
@@ -232,8 +249,18 @@ export const ProfileForm = () => {
             <span>{formData.description ? formData.description.length : 0} / 300</span>
           </div>
 
-          <div className="form__submit">
-            <button type="submit" className="btn btn--primary btn--block btn--l">
+          <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
+            <button
+              type="button"
+              className="btn btn--secondary btn--block btn--l"
+              onClick={onCancel}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="btn btn--primary btn--block btn--l"
+            >
               Save Changes
             </button>
           </div>
