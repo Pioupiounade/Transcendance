@@ -1479,7 +1479,21 @@ button:disabled {
     font-size: 22px;
   }
   .header-actions > .btn {
+    display: inline-flex;
+  }
+  .profile-page .profile-edit-button {
+    min-width: 44px;
+    width: 44px;
+    padding: 0;
+    border-radius: 999px;
+  }
+  .profile-page .profile-edit-button .btn-label {
     display: none;
+  }
+  .profile-page .profile-edit-button::before {
+    content: "✏️";
+    font-size: 1.1rem;
+    line-height: 1;
   }
   .dashboard {
     padding: 24px;

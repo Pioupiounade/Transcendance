@@ -25,10 +25,14 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
 
   const handleConfirmDelete = async () => {
     setIsDeleting(true);
+
     try {
       await onDeleteAccount();
+      closeDeleteModal();
     } catch (error) {
       console.error('Failed to delete account:', error);
+      setIsDeleting(false);
+    } finally {
       setIsDeleting(false);
     }
   };
@@ -37,7 +41,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
     <main className="profile-page">
       <div className="card panel">
         {/* Profile header: Avatar, info, and edit action */}
-        <div className="header-actions" style={{ justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div className="header-actions" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
             <div className="profile-avatar avatar">
               {profile.profilePicture ? (
@@ -57,8 +61,13 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
             </div>
           </div>
 
-          <button type="button" className="btn btn--secondary" onClick={onEdit}>
-            Edit Profile
+          <button
+            type="button"
+            className="btn btn--secondary profile-edit-button"
+            onClick={onEdit}
+            aria-label="Edit profile"
+          >
+            <span className="btn-label">Edit Profile</span>
           </button>
         </div>
 
