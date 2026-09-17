@@ -1,0 +1,190 @@
+.
+├── backend
+│   ├── eslint.config.mjs
+│   ├── generated
+│   │   └── prisma
+│   │       ├── browser.ts
+│   │       ├── client.ts
+│   │       ├── commonInputTypes.ts
+│   │       ├── enums.ts
+│   │       ├── internal
+│   │       │   ├── class.ts
+│   │       │   ├── prismaNamespaceBrowser.ts
+│   │       │   └── prismaNamespace.ts
+│   │       ├── models
+│   │       │   ├── Action.ts
+│   │       │   ├── FriendRequest.ts
+│   │       │   ├── Friendship.ts
+│   │       │   ├── OrganizationMember.ts
+│   │       │   ├── Organization.ts
+│   │       │   ├── Participation.ts
+│   │       │   ├── PointTransaction.ts
+│   │       │   ├── Profile.ts
+│   │       │   ├── UserInterest.ts
+│   │       │   └── User.ts
+│   │       └── models.ts
+│   ├── nest-cli.json
+│   ├── package.json
+│   ├── package-lock.json
+│   ├── prisma
+│   │   ├── migrations
+│   │   │   ├── 20260807204622_init
+│   │   │   │   └── migration.sql
+│   │   │   ├── 20260808090935_add_point_system
+│   │   │   │   └── migration.sql
+│   │   │   ├── 20260815113328_add_action_lifecycle_statuses
+│   │   │   │   └── migration.sql
+│   │   │   ├── 20260815113653_update_images_by_default_in_action
+│   │   │   │   └── migration.sql
+│   │   │   ├── 20260815134438_add_action_lifecycle_statuses_corrected
+│   │   │   │   └── migration.sql
+│   │   │   ├── 20260815194609_add_min_max_participants_to_actions
+│   │   │   │   └── migration.sql
+│   │   │   ├── 20260816070330_changes_profile_table
+│   │   │   │   └── migration.sql
+│   │   │   ├── 20260816080851_changes_in_interest_handling
+│   │   │   │   └── migration.sql
+│   │   │   ├── 20260816102318_separate_friend_requests_friendships
+│   │   │   │   └── migration.sql
+│   │   │   ├── 20260816151518_add_blocker_id_in_friendship
+│   │   │   │   └── migration.sql
+│   │   │   └── migration_lock.toml
+│   │   └── schema.prisma
+│   ├── prisma.config.ts
+│   ├── README.md
+│   ├── src
+│   │   ├── actions
+│   │   │   ├── actions.controller.spec.ts
+│   │   │   ├── actions.controller.ts
+│   │   │   ├── actions.module.ts
+│   │   │   ├── actions.service.spec.ts
+│   │   │   ├── actions.service.ts
+│   │   │   └── dto
+│   │   │       ├── create-action.dto.ts
+│   │   │       └── update-action.dto.ts
+│   │   ├── app.controller.spec.ts
+│   │   ├── app.controller.ts
+│   │   ├── app.module.ts
+│   │   ├── app.service.ts
+│   │   ├── friend-requests
+│   │   │   ├── dto
+│   │   │   │   └── send-friend-request.dto.ts
+│   │   │   ├── friend-requests.controller.spec.ts
+│   │   │   ├── friend-requests.controller.ts
+│   │   │   ├── friend-requests.module.ts
+│   │   │   ├── friend-requests.service.spec.ts
+│   │   │   └── friend-requests.service.ts
+│   │   ├── friendships
+│   │   │   ├── friendships.controller.spec.ts
+│   │   │   ├── friendships.controller.ts
+│   │   │   ├── friendships.module.ts
+│   │   │   ├── friendships.service.spec.ts
+│   │   │   └── friendships.service.ts
+│   │   ├── interests
+│   │   │   ├── dto
+│   │   │   │   └── select-interest.dto.ts
+│   │   │   ├── interests.controller.spec.ts
+│   │   │   ├── interests.controller.ts
+│   │   │   ├── interests.module.ts
+│   │   │   ├── interests.service.spec.ts
+│   │   │   └── interests.service.ts
+│   │   ├── main.ts
+│   │   ├── organizations
+│   │   │   ├── dto
+│   │   │   │   ├── create-organization.dto.ts
+│   │   │   │   └── update-organization.dto.ts
+│   │   │   ├── organizations.controller.spec.ts
+│   │   │   ├── organizations.controller.ts
+│   │   │   ├── organizations.module.ts
+│   │   │   ├── organizations.service.spec.ts
+│   │   │   └── organizations.service.ts
+│   │   ├── participations
+│   │   │   ├── participations.controller.spec.ts
+│   │   │   ├── participations.controller.ts
+│   │   │   ├── participations.module.ts
+│   │   │   ├── participations.service.spec.ts
+│   │   │   └── participations.service.ts
+│   │   ├── prisma
+│   │   │   ├── prisma.module.ts
+│   │   │   ├── prisma.service.spec.ts
+│   │   │   └── prisma.service.ts
+│   │   ├── profiles
+│   │   │   ├── dto
+│   │   │   │   ├── create-profile.dto.ts
+│   │   │   │   └── update-profile.dto.ts
+│   │   │   ├── profiles.controller.spec.ts
+│   │   │   ├── profiles.controller.ts
+│   │   │   ├── profiles.module.ts
+│   │   │   ├── profiles.service.spec.ts
+│   │   │   └── profiles.service.ts
+│   │   └── users
+│   │       ├── dto
+│   │       │   ├── create-user.dto.ts
+│   │       │   ├── update-password.dto.ts
+│   │       │   └── update-user.dto.ts
+│   │       ├── users.controller.spec.ts
+│   │       ├── users.controller.ts
+│   │       ├── users.module.ts
+│   │       ├── users.service.spec.ts
+│   │       └── users.service.ts
+│   ├── test
+│   │   ├── app.e2e-spec.ts
+│   │   └── jest-e2e.json
+│   ├── tsconfig.build.json
+│   └── tsconfig.json
+├── docker
+│   ├── backend
+│   │   └── Dockerfile
+│   ├── docker-compose.yml
+│   ├── frontend
+│   │   └── Dockerfile
+│   └── Nginx
+│       ├── Dockerfile
+│       └── nginx.conf
+├── Docs
+│   ├── architecture.md
+│   ├── backlog.md
+│   ├── database.md
+│   ├── modules.md
+│   ├── personas.md
+│   ├── prisma_rules.md
+│   ├── todo.md
+│   ├── user_stories.md
+│   └── vision.md
+├── frontend
+│   ├── eslint.config.js
+│   ├── index.html
+│   ├── package.json
+│   ├── package-lock.json
+│   ├── public
+│   │   ├── favicon.svg
+│   │   └── icons.svg
+│   ├── README.md
+│   ├── src
+│   │   ├── App.css
+│   │   ├── App.tsx
+│   │   ├── assets
+│   │   │   ├── hero.png
+│   │   │   ├── react.svg
+│   │   │   └── vite.svg
+│   │   ├── index.css
+│   │   └── main.tsx
+│   ├── tsconfig.app.json
+│   ├── tsconfig.json
+│   ├── tsconfig.node.json
+│   └── vite.config.ts
+├── mockup
+│   ├── profile-page.svg
+│   ├── ui-mockup-poi-click.svg
+│   └── ui-mockup.svg
+├── package.json
+├── package-lock.json
+├── README.md
+├── tree_project.txt
+└── Tuto
+    ├── setup.md
+    ├── Suivi.md
+    ├── Utiliser_React.md
+    └── Utiliser_TypeScript.md
+
+46 directories, 142 files
