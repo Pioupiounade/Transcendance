@@ -639,6 +639,10 @@ button:disabled {
   align-items: center;
   gap: 12px;
 }
+.card.panel {
+  min-width: 430px; /* Ajuste la valeur (ex: 320px, 380px, 400px) selon tes besoins */
+  width: 100%;
+}
 .avatar {
   display: inline-flex;
   align-items: center;
