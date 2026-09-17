@@ -13,6 +13,12 @@ export class UsersController {
     return this.usersService.findAll();
   }
 
+  @Get('me')
+  getProfile() {
+    // This is a placeholder for getting the authenticated user's profile.
+    return { message: 'This endpoint will return the authenticated user\'s profile.' };
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.usersService.findOne(id);

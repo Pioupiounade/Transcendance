@@ -4,7 +4,10 @@ COMPOSE = docker compose -f docker/docker-compose.yml
 all: up
 
 up:
-	$(COMPOSE) up -d --build
+	$(COMPOSE) up -d
+
+uplogs:
+	$(COMPOSE) up
 
 down:
 	$(COMPOSE) down
@@ -14,9 +17,10 @@ re:
 	$(COMPOSE) up -d --build
 	@echo "Rebuilt and started containers."
 	@sleep 5
-	$(MAKE) db-push
+	$(MAKE) db-update
 
-db-push:
+db-update:
+	$(COMPOSE) exec -T backend npx npx prisma generate
 	$(COMPOSE) exec -T backend npx prisma db push
 
 logs:
