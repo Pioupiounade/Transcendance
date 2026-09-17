@@ -27,7 +27,9 @@ export class AuthService {
 
 		await this.updateRefreshDb(tokens.refresh_token, createdUser.user_id.toString());
 
-		const safeUser = await this.usersService.findOne(createdUser.user_id.toString());
+		const user = await this.usersService.findOne(createdUser.user_id.toString());
+
+		const { refresh_token, ...safeUser } = user;
 
 		return {
 			user: safeUser,
