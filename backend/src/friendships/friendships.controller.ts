@@ -1,45 +1,65 @@
-import { Controller, Get, Patch, Delete, Query, Param } from '@nestjs/common';
+import { Controller, Get, Patch, Delete, Query, Param, Req, UseGuards } from '@nestjs/common';
 import { FriendshipsService } from './friendships.service';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth-guard';
+
 
 @Controller('friendships')
 export class FriendshipsController {
     constructor(private friendshipsService: FriendshipsService) {}
 
+    @UseGuards(JwtAuthGuard)
     @Get('me')
     findMyFriends(
-        @Query('current_user_id') currentUserId: string,
+    @Req() req: any,
     ) {
-        return this.friendshipsService.findMyFriends(currentUserId);
+    return this.friendshipsService.findMyFriends(
+        req.user.id,
+    );
     }
 
+    @UseGuards(JwtAuthGuard)
     @Get('me/blocked')
     findBlockedFriends(
-        @Query('current_user_id') currentUserId: string,
+    @Req() req: any,
     ) {
-        return this.friendshipsService.findBlockedFriends(currentUserId);
+    return this.friendshipsService.findBlockedFriends(
+        req.user.id,
+    );
     }
 
+    @UseGuards(JwtAuthGuard)
     @Patch(':friendUserId/block')
     blockFriend(
-        @Param('friendUserId') friendUserId: string,
-        @Query('current_user_id') currentUserId: string,
+    @Req() req: any,
+    @Param('friendUserId') friendUserId: string,
     ) {
-        return this.friendshipsService.blockFriend(currentUserId, friendUserId);
+    return this.friendshipsService.blockFriend(
+        req.user.id,
+        friendUserId,
+    );
     }
 
+    @UseGuards(JwtAuthGuard)
     @Patch(':friendUserId/unblock')
     unblockFriend(
-        @Param('friendUserId') friendUserId: string,
-        @Query('current_user_id') currentUserId: string,
+    @Req() req: any,
+    @Param('friendUserId') friendUserId: string,
     ) {
-          return this.friendshipsService.unblockFriend(currentUserId, friendUserId);
+    return this.friendshipsService.unblockFriend(
+        req.user.id,
+        friendUserId,
+    );
     }
 
+    @UseGuards(JwtAuthGuard)
     @Delete(':friendUserId')
     removeFriend(
-        @Param('friendUserId') friendUserId: string,
-        @Query('current_user_id') currentUserId: string,
+    @Req() req: any,
+    @Param('friendUserId') friendUserId: string,
     ) {
-          return this.friendshipsService.removeFriend(currentUserId, friendUserId);
+    return this.friendshipsService.removeFriend(
+        req.user.id,
+        friendUserId,
+    );
     }
 }

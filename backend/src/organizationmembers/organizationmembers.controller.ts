@@ -1,5 +1,6 @@
-import { Controller, Get, Post, Patch, Delete, Param, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Param, BadRequestException, Req, UseGuards } from '@nestjs/common';
 import { OrganizationmembersService } from './organizationmembers.service';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth-guard';
 
 @Controller('organization-members')
 export class OrganizationmembersController {
@@ -32,14 +33,15 @@ export class OrganizationmembersController {
     );
   }
 
-  @Get('organization/:organizationId/memberships/:requesterId')
+  @UseGuards(JwtAuthGuard)
+  @Get('organization/:organizationId/memberships')
   findAllMemberships(
+    @Req() req: any,
     @Param('organizationId') organizationId: string,
-    @Param('requesterId') requesterId: string,
   ) {
     return this.organizationMembersService.findAllMemberships(
       this.toBigInt(organizationId, 'organizationId'),
-      this.toBigInt(requesterId, 'requesterId'),
+      BigInt(req.user.id),
     );
   }
 
@@ -50,127 +52,137 @@ export class OrganizationmembersController {
     );
   }
 
-  @Post('organization/:organizationId/member/:targetUserId/add/:requesterId')
+  @UseGuards(JwtAuthGuard)
+  @Post('organization/:organizationId/member/:targetUserId/add')
   addMember(
+    @Req() req: any,
     @Param('organizationId') organizationId: string,
     @Param('targetUserId') targetUserId: string,
-    @Param('requesterId') requesterId: string,
   ) {
     return this.organizationMembersService.addMember(
-      this.toBigInt(requesterId, 'requesterId'),
+      BigInt(req.user.id),
       this.toBigInt(organizationId, 'organizationId'),
       this.toBigInt(targetUserId, 'targetUserId'),
     );
   }
 
-  @Delete('organization/:organizationId/member/:targetUserId/remove/:requesterId')
+  @UseGuards(JwtAuthGuard)
+  @Delete('organization/:organizationId/member/:targetUserId/remove')
   removeMember(
+    @Req() req: any,
     @Param('organizationId') organizationId: string,
     @Param('targetUserId') targetUserId: string,
-    @Param('requesterId') requesterId: string,
   ) {
     return this.organizationMembersService.removeMember(
-      this.toBigInt(requesterId, 'requesterId'),
+      BigInt(req.user.id),
       this.toBigInt(organizationId, 'organizationId'),
       this.toBigInt(targetUserId, 'targetUserId'),
     );
   }
 
-  @Patch('organization/:organizationId/member/:targetUserId/ban/:requesterId')
+  @UseGuards(JwtAuthGuard)
+  @Patch('organization/:organizationId/member/:targetUserId/ban')
   banMember(
+    @Req() req: any,
     @Param('organizationId') organizationId: string,
     @Param('targetUserId') targetUserId: string,
-    @Param('requesterId') requesterId: string,
   ) {
     return this.organizationMembersService.banMember(
-      this.toBigInt(requesterId, 'requesterId'),
+      BigInt(req.user.id),
       this.toBigInt(organizationId, 'organizationId'),
       this.toBigInt(targetUserId, 'targetUserId'),
     );
   }
 
-  @Post('organization/:organizationId/join/:userId')
+  @UseGuards(JwtAuthGuard)
+  @Post('organization/:organizationId/join')
   joinOrganization(
+    @Req() req: any,
     @Param('organizationId') organizationId: string,
-    @Param('userId') userId: string,
   ) {
     return this.organizationMembersService.joinOrganization(
-      this.toBigInt(userId, 'userId'),
+      BigInt(req.user.id),
       this.toBigInt(organizationId, 'organizationId'),
     );
   }
 
-  @Patch('organization/:organizationId/member/:targetUserId/approve/:requesterId')
+  @UseGuards(JwtAuthGuard)
+  @Patch('organization/:organizationId/member/:targetUserId/approve')
   approveMembership(
+    @Req() req: any,
     @Param('organizationId') organizationId: string,
     @Param('targetUserId') targetUserId: string,
-    @Param('requesterId') requesterId: string,
   ) {
     return this.organizationMembersService.approveMembership(
-      this.toBigInt(requesterId, 'requesterId'),
+      BigInt(req.user.id),
       this.toBigInt(organizationId, 'organizationId'),
       this.toBigInt(targetUserId, 'targetUserId'),
     );
   }
 
-  @Patch('organization/:organizationId/member/:targetUserId/deny/:requesterId')
+  @UseGuards(JwtAuthGuard)
+  @Patch('organization/:organizationId/member/:targetUserId/deny')
   denyMembership(
+    @Req() req: any,
     @Param('organizationId') organizationId: string,
     @Param('targetUserId') targetUserId: string,
-    @Param('requesterId') requesterId: string,
   ) {
     return this.organizationMembersService.denyMembership(
-      this.toBigInt(requesterId, 'requesterId'),
+      BigInt(req.user.id),
       this.toBigInt(organizationId, 'organizationId'),
       this.toBigInt(targetUserId, 'targetUserId'),
     );
   }
 
-  @Delete('organization/:organizationId/leave/:userId')
+  @UseGuards(JwtAuthGuard)
+  @Delete('organization/:organizationId/leave')
   leaveOrganization(
+    @Req() req: any,
     @Param('organizationId') organizationId: string,
-    @Param('userId') userId: string,
   ) {
     return this.organizationMembersService.leaveOrganization(
-      this.toBigInt(userId, 'userId'),
+      BigInt(req.user.id),
       this.toBigInt(organizationId, 'organizationId'),
     );
   }
 
-  @Patch('organization/:organizationId/member/:targetUserId/promote/:requesterId')
+  @UseGuards(JwtAuthGuard)
+  @Patch('organization/:organizationId/member/:targetUserId/promote')
   promoteToManager(
+    @Req() req: any,
     @Param('organizationId') organizationId: string,
     @Param('targetUserId') targetUserId: string,
-    @Param('requesterId') requesterId: string,
   ) {
     return this.organizationMembersService.promoteToManager(
-      this.toBigInt(requesterId, 'requesterId'),
+      BigInt(req.user.id),
       this.toBigInt(organizationId, 'organizationId'),
       this.toBigInt(targetUserId, 'targetUserId'),
     );
   }
 
-  @Patch('organization/:organizationId/member/:targetUserId/demote/:requesterId')
+  @UseGuards(JwtAuthGuard)
+  @Patch('organization/:organizationId/member/:targetUserId/demote')
   demoteToMember(
+    @Req() req: any,
     @Param('organizationId') organizationId: string,
     @Param('targetUserId') targetUserId: string,
-    @Param('requesterId') requesterId: string,
   ) {
     return this.organizationMembersService.demoteToMember(
-      this.toBigInt(requesterId, 'requesterId'),
+      BigInt(req.user.id),
       this.toBigInt(organizationId, 'organizationId'),
       this.toBigInt(targetUserId, 'targetUserId'),
     );
   }
 
-  @Patch('organization/:organizationId/transfer-ownership/:newOwnerId/:requesterId')
+  @UseGuards(JwtAuthGuard)
+  @Patch('organization/:organizationId/transfer-ownership/:newOwnerId')
   transferOwnership(
+    @Req() req: any,
     @Param('organizationId') organizationId: string,
     @Param('newOwnerId') newOwnerId: string,
-    @Param('requesterId') requesterId: string,
   ) {
     return this.organizationMembersService.transferOwnership(
-      this.toBigInt(requesterId, 'requesterId'),
+      BigInt(req.user.id),
       this.toBigInt(organizationId, 'organizationId'),
       this.toBigInt(newOwnerId, 'newOwnerId'),
     );

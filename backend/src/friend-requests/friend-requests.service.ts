@@ -3,7 +3,6 @@ import { PrismaService } from '../prisma/prisma.service';
 import { SendFriendRequestDto } from './dto/send-friend-request.dto';
 import { FriendRequestStatus, FriendshipStatus, AccountStatus } from '../../generated/prisma/client';
 
-
 @Injectable()
 export class FriendRequestsService {
     constructor(private prisma: PrismaService) {}

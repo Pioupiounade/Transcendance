@@ -194,11 +194,11 @@ async findAll() {
   }
 
 //8. creer une nouvelle action
-  async create(data: CreateActionDto) {
+  async create(currentUserId: string, data: CreateActionDto) {
     const creator = await this.prisma.user.findUnique({
-     where: {
-      user_id: BigInt(data.creator_id),
-    },
+      where: {
+        user_id: BigInt(currentUserId),
+      },
     });
 
     if (!creator) {
@@ -209,41 +209,22 @@ async findAll() {
       throw new BadRequestException('Only an active user can create an action');
     }
 
-    if (data.organization_id) {
-      const organization = await this.prisma.organization.findUnique({
-        where: {
-          organization_id: BigInt(data.organization_id),
-        },
-      });
-
-      if (!organization) {
-        throw new NotFoundException('Organization not found');
-      }
-
-      if (organization.organization_status !== OrganizationStatus.ACTIVE) {
-        throw new BadRequestException('Only an active organization can create an action');
-      }
-}
     const createdAction = await this.prisma.action.create({
       data: {
         title: data.title,
         description: data.description,
-        creator_id: BigInt(data.creator_id),
-        organization_id: data.organization_id? BigInt(data.organization_id) : null,
-        location: data.location,
         category: data.category,
-        imagesList: data.imagesList,
-        scheduled_at: new Date(data.scheduled_at),
+        location: data.location,
+        scheduled_at: data.scheduled_at,
+        organization_id: data.organization_id
+          ? BigInt(data.organization_id)
+          : null,
+
+        creator_id: BigInt(currentUserId),
       },
     });
 
-    return {
-      ...createdAction,
-      action_id: createdAction.action_id.toString(),
-      creator_id: createdAction.creator_id.toString(),
-      organization_id: createdAction.organization_id?.toString() ?? null,
-      validated_by_user_id: createdAction.validated_by_user_id?.toString() ?? null,
-      };
+    return createdAction;
   }
 
 //9. mettre a jour les donnees de l'action

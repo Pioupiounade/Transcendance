@@ -14,9 +14,6 @@ export class CreateActionDto {
   @IsNumber({}, { each: true })
   location!: number[];
 
-  @IsInt()
-  creator_id!: number;
-
   @IsOptional()
   @IsInt()
   organization_id?: number;

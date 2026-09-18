@@ -1,7 +1,8 @@
-import { Body, Controller, Get, Post, Param, Patch, Query } from '@nestjs/common';
+import { Body, Controller, Get, Post, Param, Patch, Query, Req, UseGuards } from '@nestjs/common';
 import { OrganizationsService } from './organizations.service';
 import { CreateOrganizationDto } from './dto/create-organization.dto';
 import { UpdateOrganizationDto } from './dto/update-organization.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth-guard';
 
 @Controller('organizations')
 export class OrganizationsController {
@@ -41,31 +42,65 @@ export class OrganizationsController {
     return this.organizationsService.findOne(id);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Post()
-  create(@Body() data: CreateOrganizationDto) {
-    return this.organizationsService.create(data);
+  create(
+    @Req() req: any,
+    @Body() data: CreateOrganizationDto,
+  ) {
+    return this.organizationsService.create(
+      req.user.id,
+      data,
+    );
   }
 
+  @UseGuards(JwtAuthGuard)
   @Patch(':id')
   update(
+    @Req() req: any,
     @Param('id') id: string,
     @Body() data: UpdateOrganizationDto,
   ) {
-    // currentUserId à ajouter quand l'auth sera branchée
+    return this.organizationsService.update(
+      id,
+      data,
+      req.user.id,
+    );
   }
 
+  @UseGuards(JwtAuthGuard)
   @Patch(':id/suspend')
-  suspend(@Param('id') id: string) {
-    // currentUserId à ajouter quand l'auth sera branchée
+  suspend(
+    @Req() req: any,
+    @Param('id') id: string,
+  ) {
+    return this.organizationsService.suspend(
+      id,
+      req.user.id,
+    );
   }
 
+  @UseGuards(JwtAuthGuard)
   @Patch(':id/deactivate')
-  deactivate(@Param('id') id: string) {
-    // currentUserId à ajouter quand l'auth sera branchée
+  deactivate(
+    @Req() req: any,
+    @Param('id') id: string,
+  ) {
+    return this.organizationsService.deactivate(
+      id,
+      req.user.id,
+    );
   }
 
+  @UseGuards(JwtAuthGuard)
   @Patch(':id/reactivate')
-  reactivate(@Param('id') id: string) {
-    // currentUserId à ajouter quand l'auth sera branchée
+  reactivate(
+    @Req() req: any,
+    @Param('id') id: string,
+  ) {
+    return this.organizationsService.reactivate(
+      id,
+      req.user.id,
+    );
   }
 }

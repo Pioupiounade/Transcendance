@@ -134,11 +134,11 @@ export class OrganizationsService {
 
 
 //6. creer une nouvelle organisation
-  async create(data: CreateOrganizationDto) {
+  async create(currentUserId: string, data: CreateOrganizationDto) {
     const creator = await this.prisma.user.findUnique({
-     where: {
-      user_id: BigInt(data.creator_id),
-    },
+      where: {
+        user_id: BigInt(currentUserId),
+      },
     });
 
     if (!creator) {
@@ -156,7 +156,7 @@ export class OrganizationsService {
         description: data.description,
         address: data.address,
         location: data.location,
-        creator_id: BigInt(data.creator_id),
+        creator_id: BigInt(currentUserId),
       },
     });
 

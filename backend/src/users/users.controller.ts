@@ -1,8 +1,9 @@
-import { Body, Controller, Get, Post, Param, Patch } from '@nestjs/common';
+import { Body, Controller, Get, Post, Param, Patch, Req, UseGuards } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth-guard';
 
 @Controller('users')
 export class UsersController {
@@ -13,15 +14,15 @@ export class UsersController {
     return this.usersService.findAll();
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get('me')
-  getProfile() {
-    // This is a placeholder for getting the authenticated user's profile.
-    return { message: 'This endpoint will return the authenticated user\'s profile.' };
+  getProfile(@Req() req: any) {
+    return this.usersService.findOneSafe(req.user.id);
   }
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.usersService.findOne(id);
+    return this.usersService.findOneSafe(id);
   }
 
   @Post()
@@ -29,34 +30,59 @@ export class UsersController {
     return this.usersService.create(data);
   }
 
-  @Patch(':id/email')
+  @UseGuards(JwtAuthGuard)
+  @Patch('me/email')
   updateEmail(
-    @Param('id') id: string,
+    @Req() req: any,
     @Body() data: UpdateUserDto,
   ) {
-    return this.usersService.updateEmail(id, data);
+    return this.usersService.updateEmail(
+      req.user.id,
+      data,
+    );
   }
 
-  @Patch(':id/password')
+  @UseGuards(JwtAuthGuard)
+  @Patch('me/password')
   updatePassword(
-    @Param('id') id: string,
+    @Req() req: any,
     @Body() data: UpdatePasswordDto,
   ) {
-    return this.usersService.updatePassword(id, data);
+    return this.usersService.updatePassword(
+      req.user.id,
+      data,
+    );
   }
 
-  @Patch(':id/deactivate')
-  deactivate(@Param('id') id: string) {
-    return this.usersService.deactivate(id);
+  @UseGuards(JwtAuthGuard)
+  @Patch('me/deactivate')
+  deactivate(@Req() req: any) {
+    return this.usersService.deactivate(
+      req.user.id,
+    );
   }
 
+  @UseGuards(JwtAuthGuard)
   @Patch(':id/suspend')
-  suspend(@Param('id') id: string) {
-    return this.usersService.suspend(id);
+  suspend(
+    @Req() req: any,
+    @Param('id') id: string,
+  ) {
+    return this.usersService.suspend(
+      id,
+      req.user.id,
+    );
   }
 
+  @UseGuards(JwtAuthGuard)
   @Patch(':id/reactivate')
-  reactivate(@Param('id') id: string) {
-    return this.usersService.reactivate(id);
+  reactivate(
+    @Req() req: any,
+    @Param('id') id: string,
+  ) {
+    return this.usersService.reactivate(
+      id,
+      req.user.id,
+    );
   }
 }
