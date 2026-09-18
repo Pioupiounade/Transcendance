@@ -544,43 +544,51 @@ async findAll() {
       throw new ForbiddenException('You are not allowed to complete this action');
     }
 
-    const updatedAction = await this.prisma.action.update({
-      where: {
-        action_id: BigInt(id),
-      },
-      data: {
-        status: ActionStatus.COMPLETED,
-      },
-    });
+  const updatedAction = await this.prisma.$transaction(
+    async (tx) => {
+      const completedAction = await tx.action.update({
+        where: {
+          action_id: BigInt(id),
+        },
+        data: {
+          status: ActionStatus.COMPLETED,
+        },
+      });
 
-        await this.pointtransactionService.rewardActionCompleted(
-      BigInt(id),
-    );
-
-        const participations = await this.prisma.participation.findMany({
-      where: {
-        action_id: BigInt(id),
-      },
-    });
-
-    for (const participation of participations) {
-      await this.pointtransactionService.rewardParticipation(
+      await this.pointtransactionService.rewardActionCompleted(
         BigInt(id),
-        participation.user_id,
+        tx,
       );
 
-      await this.pointtransactionService.rewardCreatorForParticipant(
-        BigInt(id),
-        participation.user_id,
-      );
-    }    
+      const participations = await tx.participation.findMany({
+        where: {
+          action_id: BigInt(id),
+        },
+      });
 
+      for (const participation of participations) {
+        await this.pointtransactionService.rewardParticipation(
+          BigInt(id),
+          participation.user_id,
+          tx,
+        );
+
+        await this.pointtransactionService.rewardCreatorForParticipant(
+          BigInt(id),
+          participation.user_id,
+          tx,
+        );
+      }
+
+      return completedAction;
+    },
+  );
     return {
-      ...updatedAction,
-      action_id: updatedAction.action_id.toString(),
-      creator_id: updatedAction.creator_id.toString(),
-      organization_id: updatedAction.organization_id?.toString() ?? null,
-      validated_by_user_id: updatedAction.validated_by_user_id?.toString() ?? null,
-    };
+    ...updatedAction,
+    action_id: updatedAction.action_id.toString(),
+    creator_id: updatedAction.creator_id.toString(),
+    organization_id: updatedAction.organization_id?.toString() ?? null,
+    validated_by_user_id: updatedAction.validated_by_user_id?.toString() ?? null,
+  };
   }
 }

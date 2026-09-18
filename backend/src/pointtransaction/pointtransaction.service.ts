@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException, ForbiddenException, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { AccountStatus, ActionStatus, MemberStatus, OrganizationStatus, PointReason, RoleApp, RoleOrg } from '../../generated/prisma/client';
+import { Prisma, AccountStatus, ActionStatus, MemberStatus, OrganizationStatus, PointReason, RoleApp, RoleOrg } from '../../generated/prisma/client';
 
 
 @Injectable()
@@ -8,16 +8,18 @@ export class PointtransactionService {
 
   constructor(private prisma: PrismaService) {}
 
-  private async checkUserCanReceiveReward(userId: bigint) {
-    const user = await this.prisma.user.findUnique({
-      where: {
-        user_id: userId,
-      },
-      select: {
-        user_id: true,
-        account_status: true,
-      },
-    });
+  private async checkUserCanReceiveReward(userId: bigint, tx?: Prisma.TransactionClient) {
+    const db = tx ?? this.prisma;
+
+    const user = await db.user.findUnique({
+        where: {
+          user_id: userId,
+        },
+        select: {
+          user_id: true,
+          account_status: true,
+        },
+      });
 
     if (!user) {
       throw new NotFoundException('User not found');
@@ -30,9 +32,10 @@ export class PointtransactionService {
     return user;
   }
 
-  private async checkOrganizationIsActive(organizationId: bigint) {
+  private async checkOrganizationIsActive(organizationId: bigint, tx?: Prisma.TransactionClient) {
+    const db = tx ?? this.prisma;
 
-    const organization = await this.prisma.organization.findUnique({
+    const organization = await db.organization.findUnique({
       where: {
         organization_id: organizationId,
       },
@@ -53,9 +56,11 @@ export class PointtransactionService {
     return organization;
   }
 
-  private async findOrganizationOwner(organizationId: bigint) {
+  private async findOrganizationOwner(organizationId: bigint, tx?: Prisma.TransactionClient) {
+  const db = tx ?? this.prisma;
 
-    const ownerMembership = await this.prisma.organizationMember.findFirst({
+  const ownerMembership =
+    await db.organizationMember.findFirst({
         where: {
           organization_id: organizationId,
           status: MemberStatus.ACTIVE,
@@ -100,57 +105,59 @@ export class PointtransactionService {
     }
   }
 
-  private async createPointTransaction(userId: bigint, points: number, reason: PointReason, eventKey: string) {
-
+  private async createPointTransaction(userId: bigint, points: number, reason: PointReason, eventKey: string, tx?: Prisma.TransactionClient) {
     if (points === 0) {
       throw new BadRequestException('Point transaction cannot be zero');
     }
 
-    const existingTransaction = await this.prisma.pointTransaction.findUnique({
-        where: {
-          event_key: eventKey,
-        },
-      });
-
-    if (existingTransaction) {
-      throw new ConflictException('This point transaction has already been processed');
-    }
-
-    try {
-
-      return await this.prisma.$transaction(async (tx) => {
-        const pointTransaction =  await tx.pointTransaction.create({
-            data: {
-              user_id: userId,
-              points,
-              reason,
-              event_key: eventKey,
-            },
-          });
-
-        await tx.user.update({
+    const execute = async (db: Prisma.TransactionClient) => {
+      const existingTransaction =
+        await db.pointTransaction.findUnique({
           where: {
-            user_id: userId,
-          },
-
-          data: {
-            points: {
-              increment: points,
-            },
+            event_key: eventKey,
           },
         });
 
-        return pointTransaction;
+      if (existingTransaction) {
+        throw new ConflictException('This point transaction has already been processed');
+      }
+
+      const pointTransaction =
+        await db.pointTransaction.create({
+          data: {
+            user_id: userId,
+            points,
+            reason,
+            event_key: eventKey,
+          },
+        });
+
+      await db.user.update({
+        where: {
+          user_id: userId,
+        },
+        data: {
+          points: {
+            increment: points,
+          },
+        },
       });
 
-    }
+      return pointTransaction;
+    };
 
-    catch (error) {
+    try {
+      if (tx) {
+        return await execute(tx);
+      }
 
-        const prismaError = error as {
+      return await this.prisma.$transaction(
+        async (newTx) => execute(newTx),
+      );
+    } catch (error) {
+      const prismaError = error as {
         code?: string;
       };
-
 
       if (prismaError.code === 'P2002') {
         throw new ConflictException('This point transaction has already been processed');
@@ -160,9 +167,10 @@ export class PointtransactionService {
     }
   }
 
-  async rewardActionCompleted(actionId: bigint) {
+  async rewardActionCompleted(actionId: bigint, tx?: Prisma.TransactionClient) {
+    const db = tx ?? this.prisma;
 
-    const action = await this.prisma.action.findUnique({
+    const action = await db.action.findUnique({
       where: {
         action_id: actionId,
       },
@@ -185,11 +193,13 @@ export class PointtransactionService {
 
     await this.checkUserCanReceiveReward(
       action.creator_id,
+      tx,
     );
 
     if (action.organization_id) {
       await this.checkOrganizationIsActive(
         action.organization_id,
+        tx,
       );
     }
 
@@ -198,20 +208,22 @@ export class PointtransactionService {
       20,
       PointReason.ACTION_COMPLETED,
       `ACTION_COMPLETED:${actionId}:${action.creator_id}`,
+      tx,
     );
   }
 
-  async rewardParticipation(actionId: bigint, participantId: bigint) {
+  async rewardParticipation(actionId: bigint, participantId: bigint, tx?: Prisma.TransactionClient) {
+    const db = tx ?? this.prisma;
 
     await this.checkUserCanReceiveReward(
       participantId,
+      tx,
     );
 
-    const action = await this.prisma.action.findUnique({
+    const action = await db.action.findUnique({
       where: {
         action_id: actionId,
       },
-
       select: {
         action_id: true,
         status: true,
@@ -230,17 +242,18 @@ export class PointtransactionService {
     if (action.organization_id) {
       await this.checkOrganizationIsActive(
         action.organization_id,
+        tx,
       );
     }
 
-    const participation = await this.prisma.participation.findUnique({
-        where: {
-          action_id_user_id: {
-            action_id: actionId,
-            user_id: participantId,
-          },
+    const participation = await db.participation.findUnique({
+      where: {
+        action_id_user_id: {
+          action_id: actionId,
+          user_id: participantId,
         },
-      });
+      },
+    });
 
     if (!participation) {
       throw new BadRequestException('User did not participate in this action');
@@ -251,12 +264,15 @@ export class PointtransactionService {
       10,
       PointReason.ACTION_PARTICIPATED,
       `ACTION_PARTICIPATED:${actionId}:${participantId}`,
+      tx,
     );
   }
 
-  async rewardCreatorForParticipant(actionId: bigint, participantId: bigint) {
-
-    const action = await this.prisma.action.findUnique({
+  async rewardCreatorForParticipant(actionId: bigint, participantId: bigint, tx?: Prisma.TransactionClient) {
+    
+    const db = tx ?? this.prisma;
+    
+    const action = await db.action.findUnique({
       where: {
         action_id: actionId,
       },
@@ -279,15 +295,16 @@ export class PointtransactionService {
 
     await this.checkUserCanReceiveReward(
       action.creator_id,
+      tx,
     );
 
     if (action.organization_id) {
       await this.checkOrganizationIsActive(
         action.organization_id,
+        tx,
       );
     }
-
-    const participation = await this.prisma.participation.findUnique({
+    const participation = await db.participation.findUnique({
         where: {
           action_id_user_id: {
             action_id: actionId,
@@ -305,15 +322,20 @@ export class PointtransactionService {
       5,
       PointReason.ACTION_PARTICIPANTS,
       `ACTION_PARTICIPANTS:${actionId}:${participantId}`,
+      tx,
     );
   }
 
-  async rewardOwnerForNewMember(organizationId: bigint, memberId: bigint) {
+  async rewardOwnerForNewMember(organizationId: bigint, memberId: bigint, tx?: Prisma.TransactionClient) {
+
+  const db = tx ?? this.prisma;
     await this.checkOrganizationIsActive(
       organizationId,
+      tx,
     );
 
-    const membership = await this.prisma.organizationMember.findUnique({
+  const membership =
+    await db.organizationMember.findUnique({
         where: {
           organization_id_user_id: {
             organization_id: organizationId,
@@ -339,8 +361,9 @@ export class PointtransactionService {
     }
 
     const ownerId = await this.findOrganizationOwner(
-        organizationId,
-      );
+      organizationId,
+      tx,
+    );
 
     if (ownerId === memberId) {
       throw new BadRequestException('The owner cannot receive points for joining their own organization');
@@ -348,23 +371,24 @@ export class PointtransactionService {
 
     await this.checkUserCanReceiveReward(
       ownerId,
+      tx,
     );
-
 
     return this.createPointTransaction(
       ownerId,
       5,
       PointReason.ORGANIZATION_MEMBER_JOINED,
       `ORGANIZATION_MEMBER_JOINED:${organizationId}:${memberId}:${membership.created_at.toISOString()}`,
+      tx,
     );
   }
 
-  private async penalizeOwnerForMemberDeparture(organizationId: bigint, memberId: bigint, membershipCreatedAt: 
-    Date, reason: PointReason) {
-
+  private async penalizeOwnerForMemberDeparture(organizationId: bigint, memberId: bigint, membershipCreatedAt: Date, reason: PointReason, tx?: Prisma.TransactionClient) {
+ 
     const ownerId = await this.findOrganizationOwner(
-        organizationId,
-      );
+      organizationId,
+      tx,
+    );
 
     let reasonName: string;
 
@@ -391,36 +415,39 @@ export class PointtransactionService {
       -5,
       reason,
       `${reasonName}:${organizationId}:${memberId}:${membershipCreatedAt.toISOString()}`,
+      tx,
     );
   }
 
-  async penalizeOwnerForMemberLeaving(organizationId: bigint, memberId: bigint, membershipCreatedAt: Date) {
-
+  async penalizeOwnerForMemberLeaving(organizationId: bigint, memberId: bigint, membershipCreatedAt: Date, tx?: Prisma.TransactionClient) {
     return this.penalizeOwnerForMemberDeparture(
       organizationId,
       memberId,
       membershipCreatedAt,
       PointReason.ORGANIZATION_MEMBER_LEFT,
+      tx,
     );
   }
 
-  async penalizeOwnerForMemberRemoval(organizationId: bigint, memberId: bigint, membershipCreatedAt: Date) {
+  async penalizeOwnerForMemberRemoval(organizationId: bigint, memberId: bigint, membershipCreatedAt: Date, tx?: Prisma.TransactionClient) {
 
     return this.penalizeOwnerForMemberDeparture(
       organizationId,
       memberId,
       membershipCreatedAt,
       PointReason.ORGANIZATION_MEMBER_REMOVED,
+      tx,
     );
   }
 
-  async penalizeOwnerForMemberBan(organizationId: bigint, memberId: bigint, membershipCreatedAt: Date) {
+  async penalizeOwnerForMemberBan(organizationId: bigint, memberId: bigint, membershipCreatedAt: Date, tx?: Prisma.TransactionClient) {
 
     return this.penalizeOwnerForMemberDeparture(
       organizationId,
       memberId,
       membershipCreatedAt,
       PointReason.ORGANIZATION_MEMBER_BANNED,
+      tx,
     );
   }
 
@@ -457,9 +484,10 @@ export class PointtransactionService {
     );
   }
 
-  async penalizeBannedUser(organizationId: bigint, userId: bigint, membershipCreatedAt: Date) {
+  async penalizeBannedUser(organizationId: bigint, userId: bigint, membershipCreatedAt: Date, tx?: Prisma.TransactionClient) {
+    const db = tx ?? this.prisma;
 
-    const user = await this.prisma.user.findUnique({
+    const user = await db.user.findUnique({
       where: {
         user_id: userId,
       },
@@ -473,7 +501,7 @@ export class PointtransactionService {
       throw new NotFoundException('User not found');
     }
 
-    const membership = await this.prisma.organizationMember.findUnique({
+    const membership = await db.organizationMember.findUnique({
         where: {
           organization_id_user_id: {
             organization_id: organizationId,
@@ -499,6 +527,7 @@ export class PointtransactionService {
       -15,
       PointReason.USER_BANNED_FROM_ORGANIZATION,
       `USER_BANNED_FROM_ORGANIZATION:${organizationId}:${userId}:${membershipCreatedAt.toISOString()}`,
+      tx,
     );
   }
 
