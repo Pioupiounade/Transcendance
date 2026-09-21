@@ -159,7 +159,7 @@ model Action {
   imagesList       String[]     @default([])
 
   validated_by_user_id BigInt?
-  validated_at         DateTime? @default(now())
+  validated_at         DateTime?
 
   scheduled_at DateTime
 

@@ -117,7 +117,6 @@ async findAll() {
       }));
   }
 
-
 //6. recupere des actions par statut
 // GET /actions?status=APPROVED
   async findByStatus(status: ActionStatus) {
@@ -140,31 +139,30 @@ async findAll() {
       }));
   }
 
-
 //7. recuperer des actions par zone
- async findByRadius(lat: number, lng: number, radiusKm: number) {
-    const actions = await this.prisma.action.findMany();
+  async findByRadius(lat: number, lng: number, radiusKm: number) {
+      const actions = await this.prisma.action.findMany();
 
-    const nearbyActions = actions.filter((action) => {
-      const [actLat, actLng] = action.location;
+      const nearbyActions = actions.filter((action) => {
+        const [actLat, actLng] = action.location;
 
-      const distance = this.calculateDistance(
-        lat,
-        lng,
-        actLat,
-        actLng,
-      );
+        const distance = this.calculateDistance(
+          lat,
+          lng,
+          actLat,
+          actLng,
+        );
 
-      return distance <= radiusKm;
-    });
+        return distance <= radiusKm;
+      });
 
-    return nearbyActions.map((action) => ({
-      ...action,
-      action_id: action.action_id.toString(),
-      creator_id: action.creator_id.toString(),
-      organization_id: action.organization_id?.toString() ?? null,
-      validated_by_user_id: action.validated_by_user_id?.toString() ?? null,
-      }));
+      return nearbyActions.map((action) => ({
+        ...action,
+        action_id: action.action_id.toString(),
+        creator_id: action.creator_id.toString(),
+        organization_id: action.organization_id?.toString() ?? null,
+        validated_by_user_id: action.validated_by_user_id?.toString() ?? null,
+        }));
   }
 
   private calculateDistance(
@@ -172,7 +170,7 @@ async findAll() {
     lng1: number,
     lat2: number,
     lng2: number,
-  ): number {
+    ): number {
     const earthRadiusKm = 6371;
 
     const dLat = this.toRadians(lat2 - lat1);
@@ -193,7 +191,7 @@ async findAll() {
     return degrees * (Math.PI / 180);
   }
 
-//8. creer une nouvelle action
+  //8. creer une nouvelle action
   async create(currentUserId: string, data: CreateActionDto) {
     const creator = await this.prisma.user.findUnique({
       where: {
@@ -209,6 +207,52 @@ async findAll() {
       throw new BadRequestException('Only an active user can create an action');
     }
 
+    let organizationId: bigint | null = null;
+
+    if (data.organization_id) {
+      organizationId = BigInt(data.organization_id);
+
+      const organization = await this.prisma.organization.findUnique({
+        where: {
+          organization_id: organizationId,
+        },
+      });
+
+      if (!organization) {
+        throw new NotFoundException('Organization not found');
+      }
+
+      if (organization.organization_status !== OrganizationStatus.ACTIVE) {
+        throw new BadRequestException(
+          'Only an active organization can create an action',
+        );
+      }
+
+      if (creator.role !== RoleApp.ADMIN) {
+        const membership = await this.prisma.organizationMember.findUnique({
+          where: {
+            organization_id_user_id: {
+              organization_id: organizationId,
+              user_id: creator.user_id,
+            },
+          },
+        });
+
+        const canCreateForOrganization =
+          membership?.status === MemberStatus.ACTIVE &&
+          (
+            membership.role === RoleOrg.MANAGER ||
+            membership.role === RoleOrg.OWNER
+          );
+
+        if (!canCreateForOrganization) {
+          throw new ForbiddenException(
+            'You are not allowed to create an action for this organization',
+          );
+        }
+      }
+    }
+
     const createdAction = await this.prisma.action.create({
       data: {
         title: data.title,
@@ -216,9 +260,8 @@ async findAll() {
         category: data.category,
         location: data.location,
         scheduled_at: data.scheduled_at,
-        organization_id: data.organization_id
-          ? BigInt(data.organization_id)
-          : null,
+        imagesList: data.imagesList ?? [],
+        organization_id: organizationId,
 
         creator_id: BigInt(currentUserId),
       },
@@ -227,7 +270,7 @@ async findAll() {
     return createdAction;
   }
 
-//9. mettre a jour les donnees de l'action
+  //9. mettre a jour les donnees de l'action
   async update( id: string, data: UpdateActionDto, currentUserId: string) {
     const action = await this.prisma.action.findUnique({
       where: {
@@ -277,6 +320,55 @@ async findAll() {
     if (!isAdmin && !isCreator && !isManagerOrOwner) {
       throw new ForbiddenException('You are not allowed to update this action');
     }
+    
+    let newOrganizationId: bigint | undefined;
+
+    if (data.organization_id !== undefined) {
+      newOrganizationId = BigInt(data.organization_id);
+
+      const newOrganization = await this.prisma.organization.findUnique({
+        where: {
+          organization_id: newOrganizationId,
+        },
+      });
+
+      if (!newOrganization) {
+        throw new NotFoundException('Organization not found');
+      }
+
+      if (
+        newOrganization.organization_status !== OrganizationStatus.ACTIVE
+      ) {
+        throw new BadRequestException(
+          'Only an active organization can be assigned to an action',
+        );
+      }
+
+      if (!isAdmin) {
+        const newMembership =
+          await this.prisma.organizationMember.findUnique({
+            where: {
+              organization_id_user_id: {
+                organization_id: newOrganizationId,
+                user_id: BigInt(currentUserId),
+              },
+            },
+          });
+
+        const canAssignOrganization =
+          newMembership?.status === MemberStatus.ACTIVE &&
+          (
+            newMembership.role === RoleOrg.MANAGER ||
+            newMembership.role === RoleOrg.OWNER
+          );
+
+        if (!canAssignOrganization) {
+          throw new ForbiddenException(
+            'You are not allowed to assign this action to this organization',
+          );
+        }
+      }
+    }
 
     const updatedAction = await this.prisma.action.update({
       where: {
@@ -285,7 +377,7 @@ async findAll() {
       data: {
         title: data.title,
         description: data.description,
-        organization_id: data.organization_id ? BigInt(data.organization_id) : undefined,
+        organization_id: newOrganizationId,
         location: data.location,
         category: data.category,
         imagesList: data.imagesList,
@@ -366,6 +458,21 @@ async findAll() {
 
     if (!isAdmin && !isCreator && !isManagerOrOwner) {
       throw new ForbiddenException('You are not allowed to approve this action');
+    }
+
+    const participantCount = await this.prisma.participation.count({
+      where: {
+        action_id: BigInt(id),
+        user_id: {
+          not: action.creator_id,
+        },
+      },
+    });
+
+    if (participantCount < 3) {
+      throw new BadRequestException(
+        'An action needs at least 3 participants to be approved',
+      );
     }
 
     const updatedAction = await this.prisma.action.update({
@@ -518,10 +625,8 @@ async findAll() {
         organization.organization_status !== OrganizationStatus.ACTIVE &&
         !isAdmin
       ) {
-        throw new ForbiddenException(
-          'Only an admin can complete an action from an inactive organization',
-        );
-      }
+          throw new ForbiddenException('Only an admin can complete an action from an inactive organization');
+        }
 
       const membership = await this.prisma.organizationMember.findUnique({
         where: {
@@ -544,51 +649,66 @@ async findAll() {
       throw new ForbiddenException('You are not allowed to complete this action');
     }
 
-  const updatedAction = await this.prisma.$transaction(
-    async (tx) => {
-      const completedAction = await tx.action.update({
-        where: {
-          action_id: BigInt(id),
-        },
-        data: {
-          status: ActionStatus.COMPLETED,
-        },
-      });
+    const updatedAction = await this.prisma.$transaction(
+      async (tx) => {
+        const participantCount = await tx.participation.count({
+          where: {
+            action_id: BigInt(id),
+            user_id: {
+              not: action.creator_id,
+            },
+          },
+        });
+
+        if (participantCount < 3) {
+          throw new BadRequestException(
+            'An action needs at least 3 participants to be completed',
+          );
+        }
+
+        const completedAction = await tx.action.update({
+          where: {
+            action_id: BigInt(id),
+          },
+          data: {
+            status: ActionStatus.COMPLETED,
+          },
+        });
 
       await this.pointtransactionService.rewardActionCompleted(
         BigInt(id),
         tx,
       );
 
-      const participations = await tx.participation.findMany({
-        where: {
-          action_id: BigInt(id),
-        },
-      });
+    const participations = await tx.participation.findMany({
+      where: {
+        action_id: BigInt(id),
+      },
+    });
 
-      for (const participation of participations) {
-        await this.pointtransactionService.rewardParticipation(
-          BigInt(id),
-          participation.user_id,
-          tx,
-        );
+    for (const participation of participations) {
+      await this.pointtransactionService.rewardParticipation(
+        BigInt(id),
+        participation.user_id,
+        tx,
+      );
 
-        await this.pointtransactionService.rewardCreatorForParticipant(
-          BigInt(id),
-          participation.user_id,
-          tx,
-        );
-      }
-
+    await this.pointtransactionService.rewardCreatorForParticipant(
+        BigInt(id),
+        participation.user_id,
+        tx,
+      );
+    }
       return completedAction;
     },
-  );
+    );
+
     return {
     ...updatedAction,
     action_id: updatedAction.action_id.toString(),
     creator_id: updatedAction.creator_id.toString(),
     organization_id: updatedAction.organization_id?.toString() ?? null,
     validated_by_user_id: updatedAction.validated_by_user_id?.toString() ?? null,
-  };
+    };
   }
 }
