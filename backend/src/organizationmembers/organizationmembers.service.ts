@@ -179,8 +179,7 @@ export class OrganizationmembersService {
         });
     }
 
-// Helper prive pour eviter de repeter les controles :
-    private async checkCanManageMembers(requesterId: bigint, organizationId: bigint) {
+    private async getManagementContext(requesterId: bigint, organizationId: bigint) {
         const requester = await this.prisma.user.findUnique({
             where: {
             user_id: requesterId,
@@ -211,8 +210,26 @@ export class OrganizationmembersService {
             throw new BadRequestException('Organization is not active');
         }
 
+        return {
+            requester,
+            organization,
+        };
+    }
+
+// Helper prive pour eviter de repeter les controles :
+    private async checkCanManageMembers(requesterId: bigint, organizationId: bigint) {
+        const {
+            requester,
+        } = await this.getManagementContext(
+            requesterId,
+            organizationId,
+        );
+
         if (requester.role === RoleApp.ADMIN) {
-            return;
+            return {
+            requester,
+            requesterMembership: null,
+            };
         }
 
         const requesterMembership =
@@ -225,14 +242,28 @@ export class OrganizationmembersService {
             },
             });
 
-        if (!requesterMembership || requesterMembership.status !== MemberStatus.ACTIVE) {
-            throw new ForbiddenException('Requester is not an active member of the organization');
+        if (
+            !requesterMembership ||
+            requesterMembership.status !== MemberStatus.ACTIVE
+        ) {
+            throw new ForbiddenException(
+            'Requester is not an active member of the organization',
+            );
         }
 
-        if (requesterMembership.role !== RoleOrg.MANAGER && requesterMembership.role !== RoleOrg.OWNER
+        if (
+            requesterMembership.role !== RoleOrg.MANAGER &&
+            requesterMembership.role !== RoleOrg.OWNER
         ) {
-            throw new ForbiddenException('You do not have permission to manage members');
+            throw new ForbiddenException(
+            'You do not have permission to manage members',
+            );
         }
+
+        return {
+            requester,
+            requesterMembership,
+        };
     }
 
 // Add a user to an organization
@@ -306,10 +337,13 @@ export class OrganizationmembersService {
 
 // Remove a user from an organization
     async removeMember(requesterId: bigint, organizationId: bigint, targetUserId: bigint) {
-        await this.checkCanManageMembers(
+        const {
+            requester,
+            requesterMembership,
+            } = await this.checkCanManageMembers(
             requesterId,
             organizationId,
-        );
+            );
 
         if (requesterId === targetUserId) {
             throw new BadRequestException('Use leaveOrganization to leave the organization');
@@ -349,35 +383,13 @@ export class OrganizationmembersService {
             throw new ForbiddenException('The owner cannot be removed. Transfer ownership first.');
         }
 
-        const requester = await this.prisma.user.findUnique({
-            where: {
-            user_id: requesterId,
-            },
-        });
-
-        if (!requester) {
-            throw new NotFoundException('Requester not found');
-        }
-
-        if (requester.role !== RoleApp.ADMIN) {
-            const requesterMembership =
-            await this.prisma.organizationMember.findUnique({
-                where: {
-                organization_id_user_id: {
-                    organization_id: organizationId,
-                    user_id: requesterId,
-                },
-                },
-            });
-
-            if (!requesterMembership) {
-            throw new ForbiddenException('Requester is not a member of this organization');
-            }
-
-            if (requesterMembership.role === RoleOrg.MANAGER && targetMembership.role !== RoleOrg.MEMBER) {
+        if (
+            requester.role !== RoleApp.ADMIN &&
+            requesterMembership?.role === RoleOrg.MANAGER &&
+            targetMembership.role !== RoleOrg.MEMBER
+           ) {
             throw new ForbiddenException('A manager can only remove members');
             }
-        }
 
         const membershipCreatedAt = targetMembership.created_at;
 
@@ -408,9 +420,12 @@ export class OrganizationmembersService {
 
 // Ban a user from an organization
     async banMember(requesterId: bigint, organizationId: bigint, targetUserId: bigint) {
-        await this.checkCanManageMembers(
-            requesterId,
-            organizationId,
+        const {
+        requester,
+        requesterMembership,
+        } = await this.checkCanManageMembers(
+        requesterId,
+        organizationId,
         );
 
         if (requesterId === targetUserId) {
@@ -453,34 +468,15 @@ export class OrganizationmembersService {
             throw new ForbiddenException('The owner cannot be banned. Transfer ownership first.');
         }
 
-        const requester = await this.prisma.user.findUnique({
-            where: {
-            user_id: requesterId,
-            },
-        });
-
-        if (!requester) {
-            throw new NotFoundException('Requester not found');
-        }
-
-        if (requester.role !== RoleApp.ADMIN) {
-            const requesterMembership = await this.prisma.organizationMember.findUnique({
-                where: {
-                organization_id_user_id: {
-                    organization_id: organizationId,
-                    user_id: requesterId,
-                },
-                },
-            });
-
-            if (!requesterMembership) {
-            throw new ForbiddenException('Requester is not a member of this organization');
+        if (
+            requester.role !== RoleApp.ADMIN &&
+            requesterMembership?.role === RoleOrg.MANAGER &&
+            targetMembership.role !== RoleOrg.MEMBER
+            ) {
+            throw new ForbiddenException(
+                'A manager can only ban members',
+            );
             }
-
-            if (requesterMembership.role === RoleOrg.MANAGER && targetMembership.role !== RoleOrg.MEMBER) {
-            throw new ForbiddenException('A manager can only ban members');
-            }
-        }
 
         const membershipCreatedAt = targetMembership.created_at;
 
@@ -770,33 +766,12 @@ export class OrganizationmembersService {
 
 // Helper pour checker que c'est le owner ou l'admin
     private async checkCanManageRoles(requesterId: bigint, organizationId: bigint) {
-        const requester = await this.prisma.user.findUnique({
-            where: {
-            user_id: requesterId,
-            },
-        });
-
-        if (!requester) {
-            throw new NotFoundException('Requester not found');
-        }
-
-        if (requester.account_status !== AccountStatus.ACTIVE) {
-            throw new ForbiddenException('Requester is not active');
-        }
-
-        const organization = await this.prisma.organization.findUnique({
-            where: {
-            organization_id: organizationId,
-            },
-        });
-
-        if (!organization) {
-            throw new NotFoundException('Organization not found');
-        }
-
-        if (organization.organization_status !==  OrganizationStatus.ACTIVE) {
-            throw new BadRequestException('Organization is not active');
-        }
+        const {
+            requester,
+        } = await this.getManagementContext(
+            requesterId,
+            organizationId,
+        );
 
         if (requester.role === RoleApp.ADMIN) {
             return;
