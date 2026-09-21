@@ -7,21 +7,27 @@ import { FriendRequestStatus, FriendshipStatus, AccountStatus } from '../../gene
 export class FriendRequestsService {
     constructor(private prisma: PrismaService) {}
 
+private async getActiveUser(userId: string) {
+  const user = await this.prisma.user.findUnique({
+    where: {
+      user_id: BigInt(userId),
+    },
+  });
+
+  if (!user) {
+    throw new NotFoundException('User not found');
+  }
+
+  if (user.account_status !== AccountStatus.ACTIVE) {
+    throw new BadRequestException('User is not active');
+  }
+
+  return user;
+}
+
 //Envoyer une demande d'ami
 async sendFriendRequest(currentUserId: string, data: SendFriendRequestDto) {
-    const user = await this.prisma.user.findUnique({
-        where: {
-            user_id: BigInt(currentUserId),
-        },
-    });
-
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-
-    if (user.account_status !== AccountStatus.ACTIVE) {
-      throw new BadRequestException('Only an active user can send friend requests');
-    }
+    const user = await this.getActiveUser(currentUserId);
 
     const receiver = await this.prisma.user.findUnique({
         where: {
@@ -107,19 +113,7 @@ async sendFriendRequest(currentUserId: string, data: SendFriendRequestDto) {
 
 //Accepter la demande d'ami
 async acceptFriendRequest(currentUserId: string, requestId: string) {
-    const user = await this.prisma.user.findUnique({
-        where: {
-            user_id: BigInt(currentUserId),
-        },
-    });
-
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-
-    if (user.account_status !== AccountStatus.ACTIVE) {
-      throw new BadRequestException('Only an active user can accept friend requests');
-    }
+    const user = await this.getActiveUser(currentUserId);
 
     const request = await this.prisma.friendRequest.findUnique({
         where: {
@@ -139,47 +133,65 @@ async acceptFriendRequest(currentUserId: string, requestId: string) {
         throw new ForbiddenException('Only the receiver can accept this friend request');
     }
 
-    const updatedRequest = await this.prisma.friendRequest.update({
+    const requester = await this.prisma.user.findUnique({
         where: {
-        friend_request_id: BigInt(requestId),
+            user_id: request.requester_id,
         },
-        data: {
-        status: FriendRequestStatus.ACCEPTED,
-        responded_at: new Date(),
-        },
-    });
+        });
 
-    await this.prisma.friendship.create({
-        data: {
-        user1_id: request.requester_id,
-        user2_id: request.addressee_id,
-        status: FriendshipStatus.ACTIVE,
+    if (!requester) {
+        throw new NotFoundException('Requester not found');
+    }
+
+    if (requester.account_status !== AccountStatus.ACTIVE) {
+        throw new BadRequestException('Friend request requester is no longer active');
+    }
+
+    const updatedRequest = await this.prisma.$transaction(
+    async (tx) => {
+        const acceptedRequest = await tx.friendRequest.update({
+        where: {
+            friend_request_id: BigInt(requestId),
         },
-    });
+        data: {
+            status: FriendRequestStatus.ACCEPTED,
+            responded_at: new Date(),
+        },
+        });
+
+        const user1Id =
+        request.requester_id < request.addressee_id
+            ? request.requester_id
+            : request.addressee_id;
+
+        const user2Id =
+        request.requester_id < request.addressee_id
+            ? request.addressee_id
+            : request.requester_id;
+
+        await tx.friendship.create({
+        data: {
+            user1_id: user1Id,
+            user2_id: user2Id,
+            status: FriendshipStatus.ACTIVE,
+        },
+        });
+
+        return acceptedRequest;
+    },
+    );
 
     return {
-        ...updatedRequest,
-        friend_request_id: updatedRequest.friend_request_id.toString(),
-        requester_id: updatedRequest.requester_id.toString(),
-        addressee_id: updatedRequest.addressee_id.toString(),
+    ...updatedRequest,
+    friend_request_id: updatedRequest.friend_request_id.toString(),
+    requester_id: updatedRequest.requester_id.toString(),
+    addressee_id: updatedRequest.addressee_id.toString(),
     };
 }
 
 //rejeter la demande d'ami
 async rejectFriendRequest(currentUserId: string, requestId: string) {
-    const user = await this.prisma.user.findUnique({
-        where: {
-            user_id: BigInt(currentUserId),
-        },
-    });
-
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-
-    if (user.account_status !== AccountStatus.ACTIVE) {
-      throw new BadRequestException('Only an active user can reject friend requests');
-    }
+    const user = await this.getActiveUser(currentUserId);
 
     const request = await this.prisma.friendRequest.findUnique({
         where: {
@@ -219,19 +231,7 @@ async rejectFriendRequest(currentUserId: string, requestId: string) {
 
 //Voir mes demandes d'ami envoyees
 async mySentRequests(currentUserId: string) {
-    const user = await this.prisma.user.findUnique({
-      where: {
-        user_id: BigInt(currentUserId),
-      },
-    });
-
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-
-    if (user.account_status !== AccountStatus.ACTIVE) {
-      throw new BadRequestException('Only an active user can see own sent request');
-    }
+    const user = await this.getActiveUser(currentUserId);
 
     const mySentRequests = await this.prisma.friendRequest.findMany({
     where: {
@@ -268,19 +268,7 @@ async mySentRequests(currentUserId: string) {
 
 //Voir mes demandes d'ami recues en attente
 async myReceivedRequests(currentUserId: string) {
-    const user = await this.prisma.user.findUnique({
-      where: {
-        user_id: BigInt(currentUserId),
-      },
-    });
-
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-
-    if (user.account_status !== AccountStatus.ACTIVE) {
-      throw new BadRequestException('Only an active user can see own sent request');
-    }
+    const user = await this.getActiveUser(currentUserId);
 
     const myReceivedRequests = await this.prisma.friendRequest.findMany({
     where: {
@@ -314,6 +302,5 @@ async myReceivedRequests(currentUserId: string) {
     },
     }));
 }
-
 
 }
