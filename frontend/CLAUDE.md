@@ -16,7 +16,8 @@ Ce fichier est chargé automatiquement quand la session démarre dans `frontend/
 
 ## Commandes
 - Ici : `npm run dev` (Vite sur :5173), `npm run build` (`tsc -b` puis `vite build` : une erreur de type casse le build),
-  `npm run lint`, `npm run preview`.
+  `npm run lint`, `npm run preview`. Node ≥ 20.19 requis (Vite 8) ; le conteneur est en node:24. Sur un Node 18,
+  seuls `npx tsc -b` et `npx eslint -f json .` fonctionnent (le formateur par défaut d'ESLint 10 plante).
 - Makefile à la racine du dépôt (= `docker compose -f docker/docker-compose.yml`) : `make up` / `make uplogs` (détaché /
   avec logs), `make down`, `make logs`, `make backend-shell`, `make re` (down -v, rebuild, up, puis `make db-update` :
   prisma generate + db push dans le conteneur backend), `make clean` (supprime aussi les volumes : base perdue).
@@ -112,8 +113,9 @@ Ce fichier est chargé automatiquement quand la session démarre dans `frontend/
 - Chaque écran gère explicitement ses états : chargement, vide, erreur (les 404 de listes vides compris).
 
 ## Appels API
-- URL de base dans `import.meta.env.VITE_API_URL` : `frontend/.env` (ignoré par git) + `frontend/.env.example`
-  documenté (exigence du sujet). Déclarer les variables dans `ImportMetaEnv` (`vite-env.d.ts`).
+- URL de base dans `import.meta.env.VITE_API_URL` : `frontend/.env` (ignoré par `frontend/.gitignore`) +
+  `frontend/.env.example` documenté (exigence du sujet). Déclarer les variables dans `ImportMetaEnv` (`vite-env.d.ts`),
+  les lire uniquement via `shared/config/env.ts` (valide au démarrage).
 - Un seul client HTTP (wrapper `fetch`) : JSON, header `Authorization: Bearer <access_token>`, erreurs normalisées
   depuis `{ statusCode, message, error }` (`message` peut être un tableau), 401 → un essai de `POST /auth/refresh`
   puis rejeu, sinon déconnexion.
@@ -121,8 +123,9 @@ Ce fichier est chargé automatiquement quand la session démarre dans `frontend/
   jamais dans les composants, pour être retiré sans douleur quand les guards backend arriveront.
 - Les listes filtrées renvoient 404 quand elles sont vides (`GET /actions?…`, `GET /organizations?creator_id=`) :
   le client traduit ce 404 en tableau vide.
-- CORS non activé côté backend (20/09/2026) : en dev, `server.proxy` dans `vite.config.ts` ou demander `app.enableCors()`
-  par ticket. Pas de contournement navigateur.
+- CORS non activé côté backend (20/09/2026) : en dev, `VITE_API_URL=/api` et `server.proxy` (`vite.config.ts`) réécrit
+  `/api/*` vers `VITE_DEV_PROXY_TARGET` (`http://localhost:3000` en local, `http://backend:3000` en Docker : à passer
+  par `environment:` dans le compose, ticket). Pas de contournement navigateur.
 - Tokens : `access_token` (15 min) en mémoire ; `refresh_token` (7 jours) persisté côté client car le backend l'attend
   dans le body de `/auth/refresh` ; à revoir si le backend passe aux cookies httpOnly. Ne jamais réutiliser le
   `refresh_token` renvoyé par `GET /users/*` (c'est un hash serveur).
@@ -194,9 +197,10 @@ assets/
 - Existant à migrer : `src/components/ProfileForm*`, `ProfileView.tsx`, `types/profile.ts` → `features/profile`.
 
 ### Modules deep de référence
-- `shared/api` : interface = `http.get/post/patch/delete(path, body?)`, `ApiError { status, messages }`,
-  `session.set/clear/onExpire`. Caché : base URL, Bearer, `?current_user_id=`, 401 → refresh → rejeu, 404 de liste
-  → `[]`, `message` tableau normalisé. Les tokens vivent ici ; `features/auth` appelle seulement `session.set`.
+- `shared/api` : interface = `http.get/post/patch/delete/list(path, body?, { query, signal })`, `ApiError { status,
+  messages, isNetwork }`, `session.set/clear/onExpire/userId`. Caché : base URL, Bearer, `?current_user_id=`, 401 →
+  refresh (dédupliqué) → rejeu, `http.list` traduit le 404 en `[]`, `message` tableau normalisé, réseau → `status 0`.
+  Les tokens vivent ici ; `features/auth` appelle seulement `session.set(tokens, userId)`.
 - `features/auth` : interface = `AuthProvider`, `useAuth() → { user, login, logout, register }`, `RequireAuth`.
 - `features/x/api/` : seule couche qui appelle `http`. Pages et composants ne voient que des hooks, ce qui rend
   TanStack Query branchable sans toucher aux composants.
@@ -223,3 +227,7 @@ Un chunk = une feature. Jamais d'export default dans un barrel.
 Pas de `pages/`, `services/`, `hooks/`, `contexts/`, `types/` à plat : chaque chose vit dans la feature propriétaire,
 sinon les interfaces deviennent shallow et les imports se croisent. `router.tsx` est le seul fichier qui changera à
 l'arrivée de React Router.
+
+## Plans et questions ouvertes
+- À la fin de chaque plan : liste des questions non résolues auxquelles répondre, s'il y en a.
+- Questions très concises ; sacrifier la grammaire pour la précision.

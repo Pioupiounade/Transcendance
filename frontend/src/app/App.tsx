@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
-import { ProfileForm } from './components/ProfileForm';
-import { ProfileView } from './components/ProfileView';
-import type { UserProfile } from './types/profile';
+import { useState } from 'react';
+import { ProfileForm } from '../components/ProfileForm';
+import { ProfileView } from '../components/ProfileView';
+import type { UserProfile } from '../types/profile';
 
-function App() {
+export function App() {
   // 1. Controla qué pantalla se ve (false = Ver perfil, true = Formulario)
   const [isEditing, setIsEditing] = useState(false);
 
@@ -47,4 +47,3 @@ function App() {
   );
 }
 
-export default App;
