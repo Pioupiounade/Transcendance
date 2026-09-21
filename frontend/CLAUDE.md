@@ -57,9 +57,10 @@ Ce fichier est chargé automatiquement quand la session démarre dans `frontend/
   `noUnusedParameters`, `noFallthroughCasesInSwitch`, `verbatimModuleSyntax`, `erasableSyntaxOnly`.
 - ESLint (flat config) : `@eslint/js` recommended, `typescript-eslint` recommended, `react-hooks` recommended,
   `react-refresh` (Vite). `npm run lint` doit être vierge avant une PR ; ne pas désactiver une règle, corriger le code.
-- Prévu par `../Docs/architecture.md` mais **pas installé** : React Router, TanStack Query, Leaflet, framework CSS (TBD),
-  Jest + React Testing Library. Chaque ajout passe par un ticket. Aucun test runner pour l'instant
-  (Vitest s'intègre nativement à Vite : à trancher en équipe avant d'installer).
+- Installé : React Router 7 en mode data (`createBrowserRouter`, ticket #8). Prévu par `../Docs/architecture.md` mais
+  **pas installé** : TanStack Query, Leaflet, framework CSS (TBD), Jest + React Testing Library. Chaque ajout passe par
+  un ticket. Aucun test runner pour l'instant (Vitest s'intègre nativement à Vite : à trancher en équipe avant d'installer).
+- CSS : CSS Modules (`X.module.css` à côté du composant) sur les variables de `styles/tokens.css`.
 
 ## Architecture des modules
 
@@ -129,15 +130,16 @@ Ce fichier est chargé automatiquement quand la session démarre dans `frontend/
 - Tokens : `access_token` (15 min) en mémoire ; `refresh_token` (7 jours) persisté côté client car le backend l'attend
   dans le body de `/auth/refresh` ; à revoir si le backend passe aux cookies httpOnly. Ne jamais réutiliser le
   `refresh_token` renvoyé par `GET /users/*` (c'est un hash serveur).
-- Libellés UI des enums (maquette) : `ENVIRONMENT` → « Environnement », `SOCIAL` → « Entraide »,
-  `CULTURAL` → « Culture & partage ». Un seul endroit pour ce mapping, jamais de chaîne d'enum en dur dans le JSX.
+- Libellés UI des enums (maquette, à traduire en anglais) : `ENVIRONMENT` → « Environment », `SOCIAL` → « Mutual aid »,
+  `CULTURAL` → « Culture & sharing ». Un seul endroit pour ce mapping, jamais de chaîne d'enum en dur dans le JSX.
 
 ## Style et design
 - Source de vérité : `../Docs/DESIGN.md` (tokens `--brand`, `--terra`, `--surface`…, rayons, espacements, breakpoints
   760 / 1100 / 1500 px) et le CSS de `../mockup/styles.css`, à découper en composants. Composants cibles : `DESIGN.md` §9.
 - Framework CSS non choisi (`architecture.md` : TBD). En attendant : CSS Modules ou CSS plain avec les variables de
   `DESIGN.md` ; aucune bibliothèque de composants sans ticket.
-- Langue de l'UI : français (maquette). Identifiants de code en anglais. Textes UI centralisés.
+- Langue de l'UI : **anglais** (décision du 21/09/2026, la maquette est en français : traduire ses libellés).
+  Identifiants de code en anglais. Textes UI centralisés (`app/labels.ts`, `features/<x>/labels.ts`).
 - Pages obligatoires (sujet, sous peine de rejet) : Politique de confidentialité et Conditions d'utilisation, accessibles
   depuis le footer, avec un contenu réel.
 - Zéro erreur ni warning dans la console navigateur (exigence du sujet). Cible : dernière version stable de Chrome,
@@ -153,9 +155,9 @@ Inspirée de bulletproof-react et feature-sliced, réduite à ce que le projet j
 
 ```
 app/            composition root : seul endroit qui connaît tout
-  main.tsx, App.tsx, providers.tsx, router.tsx, lazyPage.ts
-  layout/       AppHeader, AppFooter, PageShell
-  pages/        pages sans domaine : Home, Terms, Privacy, NotFound
+  main.tsx, App.tsx, router.tsx (AppRouter), routes.ts (ROUTES), labels.ts, lazyPage.ts (à créer au 1er usage)
+  layout/       PageShell, AppHeader, BottomNav (mobile), AppFooter, navItems.ts
+  pages/        pages sans domaine : Home, Legal (CGU, confidentialité), NotFound, Placeholder
 features/       1 domaine métier = 1 module ; interface = index.ts
   auth/         login, register, session, RequireAuth
   profile/      users + profiles + interests (api_contract §6-8)
