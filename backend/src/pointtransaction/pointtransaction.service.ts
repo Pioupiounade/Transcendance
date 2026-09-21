@@ -57,24 +57,24 @@ export class PointtransactionService {
   }
 
   private async findOrganizationOwner(organizationId: bigint, tx?: Prisma.TransactionClient) {
-  const db = tx ?? this.prisma;
+    const db = tx ?? this.prisma;
 
-  const ownerMembership =
-    await db.organizationMember.findFirst({
-        where: {
-          organization_id: organizationId,
-          status: MemberStatus.ACTIVE,
-          role: RoleOrg.OWNER,
-        },
+    const ownerMembership =
+      await db.organizationMember.findFirst({
+          where: {
+            organization_id: organizationId,
+            status: MemberStatus.ACTIVE,
+            role: RoleOrg.OWNER,
+          },
 
-        select: {
-          user_id: true,
-        },
-      });
+          select: {
+            user_id: true,
+          },
+        });
 
-    if (!ownerMembership) {
-      throw new NotFoundException('Organization owner not found');
-    }
+      if (!ownerMembership) {
+        throw new NotFoundException('Organization owner not found');
+      }
 
     return ownerMembership.user_id;
   }
@@ -327,60 +327,59 @@ export class PointtransactionService {
   }
 
   async rewardOwnerForNewMember(organizationId: bigint, memberId: bigint, tx?: Prisma.TransactionClient) {
+    const db = tx ?? this.prisma;
+      await this.checkOrganizationIsActive(
+        organizationId,
+        tx,
+      );
 
-  const db = tx ?? this.prisma;
-    await this.checkOrganizationIsActive(
-      organizationId,
-      tx,
-    );
-
-  const membership =
-    await db.organizationMember.findUnique({
-        where: {
-          organization_id_user_id: {
-            organization_id: organizationId,
-            user_id: memberId,
+    const membership =
+      await db.organizationMember.findUnique({
+          where: {
+            organization_id_user_id: {
+              organization_id: organizationId,
+              user_id: memberId,
+            },
           },
-        },
 
-        select: {
-          user_id: true,
-          status: true,
-          role: true,
-          created_at: true,
-        },
-      });
+          select: {
+            user_id: true,
+            status: true,
+            role: true,
+            created_at: true,
+          },
+        });
 
-    if (!membership) {
-      throw new NotFoundException('Organization membership not found');
-    }
+      if (!membership) {
+        throw new NotFoundException('Organization membership not found');
+      }
 
 
-    if (membership.status !== MemberStatus.ACTIVE) {
-      throw new BadRequestException('Only an active membership can reward the owner');
-    }
+      if (membership.status !== MemberStatus.ACTIVE) {
+        throw new BadRequestException('Only an active membership can reward the owner');
+      }
 
-    const ownerId = await this.findOrganizationOwner(
-      organizationId,
-      tx,
-    );
+      const ownerId = await this.findOrganizationOwner(
+        organizationId,
+        tx,
+      );
 
-    if (ownerId === memberId) {
-      throw new BadRequestException('The owner cannot receive points for joining their own organization');
-    }
+      if (ownerId === memberId) {
+        throw new BadRequestException('The owner cannot receive points for joining their own organization');
+      }
 
-    await this.checkUserCanReceiveReward(
-      ownerId,
-      tx,
-    );
+      await this.checkUserCanReceiveReward(
+        ownerId,
+        tx,
+      );
 
-    return this.createPointTransaction(
-      ownerId,
-      5,
-      PointReason.ORGANIZATION_MEMBER_JOINED,
-      `ORGANIZATION_MEMBER_JOINED:${organizationId}:${memberId}:${membership.created_at.toISOString()}`,
-      tx,
-    );
+      return this.createPointTransaction(
+        ownerId,
+        5,
+        PointReason.ORGANIZATION_MEMBER_JOINED,
+        `ORGANIZATION_MEMBER_JOINED:${organizationId}:${memberId}:${membership.created_at.toISOString()}`,
+        tx,
+      );
   }
 
   private async penalizeOwnerForMemberDeparture(organizationId: bigint, memberId: bigint, membershipCreatedAt: Date, reason: PointReason, tx?: Prisma.TransactionClient) {
@@ -451,9 +450,10 @@ export class PointtransactionService {
     );
   }
 
-  async penalizeSuspendedUser(userId: bigint) {
+  async penalizeSuspendedUser(userId: bigint, tx?: Prisma.TransactionClient) {
+    const db = tx ?? this.prisma;
 
-    const user = await this.prisma.user.findUnique({
+    const user = await db.user.findUnique({
       where: {
         user_id: userId,
       },
@@ -481,8 +481,9 @@ export class PointtransactionService {
       -50,
       PointReason.USER_SUSPENDED,
       `USER_SUSPENDED:${userId}:${user.updated_at.toISOString()}`,
+      tx,
     );
-  }
+}
 
   async penalizeBannedUser(organizationId: bigint, userId: bigint, membershipCreatedAt: Date, tx?: Prisma.TransactionClient) {
     const db = tx ?? this.prisma;

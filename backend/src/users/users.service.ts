@@ -97,26 +97,26 @@ export class UsersService {
   }
 
   async findOneSafe(id: string) {
-  const user = await this.prisma.user.findUnique({
-    where: {
-      user_id: BigInt(id),
-    },
-  });
+    const user = await this.prisma.user.findUnique({
+      where: {
+        user_id: BigInt(id),
+      },
+    });
 
-  if (!user) {
-    throw new NotFoundException('User not found');
-  }
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
 
-  const {
-    password_hash,
-    refresh_token,
-    ...safeUser
-  } = user;
+    const {
+      password_hash,
+      refresh_token,
+      ...safeUser
+    } = user;
 
-  return {
-    ...safeUser,
-    user_id: safeUser.user_id.toString(),
-  };
+    return {
+      ...safeUser,
+      user_id: safeUser.user_id.toString(),
+    };
 }
   //4. mettre a jour l'adresse mail
   async updateEmail(id: string, data: UpdateUserDto) {
@@ -182,25 +182,25 @@ export class UsersService {
 
 //6. desactiver un utilisateur
   async deactivate(id: string) {
-  const user = await this.prisma.user.update({
-    where: {
-      user_id: BigInt(id),
-    },
-    data: {
-      account_status: AccountStatus.DEACTIVATED,
-    },
-  });
+    const user = await this.prisma.user.update({
+      where: {
+        user_id: BigInt(id),
+      },
+      data: {
+        account_status: AccountStatus.DEACTIVATED,
+      },
+    });
 
-  const {
-    password_hash,
-    refresh_token,
-    ...safeUser
-  } = user;
+    const {
+      password_hash,
+      refresh_token,
+      ...safeUser
+    } = user;
 
-  return {
-    ...safeUser,
-    user_id: safeUser.user_id.toString(),
-  };
+    return {
+      ...safeUser,
+      user_id: safeUser.user_id.toString(),
+    };
 }
 
 //7. suspendre un utilisateur
@@ -233,17 +233,24 @@ export class UsersService {
       throw new BadRequestException('User is already suspended');
     }
 
-    const updatedUser = await this.prisma.user.update({
-      where: {
-        user_id: BigInt(targetUserId),
-      },
-      data: {
-        account_status: AccountStatus.SUSPENDED,
-      },
-    });
+    const updatedUser = await this.prisma.$transaction(
+      async (tx) => {
+        const suspendedUser = await tx.user.update({
+          where: {
+            user_id: BigInt(targetUserId),
+          },
+          data: {
+            account_status: AccountStatus.SUSPENDED,
+          },
+        });
 
-    await this.pointtransactionService.penalizeSuspendedUser(
-      BigInt(targetUserId),
+        await this.pointtransactionService.penalizeSuspendedUser(
+          BigInt(targetUserId),
+          tx,
+        );
+
+        return suspendedUser;
+      },
     );
 
     const {
@@ -256,7 +263,7 @@ export class UsersService {
       ...safeUser,
       user_id: safeUser.user_id.toString(),
     };
-  }
+}
 
 //8. Reactiver un utilisateur
   async reactivate(targetUserId: string, currentUserId: string) {
