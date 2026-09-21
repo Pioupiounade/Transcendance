@@ -54,3 +54,14 @@ Quand je m'installe sur un nouvel ordi:
     cd backend
     npm run build
 ```
+
+-> lancer prisma 
+```
+    npm run start:dev
+```
+
+-> checker les logs de prisma
+```
+    docker logs -f pioupiounades-backend
+```
+
