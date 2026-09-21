@@ -1,0 +1,225 @@
+# frontend/ — Pioupiounades (ft_transcendence, 42)
+
+Périmètre de Claude Code : **`frontend/` uniquement**. Tout ce que Claude produit (code, docs, notes, fichiers générés)
+vit ici : jamais à la racine du dépôt, ni dans `backend/` (coéquipiers, lecture seule), ni dans `Docs/` (documentation
+d'équipe, lecture seule). Si l'API ne couvre pas un besoin, le signaler par un ticket au lieu de contourner.
+Contrat d'API réel : `docs/api_contract.md`. Design : `../Docs/DESIGN.md`, `../Docs/_reference.html`, `../mockup/`.
+Ce fichier est chargé automatiquement quand la session démarre dans `frontend/`, ou dès que Claude touche un fichier de ce dossier.
+
+## Projet
+- Plateforme web de quartier : actions citoyennes, organisations, participations, amis. Équipe de 4, Tech Lead : @Quentin.
+- Sujet officiel : `../Docs/en.subject.pdf` (v21.1). Démo finale le 28/09/2026 (`../Docs/sprint_schedule.md`).
+- Backend (`../backend/`, hors périmètre) : NestJS 11, Prisma 7, PostgreSQL 17, JWT (passport), argon2. API REST sans
+  préfixe ni version, ids `BigInt` renvoyés en string, CORS non activé (20/09/2026).
+- `../docker/docker-compose.yml` : postgres :5432, backend :3000, frontend :5173, sources montées (hot reload).
+  Nginx/HTTPS pas encore branché.
+
+## Commandes
+- Ici : `npm run dev` (Vite sur :5173), `npm run build` (`tsc -b` puis `vite build` : une erreur de type casse le build),
+  `npm run lint`, `npm run preview`.
+- Makefile à la racine du dépôt (= `docker compose -f docker/docker-compose.yml`) : `make up` / `make uplogs` (détaché /
+  avec logs), `make down`, `make logs`, `make backend-shell`, `make re` (down -v, rebuild, up, puis `make db-update` :
+  prisma generate + db push dans le conteneur backend), `make clean` (supprime aussi les volumes : base perdue).
+- Docker : le conteneur frontend exécute `npm run dev -- --host 0.0.0.0`, le dossier est monté, `node_modules` est un
+  volume nommé. Après un ajout de dépendance : `make re` ou `docker compose -f docker/docker-compose.yml build frontend`.
+
+## Règles d'équipe (workflow GitHub)
+1. Ticket : passer la carte en "In Progress" dès le début du travail.
+2. Branche depuis `main` à jour : `feature/<issue#>-short_description` (ex. `feature/2-docker-setup`). 1 ticket = 1 branche.
+3. Travail testé et commité → ouvrir la PR, la lier au ticket (`Closes #<issue#>`), carte en "In Review", reviewer @Quentin.
+4. @Quentin relit, approuve et merge dans `main` ; la fermeture de la PR passe la carte en "Done".
+5. Daily chaque jour travaillé (au début ou avant de partir) : `Daily — [Date]` / 1. What did I work on? /
+   2. What will I do next? / 3. Any blockers?
+- Commits clairs et significatifs (exigence du sujet), format `type(scope): description`, sujet en anglais.
+
+## Règles pour Claude Code (git)
+- Seul espace de travail : la branche `claude/*` du worktree, créée depuis la branche d'issue de l'utilisateur.
+  Commiter uniquement dessus, en petits commits atomiques `type(scope): description`.
+- Jamais : `git push`, création de PR, merge, rebase, changement de branche, modification de `main` ou de la branche
+  d'issue. L'utilisateur intègre lui-même par `merge --squash` après relecture.
+- Fin de tâche : ne rien pousser ; donner la liste des fichiers créés et modifiés, les points à relire en priorité et une
+  proposition de message pour le commit squash.
+
+## Documentation d'équipe (`../Docs/`, lecture seule) — lire avant d'agir, ne pas dupliquer
+- `vision.md`, `personas.md`, `user_stories.md` (tableau MVP en fin de fichier), `backlog.md` (épics 1 à 9) : le produit.
+- `modules.md` : modules ft_transcendence choisis et points. `sprint_schedule.md` : sprints de septembre 2026.
+- `architecture.md` : stack cible, couches, RBAC (§10.1). `database.md` : schéma cible, partiellement obsolète
+  (la vérité est `../backend/prisma/schema.prisma`). `prisma_rules.md` : règles métier par entité. `todo.md` : reste à faire.
+- `DESIGN.md` : palette, typo, composants React à construire (§9). `_reference.html` : maquette navigable.
+- `en.subject.pdf` : sujet officiel (bloquant : HTTPS, `.env` ignoré + `.env.example`, pages CGU et confidentialité,
+  README complet en anglais).
+- `docs/api_contract.md` (ici, dans `frontend/`) : routes réelles du backend, généré le 20/09/2026 ; à régénérer quand
+  le backend change.
+
+## Outillage
+- React 19.2, Vite 8, TypeScript 6. `tsconfig.app.json` : cible ES2023, `jsx: react-jsx`, `noUnusedLocals`,
+  `noUnusedParameters`, `noFallthroughCasesInSwitch`, `verbatimModuleSyntax`, `erasableSyntaxOnly`.
+- ESLint (flat config) : `@eslint/js` recommended, `typescript-eslint` recommended, `react-hooks` recommended,
+  `react-refresh` (Vite). `npm run lint` doit être vierge avant une PR ; ne pas désactiver une règle, corriger le code.
+- Prévu par `../Docs/architecture.md` mais **pas installé** : React Router, TanStack Query, Leaflet, framework CSS (TBD),
+  Jest + React Testing Library. Chaque ajout passe par un ticket. Aucun test runner pour l'instant
+  (Vitest s'intègre nativement à Vite : à trancher en équipe avant d'installer).
+
+## Architecture des modules
+
+### Vocabulaire d'architecture (à utiliser tel quel)
+
+- Module : unité avec une interface et une implémentation. Ici : un dossier de feature, un hook, le client API.
+- Interface : tout ce que l'appelant doit savoir (signatures, erreurs, ordre d'appel). Doit tenir en quelques lignes.
+- Deep : petite interface, beaucoup de comportement caché. C'est l'objectif.
+- Shallow : interface aussi complexe que l'implémentation. À éviter.
+- Seam : endroit où l'on peut substituer une implémentation (ex. client API réel / mock en test).
+
+### Règles
+
+1. Chaque feature expose son interface via son `index.ts`. Rien d'autre n'est public.
+2. Import entre features uniquement par l'`index.ts`. Jamais de chemin interne (`features/x/components/...`).
+3. Pour utiliser un module, lis son `index.ts`. N'ouvre son implémentation que si la tâche la modifie.
+4. Avant de créer un module, applique le test de suppression : si le supprimer ne renvoie aucune complexité chez les appelants, ne le crée pas.
+5. Pas d'abstraction pour une seule implémentation. Un seam n'est réel qu'à partir de deux adaptateurs.
+6. Les tests passent par l'interface, pas par les détails internes.
+
+## TypeScript
+- `verbatimModuleSyntax` : importer les types avec `import type { X } from '...'` (ou `import { type X }`).
+- `erasableSyntaxOnly` : **pas d'`enum`**, pas de `namespace`, pas de propriétés de paramètre dans les constructeurs.
+  Pour les enums de l'API, objet `as const` + type union :
+  `export const CATEGORY = { SOCIAL: 'SOCIAL', ENVIRONMENT: 'ENVIRONMENT', CULTURAL: 'CULTURAL' } as const;`
+  `export type Category = (typeof CATEGORY)[keyof typeof CATEGORY];`
+- Pas de `any` (utiliser `unknown` puis affiner). Typer les réponses API d'après `docs/api_contract.md` §3 :
+  les ids sont des `string`, les dates des `string` ISO, `location` est `[lat, lng]`.
+- Exports nommés uniquement (lisibilité, refactoring, compatibilité `react-refresh`) ; export default seulement si un
+  outil l'exige (ex. `React.lazy`).
+
+## React
+- Composants fonction uniquement, hooks pour la logique, jamais de classe. Respecter `rules-of-hooks` et
+  `exhaustive-deps` : une dépendance manquante se corrige, elle ne se commente pas.
+- Nommage : composants et leurs fichiers en PascalCase (`ActionCard.tsx`), hooks en camelCase préfixés `use`
+  (`useActions.ts`), utilitaires en camelCase, un composant par fichier.
+- Un fichier de composant (`.tsx`) n'exporte que des composants : la règle `react-refresh/only-export-components`
+  (sévérité error via `configs.vite`) n'analyse que les `.jsx`/`.tsx`. Constantes, types et helpers partagés vivent
+  dans des fichiers séparés. L'`index.ts` d'une feature (Règle 1) n'est pas analysé : il réexporte composants, hooks,
+  types et constantes sans avertissement. Le nommer `index.ts`, jamais `index.tsx`.
+- Props : `type XProps = { ... }` explicite, pas de `React.FC`, `children` typé `ReactNode` (import type).
+- État : local d'abord (`useState`, `useReducer`) ; un contexte pour l'utilisateur connecté ; pas de store global tant
+  que le besoin n'est pas démontré. Les données serveur passeront par TanStack Query une fois installé.
+- Effets : réservés à la synchronisation avec l'extérieur (fetch, abonnements, DOM). Pas d'effet pour dériver un état
+  d'un autre : calculer pendant le rendu ou utiliser `useMemo`.
+- Formulaires : composants contrôlés, validation côté client miroir des DTO backend (e-mail valide, mot de passe ≥ 8
+  caractères, `location` = 2 nombres, champs obligatoires listés dans `docs/api_contract.md`). Le sujet impose la
+  validation des deux côtés.
+- Accessibilité (`../Docs/DESIGN.md` §5 et sujet) : label visible pour chaque champ, erreur reliée par `aria-describedby`,
+  focus visible, `prefers-reduced-motion` respecté, la couleur ne porte jamais seule une information (icône + libellé).
+- Chaque écran gère explicitement ses états : chargement, vide, erreur (les 404 de listes vides compris).
+
+## Appels API
+- URL de base dans `import.meta.env.VITE_API_URL` : `frontend/.env` (ignoré par git) + `frontend/.env.example`
+  documenté (exigence du sujet). Déclarer les variables dans `ImportMetaEnv` (`vite-env.d.ts`).
+- Un seul client HTTP (wrapper `fetch`) : JSON, header `Authorization: Bearer <access_token>`, erreurs normalisées
+  depuis `{ statusCode, message, error }` (`message` peut être un tableau), 401 → un essai de `POST /auth/refresh`
+  puis rejeu, sinon déconnexion.
+- Le paramètre transitoire `?current_user_id=` (routes hors `/auth`) est ajouté par le client HTTP à un seul endroit,
+  jamais dans les composants, pour être retiré sans douleur quand les guards backend arriveront.
+- Les listes filtrées renvoient 404 quand elles sont vides (`GET /actions?…`, `GET /organizations?creator_id=`) :
+  le client traduit ce 404 en tableau vide.
+- CORS non activé côté backend (20/09/2026) : en dev, `server.proxy` dans `vite.config.ts` ou demander `app.enableCors()`
+  par ticket. Pas de contournement navigateur.
+- Tokens : `access_token` (15 min) en mémoire ; `refresh_token` (7 jours) persisté côté client car le backend l'attend
+  dans le body de `/auth/refresh` ; à revoir si le backend passe aux cookies httpOnly. Ne jamais réutiliser le
+  `refresh_token` renvoyé par `GET /users/*` (c'est un hash serveur).
+- Libellés UI des enums (maquette) : `ENVIRONMENT` → « Environnement », `SOCIAL` → « Entraide »,
+  `CULTURAL` → « Culture & partage ». Un seul endroit pour ce mapping, jamais de chaîne d'enum en dur dans le JSX.
+
+## Style et design
+- Source de vérité : `../Docs/DESIGN.md` (tokens `--brand`, `--terra`, `--surface`…, rayons, espacements, breakpoints
+  760 / 1100 / 1500 px) et le CSS de `../mockup/styles.css`, à découper en composants. Composants cibles : `DESIGN.md` §9.
+- Framework CSS non choisi (`architecture.md` : TBD). En attendant : CSS Modules ou CSS plain avec les variables de
+  `DESIGN.md` ; aucune bibliothèque de composants sans ticket.
+- Langue de l'UI : français (maquette). Identifiants de code en anglais. Textes UI centralisés.
+- Pages obligatoires (sujet, sous peine de rejet) : Politique de confidentialité et Conditions d'utilisation, accessibles
+  depuis le footer, avec un contenu réel.
+- Zéro erreur ni warning dans la console navigateur (exigence du sujet). Cible : dernière version stable de Chrome,
+  responsive du mobile au desktop.
+
+## Tests
+- Aucun runner installé. Quand il le sera : tests à côté du code (`ActionCard.test.tsx`), orientés utilisateur
+  (rôles, labels, comportements), jamais sur les détails d'implémentation.
+
+## Structure des dossiers
+
+Inspirée de bulletproof-react et feature-sliced, réduite à ce que le projet justifie. `src/` :
+
+```
+app/            composition root : seul endroit qui connaît tout
+  main.tsx, App.tsx, providers.tsx, router.tsx, lazyPage.ts
+  layout/       AppHeader, AppFooter, PageShell
+  pages/        pages sans domaine : Home, Terms, Privacy, NotFound
+features/       1 domaine métier = 1 module ; interface = index.ts
+  auth/         login, register, session, RequireAuth
+  profile/      users + profiles + interests (api_contract §6-8)
+  actions/      actions + carte + filtres ; owner des enums Category/ActionStatus et de leurs libellés
+  participations/, organizations/, friends/ (friend-requests + friendships)
+  <feature>/
+    api/        fonctions fetch typées + hooks useX : seuls appelants de shared/api
+    components/ privés au domaine
+    pages/      écrans routés (XPage.tsx)
+    hooks/      logique React privée
+    types.ts    d'après api_contract.md §3
+    labels.ts   textes UI du domaine
+    index.ts    l'interface, 10 à 20 lignes max
+shared/         zéro connaissance métier, réutilisable ailleurs
+  api/          client HTTP (deep), index.ts
+  ui/           kit DESIGN.md §9 (Button, FloatingField, CategoryChip, Dialog, Spinner, ErrorMessage…), index.ts
+  lib/          fonctions pures, pas de barrel (test de suppression négatif)
+  config/       env.ts : lit et valide VITE_API_URL
+styles/         tokens.css (DESIGN.md), reset.css, global.css
+assets/
+```
+
+### Dépendances
+- Une seule direction : `app → features → shared`. Jamais l'inverse.
+- Feature → feature par l'`index.ts` uniquement, sans cycle. Un cycle = fusionner les deux features ou remonter le
+  morceau dans `shared`.
+- Vérifié par ESLint `no-restricted-imports` (règle core) : chemins internes `**/features/*/*` interdits, `@/app/*`
+  interdit depuis `features` et `shared`, `@/features/*` interdit depuis `shared`.
+- Alias `@/` = `src/` : `paths` dans `tsconfig.app.json` + `resolve.alias` dans `vite.config.ts`.
+
+### Feature ou module partagé ?
+- Feature : possède des routes de `docs/api_contract.md` et/ou des écrans. Test : si le backend supprime le domaine,
+  le dossier disparaît entier.
+- Partagé : ne connaît aucun type métier. `shared/api` et `shared/ui` ont un `index.ts` (plusieurs appelants) ;
+  `shared/lib` n'en a pas, import direct du fichier.
+- Libellés d'enum : dans la feature propriétaire de l'enum (`features/actions/labels.ts`, réexporté par son index).
+  Pas de dossier `constants` global.
+- `NeighborhoodMap` reste dans `features/actions` ; passe en `shared/ui` seulement quand un 2e domaine l'utilise.
+- Existant à migrer : `src/components/ProfileForm*`, `ProfileView.tsx`, `types/profile.ts` → `features/profile`.
+
+### Modules deep de référence
+- `shared/api` : interface = `http.get/post/patch/delete(path, body?)`, `ApiError { status, messages }`,
+  `session.set/clear/onExpire`. Caché : base URL, Bearer, `?current_user_id=`, 401 → refresh → rejeu, 404 de liste
+  → `[]`, `message` tableau normalisé. Les tokens vivent ici ; `features/auth` appelle seulement `session.set`.
+- `features/auth` : interface = `AuthProvider`, `useAuth() → { user, login, logout, register }`, `RequireAuth`.
+- `features/x/api/` : seule couche qui appelle `http`. Pages et composants ne voient que des hooks, ce qui rend
+  TanStack Query branchable sans toucher aux composants.
+
+### Chargement paresseux
+Exports nommés partout, barrels compris. Un seul helper, `app/lazyPage.ts` :
+```ts
+export const lazyPage = <T extends Record<K, ComponentType>, K extends keyof T>(
+  load: () => Promise<T>, name: K,
+) => lazy(() => load().then((m) => ({ default: m[name] })));
+// router.tsx : lazyPage(() => import('@/features/actions'), 'ActionsPage')
+```
+Un chunk = une feature. Jamais d'export default dans un barrel.
+
+### Tests (complète la Règle 6)
+- Colocalisés (`ActionsPage.test.tsx`) mais importent l'interface : `from '..'` (index de la feature) ou `from '.'`
+  (composant `shared/ui`).
+- Un composant privé n'a pas de test direct : le besoin d'en tester un signale qu'il doit devenir un module
+  (`shared/ui`) ou être couvert via sa page.
+- Doubles au niveau réseau (`vi.stubGlobal('fetch', …)` ou équivalent). Aucun seam ajouté dans le code (Règle 5) :
+  le seam réel est `fetch`.
+
+### Écarts assumés avec `../Docs/architecture.md` §4
+Pas de `pages/`, `services/`, `hooks/`, `contexts/`, `types/` à plat : chaque chose vit dans la feature propriétaire,
+sinon les interfaces deviennent shallow et les imports se croisent. `router.tsx` est le seul fichier qui changera à
+l'arrivée de React Router.
