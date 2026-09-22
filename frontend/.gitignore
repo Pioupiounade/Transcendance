@@ -1,0 +1,4 @@
+# Secrets locaux (exigence du sujet : .env ignoré, .env.example versionné)
+.env
+.env.*
+!.env.example
