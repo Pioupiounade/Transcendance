@@ -1,0 +1,77 @@
+/* Tokens de design — source : ../Docs/DESIGN.md (valeurs finales, forêt + terracotta).
+   Un seul bloc :root ; la maquette en avait deux, le second écrasant le premier. */
+:root {
+  /* Typographie */
+  --font: "Avenir Next", "Nunito Sans", Avenir, system-ui, sans-serif;
+  --display: 32px;
+  --title: 22px;
+  --body: 16px;
+  --caption: 13px;
+  --track: 0;
+  --btn-w: 700;
+
+  /* Couleurs — cœur */
+  --brand: #265c4b;
+  --brand-hover: #1d493b;
+  --brand-press: #153a2f;
+  --terra: #b65339;
+  --surface: #f8f5ef;
+  --ground: #fffefa;
+  --trust: #265c4b;
+  --trust-soft: #e5eedf;
+  --ink: #263f36;
+
+  /* Couleurs — secondaires */
+  --muted: #65736b;
+  --line: #dddcd2;
+  --danger: #b93832;
+  --danger-soft: #fbedea;
+  --culture: #90681f;
+  --tag-culture-bg: #f6ebca;
+  --tag-culture-ink: #78551b;
+  --tag-social-bg: #f8e3d8;
+  --tag-social-ink: #a04b34;
+  --tag-environment-bg: #e5eedf;
+  --tag-environment-ink: #265c4b;
+  --avatar-bg: #f2d6bc;
+  --avatar-ink: #62452e;
+  --map-ground: #e5eacf;
+  --map-line: #cbd8bc;
+  --note-bg: #eee8d8;
+  --note-ink: #69715d;
+  --card-selected-bg: #f3f6ea;
+
+  /* Espacements (DESIGN.md §3) */
+  --s1: 4px;
+  --s2: 8px;
+  --s3: 16px;
+  --s4: 24px;
+  --s5: 40px;
+  --s6: 64px;
+
+  /* Rayons */
+  --r-btn: 999px;
+  --r-field: 12px;
+  --r-chip: 30px;
+  --r-action: 19px;
+  --r-panel: 22px;
+  --r-card: 24px;
+  --r-tag: 7px;
+
+  /* Élévation, focus, mouvement */
+  --shadow: 0 8px 30px #263f3610;
+  --focus-ring: 3px solid var(--terra);
+  --focus-offset: 3px;
+  --t-fast: 120ms;
+  --t-base: 150ms;
+
+  /* Breakpoints (documentaires : les media queries ne lisent pas les variables) */
+  /* mobile ≤ 760px · tablette 761–1100px · desktop > 1100px · large > 1500px */
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --t-fast: 0ms;
+    --t-base: 0ms;
+  }
+}
