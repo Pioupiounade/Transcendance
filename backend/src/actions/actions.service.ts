@@ -17,17 +17,15 @@ export class ActionsService {
 
 //1. recuperer toutes les actions
 // GET /actions
-async findAll() {
-  const actions = await this.prisma.action.findMany();
+  async findAll() {
+    const actions = await this.prisma.action.findMany();
 
-  return actions.map((action) => ({
-    ...action,
-    action_id: action.action_id.toString(),
-    creator_id: action.creator_id.toString(),
-    organization_id: action.organization_id?.toString() ?? null,
-    validated_by_user_id: action.validated_by_user_id?.toString() ?? null,
-  }));
-}
+    return Promise.all(
+      actions.map((action) =>
+        this.enrichActionWithParticipationData(action),
+      ),
+    );
+  }
 
 //2. recupere une action grace a son id
 // GET /actions/:id
@@ -41,14 +39,27 @@ async findAll() {
     if(!action) {
       throw new NotFoundException('Action not found');
     }
-    
+
+    const participantCount = await this.prisma.participation.count({
+      where: {
+        action_id: action.action_id,
+      },
+    });
+
+    const remainingSeats =
+      action.max_participants === null
+        ? null
+        : Math.max(action.max_participants - participantCount, 0);
+
     return {
       ...action,
       action_id: action.action_id.toString(),
       creator_id: action.creator_id.toString(),
       organization_id: action.organization_id?.toString() ?? null,
       validated_by_user_id: action.validated_by_user_id?.toString() ?? null,
-      };
+      participant_count: participantCount,
+      remaining_seats: remainingSeats,
+    };
   }
 
 //3. recupere des actions par organization
@@ -64,13 +75,11 @@ async findAll() {
       throw new NotFoundException('No actions found for this organization');
     }
     
-    return actions.map((action) => ({
-      ...action,
-      action_id: action.action_id.toString(),
-      creator_id: action.creator_id.toString(),
-      organization_id: action.organization_id?.toString() ?? null,
-      validated_by_user_id: action.validated_by_user_id?.toString() ?? null,
-      }));
+    return Promise.all(
+      actions.map((action) =>
+        this.enrichActionWithParticipationData(action),
+      ),
+    );
   }
 
 //4. recupere des actions par categorie
@@ -86,13 +95,11 @@ async findAll() {
       throw new NotFoundException('No actions found for this category');
     }
     
-    return actions.map((action) => ({
-      ...action,
-      action_id: action.action_id.toString(),
-      creator_id: action.creator_id.toString(),
-      organization_id: action.organization_id?.toString() ?? null,
-      validated_by_user_id: action.validated_by_user_id?.toString() ?? null,
-      }));
+    return Promise.all(
+      actions.map((action) =>
+        this.enrichActionWithParticipationData(action),
+      ),
+    );
   }
 
 //5. recupere des actions par createur
@@ -108,13 +115,11 @@ async findAll() {
       throw new NotFoundException('No actions found for this user');
     }
     
-    return actions.map((action) => ({
-      ...action,
-      action_id: action.action_id.toString(),
-      creator_id: action.creator_id.toString(),
-      organization_id: action.organization_id?.toString() ?? null,
-      validated_by_user_id: action.validated_by_user_id?.toString() ?? null,
-      }));
+    return Promise.all(
+      actions.map((action) =>
+        this.enrichActionWithParticipationData(action),
+      ),
+    );
   }
 
 //6. recupere des actions par statut
@@ -130,13 +135,11 @@ async findAll() {
       throw new NotFoundException('No actions found for this status');
     }
     
-    return actions.map((action) => ({
-      ...action,
-      action_id: action.action_id.toString(),
-      creator_id: action.creator_id.toString(),
-      organization_id: action.organization_id?.toString() ?? null,
-      validated_by_user_id: action.validated_by_user_id?.toString() ?? null,
-      }));
+    return Promise.all(
+      actions.map((action) =>
+        this.enrichActionWithParticipationData(action),
+      ),
+    );
   }
 
 //7. recuperer des actions par zone
@@ -156,13 +159,32 @@ async findAll() {
         return distance <= radiusKm;
       });
 
-      return nearbyActions.map((action) => ({
-        ...action,
-        action_id: action.action_id.toString(),
-        creator_id: action.creator_id.toString(),
-        organization_id: action.organization_id?.toString() ?? null,
-        validated_by_user_id: action.validated_by_user_id?.toString() ?? null,
-        }));
+      return Promise.all(
+        nearbyActions.map((action) =>
+          this.enrichActionWithParticipationData(action),
+        ),
+      );
+  }
+
+  private async enrichActionWithParticipationData(action: any) {
+    const participantCount = await this.prisma.participation.count({
+      where: {
+        action_id: action.action_id,
+      },
+    });
+
+    return {
+      ...action,
+      action_id: action.action_id.toString(),
+      creator_id: action.creator_id.toString(),
+      organization_id: action.organization_id?.toString() ?? null,
+      validated_by_user_id: action.validated_by_user_id?.toString() ?? null,
+      participant_count: participantCount,
+      remaining_seats:
+        action.max_participants === null
+          ? null
+          : Math.max(action.max_participants - participantCount, 0),
+    };
   }
 
   private calculateDistance(
@@ -253,6 +275,15 @@ async findAll() {
       }
     }
 
+    if (
+      data.max_participants !== undefined &&
+      data.max_participants < 3
+    ) {
+      throw new BadRequestException(
+        'Maximum participants cannot be lower than minimum participants',
+      );
+    }
+    
     const createdAction = await this.prisma.action.create({
       data: {
         title: data.title,
@@ -262,7 +293,7 @@ async findAll() {
         scheduled_at: data.scheduled_at,
         imagesList: data.imagesList ?? [],
         organization_id: organizationId,
-
+        max_participants: data.max_participants,
         creator_id: BigInt(currentUserId),
       },
     });
@@ -370,6 +401,22 @@ async findAll() {
       }
     }
 
+    if (data.max_participants !== undefined) {
+      if (data.max_participants < action.min_participants) {
+        throw new BadRequestException('Maximum participants cannot be lower than minimum participants');
+      }
+
+      const participantCount = await this.prisma.participation.count({
+        where: {
+          action_id: action.action_id,
+        },
+      });
+
+      if (data.max_participants < participantCount) {
+        throw new BadRequestException('Maximum participants cannot be lower than current participants count');
+      }
+    }
+
     const updatedAction = await this.prisma.action.update({
       where: {
         action_id: BigInt(id),
@@ -381,6 +428,7 @@ async findAll() {
         location: data.location,
         category: data.category,
         imagesList: data.imagesList,
+        max_participants: data.max_participants,
         scheduled_at: data.scheduled_at ? new Date(data.scheduled_at) : undefined,
       },
     });
@@ -469,10 +517,8 @@ async findAll() {
       },
     });
 
-    if (participantCount < 3) {
-      throw new BadRequestException(
-        'An action needs at least 3 participants to be approved',
-      );
+    if (participantCount < action.min_participants) {
+      throw new BadRequestException(`An action needs at least ${action.min_participants} participants to be approved`);
     }
 
     const updatedAction = await this.prisma.action.update({
@@ -660,10 +706,8 @@ async findAll() {
           },
         });
 
-        if (participantCount < 3) {
-          throw new BadRequestException(
-            'An action needs at least 3 participants to be completed',
-          );
+        if (participantCount < action.min_participants) {
+          throw new BadRequestException(`An action needs at least ${action.min_participants} participants to be completed`);
         }
 
         const completedAction = await tx.action.update({

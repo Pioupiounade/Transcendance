@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { AccountStatus, ActionStatus } from '../../generated/prisma/client';
+import { AccountStatus, ActionStatus, Prisma } from '../../generated/prisma/client';
 
 @Injectable()
 export class ParticipationsService {
@@ -11,71 +11,112 @@ export class ParticipationsService {
     const userId = BigInt(currentUserId);
     const actionIdBigInt = BigInt(actionId);
 
-    const user = await this.prisma.user.findUnique({
-      where: {
-        user_id: userId,
-      },
-    });
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        const participation = await this.prisma.$transaction(
+          async (tx) => {
+            const user = await tx.user.findUnique({
+              where: {
+                user_id: userId,
+              },
+            });
 
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
+            if (!user) {
+              throw new NotFoundException('User not found');
+            }
 
-    if (user.account_status !== AccountStatus.ACTIVE) {
-      throw new BadRequestException('Only an active user can participate to an action');
-    }
+            if (user.account_status !== AccountStatus.ACTIVE) {
+              throw new BadRequestException('Only an active user can participate to an action');
+            }
 
-    const action = await this.prisma.action.findUnique({
-      where: {
-        action_id: actionIdBigInt,
-      },
-    });
+            const action = await tx.action.findUnique({
+              where: {
+                action_id: actionIdBigInt,
+              },
+            });
 
-    if (!action) {
-      throw new NotFoundException('Action not found');
-    }
+            if (!action) {
+              throw new NotFoundException('Action not found');
+            }
 
-    if (action.status !== ActionStatus.PENDING) {
-      throw new BadRequestException('You can only join a pending action');
-    }
+            if (action.creator_id === userId) {
+              throw new BadRequestException('The action creator cannot participate in their own action');
+            }
 
-    const existingParticipation = await this.prisma.participation.findUnique({
-        where: {
-          action_id_user_id: {
-            action_id: actionIdBigInt,
-            user_id: userId,
+            if (action.status !== ActionStatus.PENDING) {
+              throw new BadRequestException(
+                'You can only join a pending action',
+              );
+            }
+
+            const existingParticipation =
+              await tx.participation.findUnique({
+                where: {
+                  action_id_user_id: {
+                    action_id: actionIdBigInt,
+                    user_id: userId,
+                  },
+                },
+              });
+
+            if (existingParticipation) {
+              throw new BadRequestException('User already participates to this action');
+            }
+
+            if (action.max_participants !== null) {
+              const currentParticipants =
+                await tx.participation.count({
+                  where: {
+                    action_id: actionIdBigInt,
+                  },
+                });
+
+              if (
+                currentParticipants >= action.max_participants
+              ) {
+                throw new BadRequestException('Maximum number of participants reached');
+              }
+            }
+
+            return tx.participation.create({
+              data: {
+                action_id: actionIdBigInt,
+                user_id: userId,
+              },
+            });
           },
-        },
-      });
-
-    if (existingParticipation) {
-      throw new BadRequestException('User already participates to this action');
-    }
-
-    if (action.max_participants !== null) {
-      const currentParticipants = await this.prisma.participation.count({
-          where: {
-            action_id: actionIdBigInt,
+          {
+            isolationLevel:
+              Prisma.TransactionIsolationLevel.Serializable,
           },
-        });
+        );
 
-      if (currentParticipants >= action.max_participants) {
-        throw new BadRequestException('Maximum number of participants reached');
+        return {
+          ...participation,
+          action_id: participation.action_id.toString(),
+          user_id: participation.user_id.toString(),
+        };
+      } catch (error) {
+        if (
+          error instanceof Prisma.PrismaClientKnownRequestError &&
+          error.code === 'P2034' &&
+          attempt < 2
+        ) {
+          continue;
+        }
+
+        if (
+          error instanceof Prisma.PrismaClientKnownRequestError &&
+          error.code === 'P2002'
+        ) {
+          throw new BadRequestException('User already participates to this action');
+        }
+
+        throw error;
       }
     }
 
-    const participation = await this.prisma.participation.create({
-        data: {
-          action_id: actionIdBigInt,
-          user_id: userId,
-        },
-      });
-
-    return {
-      ...participation,
-      action_id: participation.action_id.toString(),
-      user_id: participation.user_id.toString(),
-    };
+    throw new BadRequestException('Participation could not be created, please try again');
   }
 
   //annuler sa participation
