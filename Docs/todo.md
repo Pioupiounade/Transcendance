@@ -1,7 +1,26 @@
 ORM ->
 
+* Implémenter le système de points
+
+  * créer un `PointsService` ou équivalent ;
+  * utiliser `PointTransaction` ;
+  * attribuer/retirer des points selon des événements métier ;
+  * éviter les modifications arbitraires de `User.points` ;
+  * conserver l’historique des transactions.
+
 * Ajouter les recherches restantes
+
   * permettre plus tard la combinaison de plusieurs filtres.
+
+* Ajouter les règles d’autorisation quand l’authentification sera disponible
+
+  * propriétaire du compte ;
+  * `ADMIN` ;
+  * créateur d’organisation ;
+  * `OWNER` ;
+  * `MANAGER` ;
+  * utilisateur actif/suspendu/désactivé ;
+  * ne plus passer librement `currentUserId` depuis le client.
 
 * Tester chaque bloc
   * cas nominal ;
