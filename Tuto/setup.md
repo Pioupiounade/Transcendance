@@ -55,13 +55,7 @@ Quand je m'installe sur un nouvel ordi:
     npm run build
 ```
 
--> lancer prisma 
+-> lancer prisma
 ```
     npm run start:dev
 ```
-
--> checker les logs de prisma
-```
-    docker logs -f pioupiounades-backend
-```
-

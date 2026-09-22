@@ -166,8 +166,17 @@ export class ParticipationsService {
         },
         include: {
           user: {
-            include: {
-              profile: true,
+            select: {
+              user_id: true,
+              account_status: true,
+
+              profile: {
+                select: {
+                  username: true,
+                  description: true,
+                  profile_picture: true,
+                },
+              },
             },
           },
         },

@@ -1,14 +1,5 @@
 ORM ->
 
-* Implémenter `OrganizationMembers`
-
-  * demander à rejoindre une organisation ;
-  * approuver/refuser une demande ;
-  * gérer les rôles `MEMBER / MANAGER / OWNER` ;
-  * vérifier les droits selon le rôle ;
-  * lister les membres d’une organisation ;
-  * lister les organisations auxquelles appartient un utilisateur.
-
 * Implémenter le système de points
 
   * créer un `PointsService` ou équivalent ;
@@ -19,34 +10,7 @@ ORM ->
 
 * Ajouter les recherches restantes
 
-  * recherche utilisateur par `username` ;
-  * autocomplétion utilisateur ;
-  * recherche actions par date
   * permettre plus tard la combinaison de plusieurs filtres.
-
-* Vérifier toutes les contraintes Prisma
-
-  * clés étrangères ;
-  * champs `@unique` ;
-  * clés primaires composées ;
-  * valeurs par défaut ;
-  * enums ;
-  * relations optionnelles ou obligatoires ;
-  * comportements lors de suppressions/désactivations.
-
-* Vérifier les DTO
-
-  * un `Create...Dto` par création ;
-  * un `Update...Dto` ou des DTO métier dédiés ;
-  * validations `class-validator` ;
-  * champs optionnels correctement déclarés ;
-  * ne jamais exposer des champs sensibles comme `password_hash`.
-
-* Uniformiser les réponses API
-
-  * convertir tous les `BigInt` en `string` ;
-  * éviter la duplication de cette conversion dans tous les services si possible ;
-  * renvoyer des `404`, `400`, `403` cohérents.
 
 * Ajouter les règles d’autorisation quand l’authentification sera disponible
 

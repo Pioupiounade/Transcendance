@@ -1,7 +1,8 @@
-import { Body, Controller, Get, Post, Param, Patch, Query } from '@nestjs/common';
+import { Body, Controller, Get, Post, Param, Patch, Query, Req, UseGuards } from '@nestjs/common';
 import { ProfilesService } from './profiles.service';
 import { CreateProfileDto } from './dto/create-profile.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth-guard';
 
 @Controller('profiles')
 export class ProfilesController {
@@ -17,10 +18,10 @@ export class ProfilesController {
     return this.profilesService.findByUsername(q);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get('me')
-  findOwnProfile(
-    @Query('current_user_id') currentUserId: string) {
-    return this.profilesService.findOwnProfile(currentUserId);
+  findOwnProfile(@Req() req: any) {
+    return this.profilesService.findOwnProfile(req.user.id);
   }
 
   @Get(':userId')
@@ -28,18 +29,21 @@ export class ProfilesController {
     return this.profilesService.findOne(userId);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Post()
   create(
-    @Query('current_user_id') currentUserId: string,
-    @Body() data: CreateProfileDto) {
-    return this.profilesService.create(currentUserId, data);
+    @Req() req: any,
+    @Body() data: CreateProfileDto,
+  ) {
+    return this.profilesService.create(req.user.id, data);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Patch('me')
   updateProfile(
-    @Query('current_user_id') currentUserId: string,
+    @Req() req: any,
     @Body() data: UpdateProfileDto,
   ) {
-      return this.profilesService.updateProfile(currentUserId, data);
+    return this.profilesService.updateProfile(req.user.id, data);
   }
 }

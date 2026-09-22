@@ -1,47 +1,66 @@
-import { Body, Controller, Get, Patch, Query, Param } from '@nestjs/common';
+import { Body, Controller, Get, Patch, Query, Param, Req, UseGuards } from '@nestjs/common';
 import { FriendRequestsService } from './friend-requests.service';
 import { SendFriendRequestDto } from './dto/send-friend-request.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth-guard';
 
 @Controller('friend-requests')
 export class FriendRequestsController {
     constructor(private friendRequestsService: FriendRequestsService) {}
 
+    @UseGuards(JwtAuthGuard)
     @Patch('me/send')
     sendFriendRequest(
-    @Query('current_user_id') currentUserId: string,
+    @Req() req: any,
     @Body() data: SendFriendRequestDto,
     ) {
-          return this.friendRequestsService.sendFriendRequest(currentUserId, data);
+    return this.friendRequestsService.sendFriendRequest(
+        req.user.id,
+        data,
+    );
     }
 
+    @UseGuards(JwtAuthGuard)
     @Patch(':requestId/accept')
     acceptFriendRequest(
+    @Req() req: any,
     @Param('requestId') requestId: string,
-    @Query('current_user_id') currentUserId: string,
     ) {
-          return this.friendRequestsService.acceptFriendRequest(currentUserId, requestId);
+    return this.friendRequestsService.acceptFriendRequest(
+        req.user.id,
+        requestId,
+    );
     }
 
+    @UseGuards(JwtAuthGuard)
     @Patch(':requestId/reject')
     rejectFriendRequest(
+    @Req() req: any,
     @Param('requestId') requestId: string,
-    @Query('current_user_id') currentUserId: string,
     ) {
-          return this.friendRequestsService.rejectFriendRequest(currentUserId, requestId);
+    return this.friendRequestsService.rejectFriendRequest(
+        req.user.id,
+        requestId,
+    );
     }
 
+    @UseGuards(JwtAuthGuard)
     @Get('sentRequests')
     mySentRequests(
-        @Query('current_user_id') currentUserId: string,
+    @Req() req: any,
     ) {
-        return this.friendRequestsService.mySentRequests(currentUserId);
+    return this.friendRequestsService.mySentRequests(
+        req.user.id,
+    );
     }
 
+    @UseGuards(JwtAuthGuard)
     @Get('receivedRequests')
     myReceivedRequests(
-        @Query('current_user_id') currentUserId: string,
+    @Req() req: any,
     ) {
-        return this.friendRequestsService.myReceivedRequests(currentUserId);
+    return this.friendRequestsService.myReceivedRequests(
+        req.user.id,
+    );
     }
 
 }

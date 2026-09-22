@@ -15,7 +15,4 @@ export class CreateOrganizationDto {
   @ArrayMaxSize(2)
   @IsNumber({}, { each: true })
   location!: number[];
-
-  @IsInt()
-  creator_id!: number;
 }

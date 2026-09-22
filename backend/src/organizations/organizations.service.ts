@@ -60,11 +60,7 @@ export class OrganizationsService {
   }
 
 //4. organizations par zone
-  async findByRadius(
-    lat: number,
-    lng: number,
-    radiusKm: number,
-  ) {
+  async findByRadius(lat: number, lng: number, radiusKm: number) {
     const organizations = await this.prisma.organization.findMany();
 
     const nearbyOrganizations = organizations.filter((organization) => {
@@ -87,12 +83,7 @@ export class OrganizationsService {
     }));
   }
 
-  private calculateDistance(
-    lat1: number,
-    lng1: number,
-    lat2: number,
-    lng2: number,
-  ): number {
+  private calculateDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
     const earthRadiusKm = 6371;
 
     const dLat = this.toRadians(lat2 - lat1);
@@ -134,11 +125,11 @@ export class OrganizationsService {
 
 
 //6. creer une nouvelle organisation
-  async create(data: CreateOrganizationDto) {
+  async create(currentUserId: string, data: CreateOrganizationDto) {
     const creator = await this.prisma.user.findUnique({
-     where: {
-      user_id: BigInt(data.creator_id),
-    },
+      where: {
+        user_id: BigInt(currentUserId),
+      },
     });
 
     if (!creator) {
@@ -156,7 +147,7 @@ export class OrganizationsService {
         description: data.description,
         address: data.address,
         location: data.location,
-        creator_id: BigInt(data.creator_id),
+        creator_id: BigInt(currentUserId),
       },
     });
 

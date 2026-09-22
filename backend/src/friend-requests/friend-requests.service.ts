@@ -3,7 +3,6 @@ import { PrismaService } from '../prisma/prisma.service';
 import { SendFriendRequestDto } from './dto/send-friend-request.dto';
 import { FriendRequestStatus, FriendshipStatus, AccountStatus } from '../../generated/prisma/client';
 
-
 @Injectable()
 export class FriendRequestsService {
     constructor(private prisma: PrismaService) {}
@@ -241,10 +240,17 @@ async mySentRequests(currentUserId: string) {
     },
     include: {
         addressee: {
-        include: {
-            profile: true,
+        select: {
+            user_id: true,
+
+            profile: {
+            select: {
+                username: true,
+                profile_picture: true,
+            },
+            },
         },
-        },
+        }
     },
     });
 
@@ -283,9 +289,16 @@ async myReceivedRequests(currentUserId: string) {
     },
     include: {
         requester: {
-        include: {
-            profile: true,
-        },
+            select: {
+                user_id: true,
+
+                profile: {
+                select: {
+                    username: true,
+                    profile_picture: true,
+                },
+                },
+            },
         },
     },
     });
