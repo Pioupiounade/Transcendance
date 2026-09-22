@@ -20,8 +20,8 @@ re:
 	$(MAKE) db-update
 
 db-update:
-	$(COMPOSE) exec -T backend npx npx prisma generate
-	$(COMPOSE) exec -T backend npx prisma db push
+	$(COMPOSE) exec -T backend npx prisma generate
+	$(COMPOSE) exec -T backend npx prisma migrate deploy
 
 logs:
 	$(COMPOSE) logs -f
