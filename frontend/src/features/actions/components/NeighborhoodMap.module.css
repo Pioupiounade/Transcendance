@@ -37,6 +37,11 @@
 .canvas :global(.leaflet-container a.leaflet-popup-close-button) {
   color: var(--muted);
 }
+.canvas :global(.leaflet-control-attribution) {
+  font-size: 11px;
+  background: #fffaf0db;
+  color: #536253;
+}
 .canvas :global(.leaflet-bar) {
   border: 1px solid var(--line);
   box-shadow: var(--shadow);
