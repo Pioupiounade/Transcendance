@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { SendFriendRequestDto } from './dto/send-friend-request.dto';
-import { FriendRequestStatus, FriendshipStatus, AccountStatus } from '../../generated/prisma/client';
+import { FriendRequestStatus, FriendshipStatus, AccountStatus, Prisma } from '../../generated/prisma/client';
 
 @Injectable()
 export class FriendRequestsService {
@@ -26,90 +26,141 @@ private async getActiveUser(userId: string) {
 }
 
 //Envoyer une demande d'ami
-async sendFriendRequest(currentUserId: string, data: SendFriendRequestDto) {
-    const user = await this.getActiveUser(currentUserId);
+    async sendFriendRequest(currentUserId: string, data: SendFriendRequestDto) {
+    const currentUserIdBigInt = BigInt(currentUserId);
+    const receiverId = BigInt(data.addressee_id);
 
-    const receiver = await this.prisma.user.findUnique({
-        where: {
-            user_id: BigInt(data.addressee_id),
-        },
-    });
+    for (let attempt = 0; attempt < 3; attempt++) {
+        try {
+        const sentRequest = await this.prisma.$transaction(
+            async (tx) => {
+            const user = await tx.user.findUnique({
+                where: {
+                user_id: currentUserIdBigInt,
+                },
+            });
 
-    if (!receiver) {
-    throw new NotFoundException('Receiver not found');
-    }
+            if (!user) {
+                throw new NotFoundException('User not found');
+            }
 
-    if (receiver.account_status !== AccountStatus.ACTIVE) {
-    throw new BadRequestException('Friend requests can only be sent to active users');
-    }
+            if (user.account_status !== AccountStatus.ACTIVE) {
+                throw new BadRequestException('User is not active');
+            }
 
-    if (user.user_id === receiver.user_id) {
-    throw new BadRequestException('You can\'t send a request to yourself');
-    }
+            const receiver = await tx.user.findUnique({
+                where: {
+                user_id: receiverId,
+                },
+            });
 
-    const existingPendingRequest = await this.prisma.friendRequest.findFirst({
-    where: {
-        status: FriendRequestStatus.PENDING,
-        OR: [
-        {
-            requester_id: user.user_id,
-            addressee_id: receiver.user_id,
-        },
-        {
-            requester_id: receiver.user_id,
-            addressee_id: user.user_id,
-        },
-        ],
-    },
-    });
+            if (!receiver) {
+                throw new NotFoundException('Receiver not found');
+            }
 
-    if (existingPendingRequest) {
-    throw new BadRequestException('A pending friend request already exists between these users');
-    }
+            if (receiver.account_status !== AccountStatus.ACTIVE) {
+                throw new BadRequestException('Friend requests can only be sent to active users');
+            }
 
-    const existingFriendship = await this.prisma.friendship.findFirst({
-    where: {
-        status: {
-        in: [
-            FriendshipStatus.ACTIVE,
-            FriendshipStatus.BLOCKED,
-        ],
-        },
-        OR: [
-            {
-                user1_id: user.user_id,
-                user2_id: receiver.user_id, 
+            if (user.user_id === receiver.user_id) {
+                throw new BadRequestException('You can\'t send a request to yourself');
+            }
+
+            const existingPendingRequest =
+                await tx.friendRequest.findFirst({
+                where: {
+                    status: FriendRequestStatus.PENDING,
+                    OR: [
+                    {
+                        requester_id: user.user_id,
+                        addressee_id: receiver.user_id,
+                    },
+                    {
+                        requester_id: receiver.user_id,
+                        addressee_id: user.user_id,
+                    },
+                    ],
+                },
+                });
+
+            if (existingPendingRequest) {
+                throw new BadRequestException('A pending friend request already exists between these users');
+            }
+
+            const existingFriendship =
+                await tx.friendship.findFirst({
+                where: {
+                    status: {
+                    in: [
+                        FriendshipStatus.ACTIVE,
+                        FriendshipStatus.BLOCKED,
+                    ],
+                    },
+                    OR: [
+                    {
+                        user1_id: user.user_id,
+                        user2_id: receiver.user_id,
+                    },
+                    {
+                        user1_id: receiver.user_id,
+                        user2_id: user.user_id,
+                    },
+                    ],
+                },
+                });
+
+            if (
+                existingFriendship?.status ===
+                FriendshipStatus.ACTIVE
+            ) {
+                throw new BadRequestException('Friendship already active');
+            }
+
+            if (
+                existingFriendship?.status ===
+                FriendshipStatus.BLOCKED
+            ) {
+                throw new BadRequestException('Friendship blocked');
+            }
+
+            return tx.friendRequest.create({
+                data: {
+                requester_id: user.user_id,
+                addressee_id: receiver.user_id,
+                },
+            });
             },
             {
-                user1_id: receiver.user_id, 
-                user2_id: user.user_id, 
+            isolationLevel:
+                Prisma.TransactionIsolationLevel.Serializable,
             },
-            ],
-    },
-    });
+        );
 
-    if (existingFriendship?.status === FriendshipStatus.ACTIVE) {
-    throw new BadRequestException('Friendship already active');
+        return {
+            ...sentRequest,
+            friend_request_id:
+            sentRequest.friend_request_id.toString(),
+            requester_id:
+            sentRequest.requester_id.toString(),
+            addressee_id:
+            sentRequest.addressee_id.toString(),
+        };
+        } catch (error) {
+        if (
+            error instanceof
+            Prisma.PrismaClientKnownRequestError &&
+            error.code === 'P2034' &&
+            attempt < 2
+        ) {
+            continue;
+        }
+
+        throw error;
+        }
     }
 
-    if (existingFriendship?.status === FriendshipStatus.BLOCKED) {
-    throw new BadRequestException('Friendship blocked');
+    throw new BadRequestException('Friend request could not be created, please try again');
     }
-
-    const sentRequest = await this.prisma.friendRequest.create({
-      data: {
-        requester_id: user.user_id,
-        addressee_id: receiver.user_id,
-      },
-    });
-
-    return {
-        ...sentRequest,
-        friend_request_id: sentRequest.friend_request_id.toString(),
-        requester_id: sentRequest.requester_id.toString(),
-        addressee_id: sentRequest.addressee_id.toString(),
-    };
-}
 
 //Accepter la demande d'ami
 async acceptFriendRequest(currentUserId: string, requestId: string) {
@@ -147,40 +198,61 @@ async acceptFriendRequest(currentUserId: string, requestId: string) {
         throw new BadRequestException('Friend request requester is no longer active');
     }
 
-    const updatedRequest = await this.prisma.$transaction(
-    async (tx) => {
-        const acceptedRequest = await tx.friendRequest.update({
-        where: {
+    let updatedRequest;
+
+    try {
+    updatedRequest = await this.prisma.$transaction(
+        async (tx) => {
+        const updateResult = await tx.friendRequest.updateMany({
+            where: {
             friend_request_id: BigInt(requestId),
-        },
-        data: {
+            status: FriendRequestStatus.PENDING,
+            },
+            data: {
             status: FriendRequestStatus.ACCEPTED,
             responded_at: new Date(),
-        },
+            },
         });
 
+        if (updateResult.count !== 1) {
+            throw new BadRequestException('This friend request can no longer be accepted');
+        }
+
         const user1Id =
-        request.requester_id < request.addressee_id
+            request.requester_id < request.addressee_id
             ? request.requester_id
             : request.addressee_id;
 
         const user2Id =
-        request.requester_id < request.addressee_id
+            request.requester_id < request.addressee_id
             ? request.addressee_id
             : request.requester_id;
 
         await tx.friendship.create({
-        data: {
+            data: {
             user1_id: user1Id,
             user2_id: user2Id,
             status: FriendshipStatus.ACTIVE,
-        },
+            },
         });
 
-        return acceptedRequest;
-    },
+        return tx.friendRequest.findUniqueOrThrow({
+            where: {
+            friend_request_id: BigInt(requestId),
+            },
+        });
+        },
     );
+    } catch (error) {
+    if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002'
+    ) {
+        throw new BadRequestException('Friendship already exists between these users');
+    }
 
+    throw error;
+    }
     return {
     ...updatedRequest,
     friend_request_id: updatedRequest.friend_request_id.toString(),
