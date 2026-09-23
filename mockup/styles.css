@@ -639,10 +639,6 @@ button:disabled {
   align-items: center;
   gap: 12px;
 }
-.card.panel {
-  min-width: 0;
-  width: 100%;
-}
 .avatar {
   display: inline-flex;
   align-items: center;
@@ -1153,21 +1149,11 @@ button:disabled {
   position: relative;
 }
 .profile-avatar {
-  width: 100px;
-  height: 100px;
+  width: 90px;
+  height: 90px;
   font-size: 30px;
-  margin-top: 0;
+  margin-top: -44px;
   position: relative;
-  border-radius: 50%;
-  overflow: hidden;
-  cursor: pointer;
-  flex-shrink: 0;
-}
-.profile-avatar img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
 }
 .profile-name {
   display: flex;
@@ -1459,7 +1445,6 @@ button:disabled {
   background: white;
   font: inherit;
   color: var(--ink);
-  resize: vertical;
 }
 @media (min-width: 1500px) {
   .map-layout {
@@ -1484,7 +1469,7 @@ button:disabled {
     font-size: 22px;
   }
   .header-actions > .btn {
-    display: inline-flex;
+    display: none;
   }
   .dashboard {
     padding: 24px;
@@ -1646,34 +1631,6 @@ button:disabled {
   .stats {
     justify-content: space-between;
     gap: 8px;
-  }
-}
-@media (max-width: 500px) {
-  .profile-page .profile-edit-button {
-    min-width: 44px;
-    width: 44px;
-    padding: 0;
-    border-radius: 999px;
-  }
-  .profile-page .profile-edit-button .btn-label {
-    display: none;
-  }
-  .profile-page .profile-edit-button::before {
-    content: "✏️";
-    font-size: 1.1rem;
-    line-height: 1;
-  }
-  .profile-page {
-    padding: 12px;
-    box-sizing: border-box;
-    width: 100%;
-  }
-  .card.panel {
-    width: 100%;
-    max-width: 600px;
-    margin: 0 auto;
-    padding: 18px 14px;
-    box-sizing: border-box;
   }
 }
 @media print {
