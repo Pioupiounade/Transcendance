@@ -24,6 +24,7 @@ const router = createBrowserRouter([
       { path: ROUTES.terms, element: <LegalPage title={APP_LABELS.pages.terms.title} /> },
       { path: ROUTES.privacy, element: <LegalPage title={APP_LABELS.pages.privacy.title} /> },
       // Ruta de perfil movida aquí para probar la UI libremente sin bloqueo de login:
+      // Don't forget to move it back to the feature's router when the feature is ready.
       { path: ROUTES.profile, element: <ProfilePage /> },
       { path: '*', element: <NotFoundPage /> },
     ],

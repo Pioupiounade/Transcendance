@@ -31,7 +31,7 @@ export const ProfilePage: React.FC = () => {
   };
 
   const handleDeleteAccount = () => {
-    alert('Account deleted.');
+    alert('Account deleted. (This is a placeholder action. Implement actual deletion logic.)');
   };
 
   if (isEditing) {
