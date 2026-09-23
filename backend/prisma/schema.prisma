@@ -56,6 +56,8 @@ model User {
   blocked_friendships Friendship[] @relation("FriendshipBlocker")
 
   point_transactions PointTransaction[]
+
+  comments ActionComment[]
 }
 
 // --------------------------------------------------
@@ -174,6 +176,29 @@ model Action {
   organization Organization? @relation(fields: [organization_id], references: [organization_id])
 
   participation Participation[]
+
+  comments ActionComment[]
+}
+
+// --------------------------------------------------
+// COMMENTS
+// --------------------------------------------------
+
+model ActionComment {
+  // Text locked at 1024 characters, to avoid spam
+  comment_id BigInt @id @default(autoincrement())
+  content    String @db.VarChar(1024)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  // 2. Champs de relation Prisma
+  user_id    BigInt
+  action_id  BigInt
+
+  user       User @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+  action     Action @relation(fields: [action_id], references: [action_id], onDelete: Cascade)
+
+  @@map("action_comments")
 }
 
 // --------------------------------------------------

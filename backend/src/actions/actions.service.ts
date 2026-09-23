@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateActionDto } from './dto/create-action.dto';
+import { CreateCommentDto } from './dto/create-comment.dto';
 import { UpdateActionDto } from './dto/update-action.dto';
 import { Category } from '../../generated/prisma/client';
 import { ActionStatus, OrganizationStatus, RoleApp, RoleOrg, MemberStatus, AccountStatus, Prisma } from '../../generated/prisma/client';
@@ -861,5 +862,68 @@ export class ActionsService {
       organization_id: updatedAction.organization_id?.toString() ?? null,
       validated_by_user_id: updatedAction.validated_by_user_id?.toString() ?? null,
     };
+  }
+
+  async addComment(actionId: bigint, userId: bigint, dto: CreateCommentDto) {
+    const action = await this.prisma.action.findUnique({
+      where: {
+        action_id: actionId,
+      },
+    });
+
+    if (!action) {
+      throw new NotFoundException('Action not found');
+    }
+
+    return this.prisma.actionComment.create({
+      data: {
+        action_id: actionId,
+        user_id: userId,
+        content: dto.content,
+      },
+      include: {
+        user: {
+          select: {
+            user_id: true,
+            profile: {
+              select: {
+                username: true,
+                profile_picture: true,
+              },
+            },
+          },
+        }
+      }
+    });
+  }
+
+  async getComments(actionId: bigint) {
+    const action = await this.prisma.action.findUnique({
+      where: {
+        action_id: actionId,
+      },
+    });
+
+    if (!action) {
+      throw new NotFoundException('Action not found');
+    }
+
+    return this.prisma.actionComment.findMany({
+      where : { action_id: actionId },
+      orderBy: { created_at: 'desc' },
+      include: {
+        user: {
+          select: {
+            user_id: true,
+            profile: {
+              select: {
+                username: true,
+                profile_picture: true,
+              },
+            },
+          },
+        }
+      }
+    });
   }
 }
