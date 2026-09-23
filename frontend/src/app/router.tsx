@@ -9,6 +9,8 @@ import { LoginPage } from './pages/LoginPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { PlaceholderPage } from './pages/PlaceholderPage';
 import { ROUTES } from './routes';
+import { ProfilePage } from '../features/profile';
+import { ActionDetailPage } from '@/features/actions';
 
 // Routes en données. Une page = une ligne ; les pages de feature sont chargées
 // paresseusement (un chunk par feature), `PageShell` fournit le Suspense.
@@ -26,11 +28,14 @@ const router = createBrowserRouter([
       { path: ROUTES.login, element: <LoginPage /> },
       { path: ROUTES.terms, element: <LegalPage title={APP_LABELS.pages.terms.title} /> },
       { path: ROUTES.privacy, element: <LegalPage title={APP_LABELS.pages.privacy.title} /> },
+      { path: ROUTES.actionDetail, element: <ActionDetailPage /> },
       {
-        // Routes protégées : RequireAuth redirige vers /login (avec `state.from`) si anonyme.
+        // Routes protégées : RequireAuth redirige vers /login avec state.from.
         element: <RequireAuth />,
-        children: [{ path: ROUTES.profile, element: <PlaceholderPage title={APP_LABELS.nav.profile} /> }],
+        children: [{ path: ROUTES.profile, element: <ProfilePage /> }],
       },
+      // Contournement local pour tester le mockup sans authentification :
+      // { path: ROUTES.profile, element: <ProfilePage /> },
       { path: '*', element: <NotFoundPage /> },
     ],
   },
