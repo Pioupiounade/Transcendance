@@ -1,0 +1,241 @@
+/* Layout */
+.dashboard {
+  display: flex;
+  justify-content: center;
+  padding: 2rem;
+}
+
+/* Card container */
+.card {
+  background: var(--ground, #ffffff);
+  border-radius: var(--r-card, 20px);
+  border: 1px solid var(--line, #e2e8f0);
+  box-shadow: var(--shadow, 0 2px 8px rgba(0, 0, 0, 0.08));
+  max-width: 800px;
+  width: 100%;
+  padding: 2.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* Header badges con colores pastel */
+.header {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+/* Category chip */
+.chip {
+  background: var(--surface);
+  color: var(--brand);
+  padding: 0.28rem 0.85rem;
+  border-radius: var(--r-chip);
+  font-size: 0.85rem;
+  font-weight: 500;
+  border: 1px solid var(--line);
+  text-transform: capitalize;
+}
+
+/* Action status */
+.chip.status-approved,
+.chip.status-completed {
+  background: var(--trust-soft);
+  color: var(--trust);
+  border-color: var(--trust);
+}
+
+.chip.status-pending {
+  background: var(--note-bg);
+  color: var(--note-ink);
+  border-color: var(--note-ink);
+}
+
+.chip.status-rejected,
+.chip.status-cancelled {
+  background: var(--danger-soft);
+  color: var(--danger);
+  border-color: var(--danger);
+}
+
+/* Verification badge */
+.chip.verified {
+  background: var(--trust-soft);
+  color: var(--trust);
+  border: 1px solid var(--trust);
+  font-weight: 500;
+}
+
+/* Título */
+.card h2 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin: 0;
+  color: var(--ink, #1f2937);
+  letter-spacing: -0.02em;
+}
+
+/* Panel del organizador */
+.organizer {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.organizer-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.organizer-name {
+  font-weight: 600;
+  color: var(--ink, #263f36);
+  font-size: 0.95rem;
+}
+
+.text-muted {
+  font-size: 0.82rem;
+  color: var(--muted, #65736b);
+}
+
+/* Carrusel de fotos centrado y proporcionado */
+.carousel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 0.5rem 0;
+}
+
+.carousel-main {
+  position: relative;
+  width: 100%;
+  height: 320px;
+  border-radius: 16px;
+  overflow: hidden;
+  margin: 10px auto;
+  background: var(--surface, #f8f5ef);
+  border: 1px solid var(--line, #e2e8f0);
+}
+
+.carousel-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.carousel-control {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0, 0, 0, 0.45);
+  color: #ffffff;
+  border: none;
+  font-size: 1.6rem;
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  transition: background 0.15s ease;
+}
+
+.carousel-control:hover {
+  background: rgba(0, 0, 0, 0.7);
+}
+
+.carousel-control.prev {
+  left: 0.5rem;
+}
+
+.carousel-control.next {
+  right: 0.5rem;
+}
+
+.carousel-control:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+/* Contador 1 / 3 centrado */
+.carousel-counter {
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--muted, #65736b);
+}
+
+/* Miniaturas alineadas en el fondo blanco de la tarjeta */
+.carousel-thumbnails {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  overflow-x: auto;
+}
+
+.thumbnail {
+  width: 52px;
+  height: 52px;
+  object-fit: cover;
+  border-radius: 8px;
+  cursor: pointer;
+  opacity: 0.65;
+  border: 2px solid transparent;
+  transition: opacity 0.15s, border-color 0.15s;
+}
+
+.thumbnail.active {
+  opacity: 1;
+  border-color: #007bff;
+}
+
+/* Panel de logística */
+.logistics {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.95rem;
+  color: var(--ink, #263f36);
+}
+
+/* Descripción */
+.description p {
+  margin: 0;
+  line-height: 1.6;
+  color: var(--ink, #263f36);
+  font-size: 0.95rem;
+}
+
+/* Bloque de participación */
+.participation {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--line, #dddcd2);
+}
+
+.participation strong {
+  margin-right: 0.5rem;
+}
+
+@media (max-width: 600px) {
+  .dashboard {
+    padding: 0.75rem;
+  }
+
+  .card {
+    padding: 1rem;
+    border-radius: var(--r-card, 20px);
+  }
+
+  .carousel-main {
+    height: auto;
+    aspect-ratio: 4 / 3;
+    margin: 0.5rem 0;
+  }
+}
