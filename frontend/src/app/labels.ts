@@ -1,6 +1,8 @@
+import { BRAND_NAME } from '@/shared/lib/pageTitle';
+
 // UI texts of the application shell (English). Each feature keeps its own labels.ts.
 export const APP_LABELS = {
-  brand: 'pioupiounades',
+  brand: BRAND_NAME,
   tagline: 'Doing things together, close to home.',
   skipToContent: 'Skip to content',
   mainNav: 'Main navigation',
