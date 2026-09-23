@@ -1,4 +1,5 @@
 import { createBrowserRouter, RouterProvider } from 'react-router';
+import { RequireAuth } from '@/features/auth';
 import { APP_LABELS } from './labels';
 import { PageShell } from './layout/PageShell';
 import { HomePage } from './pages/HomePage';
@@ -23,9 +24,13 @@ const router = createBrowserRouter([
       { path: ROUTES.login, element: <LoginPage /> },
       { path: ROUTES.terms, element: <LegalPage title={APP_LABELS.pages.terms.title} /> },
       { path: ROUTES.privacy, element: <LegalPage title={APP_LABELS.pages.privacy.title} /> },
-      // Ruta de perfil movida aquí para probar la UI libremente sin bloqueo de login:
-      // Don't forget to move it back to the feature's router when the feature is ready.
-      { path: ROUTES.profile, element: <ProfilePage /> },
+      {
+        // Routes protégées : RequireAuth redirige vers /login avec state.from.
+        element: <RequireAuth />,
+        children: [{ path: ROUTES.profile, element: <ProfilePage /> }],
+      },
+      // Contournement local pour tester le mockup sans authentification :
+      // { path: ROUTES.profile, element: <ProfilePage /> },
       { path: '*', element: <NotFoundPage /> },
     ],
   },
