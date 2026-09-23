@@ -1,94 +1,37 @@
-/**
- * Represents the category of an action.
- *
- * @typedef {'environment' | 'social' | 'cultural'} ActionCategory
- */
-export type ActionCategory = 'environment' | 'social' | 'cultural';
+// D'après docs/api_contract.md §2 (enums) et §3 (forme `Action`).
+export const CATEGORY = { ENVIRONMENT: 'ENVIRONMENT', SOCIAL: 'SOCIAL', CULTURAL: 'CULTURAL' } as const;
+export type Category = (typeof CATEGORY)[keyof typeof CATEGORY];
 
-/**
- * Represents the current status of an action.
- *
- * @typedef {'pending' | 'approved' | 'rejected' | 'completed' | 'cancelled'} ActionStatus
- *
- * Note: The value **'cancelled'** is spelled with a double “l”.
- */
-export type ActionStatus =
-  | 'pending'
-  | 'approved'
-  | 'rejected'
-  | 'completed'
-  | 'cancelled';
+export const ACTION_STATUS = {
+  PENDING: 'PENDING',
+  APPROVED: 'APPROVED',
+  REJECTED: 'REJECTED',
+  CANCELLED: 'CANCELLED',
+  COMPLETED: 'COMPLETED',
+} as const;
+export type ActionStatus = (typeof ACTION_STATUS)[keyof typeof ACTION_STATUS];
 
-/**
- * Information about the organizer of an action.
- *
- * @interface ActionOrganizer
- */
-export interface ActionOrganizer {
-  /** Unique identifier of the user who organizes the action. */
-  userId: string;
+/** `[latitude, longitude]`, l'ordre du backend et de Leaflet. */
+export type LatLng = [latitude: number, longitude: number];
 
-  /** Display name of the organizer. */
-  name: string;
-
-  /** URL of the organizer's avatar image (optional). */
-  avatarUrl?: string;
-
-  /** Title of the organization the organizer belongs to (optional). */
-  organizationTitle?: string;
-
-  /** Identifier of the organization (optional). */
-  organizationId?: string;
-}
-
-/**
- * Detailed data for an action.
- *
- * @interface ActionDetailData
- */
-export interface ActionDetailData {
-  /** Unique identifier of the action. */
-  id: string;
-
-  /** Title of the action. */
+export type Action = {
+  action_id: string;
   title: string;
-
-  /** Full description of the action. */
   description: string;
-
-  /** Category of the action. */
-  category: ActionCategory;
-
-  /** Current status of the action. */
+  creator_id: string;
+  organization_id: string | null;
+  min_participants: number | null;
+  max_participants: number | null;
+  location: LatLng;
   status: ActionStatus;
+  category: Category;
+  imagesList: string[];
+  validated_by_user_id: string | null;
+  validated_at: string | null;
+  scheduled_at: string;
+  created_at: string;
+  updated_at: string;
+};
 
-  /** Human‑readable name of the location where the action takes place. */
-  locationName: string;
-
-  /** Scheduled date and time in ISO‑8601 format. */
-  scheduledAt: string;
-
-  /** Minimum number of participants required. */
-  minParticipants: number;
-
-  /** Maximum number of participants allowed. */
-  maxParticipants: number;
-
-  /** Current number of participants signed up. */
-  currentParticipants: number;
-
-  /** Array of image URLs (up to 5 photos). */
-  images: string[];
-
-  /** Organizer information. */
-  organizer: ActionOrganizer;
-
-  /** Identifier of the user who validated the action (optional). */
-  validatedByUserId?: string;
-
-  /** Timestamp when the action was validated, in ISO‑8601 format (optional). */
-  validatedAt?: string;
-
-  /** Identifier of the organization associated with the action (optional). */
-  organizationId?: string;
-}
+/** Statuts visibles sur la carte et dans les listes publiques : à venir ou validées. */
+export const OPEN_STATUSES: readonly ActionStatus[] = [ACTION_STATUS.PENDING, ACTION_STATUS.APPROVED];

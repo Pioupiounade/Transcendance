@@ -1,5 +1,5 @@
 import { APP_LABELS } from '../labels';
-import { pageTitle } from './pageTitle';
+import { pageTitle } from '@/shared/lib/pageTitle';
 import styles from './Page.module.css';
 
 type PlaceholderPageProps = { title: string };
