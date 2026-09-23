@@ -17,6 +17,12 @@
   background: var(--map-ground);
 }
 
+/* Tuiles OSM adoucies vers le fond `--map-ground` de la maquette : les pins forêt / terracotta ressortent.
+   Alternatives sans clé API comparées le 23/09/2026 (CARTO en exige une désormais) : ce filtre l'emporte. */
+.canvas :global(.leaflet-tile-pane) {
+  filter: saturate(0.45) sepia(0.18) contrast(0.92) brightness(1.04);
+}
+
 /* Popup Leaflet aux couleurs du callout de la maquette (classes globales de Leaflet). */
 .canvas :global(.leaflet-popup-content-wrapper) {
   border: 1px solid var(--line);
