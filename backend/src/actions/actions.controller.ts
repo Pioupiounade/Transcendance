@@ -1,6 +1,8 @@
 import { Body, Controller, Get, Post, Param, Patch, Query, Req, UseGuards } from '@nestjs/common';
 import { ActionsService } from './actions.service';
 import { CreateActionDto } from './dto/create-action.dto';
+import { CreateCommentDto } from './dto/create-comment.dto';
+import { ParseIntPipe } from '@nestjs/common';
 import { UpdateActionDto } from './dto/update-action.dto';
 import { Category, ActionStatus } from '../../generated/prisma/client';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth-guard';
@@ -100,5 +102,21 @@ export class ActionsController {
       id,
       req.user.id,
     );
+  }
+
+  // Comments routes
+  @Post(':id/comments')
+  @UseGuards(JwtAuthGuard)
+  async addComment(
+    @Param('id', ParseIntPipe) actionId: string,
+    @Req() req: any,
+    @Body() dto: CreateCommentDto,
+  ) {
+    return this.actionsService.addComment(BigInt(actionId), BigInt(req.user.id), dto);
+  }
+
+  @Get(':id/comments')
+  async getComments(@Param('id', ParseIntPipe) actionId: string) {
+    return this.actionsService.getComments(BigInt(actionId));
   }
 }
