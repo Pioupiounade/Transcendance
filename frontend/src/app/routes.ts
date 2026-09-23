@@ -9,5 +9,6 @@ export const ROUTES = {
   profile: '/profile',
   terms: '/terms',
   privacy: '/privacy',
+  profile: '/profile',
   ...AUTH_ROUTES,
 } as const;
