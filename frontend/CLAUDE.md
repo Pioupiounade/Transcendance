@@ -58,9 +58,10 @@ Ce fichier est chargé automatiquement quand la session démarre dans `frontend/
   `noUnusedParameters`, `noFallthroughCasesInSwitch`, `verbatimModuleSyntax`, `erasableSyntaxOnly`.
 - ESLint (flat config) : `@eslint/js` recommended, `typescript-eslint` recommended, `react-hooks` recommended,
   `react-refresh` (Vite). `npm run lint` doit être vierge avant une PR ; ne pas désactiver une règle, corriger le code.
-- Installé : React Router 7 en mode data (`createBrowserRouter`, ticket #8). Prévu par `../Docs/architecture.md` mais
-  **pas installé** : TanStack Query, Leaflet, framework CSS (TBD), Jest + React Testing Library. Chaque ajout passe par
-  un ticket. Aucun test runner pour l'instant (Vitest s'intègre nativement à Vite : à trancher en équipe avant d'installer).
+- Installé : React Router 7 en mode data (`createBrowserRouter`, ticket #8) ; Leaflet 1.9 + react-leaflet 5 (ticket #12,
+  tuiles OpenStreetMap, pins en `divIcon` CSS : jamais les PNG de Leaflet, cassés sous Vite). Prévu par
+  `../Docs/architecture.md` mais **pas installé** : TanStack Query, framework CSS (TBD), Jest + React Testing Library.
+  Chaque ajout passe par un ticket. Aucun test runner pour l'instant (Vitest s'intègre nativement à Vite : à trancher en équipe avant d'installer).
 - CSS : CSS Modules (`X.module.css` à côté du composant) sur les variables de `styles/tokens.css`.
 
 ## Architecture des modules
@@ -155,13 +156,14 @@ Inspirée de bulletproof-react et feature-sliced, réduite à ce que le projet j
 
 ```
 app/            composition root : seul endroit qui connaît tout
-  main.tsx, App.tsx, router.tsx (AppRouter), routes.ts (ROUTES), labels.ts, lazyPage.ts (à créer au 1er usage)
-  layout/       PageShell, AppHeader, BottomNav (mobile), AppFooter, navItems.ts
+  main.tsx, App.tsx, router.tsx (AppRouter), routes.ts (ROUTES), labels.ts, lazyPage.ts
+  layout/       PageShell (Suspense des pages paresseuses), AppHeader, BottomNav (mobile), AppFooter, navItems.ts
   pages/        pages sans domaine : Home, Legal (CGU, confidentialité), NotFound, Placeholder
 features/       1 domaine métier = 1 module ; interface = index.ts
   auth/         login, register, session, RequireAuth
   profile/      users + profiles + interests (api_contract §6-8)
-  actions/      actions + carte + filtres ; owner des enums Category/ActionStatus et de leurs libellés
+  actions/      actions + carte + filtres ; owner des enums Category/ActionStatus et de leurs libellés.
+                Existant (#12) : MapPage, NeighborhoodMap, ActionCard, CategoryFilter, useActions, mapConfig.ts
   participations/, organizations/, friends/ (friend-requests + friendships)
   <feature>/
     api/        fonctions fetch typées + hooks useX : seuls appelants de shared/api
@@ -173,8 +175,9 @@ features/       1 domaine métier = 1 module ; interface = index.ts
     index.ts    l'interface, 10 à 20 lignes max
 shared/         zéro connaissance métier, réutilisable ailleurs
   api/          client HTTP (deep), index.ts
-  ui/           kit DESIGN.md §9 (Button, FloatingField, CategoryChip, Dialog, Spinner, ErrorMessage…), index.ts
-  lib/          fonctions pures, pas de barrel (test de suppression négatif)
+  ui/           kit DESIGN.md §9 (Button, FloatingField, CategoryChip, Dialog, Spinner, ErrorMessage…), index.ts.
+                Existant : Button, ButtonLink, Avatar, Icon (+ iconMarkup pour les hôtes HTML), Chip
+  lib/          fonctions pures, pas de barrel (test de suppression négatif) : pageTitle, formatDate, prefersReducedMotion
   config/       env.ts : lit et valide VITE_API_URL
 styles/         tokens.css (DESIGN.md), reset.css, global.css
 assets/
