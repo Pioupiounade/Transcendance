@@ -124,63 +124,87 @@ export class ParticipationsService {
     const userId = BigInt(currentUserId);
     const actionIdBigInt = BigInt(actionId);
 
-    const user = await this.prisma.user.findUnique({
-      where: {
-        user_id: userId,
-      },
-    });
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        const participation = await this.prisma.$transaction(
+          async (tx) => {
+            const user = await tx.user.findUnique({
+              where: {
+                user_id: userId,
+              },
+            });
 
-    if (!user) {
-      throw new NotFoundException('User not found');
+            if (!user) {
+              throw new NotFoundException('User not found');
+            }
+
+            if (user.account_status !== AccountStatus.ACTIVE) {
+              throw new BadRequestException('Only an active user can cancel a participation');
+            }
+
+            const action = await tx.action.findUnique({
+              where: {
+                action_id: actionIdBigInt,
+              },
+            });
+
+            if (!action) {
+              throw new NotFoundException('Action not found');
+            }
+
+            if (action.status !== ActionStatus.PENDING) {
+              throw new BadRequestException('Participation can only be cancelled while the action is pending');
+            }
+
+            const existingParticipation = await tx.participation.findUnique({
+              where: {
+                action_id_user_id: {
+                  action_id: actionIdBigInt,
+                  user_id: userId,
+                },
+              },
+            });
+
+            if (!existingParticipation) {
+              throw new NotFoundException('Participation not found');
+            }
+
+            await tx.participation.delete({
+              where: {
+                action_id_user_id: {
+                  action_id: actionIdBigInt,
+                  user_id: userId,
+                },
+              },
+            });
+
+            return existingParticipation;
+          },
+          {
+            isolationLevel:
+              Prisma.TransactionIsolationLevel.Serializable,
+          },
+        );
+
+        return {
+          ...participation,
+          action_id: participation.action_id.toString(),
+          user_id: participation.user_id.toString(),
+        };
+      } catch (error) {
+        if (
+          error instanceof Prisma.PrismaClientKnownRequestError &&
+          error.code === 'P2034' &&
+          attempt < 2
+        ) {
+          continue;
+        }
+
+        throw error;
+      }
     }
 
-    if (user.account_status !== AccountStatus.ACTIVE) {
-      throw new BadRequestException('Only an active user can cancel a participation');
-    }
-
-    const action = await this.prisma.action.findUnique({
-      where: {
-        action_id: actionIdBigInt,
-      },
-    });
-
-    if (!action) {
-      throw new NotFoundException('Action not found');
-    }
-
-    if (action.status !== ActionStatus.PENDING) {
-      throw new BadRequestException('Participation can only be cancelled while the action is pending');
-    }
-
-    const participation = await this.prisma.participation.findUnique({
-      where: {
-        action_id_user_id: {
-          action_id: actionIdBigInt,
-          user_id: userId,
-        },
-      },
-    });
-
-    if (!participation) {
-      throw new NotFoundException('Participation not found');
-    }
-
-    const deleteResult = await this.prisma.participation.deleteMany({
-      where: {
-        action_id: actionIdBigInt,
-        user_id: userId,
-      },
-    });
-
-    if (deleteResult.count !== 1) {
-      throw new BadRequestException('Participation has already been cancelled');
-    }
-
-    return {
-      ...participation,
-      action_id: participation.action_id.toString(),
-      user_id: participation.user_id.toString(),
-    };
+    throw new BadRequestException('Participation could not be cancelled, please try again');
   }
 
 //voir tous les participants d'une action
