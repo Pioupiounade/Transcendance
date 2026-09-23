@@ -255,11 +255,19 @@ ACTION_APPROVED_ID=$(create_action "approved" "$TOKEN_CREATOR" 4)
 # Action avec 1 seule place restante pour le test concurrent.
 ACTION_CONCURRENCY_ID=$(create_action "concurrency" "$TOKEN_CREATOR" 3)
 
+# Action pour tester deux annulations simultanées.
+ACTION_CANCEL_CONCURRENCY_ID=$(create_action "cancel-concurrency" "$TOKEN_CREATOR" 4)
+
+# Action pour tester une réduction de capacité pendant une inscription.
+ACTION_CAPACITY_CONCURRENCY_ID=$(create_action "capacity-concurrency" "$TOKEN_CREATOR" 4)
+
 echo "✅ Actions créées :"
 echo "   PENDING     = $ACTION_PENDING_ID"
 echo "   FULL        = $ACTION_FULL_ID"
-echo "   APPROVED    = $ACTION_APPROVED_ID"
-echo "   CONCURRENCY = $ACTION_CONCURRENCY_ID"
+echo "   APPROVED             = $ACTION_APPROVED_ID"
+echo "   CONCURRENCY          = $ACTION_CONCURRENCY_ID"
+echo "   CANCEL CONCURRENCY   = $ACTION_CANCEL_CONCURRENCY_ID"
+echo "   CAPACITY CONCURRENCY = $ACTION_CAPACITY_CONCURRENCY_ID"
 echo
 
 # ============================================================
@@ -438,6 +446,175 @@ else
 fi
 
 # ============================================================
+# TEST 10 — deux annulations simultanées
+# ============================================================
+
+echo
+echo "Préparation du test de double annulation concurrente..."
+
+participate_setup \
+  "$ACTION_CANCEL_CONCURRENCY_ID" \
+  "$TOKEN_USER1" \
+  "cancel_concurrency_user1"
+
+echo
+echo "========================================"
+echo "TEST 10 — DOUBLE ANNULATION CONCURRENTE"
+echo "========================================"
+echo "Lancement simultané de deux DELETE..."
+
+curl -sS \
+  -o "$TMP_DIR/cancel_concurrency_1.json" \
+  -w "%{http_code}" \
+  -X DELETE \
+  "$BASE_URL/participations/$ACTION_CANCEL_CONCURRENCY_ID" \
+  -H "Authorization: Bearer $TOKEN_USER1" \
+  -H "Content-Type: application/json" \
+  > "$TMP_DIR/cancel_concurrency_1.status" &
+
+PID1=$!
+
+curl -sS \
+  -o "$TMP_DIR/cancel_concurrency_2.json" \
+  -w "%{http_code}" \
+  -X DELETE \
+  "$BASE_URL/participations/$ACTION_CANCEL_CONCURRENCY_ID" \
+  -H "Authorization: Bearer $TOKEN_USER1" \
+  -H "Content-Type: application/json" \
+  > "$TMP_DIR/cancel_concurrency_2.status" &
+
+PID2=$!
+
+wait "$PID1"
+wait "$PID2"
+
+STATUS1=$(cat "$TMP_DIR/cancel_concurrency_1.status")
+STATUS2=$(cat "$TMP_DIR/cancel_concurrency_2.status")
+
+echo
+echo "DELETE 1 -> HTTP $STATUS1"
+cat "$TMP_DIR/cancel_concurrency_1.json" | print_json
+echo
+echo "DELETE 2 -> HTTP $STATUS2"
+cat "$TMP_DIR/cancel_concurrency_2.json" | print_json
+echo
+
+if {
+  [[ "$STATUS1" == "200" && ( "$STATUS2" == "400" || "$STATUS2" == "404" ) ]] ||
+  [[ "$STATUS2" == "200" && ( "$STATUS1" == "400" || "$STATUS1" == "404" ) ]];
+}; then
+  echo "✅ TEST OK — une seule annulation a réussi, aucun HTTP 500"
+  PASS=$((PASS + 1))
+else
+  echo "❌ TEST FAILED — attendu : un HTTP 200 et un HTTP 400/404"
+  FAIL=$((FAIL + 1))
+fi
+
+# ============================================================
+# Préparation TEST 11 :
+# 2 participants sur une capacité de 4.
+# Une requête réduit la capacité à 2 pendant qu'un troisième
+# utilisateur tente de s'inscrire.
+# ============================================================
+
+echo
+echo "Préparation du test capacité / inscription concurrente..."
+
+participate_setup \
+  "$ACTION_CAPACITY_CONCURRENCY_ID" \
+  "$TOKEN_USER1" \
+  "capacity_concurrency_user1"
+
+participate_setup \
+  "$ACTION_CAPACITY_CONCURRENCY_ID" \
+  "$TOKEN_USER2" \
+  "capacity_concurrency_user2"
+
+echo "✅ Action préparée avec 2 participants sur 4"
+
+# ============================================================
+# TEST 11 — réduction de capacité vs inscription
+# ============================================================
+
+echo
+echo "========================================"
+echo "TEST 11 — CAPACITE VS INSCRIPTION CONCURRENTE"
+echo "========================================"
+echo "PATCH max_participants=2 / POST USER3 simultanément..."
+
+PATCH_PAYLOAD='{"max_participants":2}'
+
+curl -sS \
+  -o "$TMP_DIR/capacity_patch.json" \
+  -w "%{http_code}" \
+  -X PATCH \
+  "$BASE_URL/actions/$ACTION_CAPACITY_CONCURRENCY_ID" \
+  -H "Authorization: Bearer $TOKEN_CREATOR" \
+  -H "Content-Type: application/json" \
+  --data-binary "$PATCH_PAYLOAD" \
+  > "$TMP_DIR/capacity_patch.status" &
+
+PID1=$!
+
+curl -sS \
+  -o "$TMP_DIR/capacity_participate.json" \
+  -w "%{http_code}" \
+  -X POST \
+  "$BASE_URL/participations/$ACTION_CAPACITY_CONCURRENCY_ID" \
+  -H "Authorization: Bearer $TOKEN_USER3" \
+  -H "Content-Type: application/json" \
+  > "$TMP_DIR/capacity_participate.status" &
+
+PID2=$!
+
+wait "$PID1"
+wait "$PID2"
+
+PATCH_STATUS=$(cat "$TMP_DIR/capacity_patch.status")
+PARTICIPATE_STATUS=$(cat "$TMP_DIR/capacity_participate.status")
+
+echo
+echo "PATCH capacité -> HTTP $PATCH_STATUS"
+cat "$TMP_DIR/capacity_patch.json" | print_json
+echo
+echo "POST participation -> HTTP $PARTICIPATE_STATUS"
+cat "$TMP_DIR/capacity_participate.json" | print_json
+echo
+
+FINAL_BODY="$TMP_DIR/capacity_final.json"
+FINAL_STATUS=$(request GET "$BASE_URL/actions/$ACTION_CAPACITY_CONCURRENCY_ID" "" "" "$FINAL_BODY")
+
+echo "Etat final de l'action :"
+cat "$FINAL_BODY" | print_json
+echo
+
+FINAL_COUNT=$(cat "$FINAL_BODY" | json_get "participant_count")
+FINAL_MAX=$(cat "$FINAL_BODY" | json_get "max_participants")
+
+VALID_FINAL_STATE=false
+if [[ "$FINAL_STATUS" == "200" && -n "$FINAL_COUNT" && -n "$FINAL_MAX" ]]; then
+  if (( FINAL_COUNT <= FINAL_MAX )); then
+    VALID_FINAL_STATE=true
+  fi
+fi
+
+NO_SERVER_ERROR=true
+if [[ "$PATCH_STATUS" == "500" || "$PARTICIPATE_STATUS" == "500" ]]; then
+  NO_SERVER_ERROR=false
+fi
+
+if [[ "$VALID_FINAL_STATE" == true && "$NO_SERVER_ERROR" == true ]]; then
+  echo "✅ TEST OK — état final cohérent : participant_count=$FINAL_COUNT, max_participants=$FINAL_MAX"
+  PASS=$((PASS + 1))
+else
+  echo "❌ TEST FAILED — incohérence ou HTTP 500 détecté"
+  echo "   participant_count=$FINAL_COUNT"
+  echo "   max_participants=$FINAL_MAX"
+  echo "   PATCH=$PATCH_STATUS / POST=$PARTICIPATE_STATUS"
+  FAIL=$((FAIL + 1))
+fi
+
+# ============================================================
 # RÉSUMÉ
 # ============================================================
 
@@ -458,8 +635,10 @@ echo
 echo "Actions :"
 echo "  pending     : $ACTION_PENDING_ID"
 echo "  full        : $ACTION_FULL_ID"
-echo "  approved    : $ACTION_APPROVED_ID"
-echo "  concurrency : $ACTION_CONCURRENCY_ID"
+echo "  approved             : $ACTION_APPROVED_ID"
+echo "  concurrency          : $ACTION_CONCURRENCY_ID"
+echo "  cancel concurrency   : $ACTION_CANCEL_CONCURRENCY_ID"
+echo "  capacity concurrency : $ACTION_CAPACITY_CONCURRENCY_ID"
 echo
 
 if [[ "$FAIL" -eq 0 ]]; then

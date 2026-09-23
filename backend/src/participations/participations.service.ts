@@ -153,31 +153,33 @@ export class ParticipationsService {
     }
 
     const participation = await this.prisma.participation.findUnique({
-        where: {
-          action_id_user_id: {
-            action_id: actionIdBigInt,
-            user_id: userId,
-          },
+      where: {
+        action_id_user_id: {
+          action_id: actionIdBigInt,
+          user_id: userId,
         },
-      });
+      },
+    });
 
     if (!participation) {
       throw new NotFoundException('Participation not found');
     }
 
-    const deletedParticipation = await this.prisma.participation.delete({
-        where: {
-          action_id_user_id: {
-            action_id: actionIdBigInt,
-            user_id: userId,
-          },
-        },
-      });
+    const deleteResult = await this.prisma.participation.deleteMany({
+      where: {
+        action_id: actionIdBigInt,
+        user_id: userId,
+      },
+    });
+
+    if (deleteResult.count !== 1) {
+      throw new BadRequestException('Participation has already been cancelled');
+    }
 
     return {
-      ...deletedParticipation,
-      action_id: deletedParticipation.action_id.toString(),
-      user_id: deletedParticipation.user_id.toString(),
+      ...participation,
+      action_id: participation.action_id.toString(),
+      user_id: participation.user_id.toString(),
     };
   }
 

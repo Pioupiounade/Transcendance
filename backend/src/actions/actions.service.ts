@@ -3,7 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateActionDto } from './dto/create-action.dto';
 import { UpdateActionDto } from './dto/update-action.dto';
 import { Category } from '../../generated/prisma/client';
-import { ActionStatus, OrganizationStatus, RoleApp, RoleOrg, MemberStatus, AccountStatus } from '../../generated/prisma/client';
+import { ActionStatus, OrganizationStatus, RoleApp, RoleOrg, MemberStatus, AccountStatus, Prisma } from '../../generated/prisma/client';
 import { PointtransactionService } from '../pointtransaction/pointtransaction.service';
 
 
@@ -401,46 +401,97 @@ export class ActionsService {
       }
     }
 
-    if (data.max_participants !== undefined) {
-      if (data.max_participants < action.min_participants) {
-        throw new BadRequestException('Maximum participants cannot be lower than minimum participants');
+      let updatedAction;
+
+      for (let attempt = 0; attempt < 3; attempt++) {
+        try {
+          updatedAction = await this.prisma.$transaction(
+            async (tx) => {
+              if (data.max_participants !== undefined) {
+                if (
+                  data.max_participants < action.min_participants
+                ) {
+                  throw new BadRequestException(
+                    'Maximum participants cannot be lower than minimum participants',
+                  );
+                }
+
+                const participantCount =
+                  await tx.participation.count({
+                    where: {
+                      action_id: action.action_id,
+                    },
+                  });
+
+                if (
+                  data.max_participants < participantCount
+                ) {
+                  throw new BadRequestException(
+                    'Maximum participants cannot be lower than current participants count',
+                  );
+                }
+              }
+
+              return tx.action.update({
+                where: {
+                  action_id: BigInt(id),
+                },
+                data: {
+                  title: data.title,
+                  description: data.description,
+                  organization_id: newOrganizationId,
+                  location: data.location,
+                  category: data.category,
+                  imagesList: data.imagesList,
+                  max_participants: data.max_participants,
+                  scheduled_at: data.scheduled_at
+                    ? new Date(data.scheduled_at)
+                    : undefined,
+                },
+              });
+            },
+            {
+              isolationLevel:
+                Prisma.TransactionIsolationLevel.Serializable,
+            },
+          );
+
+          break;
+        } catch (error) {
+          if (
+            error instanceof
+              Prisma.PrismaClientKnownRequestError &&
+            error.code === 'P2034'
+          ) {
+            if (attempt < 2) {
+              continue;
+            }
+
+            throw new BadRequestException(
+              'Action capacity was modified concurrently, please try again',
+            );
+          }
+
+          throw error;
+        }
       }
 
-      const participantCount = await this.prisma.participation.count({
-        where: {
-          action_id: action.action_id,
-        },
-      });
-
-      if (data.max_participants < participantCount) {
-        throw new BadRequestException('Maximum participants cannot be lower than current participants count');
+      if (!updatedAction) {
+        throw new BadRequestException(
+          'Action could not be updated, please try again',
+        );
       }
-    }
 
-    const updatedAction = await this.prisma.action.update({
-      where: {
-        action_id: BigInt(id),
-      },
-      data: {
-        title: data.title,
-        description: data.description,
-        organization_id: newOrganizationId,
-        location: data.location,
-        category: data.category,
-        imagesList: data.imagesList,
-        max_participants: data.max_participants,
-        scheduled_at: data.scheduled_at ? new Date(data.scheduled_at) : undefined,
-      },
-    });
-
-    return {
-      ...updatedAction,
-      action_id: updatedAction.action_id.toString(),
-      creator_id: updatedAction.creator_id.toString(),
-      organization_id: updatedAction.organization_id?.toString() ?? null,
-      validated_by_user_id: updatedAction.validated_by_user_id?.toString() ?? null,
-    };
-  }
+      return {
+        ...updatedAction,
+        action_id: updatedAction.action_id.toString(),
+        creator_id: updatedAction.creator_id.toString(),
+        organization_id:
+          updatedAction.organization_id?.toString() ?? null,
+        validated_by_user_id:
+          updatedAction.validated_by_user_id?.toString() ?? null,
+      };
+}
 
 //10. approuver une action
   async approve(id: string, currentUserId: string) {
