@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
-import type { UserProfile } from '../types/profile';
+import type { UserProfile } from '../types';
+import './ProfileForm.css';
 
 interface ProfileFormProps {
   initialData?: UserProfile;
@@ -124,16 +125,7 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({
 
     if (hasError) return;
 
-    // Pasa los datos validados hacia App.tsx
-    const payload = {
-      ...formData,
-      location: formData.location 
-        ? `POINT(${formData.location.longitude} ${formData.location.latitude})` 
-        : null,
-    };
-    onSave(payload as unknown as UserProfile);
-
-    console.log('Payload ready for PostGIS:', payload);
+    onSave(formData);
   };
 
   return (
@@ -252,14 +244,14 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({
           <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
             <button
               type="button"
-              className="btn btn--secondary btn--block btn--l"
+              className="btn btn--secondary btn--block"
               onClick={onCancel}
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="btn btn--primary btn--block btn--l"
+              className="btn btn--primary btn--block"
             >
               Save Changes
             </button>
@@ -269,3 +261,5 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({
     </main>
   );
 };
+
+export default ProfileForm;

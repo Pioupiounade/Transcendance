@@ -10,7 +10,8 @@ Ce fichier est chargé automatiquement quand la session démarre dans `frontend/
 - Plateforme web de quartier : actions citoyennes, organisations, participations, amis. Équipe de 4, Tech Lead : @Quentin.
 - Sujet officiel : `../Docs/en.subject.pdf` (v21.1). Démo finale le 28/09/2026 (`../Docs/sprint_schedule.md`).
 - Backend (`../backend/`, hors périmètre) : NestJS 11, Prisma 7, PostgreSQL 17, JWT (passport), argon2. API REST sans
-  préfixe ni version, ids `BigInt` renvoyés en string, CORS non activé (20/09/2026).
+  préfixe ni version, ids `BigInt` renvoyés en string, JWT (`JwtAuthGuard`) sur toute route agissant au nom de
+  l'utilisateur, CORS non activé (23/09/2026).
 - `../docker/docker-compose.yml` : postgres :5432, backend :3000, frontend :5173, sources montées (hot reload).
   Nginx/HTTPS pas encore branché.
 
@@ -49,7 +50,7 @@ Ce fichier est chargé automatiquement quand la session démarre dans `frontend/
 - `DESIGN.md` : palette, typo, composants React à construire (§9). `_reference.html` : maquette navigable.
 - `en.subject.pdf` : sujet officiel (bloquant : HTTPS, `.env` ignoré + `.env.example`, pages CGU et confidentialité,
   README complet en anglais).
-- `docs/api_contract.md` (ici, dans `frontend/`) : routes réelles du backend, généré le 20/09/2026 ; à régénérer quand
+- `docs/api_contract.md` (ici, dans `frontend/`) : routes réelles du backend, généré le 23/09/2026 ; à régénérer quand
   le backend change.
 
 ## Outillage
@@ -57,9 +58,10 @@ Ce fichier est chargé automatiquement quand la session démarre dans `frontend/
   `noUnusedParameters`, `noFallthroughCasesInSwitch`, `verbatimModuleSyntax`, `erasableSyntaxOnly`.
 - ESLint (flat config) : `@eslint/js` recommended, `typescript-eslint` recommended, `react-hooks` recommended,
   `react-refresh` (Vite). `npm run lint` doit être vierge avant une PR ; ne pas désactiver une règle, corriger le code.
-- Installé : React Router 7 en mode data (`createBrowserRouter`, ticket #8). Prévu par `../Docs/architecture.md` mais
-  **pas installé** : TanStack Query, Leaflet, framework CSS (TBD), Jest + React Testing Library. Chaque ajout passe par
-  un ticket. Aucun test runner pour l'instant (Vitest s'intègre nativement à Vite : à trancher en équipe avant d'installer).
+- Installé : React Router 7 en mode data (`createBrowserRouter`, ticket #8) ; Leaflet 1.9 + react-leaflet 5 (ticket #12,
+  tuiles OpenStreetMap, pins en `divIcon` CSS : jamais les PNG de Leaflet, cassés sous Vite). Prévu par
+  `../Docs/architecture.md` mais **pas installé** : TanStack Query, framework CSS (TBD), Jest + React Testing Library.
+  Chaque ajout passe par un ticket. Aucun test runner pour l'instant (Vitest s'intègre nativement à Vite : à trancher en équipe avant d'installer).
 - CSS : CSS Modules (`X.module.css` à côté du composant) sur les variables de `styles/tokens.css`.
 
 ## Architecture des modules
@@ -120,16 +122,15 @@ Ce fichier est chargé automatiquement quand la session démarre dans `frontend/
 - Un seul client HTTP (wrapper `fetch`) : JSON, header `Authorization: Bearer <access_token>`, erreurs normalisées
   depuis `{ statusCode, message, error }` (`message` peut être un tableau), 401 → un essai de `POST /auth/refresh`
   puis rejeu, sinon déconnexion.
-- Le paramètre transitoire `?current_user_id=` (routes hors `/auth`) est ajouté par le client HTTP à un seul endroit,
-  jamais dans les composants, pour être retiré sans douleur quand les guards backend arriveront.
+- L'identité vient du JWT : jamais d'id utilisateur dans une query ou un body pour dire « qui je suis »
+  (`creator_id` n'existe plus dans les DTO ; l'envoyer provoque un 400).
 - Les listes filtrées renvoient 404 quand elles sont vides (`GET /actions?…`, `GET /organizations?creator_id=`) :
   le client traduit ce 404 en tableau vide.
 - CORS non activé côté backend (20/09/2026) : en dev, `VITE_API_URL=/api` et `server.proxy` (`vite.config.ts`) réécrit
   `/api/*` vers `VITE_DEV_PROXY_TARGET` (`http://localhost:3000` en local, `http://backend:3000` en Docker : à passer
   par `environment:` dans le compose, ticket). Pas de contournement navigateur.
 - Tokens : `access_token` (15 min) en mémoire ; `refresh_token` (7 jours) persisté côté client car le backend l'attend
-  dans le body de `/auth/refresh` ; à revoir si le backend passe aux cookies httpOnly. Ne jamais réutiliser le
-  `refresh_token` renvoyé par `GET /users/*` (c'est un hash serveur).
+  dans le body de `/auth/refresh` ; à revoir si le backend passe aux cookies httpOnly.
 - Libellés UI des enums (maquette, à traduire en anglais) : `ENVIRONMENT` → « Environment », `SOCIAL` → « Mutual aid »,
   `CULTURAL` → « Culture & sharing ». Un seul endroit pour ce mapping, jamais de chaîne d'enum en dur dans le JSX.
 
@@ -155,13 +156,14 @@ Inspirée de bulletproof-react et feature-sliced, réduite à ce que le projet j
 
 ```
 app/            composition root : seul endroit qui connaît tout
-  main.tsx, App.tsx, router.tsx (AppRouter), routes.ts (ROUTES), labels.ts, lazyPage.ts (à créer au 1er usage)
-  layout/       PageShell, AppHeader, BottomNav (mobile), AppFooter, navItems.ts
+  main.tsx, App.tsx, router.tsx (AppRouter), routes.ts (ROUTES), labels.ts, lazyPage.ts
+  layout/       PageShell (Suspense des pages paresseuses), AppHeader, BottomNav (mobile), AppFooter, navItems.ts
   pages/        pages sans domaine : Home, Legal (CGU, confidentialité), NotFound, Placeholder
 features/       1 domaine métier = 1 module ; interface = index.ts
   auth/         login, register, session, RequireAuth
   profile/      users + profiles + interests (api_contract §6-8)
-  actions/      actions + carte + filtres ; owner des enums Category/ActionStatus et de leurs libellés
+  actions/      actions + carte + filtres ; owner des enums Category/ActionStatus et de leurs libellés.
+                Existant (#12) : MapPage, NeighborhoodMap, ActionCard, CategoryFilter, useActions, mapConfig.ts
   participations/, organizations/, friends/ (friend-requests + friendships)
   <feature>/
     api/        fonctions fetch typées + hooks useX : seuls appelants de shared/api
@@ -173,8 +175,9 @@ features/       1 domaine métier = 1 module ; interface = index.ts
     index.ts    l'interface, 10 à 20 lignes max
 shared/         zéro connaissance métier, réutilisable ailleurs
   api/          client HTTP (deep), index.ts
-  ui/           kit DESIGN.md §9 (Button, FloatingField, CategoryChip, Dialog, Spinner, ErrorMessage…), index.ts
-  lib/          fonctions pures, pas de barrel (test de suppression négatif)
+  ui/           kit DESIGN.md §9 (Button, FloatingField, CategoryChip, Dialog, Spinner, ErrorMessage…), index.ts.
+                Existant : Button, ButtonLink, Avatar, Icon (+ iconMarkup pour les hôtes HTML), Chip
+  lib/          fonctions pures, pas de barrel (test de suppression négatif) : pageTitle, formatDate, prefersReducedMotion
   config/       env.ts : lit et valide VITE_API_URL
 styles/         tokens.css (DESIGN.md), reset.css, global.css
 assets/
@@ -200,7 +203,7 @@ assets/
 
 ### Modules deep de référence
 - `shared/api` : interface = `http.get/post/patch/delete/list(path, body?, { query, signal })`, `ApiError { status,
-  messages, isNetwork }`, `session.set/clear/onExpire/userId`. Caché : base URL, Bearer, `?current_user_id=`, 401 →
+  messages, isNetwork }`, `session.set/clear/onExpire/userId`. Caché : base URL, Bearer, 401 →
   refresh (dédupliqué) → rejeu, `http.list` traduit le 404 en `[]`, `message` tableau normalisé, réseau → `status 0`.
   Les tokens vivent ici ; `features/auth` appelle seulement `session.set(tokens, userId)`.
 - `features/auth` : interface = `AuthProvider`, `useAuth() → { user, login, logout, register }`, `RequireAuth`.

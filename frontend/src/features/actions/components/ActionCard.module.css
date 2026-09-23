@@ -1,0 +1,81 @@
+/* DESIGN.md §6 « Action card », « Tag » */
+.card {
+  display: block;
+  width: 100%;
+  padding: 17px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-action);
+  background: var(--ground);
+  color: var(--ink);
+  text-align: left;
+  transition:
+    border-color var(--t-base),
+    background-color var(--t-base);
+}
+.card:hover {
+  border-color: var(--brand);
+}
+.selected,
+.selected:hover {
+  border: 1.5px solid var(--brand);
+  background: var(--card-selected-bg);
+}
+
+.top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: var(--r-tag);
+  background: var(--tag-environment-bg);
+  color: var(--tag-environment-ink);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+.social {
+  background: var(--tag-social-bg);
+  color: var(--tag-social-ink);
+}
+.cultural {
+  background: var(--tag-culture-bg);
+  color: var(--tag-culture-ink);
+}
+
+.status {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.title {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.35;
+  letter-spacing: -0.3px;
+}
+
+.meta,
+.description {
+  display: block;
+  margin-top: 4px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.description {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+}

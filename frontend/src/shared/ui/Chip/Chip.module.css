@@ -1,0 +1,34 @@
+/* DESIGN.md §6 « Category chip » */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-chip);
+  background: var(--ground);
+  color: var(--ink);
+  font-size: 14px;
+  line-height: 1.5;
+  transition:
+    background-color var(--t-fast),
+    color var(--t-fast),
+    border-color var(--t-fast);
+}
+
+.chip:hover {
+  border-color: var(--brand);
+}
+
+.chip[aria-pressed='true'] {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: #fff;
+}
+
+@media (max-width: 760px) {
+  .chip {
+    padding: 8px 11px;
+    font-size: 12px;
+  }
+}
