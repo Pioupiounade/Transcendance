@@ -1,0 +1,120 @@
+/* ActionDetailsView styling – uses design tokens from tokens.css */
+
+/* -------------------------------------------------------------------------- */
+/* Card container                                                            */
+/* -------------------------------------------------------------------------- */
+.action-details-card {
+  max-width: 760px;
+  margin: 0 auto;               /* center horizontally */
+  padding: var(--s4);           /* 24px – token based */
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-card);
+  box-shadow: var(--shadow);
+}
+
+/* -------------------------------------------------------------------------- */
+/* Header and chips                                                          */
+/* -------------------------------------------------------------------------- */
+.action-header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s2);
+  margin-bottom: var(--s3);
+}
+
+/* Generic pill chip */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--s1) var(--s2);
+  background: var(--ground);
+  border-radius: 9999px;       /* fully rounded pill */
+  font-size: var(--body);
+  color: var(--ink);
+}
+
+/* Verification badge – uses brand colour */
+.chip--verified {
+  background: var(--brand);
+  color: #fff;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Photo carousel                                                            */
+/* -------------------------------------------------------------------------- */
+.carousel {
+  width: 100%;
+  max-height: 260px;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Images inside the carousel */
+.carousel img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Navigation buttons (prev / next) */
+.carousel-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+/* Positioning of the two buttons */
+.carousel-btn.prev {
+  left: var(--s2);
+}
+.carousel-btn.next {
+  right: var(--s2);
+}
+
+/* Thumbnail strip below the carousel */
+.carousel-thumbnails {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: var(--s2);
+}
+
+/* Individual thumbnail */
+.carousel-thumbnails img {
+  width: 48px;
+  height: 48px;
+  object-fit: cover;
+  border: 2px solid transparent;
+  border-radius: var(--r-card);
+  cursor: pointer;
+}
+
+/* Active thumbnail */
+.carousel-thumbnails img.active {
+  border-color: var(--brand);
+}
+
+/* -------------------------------------------------------------------------- */
+/* Panels (logistics, participation, generic)                               */
+/* -------------------------------------------------------------------------- */
+.panel,
+.logistics,
+.participation {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+  background: var(--ground);
+  padding: var(--s3);
+  border-radius: var(--r-card);
+}
