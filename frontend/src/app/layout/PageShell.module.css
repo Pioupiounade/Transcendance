@@ -10,6 +10,12 @@
   width: 100%;
 }
 
+.loading {
+  padding: var(--s6) var(--s4);
+  text-align: center;
+  color: var(--muted);
+}
+
 .skip {
   position: absolute;
   left: 16px;

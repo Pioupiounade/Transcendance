@@ -30,6 +30,7 @@ export const APP_LABELS = {
     terms: { title: 'Terms of Service' },
     privacy: { title: 'Privacy Policy' },
     notFound: { title: 'Page not found', lead: 'This address leads nowhere.', back: 'Back to home' },
+    loading: 'Loading…',
     placeholder: 'This screen is coming in a future ticket.',
     legalPlaceholder: 'Content being written by the team.',
   },

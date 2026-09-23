@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { Outlet } from 'react-router';
 import { APP_LABELS } from '../labels';
 import { AppFooter } from './AppFooter';
@@ -14,7 +15,16 @@ export function PageShell() {
       </a>
       <AppHeader />
       <main id="main" className={styles.main} tabIndex={-1}>
-        <Outlet />
+        {/* Pages chargées paresseusement (`app/lazyPage.ts`) : un seul Suspense pour toutes. */}
+        <Suspense
+          fallback={
+            <p className={styles.loading} role="status">
+              {APP_LABELS.pages.loading}
+            </p>
+          }
+        >
+          <Outlet />
+        </Suspense>
       </main>
       <AppFooter />
       <BottomNav />
