@@ -1,0 +1,44 @@
+import { Link, NavLink } from 'react-router';
+import { useAuth } from '@/features/auth';
+import { Avatar, ButtonLink, Icon } from '@/shared/ui';
+import { APP_LABELS } from '../labels';
+import { ROUTES } from '../routes';
+import { Brandmark } from './Brandmark';
+import { NAV_ITEMS } from './navItems';
+import styles from './AppHeader.module.css';
+
+export function AppHeader() {
+  const { status, user } = useAuth();
+  const links = NAV_ITEMS.filter((item) => item.to !== ROUTES.profile);
+
+  return (
+    <header className={styles.topbar}>
+      <Link to={ROUTES.home} className={styles.wordmark}>
+        <Brandmark />
+        {APP_LABELS.brand}
+      </Link>
+
+      <nav className={styles.nav} aria-label={APP_LABELS.mainNav}>
+        {links.map((item) => (
+          <NavLink key={item.to} to={item.to} end={item.end} className={styles.link}>
+            <Icon name={item.icon} />
+            {item.label}
+          </NavLink>
+        ))}
+      </nav>
+
+      <div className={styles.actions}>
+        {status === 'authenticated' && user && (
+          <Link to={ROUTES.profile} className={styles.profileLink} aria-label={APP_LABELS.myProfile}>
+            <Avatar name={user.email} />
+          </Link>
+        )}
+        {status === 'anonymous' && (
+          <ButtonLink to={ROUTES.login} variant="secondary">
+            {APP_LABELS.signIn}
+          </ButtonLink>
+        )}
+      </div>
+    </header>
+  );
+}

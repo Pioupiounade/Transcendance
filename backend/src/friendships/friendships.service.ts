@@ -6,9 +6,45 @@ import { FriendshipStatus, AccountStatus } from '../../generated/prisma/client';
 export class FriendshipsService {
     constructor(private prisma: PrismaService) {}
 
+private async getActiveUser(userId: string) {
+  const user = await this.prisma.user.findUnique({
+    where: {
+      user_id: BigInt(userId),
+    },
+  });
+
+  if (!user) {
+    throw new NotFoundException('User not found');
+  }
+
+  if (user.account_status !== AccountStatus.ACTIVE) {
+    throw new BadRequestException('User is not active');
+  }
+
+  return user;
+}
+
+private async findFriendshipBetweenUsers(currentUserId: string, friendUserId: string) {
+  return this.prisma.friendship.findFirst({
+    where: {
+      OR: [
+        {
+          user1_id: BigInt(currentUserId),
+          user2_id: BigInt(friendUserId),
+        },
+        {
+          user1_id: BigInt(friendUserId),
+          user2_id: BigInt(currentUserId),
+        },
+      ],
+    },
+  });
+}
+
 // Voir tous mes amis actifs
 async findMyFriends(currentUserId: string) {
-  const userId = BigInt(currentUserId);
+  const user = await this.getActiveUser(currentUserId);
+  const userId = user.user_id;
 
   const friendships = await this.prisma.friendship.findMany({
     where: {
@@ -54,7 +90,8 @@ async findMyFriends(currentUserId: string) {
 
 // Voir tous mes amis bloqués
 async findBlockedFriends(currentUserId: string) {
-  const userId = BigInt(currentUserId);
+  const user = await this.getActiveUser(currentUserId);
+  const userId = user.user_id;
 
   const friendships = await this.prisma.friendship.findMany({
     where: {
@@ -99,34 +136,12 @@ async findBlockedFriends(currentUserId: string) {
 
 // Bloquer un ami
 async blockFriend( currentUserId: string, friendUserId: string) {
-    const user = await this.prisma.user.findUnique({
-        where: {
-            user_id: BigInt(currentUserId),
-        },
-    });
+    const user = await this.getActiveUser(currentUserId);
 
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-
-    if (user.account_status !== AccountStatus.ACTIVE) {
-      throw new BadRequestException('Only an active user can block another user');
-    }
-
-    const friendship = await this.prisma.friendship.findFirst({
-    where: {
-        OR: [
-        {
-            user1_id: BigInt(currentUserId),
-            user2_id: BigInt(friendUserId),
-        },
-        {
-            user1_id: BigInt(friendUserId),
-            user2_id: BigInt(currentUserId),
-        },
-        ],
-    },
-    });
+    const friendship = await this.findFriendshipBetweenUsers(
+      currentUserId,
+      friendUserId,
+    );
 
     if (!friendship) {
         throw new NotFoundException('Friendship not found');
@@ -162,34 +177,12 @@ async blockFriend( currentUserId: string, friendUserId: string) {
 
 // Débloquer un ami
 async unblockFriend(currentUserId: string, friendUserId: string) {
-    const user = await this.prisma.user.findUnique({
-        where: {
-            user_id: BigInt(currentUserId),
-        },
-    });
+    const user = await this.getActiveUser(currentUserId);
 
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-
-    if (user.account_status !== AccountStatus.ACTIVE) {
-      throw new BadRequestException('Only an active user can unblock another user');
-    }
-
-    const friendship = await this.prisma.friendship.findFirst({
-    where: {
-        OR: [
-        {
-            user1_id: BigInt(currentUserId),
-            user2_id: BigInt(friendUserId),
-        },
-        {
-            user1_id: BigInt(friendUserId),
-            user2_id: BigInt(currentUserId),
-        },
-        ],
-    },
-    });
+    const friendship = await this.findFriendshipBetweenUsers(
+      currentUserId,
+      friendUserId,
+    );
 
     if (!friendship) {
         throw new NotFoundException('Friendship not found');
@@ -227,35 +220,13 @@ async unblockFriend(currentUserId: string, friendUserId: string) {
 }
 
 // Supprimer une amitié
-async removeFriend(currentUserId: string, friendUserId: string){
-    const user = await this.prisma.user.findUnique({
-        where: {
-            user_id: BigInt(currentUserId),
-        },
-    });
+async removeFriend(currentUserId: string, friendUserId: string) {
+    await this.getActiveUser(currentUserId);
 
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-
-    if (user.account_status !== AccountStatus.ACTIVE) {
-      throw new BadRequestException('Only an active user can remove another user');
-    }
-
-    const friendship = await this.prisma.friendship.findFirst({
-    where: {
-        OR: [
-        {
-            user1_id: BigInt(currentUserId),
-            user2_id: BigInt(friendUserId),
-        },
-        {
-            user1_id: BigInt(friendUserId),
-            user2_id: BigInt(currentUserId),
-        },
-        ],
-    },
-    });
+    const friendship = await this.findFriendshipBetweenUsers(
+      currentUserId,
+      friendUserId,
+    );
 
     if (!friendship) {
         throw new NotFoundException('Friendship not found');

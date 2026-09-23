@@ -1,0 +1,73 @@
+/* DESIGN.md §4 */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s2);
+  height: 44px;
+  padding: 0 20px;
+  border-radius: var(--r-btn);
+  border: 1.5px solid transparent;
+  font-weight: var(--btn-w);
+  font-size: 14px;
+  line-height: 1;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color var(--t-fast),
+    color var(--t-fast),
+    border-color var(--t-fast);
+}
+
+.lg {
+  height: 52px;
+  padding: 0 24px;
+  font-size: 16px;
+}
+
+.block {
+  width: 100%;
+}
+
+.primary {
+  background: var(--brand);
+  color: #fff;
+}
+.primary:hover {
+  background: var(--brand-hover);
+}
+.primary:active {
+  background: var(--brand-press);
+}
+.primary:disabled,
+.primary[aria-disabled='true'] {
+  background: #e2e4dc;
+  color: #687267;
+}
+
+.secondary {
+  background: var(--ground);
+  color: var(--ink);
+  border-color: var(--line);
+}
+.secondary:hover {
+  background: #eeede4;
+}
+.secondary:active {
+  background: #efefec;
+}
+
+.text {
+  height: auto;
+  padding: 0;
+  border: 0;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.text:hover {
+  color: var(--muted);
+}
