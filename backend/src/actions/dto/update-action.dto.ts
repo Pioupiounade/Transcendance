@@ -32,6 +32,10 @@ export class UpdateActionDto {
   imagesList?: string[];
 
   @IsOptional()
+  @IsInt()
+  max_participants?: number;
+
+  @IsOptional()
   @IsDateString()
   scheduled_at?: string;
 }

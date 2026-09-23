@@ -26,6 +26,10 @@ export class CreateActionDto {
   @IsString({ each:true })
   imagesList?: string[];
 
+  @IsOptional()
+  @IsInt()
+  max_participants?: number;
+
   @IsDateString()
   scheduled_at!: string;
 }
