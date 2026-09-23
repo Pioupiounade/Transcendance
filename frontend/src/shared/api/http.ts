@@ -3,7 +3,7 @@ import { ApiError } from './ApiError';
 import { session, type SessionTokens } from './session';
 
 // Client HTTP unique (frontend/CLAUDE.md, « Appels API »). Caché ici, et nulle part ailleurs :
-// base URL, JSON, Bearer, `?current_user_id=` transitoire, 401 → refresh → rejeu, normalisation des erreurs.
+// base URL, JSON, Bearer, 401 → refresh → rejeu, normalisation des erreurs.
 
 type Method = 'GET' | 'POST' | 'PATCH' | 'DELETE';
 type Query = Record<string, string | number | boolean | null | undefined>;
@@ -15,18 +15,12 @@ export type RequestOptions = {
   signal?: AbortSignal;
 };
 
-const CURRENT_USER_PARAM = 'current_user_id';
 const AUTH_PREFIX = '/auth';
 
 const buildUrl = (path: string, query: Query | undefined): string => {
   const url = new URL(env.apiUrl + path, window.location.origin);
   for (const [key, value] of Object.entries(query ?? {})) {
     if (value !== null && value !== undefined) url.searchParams.set(key, String(value));
-  }
-  // Transitoire : le backend n'a aucun guard hors /auth et se fie à ce paramètre.
-  // À retirer ici, et ici seulement, quand les guards JWT arriveront.
-  if (!path.startsWith(AUTH_PREFIX) && session.userId !== null && !url.searchParams.has(CURRENT_USER_PARAM)) {
-    url.searchParams.set(CURRENT_USER_PARAM, session.userId);
   }
   return url.toString();
 };
