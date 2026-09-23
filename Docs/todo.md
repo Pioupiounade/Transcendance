@@ -1,29 +1,9 @@
 ORM ->
 
-* Implémenter le système de points
-
-  * créer un `PointsService` ou équivalent ;
-  * utiliser `PointTransaction` ;
-  * attribuer/retirer des points selon des événements métier ;
-  * éviter les modifications arbitraires de `User.points` ;
-  * conserver l’historique des transactions.
-
 * Ajouter les recherches restantes
-
   * permettre plus tard la combinaison de plusieurs filtres.
 
-* Ajouter les règles d’autorisation quand l’authentification sera disponible
-
-  * propriétaire du compte ;
-  * `ADMIN` ;
-  * créateur d’organisation ;
-  * `OWNER` ;
-  * `MANAGER` ;
-  * utilisateur actif/suspendu/désactivé ;
-  * ne plus passer librement `currentUserId` depuis le client.
-
 * Tester chaque bloc
-
   * cas nominal ;
   * ID inexistant ;
   * clé étrangère invalide ;
@@ -34,7 +14,6 @@ ORM ->
   * limites de participation.
 
 * Une fois tout cela fait, la partie ORM sera essentiellement terminée :
-
   * le `schema.prisma` représentera correctement les données ;
   * les migrations seront à jour ;
   * Prisma accédera correctement à PostgreSQL ;
@@ -42,24 +21,6 @@ ORM ->
   * les relations et contraintes métier principales seront implémentées ;
   * l’authentification/autorisation pourra ensuite venir sécuriser les opérations déjà définies.
 
-
-* **Authentification**
-
-  * inscription / connexion ;
-  * gestion des sessions ou JWT selon votre choix ;
-  * récupération de l’utilisateur connecté ;
-  * changement de mot de passe ;
-  * mot de passe oublié / reset ;
-  * déconnexion.
-
-* **Autorisation / rôles**
-
-  * Guards NestJS ;
-  * vérifier `USER` / `ADMIN` ;
-  * protéger les routes sensibles ;
-  * vérifier propriétaire du compte ;
-  * vérifier `OWNER` / `MANAGER` d’organisation ;
-  * remplacer les `currentUserId` temporaires par l’identité issue de l’auth.
 
 * **Frontend React**
 

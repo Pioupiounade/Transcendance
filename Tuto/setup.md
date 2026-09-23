@@ -1,40 +1,51 @@
 Quand je m'installe sur un nouvel ordi:
 -> git clone le projet dans goinfre
--> 
+->
+
 ```
     cd backend
     npm ci
 ```
+
 -> verifier Prism
+
 ```
     npx prisma --version
     npx prisma generate
     npx prisma validate
 ```
+
 -> verifier Docker
+
 ```
     cd ../docker
     docker compose up --build -d
     docker compose ps
 ```
--> verifier les logs 
+
+-> verifier les logs
+
 ```
     cd ../docker
     docker compose ps
     docker compose logs backend --tail=50
-
 ```
+
 -> verifier avec curl
+
 ```
     curl http://localhost:3000/users
 ```
 
 -> lancer prisma sur un navigateur
+
 ```
     cd backend
     npx prisma studio
 ```
+
 -> creer un nouveau module, service, controller
+
 ```
     npx nest generate module nom
     npx nest generate service nom
@@ -42,6 +53,7 @@ Quand je m'installe sur un nouvel ordi:
 ```
 
 -> migrer prismascheme
+
 ```
     npx prisma format
     npx prisma validate
@@ -50,12 +62,21 @@ Quand je m'installe sur un nouvel ordi:
 ```
 
 -> verifier que prisma compile bien
-``` 
+
+```
     cd backend
     npm run build
 ```
 
 -> lancer prisma
+
 ```
     npm run start:dev
+```
+
+-> compiler prismascheme en reglant les acces
+
+```
+    rm -rf dist
+    npm run build
 ```
