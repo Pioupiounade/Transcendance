@@ -1,6 +1,6 @@
-import { IsInt } from 'class-validator';
+import { IsNumberString } from 'class-validator';
 
 export class SendFriendRequestDto {
-  @IsInt()
-  addressee_id!: number;
+  @IsNumberString()
+  addressee_id!: string;
 }

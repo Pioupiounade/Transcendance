@@ -59,3 +59,9 @@ Quand je m'installe sur un nouvel ordi:
 ```
     npm run start:dev
 ```
+
+-> compiler prismascheme en reglant les acces
+```
+    sudo rm -rf dist
+    npm run build
+```
