@@ -1,3 +1,4 @@
+import type { IconName } from '@/shared/ui';
 import type { ActionStatus, Category } from './types';
 
 // Seul endroit qui traduit les enums de l'API (frontend/CLAUDE.md, « Appels API »).
@@ -5,6 +6,13 @@ export const CATEGORY_LABELS: Record<Category, string> = {
   ENVIRONMENT: 'Environment',
   SOCIAL: 'Mutual aid',
   CULTURAL: 'Culture & sharing',
+};
+
+/** Icône de chaque catégorie (maquette : feuille, cœur, soleil), pour les puces, les tags et les pins. */
+export const CATEGORY_ICONS: Record<Category, IconName> = {
+  ENVIRONMENT: 'leaf',
+  SOCIAL: 'heart',
+  CULTURAL: 'sun',
 };
 
 export const ACTION_STATUS_LABELS: Record<ActionStatus, string> = {
