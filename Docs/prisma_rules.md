@@ -39,6 +39,8 @@
 
    - Mandatory fields for new action creations:
         `title`, `description`, `creator_id`, `location`, `category`, `scheduled at`
+   - Acitons need a minimum of 3 participants (+ creator) to be confirmed and completed
+   - Actions can't be deleted, they can be cancelled in order to keep the history.
    - Methods :
         - Get all the actions
         - Get a specific action with the action_id
