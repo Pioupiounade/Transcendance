@@ -27,30 +27,44 @@
   align-items: center;
 }
 
-/* Categoría (azul pastel como ayer) */
+/* Category chip */
 .chip {
-  background: #e0f0ff;
-  color: #007bff;
+  background: var(--surface);
+  color: var(--brand);
   padding: 0.28rem 0.85rem;
-  border-radius: 9999px;
+  border-radius: var(--r-chip);
   font-size: 0.85rem;
   font-weight: 500;
-  border: 1px solid #bae0ff;
+  border: 1px solid var(--line);
   text-transform: capitalize;
 }
 
-/* Estado de la acción (aprobada/pendiente) */
-.chip.status-approved {
-  background: #e6f7ff;
-  color: #096dd9;
-  border-color: #91d5ff;
+/* Action status */
+.chip.status-approved,
+.chip.status-completed {
+  background: var(--trust-soft);
+  color: var(--trust);
+  border-color: var(--trust);
 }
 
-/* Badge de verificación (verde suave como ayer) */
+.chip.status-pending {
+  background: var(--note-bg);
+  color: var(--note-ink);
+  border-color: var(--note-ink);
+}
+
+.chip.status-rejected,
+.chip.status-cancelled {
+  background: var(--danger-soft);
+  color: var(--danger);
+  border-color: var(--danger);
+}
+
+/* Verification badge */
 .chip.verified {
-  background: #e6ffed;
-  color: #1e7e34;
-  border: 1px solid #b7eb8f;
+  background: var(--trust-soft);
+  color: var(--trust);
+  border: 1px solid var(--trust);
   font-weight: 500;
 }
 

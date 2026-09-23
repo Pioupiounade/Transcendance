@@ -59,7 +59,7 @@ export const ActionDetailsView: React.FC<ActionDetailsViewProps> = ({ action }) 
         {/* Header chips con badges contrastados */}
         <div className="header">
           <span className="chip">{category}</span>
-          <span className="chip status-approved">{status}</span>
+          <span className={`chip status-${status}`}>{status}</span>
           {status === 'approved' && validatedAt && (
             <span className="chip verified">✓ Action verified</span>
           )}
