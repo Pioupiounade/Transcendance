@@ -70,7 +70,7 @@ export const ActionDetailsView: React.FC<ActionDetailsViewProps> = ({ action }) 
 
         {/* Organizer row usando el componente Avatar oficial */}
         <div className="organizer">
-          <Avatar src={organizer.avatarUrl} alt={organizer.name} size={42} />
+          <Avatar src={organizer.avatarUrl} name={organizer.name} size={42} />
           <div className="organizer-info">
             <span className="organizer-name">{organizer.name}</span>
             {organizer.organizationTitle && (
