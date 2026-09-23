@@ -9,14 +9,14 @@ import { PointtransactionService } from '../pointtransaction/pointtransaction.se
 
 @Injectable()
 export class ActionsService {
- 
-  constructor(
-      private prisma: PrismaService,
-      private pointtransactionService: PointtransactionService,
- ) {}
 
-//1. recuperer toutes les actions
-// GET /actions
+  constructor(
+    private prisma: PrismaService,
+    private pointtransactionService: PointtransactionService,
+  ) { }
+
+  //1. recuperer toutes les actions
+  // GET /actions
   async findAll() {
     const actions = await this.prisma.action.findMany();
 
@@ -27,8 +27,8 @@ export class ActionsService {
     );
   }
 
-//2. recupere une action grace a son id
-// GET /actions/:id
+  //2. recupere une action grace a son id
+  // GET /actions/:id
   async findOne(id: string) {
     const action = await this.prisma.action.findUnique({
       where: {
@@ -36,7 +36,7 @@ export class ActionsService {
       },
     });
 
-    if(!action) {
+    if (!action) {
       throw new NotFoundException('Action not found');
     }
 
@@ -62,8 +62,8 @@ export class ActionsService {
     };
   }
 
-//3. recupere des actions par organization
-// GET /actions?organization_id=2
+  //3. recupere des actions par organization
+  // GET /actions?organization_id=2
   async findByOrganization(id: string) {
     const actions = await this.prisma.action.findMany({
       where: {
@@ -71,10 +71,10 @@ export class ActionsService {
       },
     });
 
-    if(actions.length === 0) {
+    if (actions.length === 0) {
       throw new NotFoundException('No actions found for this organization');
     }
-    
+
     return Promise.all(
       actions.map((action) =>
         this.enrichActionWithParticipationData(action),
@@ -82,8 +82,8 @@ export class ActionsService {
     );
   }
 
-//4. recupere des actions par categorie
-// GET /actions?category=ENVIRONMENT
+  //4. recupere des actions par categorie
+  // GET /actions?category=ENVIRONMENT
   async findByCategory(category: Category) {
     const actions = await this.prisma.action.findMany({
       where: {
@@ -91,10 +91,10 @@ export class ActionsService {
       },
     });
 
-    if(actions.length === 0) {
+    if (actions.length === 0) {
       throw new NotFoundException('No actions found for this category');
     }
-    
+
     return Promise.all(
       actions.map((action) =>
         this.enrichActionWithParticipationData(action),
@@ -102,8 +102,8 @@ export class ActionsService {
     );
   }
 
-//5. recupere des actions par createur
-// GET /actions?creator_id=1
+  //5. recupere des actions par createur
+  // GET /actions?creator_id=1
   async findByCreator(id: string) {
     const actions = await this.prisma.action.findMany({
       where: {
@@ -111,10 +111,10 @@ export class ActionsService {
       },
     });
 
-    if(actions.length === 0) {
+    if (actions.length === 0) {
       throw new NotFoundException('No actions found for this user');
     }
-    
+
     return Promise.all(
       actions.map((action) =>
         this.enrichActionWithParticipationData(action),
@@ -122,8 +122,8 @@ export class ActionsService {
     );
   }
 
-//6. recupere des actions par statut
-// GET /actions?status=APPROVED
+  //6. recupere des actions par statut
+  // GET /actions?status=APPROVED
   async findByStatus(status: ActionStatus) {
     const actions = await this.prisma.action.findMany({
       where: {
@@ -131,10 +131,10 @@ export class ActionsService {
       },
     });
 
-    if(actions.length === 0) {
+    if (actions.length === 0) {
       throw new NotFoundException('No actions found for this status');
     }
-    
+
     return Promise.all(
       actions.map((action) =>
         this.enrichActionWithParticipationData(action),
@@ -142,28 +142,28 @@ export class ActionsService {
     );
   }
 
-//7. recuperer des actions par zone
+  //7. recuperer des actions par zone
   async findByRadius(lat: number, lng: number, radiusKm: number) {
-      const actions = await this.prisma.action.findMany();
+    const actions = await this.prisma.action.findMany();
 
-      const nearbyActions = actions.filter((action) => {
-        const [actLat, actLng] = action.location;
+    const nearbyActions = actions.filter((action) => {
+      const [actLat, actLng] = action.location;
 
-        const distance = this.calculateDistance(
-          lat,
-          lng,
-          actLat,
-          actLng,
-        );
-
-        return distance <= radiusKm;
-      });
-
-      return Promise.all(
-        nearbyActions.map((action) =>
-          this.enrichActionWithParticipationData(action),
-        ),
+      const distance = this.calculateDistance(
+        lat,
+        lng,
+        actLat,
+        actLng,
       );
+
+      return distance <= radiusKm;
+    });
+
+    return Promise.all(
+      nearbyActions.map((action) =>
+        this.enrichActionWithParticipationData(action),
+      ),
+    );
   }
 
   private async enrichActionWithParticipationData(action: any) {
@@ -192,7 +192,7 @@ export class ActionsService {
     lng1: number,
     lat2: number,
     lng2: number,
-    ): number {
+  ): number {
     const earthRadiusKm = 6371;
 
     const dLat = this.toRadians(lat2 - lat1);
@@ -201,8 +201,8 @@ export class ActionsService {
     const a =
       Math.sin(dLat / 2) ** 2 +
       Math.cos(this.toRadians(lat1)) *
-        Math.cos(this.toRadians(lat2)) *
-        Math.sin(dLng / 2) ** 2;
+      Math.cos(this.toRadians(lat2)) *
+      Math.sin(dLng / 2) ** 2;
 
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
@@ -283,7 +283,7 @@ export class ActionsService {
         'Maximum participants cannot be lower than minimum participants',
       );
     }
-    
+
     const createdAction = await this.prisma.action.create({
       data: {
         title: data.title,
@@ -302,7 +302,7 @@ export class ActionsService {
   }
 
   //9. mettre a jour les donnees de l'action
-  async update( id: string, data: UpdateActionDto, currentUserId: string) {
+  async update(id: string, data: UpdateActionDto, currentUserId: string) {
     const action = await this.prisma.action.findUnique({
       where: {
         action_id: BigInt(id),
@@ -330,19 +330,19 @@ export class ActionsService {
 
     const isAdmin = currentUser.role === RoleApp.ADMIN;
 
-    const isCreator =  action.creator_id === BigInt(currentUserId);
+    const isCreator = action.creator_id === BigInt(currentUserId);
 
     let isManagerOrOwner = false;
 
     if (action.organization_id) {
       const membership = await this.prisma.organizationMember.findUnique({
-          where: {
-            organization_id_user_id: {
-              organization_id: action.organization_id,
-              user_id: BigInt(currentUserId),
-            },
+        where: {
+          organization_id_user_id: {
+            organization_id: action.organization_id,
+            user_id: BigInt(currentUserId),
           },
-        });
+        },
+      });
 
       isManagerOrOwner = membership?.status === MemberStatus.ACTIVE &&
         (membership.role === RoleOrg.MANAGER || membership.role === RoleOrg.OWNER);
@@ -351,7 +351,7 @@ export class ActionsService {
     if (!isAdmin && !isCreator && !isManagerOrOwner) {
       throw new ForbiddenException('You are not allowed to update this action');
     }
-    
+
     let newOrganizationId: bigint | undefined;
 
     if (data.organization_id !== undefined) {
@@ -401,7 +401,7 @@ export class ActionsService {
       }
     }
 
-    const updatedAction = await this.prisma.action.update({
+    let updatedAction = await this.prisma.action.update({
       where: {
         action_id: BigInt(id),
       },
@@ -416,143 +416,140 @@ export class ActionsService {
       },
     });
 
-      const newOrganization = await this.prisma.organization.findUnique({
-        where: {
-          organization_id: newOrganizationId,
-        },
-      });
+    const newOrganization = await this.prisma.organization.findUnique({
+      where: {
+        organization_id: newOrganizationId,
+      },
+    });
 
-      if (!newOrganization) {
-        throw new NotFoundException('Organization not found');
-      }
+    if (!newOrganization) {
+      throw new NotFoundException('Organization not found');
+    }
 
-      if (
-        newOrganization.organization_status !== OrganizationStatus.ACTIVE
-      ) {
-        throw new BadRequestException(
-          'Only an active organization can be assigned to an action',
-        );
-      }
+    if (
+      newOrganization.organization_status !== OrganizationStatus.ACTIVE
+    ) {
+      throw new BadRequestException(
+        'Only an active organization can be assigned to an action',
+      );
+    }
 
-      if (!isAdmin) {
-        const newMembership =
-          await this.prisma.organizationMember.findUnique({
-            where: {
-              organization_id_user_id: {
-                organization_id: newOrganizationId,
-                user_id: BigInt(currentUserId),
-              },
+    if (!isAdmin && newOrganizationId) {
+      const newMembership =
+        await this.prisma.organizationMember.findUnique({
+          where: {
+            organization_id_user_id: {
+              organization_id: newOrganizationId,
+              user_id: BigInt(currentUserId),
             },
-          });
+          },
+        });
 
-        const canAssignOrganization =
-          newMembership?.status === MemberStatus.ACTIVE &&
-          (
-            newMembership.role === RoleOrg.MANAGER ||
-            newMembership.role === RoleOrg.OWNER
-          );
+      const canAssignOrganization =
+        newMembership?.status === MemberStatus.ACTIVE &&
+        (
+          newMembership.role === RoleOrg.MANAGER ||
+          newMembership.role === RoleOrg.OWNER
+        );
 
-        if (!canAssignOrganization) {
-          throw new ForbiddenException(
-            'You are not allowed to assign this action to this organization',
-          );
-        }
+      if (!canAssignOrganization) {
+        throw new ForbiddenException(
+          'You are not allowed to assign this action to this organization',
+        );
       }
     }
 
-      let updatedAction;
-
-      for (let attempt = 0; attempt < 3; attempt++) {
-        try {
-          updatedAction = await this.prisma.$transaction(
-            async (tx) => {
-              if (data.max_participants !== undefined) {
-                if (
-                  data.max_participants < action.min_participants
-                ) {
-                  throw new BadRequestException(
-                    'Maximum participants cannot be lower than minimum participants',
-                  );
-                }
-
-                const participantCount =
-                  await tx.participation.count({
-                    where: {
-                      action_id: action.action_id,
-                    },
-                  });
-
-                if (
-                  data.max_participants < participantCount
-                ) {
-                  throw new BadRequestException(
-                    'Maximum participants cannot be lower than current participants count',
-                  );
-                }
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        updatedAction = await this.prisma.$transaction(
+          async (tx) => {
+            if (data.max_participants !== undefined) {
+              if (
+                data.max_participants < action.min_participants
+              ) {
+                throw new BadRequestException(
+                  'Maximum participants cannot be lower than minimum participants',
+                );
               }
 
-              return tx.action.update({
-                where: {
-                  action_id: BigInt(id),
-                },
-                data: {
-                  title: data.title,
-                  description: data.description,
-                  organization_id: newOrganizationId,
-                  location: data.location,
-                  category: data.category,
-                  imagesList: data.imagesList,
-                  max_participants: data.max_participants,
-                  scheduled_at: data.scheduled_at
-                    ? new Date(data.scheduled_at)
-                    : undefined,
-                },
-              });
-            },
-            {
-              isolationLevel:
-                Prisma.TransactionIsolationLevel.Serializable,
-            },
-          );
+              const participantCount =
+                await tx.participation.count({
+                  where: {
+                    action_id: action.action_id,
+                  },
+                });
 
-          break;
-        } catch (error) {
-          if (
-            error instanceof
-              Prisma.PrismaClientKnownRequestError &&
-            error.code === 'P2034'
-          ) {
-            if (attempt < 2) {
-              continue;
+              if (
+                data.max_participants < participantCount
+              ) {
+                throw new BadRequestException(
+                  'Maximum participants cannot be lower than current participants count',
+                );
+              }
             }
 
-            throw new BadRequestException(
-              'Action capacity was modified concurrently, please try again',
-            );
+            return tx.action.update({
+              where: {
+                action_id: BigInt(id),
+              },
+              data: {
+                title: data.title,
+                description: data.description,
+                organization_id: newOrganizationId,
+                location: data.location,
+                category: data.category,
+                imagesList: data.imagesList,
+                max_participants: data.max_participants,
+                scheduled_at: data.scheduled_at
+                  ? new Date(data.scheduled_at)
+                  : undefined,
+              },
+            });
+          },
+          {
+            isolationLevel:
+              Prisma.TransactionIsolationLevel.Serializable,
+          },
+        );
+
+        break;
+      } catch (error) {
+        if (
+          error instanceof
+          Prisma.PrismaClientKnownRequestError &&
+          error.code === 'P2034'
+        ) {
+          if (attempt < 2) {
+            continue;
           }
 
-          throw error;
+          throw new BadRequestException(
+            'Action capacity was modified concurrently, please try again',
+          );
         }
+
+        throw error;
       }
+    }
 
-      if (!updatedAction) {
-        throw new BadRequestException(
-          'Action could not be updated, please try again',
-        );
-      }
+    if (!updatedAction) {
+      throw new BadRequestException(
+        'Action could not be updated, please try again',
+      );
+    }
 
-      return {
-        ...updatedAction,
-        action_id: updatedAction.action_id.toString(),
-        creator_id: updatedAction.creator_id.toString(),
-        organization_id:
-          updatedAction.organization_id?.toString() ?? null,
-        validated_by_user_id:
-          updatedAction.validated_by_user_id?.toString() ?? null,
-      };
-}
+    return {
+      ...updatedAction,
+      action_id: updatedAction.action_id.toString(),
+      creator_id: updatedAction.creator_id.toString(),
+      organization_id:
+        updatedAction.organization_id?.toString() ?? null,
+      validated_by_user_id:
+        updatedAction.validated_by_user_id?.toString() ?? null,
+    };
+  }
 
-//10. approuver une action
+  //10. approuver une action
   async approve(id: string, currentUserId: string) {
     const action = await this.prisma.action.findUnique({
       where: {
@@ -595,7 +592,7 @@ export class ActionsService {
         throw new NotFoundException('Organization not found');
       }
 
-      if ( organization.organization_status !==  OrganizationStatus.ACTIVE
+      if (organization.organization_status !== OrganizationStatus.ACTIVE
       ) {
         throw new BadRequestException('Only an active organization can approve an action');
       }
@@ -651,9 +648,9 @@ export class ActionsService {
     };
   }
 
-//11. annuler une action
+  //11. annuler une action
   async cancel(id: string, currentUserId: string) {
-     const action = await this.prisma.action.findUnique({
+    const action = await this.prisma.action.findUnique({
       where: {
         action_id: BigInt(id),
       },
@@ -734,9 +731,9 @@ export class ActionsService {
     };
   }
 
-//12. terminer une action
+  //12. terminer une action
   async complete(id: string, currentUserId: string) {
-     const action = await this.prisma.action.findUnique({
+    const action = await this.prisma.action.findUnique({
       where: {
         action_id: BigInt(id),
       },
@@ -781,8 +778,8 @@ export class ActionsService {
         organization.organization_status !== OrganizationStatus.ACTIVE &&
         !isAdmin
       ) {
-          throw new ForbiddenException('Only an admin can complete an action from an inactive organization');
-        }
+        throw new ForbiddenException('Only an admin can complete an action from an inactive organization');
+      }
 
       const membership = await this.prisma.organizationMember.findUnique({
         where: {
@@ -829,40 +826,40 @@ export class ActionsService {
           },
         });
 
-      await this.pointtransactionService.rewardActionCompleted(
-        BigInt(id),
-        tx,
-      );
+        await this.pointtransactionService.rewardActionCompleted(
+          BigInt(id),
+          tx,
+        );
 
-    const participations = await tx.participation.findMany({
-      where: {
-        action_id: BigInt(id),
+        const participations = await tx.participation.findMany({
+          where: {
+            action_id: BigInt(id),
+          },
+        });
+
+        for (const participation of participations) {
+          await this.pointtransactionService.rewardParticipation(
+            BigInt(id),
+            participation.user_id,
+            tx,
+          );
+
+          await this.pointtransactionService.rewardCreatorForParticipant(
+            BigInt(id),
+            participation.user_id,
+            tx,
+          );
+        }
+        return completedAction;
       },
-    });
-
-    for (const participation of participations) {
-      await this.pointtransactionService.rewardParticipation(
-        BigInt(id),
-        participation.user_id,
-        tx,
-      );
-
-    await this.pointtransactionService.rewardCreatorForParticipant(
-        BigInt(id),
-        participation.user_id,
-        tx,
-      );
-    }
-      return completedAction;
-    },
     );
 
     return {
-    ...updatedAction,
-    action_id: updatedAction.action_id.toString(),
-    creator_id: updatedAction.creator_id.toString(),
-    organization_id: updatedAction.organization_id?.toString() ?? null,
-    validated_by_user_id: updatedAction.validated_by_user_id?.toString() ?? null,
+      ...updatedAction,
+      action_id: updatedAction.action_id.toString(),
+      creator_id: updatedAction.creator_id.toString(),
+      organization_id: updatedAction.organization_id?.toString() ?? null,
+      validated_by_user_id: updatedAction.validated_by_user_id?.toString() ?? null,
     };
   }
 }
