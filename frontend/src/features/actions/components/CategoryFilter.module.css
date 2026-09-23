@@ -1,0 +1,12 @@
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 9px;
+}
+
+@media (max-width: 760px) {
+  .filters {
+    gap: 7px;
+  }
+}

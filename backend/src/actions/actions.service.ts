@@ -401,6 +401,65 @@ export class ActionsService {
       }
     }
 
+    const updatedAction = await this.prisma.action.update({
+      where: {
+        action_id: BigInt(id),
+      },
+      data: {
+        title: data.title,
+        description: data.description,
+        organization_id: newOrganizationId,
+        location: data.location,
+        category: data.category,
+        imagesList: data.imagesList,
+        scheduled_at: data.scheduled_at ? new Date(data.scheduled_at) : undefined,
+      },
+    });
+
+      const newOrganization = await this.prisma.organization.findUnique({
+        where: {
+          organization_id: newOrganizationId,
+        },
+      });
+
+      if (!newOrganization) {
+        throw new NotFoundException('Organization not found');
+      }
+
+      if (
+        newOrganization.organization_status !== OrganizationStatus.ACTIVE
+      ) {
+        throw new BadRequestException(
+          'Only an active organization can be assigned to an action',
+        );
+      }
+
+      if (!isAdmin) {
+        const newMembership =
+          await this.prisma.organizationMember.findUnique({
+            where: {
+              organization_id_user_id: {
+                organization_id: newOrganizationId,
+                user_id: BigInt(currentUserId),
+              },
+            },
+          });
+
+        const canAssignOrganization =
+          newMembership?.status === MemberStatus.ACTIVE &&
+          (
+            newMembership.role === RoleOrg.MANAGER ||
+            newMembership.role === RoleOrg.OWNER
+          );
+
+        if (!canAssignOrganization) {
+          throw new ForbiddenException(
+            'You are not allowed to assign this action to this organization',
+          );
+        }
+      }
+    }
+
       let updatedAction;
 
       for (let attempt = 0; attempt < 3; attempt++) {

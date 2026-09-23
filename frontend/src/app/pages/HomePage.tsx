@@ -1,7 +1,7 @@
 import { ButtonLink } from '@/shared/ui';
 import { APP_LABELS } from '../labels';
 import { ROUTES } from '../routes';
-import { pageTitle } from './pageTitle';
+import { pageTitle } from '@/shared/lib/pageTitle';
 import styles from './Page.module.css';
 
 const text = APP_LABELS.pages.home;

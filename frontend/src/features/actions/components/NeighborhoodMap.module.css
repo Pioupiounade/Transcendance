@@ -1,0 +1,208 @@
+/* DESIGN.md §6 « Map », « Map pin », « You are here », « Callout » */
+.map {
+  position: relative;
+  /* Les z-index internes de Leaflet (400 à 1000) restent sous l'en-tête et la barre mobile. */
+  isolation: isolate;
+  min-height: 570px;
+  border: 1px solid var(--map-line);
+  border-radius: 25px;
+  overflow: hidden;
+  background: var(--map-ground);
+}
+
+.map .canvas {
+  position: absolute;
+  inset: 0;
+  font: inherit;
+  background: var(--map-ground);
+}
+
+/* Tuiles OSM adoucies vers le fond `--map-ground` de la maquette : les pins forêt / terracotta ressortent.
+   Alternatives sans clé API comparées le 23/09/2026 (CARTO en exige une désormais) : ce filtre l'emporte. */
+.canvas :global(.leaflet-tile-pane) {
+  filter: saturate(0.45) sepia(0.18) contrast(0.92) brightness(1.04);
+}
+
+/* Popup Leaflet aux couleurs du callout de la maquette (classes globales de Leaflet). */
+.canvas :global(.leaflet-popup-content-wrapper) {
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  background: var(--ground);
+  color: var(--ink);
+  box-shadow: var(--shadow);
+}
+.canvas :global(.leaflet-popup-content) {
+  margin: 10px 15px;
+  max-width: 210px;
+  font-size: 14px;
+  line-height: 1.4;
+}
+.canvas :global(.leaflet-popup-tip) {
+  background: var(--ground);
+}
+.canvas :global(.leaflet-container a.leaflet-popup-close-button) {
+  color: var(--muted);
+}
+.canvas :global(.leaflet-control-attribution) {
+  font-size: 11px;
+  background: #fffaf0db;
+  color: #536253;
+}
+.canvas :global(.leaflet-bar) {
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+}
+.canvas :global(.leaflet-bar a) {
+  color: var(--ink);
+  background: var(--ground);
+}
+
+.popupTitle {
+  display: block;
+  font-weight: 700;
+}
+.popupMeta {
+  display: block;
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* Leaflet applique `leaflet-div-icon` (fond blanc, bordure) sauf si on fournit une classe. */
+.pinWrap {
+  background: none;
+  border: 0;
+}
+
+.pin {
+  display: grid;
+  place-items: center;
+  width: 49px;
+  height: 49px;
+  background: var(--brand);
+  color: #fff;
+  border: 4px solid #fffef7;
+  border-radius: 50% 50% 50% 10%;
+  transform: rotate(-45deg);
+  box-shadow:
+    0 5px 0 #274c3520,
+    0 9px 18px #274c3526;
+  transition: scale var(--t-base);
+}
+.pin > svg {
+  transform: rotate(45deg);
+}
+.social {
+  background: var(--terra);
+}
+.cultural {
+  background: var(--culture);
+}
+.pin:hover {
+  scale: 1.1;
+}
+.selected {
+  outline: 8px solid #fff9;
+  scale: 1.12;
+}
+
+.you {
+  display: block;
+  width: 20px;
+  height: 20px;
+  background: var(--brand);
+  border: 4px solid #fff;
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 18px #265c4b14,
+    0 0 0 45px #265c4b0b;
+}
+
+.tools {
+  position: absolute;
+  top: 19px;
+  left: 19px;
+  right: 19px;
+  z-index: 1001;
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  pointer-events: none;
+}
+.tag {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 14px;
+  border-radius: var(--r-chip);
+  background: #fffefaf5;
+  box-shadow: 0 3px 12px #304b3212;
+  font-size: 13px;
+  font-weight: 600;
+  pointer-events: auto;
+}
+.live {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--brand);
+}
+
+.controls {
+  position: absolute;
+  right: 18px;
+  bottom: 22px;
+  z-index: 1001;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.control {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  background: var(--ground);
+  color: var(--ink);
+  box-shadow: var(--shadow);
+}
+.control:disabled {
+  color: var(--muted);
+}
+
+.status {
+  position: absolute;
+  left: 18px;
+  bottom: 40px;
+  z-index: 1001;
+  padding: 4px 9px;
+  border-radius: 8px;
+  background: #fffaf0db;
+  font-size: 12px;
+  color: #536253;
+}
+.status:empty {
+  display: none;
+}
+
+@media (min-width: 1501px) {
+  .map {
+    min-height: 630px;
+  }
+}
+
+@media (max-width: 760px) {
+  .map {
+    min-height: 430px;
+  }
+  .tools {
+    top: 12px;
+    left: 12px;
+    right: 12px;
+  }
+  .tag {
+    font-size: 11px;
+  }
+}

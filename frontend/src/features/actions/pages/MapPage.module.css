@@ -1,0 +1,108 @@
+/* DESIGN.md §3 « Desktop grid » et §7 breakpoints */
+.page {
+  max-width: 1800px;
+  margin: 0 auto;
+  padding: 30px 38px 24px;
+  display: grid;
+  gap: 20px;
+}
+
+.intro {
+  display: grid;
+  gap: 7px;
+}
+
+.eyebrow {
+  color: var(--terra);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1.8px;
+  text-transform: uppercase;
+}
+
+.lead {
+  color: var(--muted);
+  font-size: 15px;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 22px;
+  align-items: start;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+}
+
+.listTitle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 3px;
+}
+.listTitle h2 {
+  font-size: 19px;
+  letter-spacing: -0.5px;
+}
+
+.count {
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: var(--trust-soft);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.state {
+  display: grid;
+  justify-items: start;
+  gap: 12px;
+  padding: 17px;
+  border-radius: 18px;
+  background: var(--note-bg);
+  color: var(--note-ink);
+  font-size: 14px;
+}
+
+.cards {
+  display: grid;
+  gap: 11px;
+}
+
+.note {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+@media (min-width: 1501px) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr) 375px;
+  }
+}
+
+@media (max-width: 1100px) {
+  .page {
+    padding: 24px;
+  }
+  .layout {
+    grid-template-columns: minmax(0, 1fr) 310px;
+    gap: 16px;
+  }
+}
+
+@media (max-width: 760px) {
+  .page {
+    padding: 24px 16px;
+    gap: 16px;
+  }
+  .layout {
+    grid-template-columns: 1fr;
+  }
+}
