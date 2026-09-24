@@ -26,7 +26,6 @@ export function useProfile() {
 
   useEffect(() => {
     let isMounted = true;
-    setIsLoading(true);
 
     getProfile()
       .then((data) => {

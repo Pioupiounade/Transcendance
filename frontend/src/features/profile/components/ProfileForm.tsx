@@ -24,6 +24,7 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({
   // Inicia con los datos recibidos o valores por defecto
   const [formData, setFormData] = useState<UserProfile>(
     initialData || {
+      id: '',
       username: '',
       location: null,
       description: '',
