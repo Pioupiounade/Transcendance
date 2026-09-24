@@ -45,10 +45,10 @@ export const ACTIONS_LABELS = {
     error: 'The actions could not be loaded.',
     retry: 'Try again',
     privacyNote: 'Your precise location stays private.',
-  },
-  create: {
     hint: 'Tap the map to suggest an action there',
     draftPin: 'New action spot (drag to adjust)',
+  },
+  create: {
     popupTitle: 'Suggest an action here?',
     popupHint: 'Drag the pin to adjust the spot.',
     start: 'Suggest an action',

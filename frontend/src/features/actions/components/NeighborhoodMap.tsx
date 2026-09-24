@@ -1,6 +1,13 @@
 import 'leaflet/dist/leaflet.css';
-import { divIcon, latLngBounds, type DivIcon, type Map as LeafletMap, type Marker as LeafletMarker } from 'leaflet';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import {
+  divIcon,
+  latLngBounds,
+  type DivIcon,
+  type LeafletMouseEvent,
+  type Map as LeafletMap,
+  type Marker as LeafletMarker,
+} from 'leaflet';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { AttributionControl, MapContainer, Marker, Popup, TileLayer, ZoomControl } from 'react-leaflet';
 import { formatDateTime } from '@/shared/lib/formatDate';
 import { prefersReducedMotion } from '@/shared/lib/prefersReducedMotion';
@@ -15,6 +22,15 @@ type NeighborhoodMapProps = {
   actions: Action[];
   selectedId: string | null;
   onSelect: (id: string | null) => void;
+  /** Brouillon d'action : pin déplaçable au lieu donné ; `null` = aucun. */
+  draft?: LatLng | null;
+  /**
+   * Présent = un clic sur la carte (hors pin, hors popup ouvert) place ou déplace le brouillon ;
+   * reçoit aussi la position après un glisser. Jamais appelé avec `null` par la carte : le parent décide.
+   */
+  onDraftChange?: (location: LatLng) => void;
+  /** Contenu du popup du brouillon (boutons du parent). */
+  draftContent?: ReactNode;
 };
 
 type Locating = 'idle' | 'pending' | 'failed';
@@ -47,6 +63,14 @@ const iconFor = (category: Category, selected: boolean): DivIcon => {
   return icon;
 };
 
+const draftIcon = divIcon({
+  className: styles.pinWrap,
+  html: `<span class="${styles.pin} ${styles.draft}">${iconMarkup('plus', 22)}</span>`,
+  iconSize: [PIN_SIZE, PIN_SIZE],
+  iconAnchor: [PIN_SIZE / 2, PIN_SIZE],
+  popupAnchor: [0, -PIN_SIZE],
+});
+
 const hereIcon = divIcon({
   className: styles.pinWrap,
   html: `<span class="${styles.you}"></span>`,
@@ -55,9 +79,17 @@ const hereIcon = divIcon({
 });
 
 /** Carte Leaflet des actions : pins par catégorie, sélection synchronisée, recadrage, position à la demande. */
-export function NeighborhoodMap({ actions, selectedId, onSelect }: NeighborhoodMapProps) {
+export function NeighborhoodMap({
+  actions,
+  selectedId,
+  onSelect,
+  draft = null,
+  onDraftChange,
+  draftContent,
+}: NeighborhoodMapProps) {
   const [map, setMap] = useState<LeafletMap | null>(null);
   const markers = useRef(new Map<string, LeafletMarker>());
+  const draftMarker = useRef<LeafletMarker | null>(null);
   const [position, setPosition] = useState<LatLng | null>(null);
   const [locating, setLocating] = useState<Locating>('idle');
 
@@ -86,6 +118,25 @@ export function NeighborhoodMap({ actions, selectedId, onSelect }: NeighborhoodM
     map.panTo(marker.getLatLng(), { animate: !prefersReducedMotion() });
     marker.openPopup();
   }, [map, selectedId]);
+
+  // Clic sur le fond de carte. Leaflet ferme d'abord le popup ouvert (`preclick`) : à cet instant
+  // `selectedId` vaut encore l'ancienne sélection, le clic ne sert alors qu'à fermer.
+  useEffect(() => {
+    if (!map || !onDraftChange) return;
+    const place = ({ latlng }: LeafletMouseEvent) => {
+      if (selectedId !== null) return;
+      onDraftChange([latlng.lat, latlng.lng]);
+    };
+    map.on('click', place);
+    return () => {
+      map.off('click', place);
+    };
+  }, [map, onDraftChange, selectedId]);
+
+  // Le popup du brouillon s'ouvre à chaque placement ou déplacement.
+  useEffect(() => {
+    if (draft) draftMarker.current?.openPopup();
+  }, [draft]);
 
   const locate = () => {
     if (!('geolocation' in navigator)) {
@@ -146,6 +197,24 @@ export function NeighborhoodMap({ actions, selectedId, onSelect }: NeighborhoodM
           </Marker>
         ))}
         {position && <Marker position={position} icon={hereIcon} title={text.youAreHere} interactive={false} />}
+        {draft && (
+          <Marker
+            ref={draftMarker}
+            position={draft}
+            icon={draftIcon}
+            title={text.draftPin}
+            draggable
+            zIndexOffset={1000}
+            eventHandlers={{
+              dragend: (event) => {
+                const { lat, lng } = (event.target as LeafletMarker).getLatLng();
+                onDraftChange?.([lat, lng]);
+              },
+            }}
+          >
+            <Popup closeButton={false}>{draftContent}</Popup>
+          </Marker>
+        )}
       </MapContainer>
 
       <div className={styles.tools}>
@@ -153,6 +222,12 @@ export function NeighborhoodMap({ actions, selectedId, onSelect }: NeighborhoodM
           <span className={styles.live} aria-hidden="true" />
           {text.nearby(actions.length)}
         </span>
+        {onDraftChange && !draft && (
+          <span className={styles.tag}>
+            <Icon name="plus" size={14} strokeWidth={2.4} />
+            {text.hint}
+          </span>
+        )}
       </div>
 
       <div className={styles.controls}>
