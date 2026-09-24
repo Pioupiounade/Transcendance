@@ -17,7 +17,7 @@ export function HomePage() {
         <ButtonLink to={ROUTES.actions} size="lg">
           {text.ctaActions}
         </ButtonLink>
-        <ButtonLink to={ROUTES.login} variant="secondary" size="lg">
+        <ButtonLink to={ROUTES.register} variant="secondary" size="lg">
           {text.ctaJoin}
         </ButtonLink>
       </div>
