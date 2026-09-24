@@ -1,0 +1,75 @@
+/* DESIGN.md §6 « Auth card », §7 breakpoints */
+.page {
+  padding-bottom: var(--s6);
+}
+
+/* Ciel de l'illustration de la maquette, sans l'illustration (pas d'asset exporté). */
+.hero {
+  height: 295px;
+  background:
+    radial-gradient(circle at 84% 28%, #e4573dd9 0 44px, transparent 45px),
+    linear-gradient(#fdf6f1, #f7dccc);
+}
+
+.card {
+  max-width: 490px;
+  margin: -75px auto 0;
+  padding: 32px 38px;
+  border: 1px solid #e8e2d6;
+  border-radius: var(--r-card);
+  background: var(--ground);
+  box-shadow: var(--shadow);
+}
+
+.title {
+  font-size: 29px;
+  letter-spacing: -0.8px;
+}
+
+.lead {
+  margin-top: 7px;
+  font-size: 15px;
+  color: var(--muted);
+}
+
+.reassure {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-top: var(--s4);
+  padding: 12px 16px;
+  border-radius: var(--r-field);
+  background: #f1f5eb;
+  font-size: 13px;
+  color: var(--ink);
+}
+.reassure > svg {
+  flex: none;
+  margin-top: 1px;
+  color: var(--trust);
+}
+
+.switchLine {
+  margin-top: var(--s4);
+  text-align: center;
+  font-size: 14px;
+  color: var(--muted);
+}
+.switchLine a {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+@media (max-width: 760px) {
+  .page {
+    padding: 0 16px var(--s5);
+  }
+  .hero {
+    height: 190px;
+    margin: 0 -16px;
+  }
+  .card {
+    margin-top: -35px;
+    padding: 28px 23px;
+  }
+}
