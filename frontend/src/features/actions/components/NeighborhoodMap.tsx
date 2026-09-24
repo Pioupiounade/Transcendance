@@ -112,13 +112,15 @@ export function NeighborhoodMap({
     fitToActions();
   }, [fitToActions]);
 
+  // `actions` en dépendance : une sélection posée avant un rechargement de la liste (action tout juste
+  // créée) s'ouvre quand son marqueur apparaît.
   useEffect(() => {
     if (!map || selectedId === null) return;
     const marker = markers.current.get(selectedId);
     if (!marker) return;
     map.panTo(marker.getLatLng(), { animate: !prefersReducedMotion() });
     marker.openPopup();
-  }, [map, selectedId]);
+  }, [map, selectedId, actions]);
 
   // Clic sur le fond de carte. Leaflet ferme d'abord le popup ouvert (`preclick`) : à cet instant
   // `selectedId` vaut encore l'ancienne sélection, le clic ne sert alors qu'à fermer.
@@ -134,10 +136,11 @@ export function NeighborhoodMap({
     };
   }, [map, onDraftChange, selectedId]);
 
-  // Le popup du brouillon s'ouvre à chaque placement ou déplacement.
+  // Le popup du brouillon s'ouvre à chaque placement ou déplacement, et au premier rendu de la carte
+  // (les marqueurs n'existent qu'une fois `map` prête).
   useEffect(() => {
-    if (draft) draftMarker.current?.openPopup();
-  }, [draft]);
+    if (map && draft) draftMarker.current?.openPopup();
+  }, [map, draft]);
 
   const locate = () => {
     if (!('geolocation' in navigator)) {

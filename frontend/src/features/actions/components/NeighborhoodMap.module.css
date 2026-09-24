@@ -157,10 +157,10 @@
   position: absolute;
   top: 19px;
   left: 19px;
-  right: 19px;
+  right: 70px; /* laisse le contrôle de zoom (en haut à droite) libre */
   z-index: 1001;
   display: flex;
-  justify-content: space-between;
+  flex-wrap: wrap;
   gap: 10px;
   pointer-events: none;
 }
@@ -235,7 +235,8 @@
   .tools {
     top: 12px;
     left: 12px;
-    right: 12px;
+    right: 60px;
+    gap: 6px;
   }
   .tag {
     font-size: 11px;
