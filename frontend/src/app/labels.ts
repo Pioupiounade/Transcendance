@@ -26,7 +26,6 @@ export const APP_LABELS = {
       ctaActions: 'Browse actions',
       ctaJoin: 'Create an account',
     },
-    login: { title: 'Sign in', soon: 'Sign-in is coming in the next ticket.' },
     terms: { title: 'Terms of Service' },
     privacy: { title: 'Privacy Policy' },
     notFound: { title: 'Page not found', lead: 'This address leads nowhere.', back: 'Back to home' },
