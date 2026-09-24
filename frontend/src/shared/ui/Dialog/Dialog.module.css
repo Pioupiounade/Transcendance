@@ -1,0 +1,49 @@
+/* DESIGN.md §6 « Dialog » : rayon 24, padding 30, largeur max 460, fond #18372B66, croix 35 px. */
+.dialog {
+  width: min(460px, calc(100% - 32px));
+  max-height: calc(100dvh - 32px);
+  margin: auto;
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-card);
+  background: var(--ground);
+  color: var(--ink);
+  box-shadow: 0 24px 60px #18372b33;
+  overflow: auto;
+}
+.dialog::backdrop {
+  background: #18372b66;
+}
+
+.panel {
+  position: relative;
+  padding: 30px;
+}
+
+.close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  display: grid;
+  place-items: center;
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--ink);
+}
+.close:hover {
+  background: #eeede4;
+}
+
+.title {
+  margin: 0 40px 6px 0;
+  font-size: var(--title);
+  letter-spacing: -0.4px;
+}
+
+@media (max-width: 760px) {
+  .panel {
+    padding: 24px 20px;
+  }
+}

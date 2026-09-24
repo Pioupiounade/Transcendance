@@ -4,6 +4,7 @@ export { ButtonLink } from './Button/ButtonLink';
 export { Avatar } from './Avatar/Avatar';
 export { Checkbox } from './Checkbox/Checkbox';
 export { Chip } from './Chip/Chip';
+export { Dialog } from './Dialog/Dialog';
 export { FloatingField } from './FloatingField/FloatingField';
 export { FloatingTextarea } from './FloatingField/FloatingTextarea';
 export { Icon } from './Icon/Icon';
