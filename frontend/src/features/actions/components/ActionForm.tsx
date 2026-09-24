@@ -3,7 +3,7 @@ import { Button, FloatingField, FloatingTextarea, Icon } from '@/shared/ui';
 import { useCreateAction } from '../api/useCreateAction';
 import { toActionErrorMessage } from '../errors';
 import { ACTIONS_LABELS, CATEGORY_ICONS, CATEGORY_LABELS } from '../labels';
-import { CATEGORY, type Action, type LatLng } from '../types';
+import { CATEGORY, type ActionRecord, type LatLng } from '../types';
 import {
   DESCRIPTION_MAX_LENGTH,
   MAX_PARTICIPANTS_MIN,
@@ -21,7 +21,7 @@ import styles from './ActionForm.module.css';
 type ActionFormProps = {
   /** Lieu choisi sur la carte : le formulaire ne le modifie pas. */
   location: LatLng;
-  onCreated: (action: Action) => void;
+  onCreated: (action: ActionRecord) => void;
   onCancel: () => void;
 };
 

@@ -1,6 +1,6 @@
 import { Dialog } from '@/shared/ui';
 import { ACTIONS_LABELS } from '../labels';
-import type { Action, LatLng } from '../types';
+import type { ActionRecord, LatLng } from '../types';
 import { ActionForm } from './ActionForm';
 import styles from './CreateActionDialog.module.css';
 
@@ -8,7 +8,7 @@ type CreateActionDialogProps = {
   /** Lieu choisi sur la carte ; `null` = fermé. */
   location: LatLng | null;
   onClose: () => void;
-  onCreated: (action: Action) => void;
+  onCreated: (action: ActionRecord) => void;
 };
 
 const text = ACTIONS_LABELS.create;

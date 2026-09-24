@@ -11,7 +11,7 @@ import { CreateActionDialog } from '../components/CreateActionDialog';
 import { NeighborhoodMap } from '../components/NeighborhoodMap';
 import { DRAFT_PARAM, formatDraft, parseDraft } from '../draftParam';
 import { ACTIONS_LABELS } from '../labels';
-import { OPEN_STATUSES, type Action, type Category, type LatLng } from '../types';
+import { OPEN_STATUSES, type ActionRecord, type Category, type LatLng } from '../types';
 import styles from './MapPage.module.css';
 
 const text = ACTIONS_LABELS.map;
@@ -65,7 +65,7 @@ export function MapPage() {
       ?.scrollIntoView({ block: 'nearest', behavior: prefersReducedMotion() ? 'auto' : 'smooth' });
   }, [selected]);
 
-  const onCreated = (action: Action) => {
+  const onCreated = (action: ActionRecord) => {
     setComposing(false);
     setDraft(null);
     setSelectedId(action.action_id);
