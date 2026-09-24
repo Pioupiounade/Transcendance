@@ -2,7 +2,7 @@
 
 État au 2026-09-24, branche `feature/map-create-action` (= `main` + `fix/main-build` + `feature/50-auth-ui` + Epic 7).
 Sources de vérité, dans l'ordre : `backend/prisma/schema.prisma` (la base) → `docs/api_contract.md` (ce que l'API
-fait réellement, §15 mis à jour le 24/09, le reste date du 23/09) → `features/<x>/types.ts` (ce que le front en voit).
+fait réellement, régénéré et vérifié par sondes le 24/09) → `features/<x>/types.ts` (ce que le front en voit).
 Ce document ne duplique pas le contrat : il dit **où vit chaque donnée côté front, par quel module deep elle passe,
 et ce qu'un appelant doit savoir**. Les termes Module / Interface / Deep / Seam sont ceux de `CLAUDE.md`.
 
@@ -47,7 +47,7 @@ dans `features/<x>/api/*` sans toucher aux composants.
 | **User** | `user_id`, `email` (unique), `role` RoleApp, `account_status`, `points`, dates. `password_hash` et `refresh_token` jamais renvoyés | `/auth/*` (5), `/users/*` (9) | `features/auth` → `AuthUser` (= `User` du contrat) | ✅ session, login, register, `/auth/me` |
 | **Profile** | `user_id` (PK = FK User, 1:1), `username` (unique), `description?`, `profile_picture?` (URL), `location` (seulement sur `GET /profiles/me`), `visibility` | `/profiles/*` (6) | `features/profile` → `UserProfile` **(mock, forme ≠ contrat)** | 🟡 page mock, aucun appel API |
 | **UserInterest** | (`user_id`, `interest` InterestCategory), 9 valeurs | `/interests/*` (3) | `features/profile` (prévu) | ❌ |
-| **Action** | `action_id`, `title`, `description`, `creator_id`, `organization_id?`, `min_participants` (défaut 3), `max_participants?`, `location`, `status`, `category`, `imagesList`, `validated_by_user_id?`, `validated_at?`, `scheduled_at`. **L'API ajoute `participant_count` et `remaining_seats`** (liste et détail, depuis #45) | `/actions/*` (7 + 2 commentaires) | `features/actions` → `Action` (§4.7) | ✅ liste, carte, création · 🟡 détail (mock `ActionDetailData`) · ⚠ type sans les 2 champs calculés |
+| **Action** | `action_id`, `title`, `description`, `creator_id`, `organization_id?`, `min_participants` (défaut 3), `max_participants?`, `location`, `status`, `category`, `imagesList`, `validated_by_user_id?`, `validated_at?`, `scheduled_at`. **L'API ajoute `participant_count` et `remaining_seats`** (liste et détail, depuis #45) | `/actions/*` (7 + 2 commentaires) | `features/actions` → `Action` (§4.7) | ✅ liste, carte, création (`Action` enrichie, `ActionRecord` pour les mutations) · 🟡 détail (mock `ActionDetailData`) |
 | **ActionComment** | `comment_id`, `content` (≤ 1024), `user_id`, `action_id`, dates ; renvoyé avec `user: { user_id, profile: { username, profile_picture } \| null }` | `POST/GET /actions/:id/comments` | `features/actions` (prévu) | ❌ |
 | **Participation** | (`action_id`, `user_id`), `created_at` | `/participations/*` (4) | `features/participations` (prévu) | ❌ |
 | **Organization** | `organization_id`, `title`, `description`, `organization_status`, `address`, `location`, `creator_id` | `/organizations/*` (8) | `features/organizations` (prévu) | ❌ |
@@ -102,12 +102,14 @@ Règle : un enum est possédé par une feature, traduit dans son `labels.ts`, ja
 
 ### 2.4 Cycles de vie qui structurent l'UI
 
-- **Action** : `PENDING` (création) → `APPROVED` (`approve` : ADMIN, **le créateur lui-même**, MANAGER/OWNER de l'orga)
-  → `COMPLETED` (`complete`, distribue les points) ; `PENDING`/`APPROVED` → `CANCELLED` (`cancel`). `REJECTED` est
-  **inatteignable** (pas de route). Pas de suppression. Une action ne se modifie plus une fois `CANCELLED`/`COMPLETED`/`REJECTED`.
+- **Action** : `PENDING` (création, inscriptions ouvertes) → `APPROVED` (`approve` : ADMIN, **le créateur lui-même**,
+  MANAGER/OWNER de l'orga, **et au moins 3 participants hors créateur**) → `COMPLETED` (`complete`, même règle, distribue les
+  points) ; `PENDING`/`APPROVED` → `CANCELLED` (`cancel`). `REJECTED` est **inatteignable** (pas de route). Pas de suppression.
+  Une action ne se modifie plus une fois `CANCELLED`/`COMPLETED`/`REJECTED`. **`PATCH /actions/:id` est cassé** (500 sans
+  `organization_id` dans le body, mise à jour partiellement appliquée) : pas d'édition avant le correctif backend.
 - **Participation** : possible **uniquement sur `PENDING`** (join et leave), plafond `max_participants`, le créateur ne
-  peut pas s'inscrire. Contradiction connue avec le flux « modération puis publication » : à trancher en équipe avant
-  le bouton « Join ».
+  peut pas s'inscrire. Cohérent avec `approve` (≥ 3 participants) : `PENDING` = ouverte, `APPROVED` = confirmée et close.
+  La contradiction est avec `Docs/user_stories.md` (modération avant publication) : à trancher en équipe.
 - **Compte** : `ACTIVE` → `DEACTIVATED` (par soi, irréversible via l'API) ; `ACTIVE` ↔ `SUSPENDED` (ADMIN, −50 points).
   Presque toute écriture exige `ACTIVE` (sinon 400, parfois 403).
 - **Membre d'organisation** : `join` → `PENDING` → `approve`/`deny` → `ACTIVE`/`REJECTED` (définitif) ; `ban` → `BANNED` ;
@@ -136,7 +138,7 @@ Règle : un enum est possédé par une feature, traduit dans son `labels.ts`, ja
 - **Points** (contrat §14) : automatiques, jamais saisis par le front. `complete` : +20 créateur, +10 par participant,
   +5 au créateur par participant ; membres d'orga ±5 à l'`OWNER` ; ban −15 ; suspension −50. Un bénéficiaire non `ACTIVE`
   fait **échouer la route appelante** (à afficher explicitement sur `complete`).
-- **Non couvert par l'API aujourd'hui** (ne pas contourner, ticket backend) : rejet d'action, suppression d'action ou de compte,
+- **Non couvert par l'API aujourd'hui** (ne pas contourner, ticket backend) : édition d'action fiable (bug `PATCH`), rejet d'action, suppression d'action ou de compte,
   upload de fichiers (🔜 branche `19-epic-5-photo-upload…` : `PATCH /profiles/me/avatar` + images d'action), notifications,
   messagerie, lecture des points, annulation d'une demande d'amitié ou d'adhésion, recherche par texte/date/rayon d'actions.
 
@@ -245,15 +247,16 @@ type Action = { action_id, title, description, creator_id, organization_id: stri
                 min_participants: number | null, max_participants: number | null, location: LatLng,
                 status: ActionStatus, category: Category, imagesList: string[],
                 validated_by_user_id: string | null, validated_at: string | null,
-                scheduled_at, created_at, updated_at }
-// ⚠ à ajouter (API depuis #45) : participant_count: number ; remaining_seats: number | null
+                scheduled_at, created_at, updated_at,
+                participant_count: number, remaining_seats: number | null }   // calculés par GET /actions(/:id)
+type ActionRecord = Omit<Action, 'participant_count' | 'remaining_seats'>   // réponse des mutations (POST, PATCH, approve…)
 ```
 
 Modules internes et leurs interfaces (un appelant lit ceci, pas l'implémentation) :
 
 | Module | Interface | Caché |
 |---|---|---|
-| `api/actionsApi` | `fetchActions(signal?) → Promise<Action[]>` · `createAction(input: CreateActionInput) → Promise<Action>` · `CreateActionInput = { title, description, category, location, scheduled_at, max_participants?, organization_id? }` | chemins `/actions`, `http` |
+| `api/actionsApi` | `fetchActions(signal?) → Promise<Action[]>` · `createAction(input: CreateActionInput) → Promise<ActionRecord>` · `CreateActionInput = { title, description, category, location, scheduled_at, max_participants?, organization_id? }` | chemins `/actions`, `http` |
 | `api/useActions` | `useActions() → { actions, loading, error: ApiError \| null, reload() }` | AbortController, `loading` dérivé du n° de tentative, 404 → `[]` |
 | `api/useCreateAction` | `useCreateAction() → (input) => Promise<Action>` | seam TanStack `useMutation` |
 | `api/actionDetailMock` **(mock #46)** | `useActionDetail(id) → { action: ActionDetailData \| null, isLoading, error }` | données fictives ; à remplacer par `GET /actions/:id` + participants + commentaires |
@@ -261,7 +264,7 @@ Modules internes et leurs interfaces (un appelant lit ceci, pas l'implémentatio
 | `components/NeighborhoodMap` | `{ actions (mémoïsées), selectedId, onSelect(id \| null), draft?: LatLng \| null, onDraftChange?(LatLng), draftContent?: ReactNode }` | Leaflet/OSM, pins `divIcon` CSS par catégorie, cache d'icônes, fitBounds / centre par défaut Saint-Cyprien, géoloc à la demande, clic fond → brouillon (un clic qui ferme un popup ne place rien), pin brouillon déplaçable + popup auto |
 | `components/ActionCard` | `{ action, selected, onSelect(id) }` (bouton à bascule, miroir du pin) | libellés, format de date |
 | `components/CategoryFilter` | `{ value: Category \| null, onChange }` | `Chip` |
-| `components/ActionForm` | `{ location: LatLng, onCreated(action), onCancel() }` | `useForm` + `validation.ts` (titre ≤ 80, description ≤ 600, catégorie, date future, `max_participants` vide ou ≥ 3), envoi, `errors.ts`, focus ; **réutilisable par le futur écran créer/modifier** |
+| `components/ActionForm` | `{ location: LatLng, onCreated(action: ActionRecord), onCancel() }` | `useForm` + `validation.ts` (titre ≤ 80, description ≤ 600, catégorie, date future, `max_participants` vide ou ≥ 3), envoi, `errors.ts`, focus ; **réutilisable par le futur écran créer/modifier** |
 | `components/CreateActionDialog` | `{ location: LatLng \| null (null = fermé), onClose(), onCreated(action) }` | `Dialog` + `ActionForm`, formulaire neuf à chaque ouverture |
 | `components/ActionDetailsView` **(#46)** | `{ action: ActionDetailData }` | carrousel, panneau logistique, bouton « Join » placeholder ; CSS global (pas de module) |
 | `pages/ActionDetailPage` **(#46)** | route `/actions/:id` | mock ci-dessus |
@@ -342,7 +345,7 @@ Backend = `main` au 24/09 (#40 auth/users/profiles/interests/orgs/membres/points
 |---|---|---|
 | Signaler une action possible (suggestion) | pas de modèle : = `Action` `PENDING` | ✅ via la carte (Epic 7) |
 | Créer une action | ✅ `POST /actions` (JWT, actif, orga facultative, `max_participants` ≥ 3) | ✅ `ActionForm` depuis la carte ; pas encore de page `/actions/new` |
-| Modifier une action | ✅ `PATCH /actions/:id` (créateur, ADMIN, MANAGER/OWNER ; pas après CANCELLED/COMPLETED/REJECTED) | ❌ (`ActionForm` prévu pour) |
+| Modifier une action | 🟡 `PATCH /actions/:id` **cassé** : 500 sans `organization_id`, mise à jour partielle (ticket backend) | ❌ (`ActionForm` prévu pour, bloqué par le bug) |
 | Supprimer une action | ❌ (`cancel` seulement) | ❌ |
 | Découvrir des actions | ✅ `GET /actions` (+ un filtre : organisation, catégorie, créateur, statut) ; pas de rayon/texte/date | ✅ carte + filtre catégorie (#12) ; ❌ page liste `/actions` (placeholder) |
 | Consulter une action | ✅ `GET /actions/:id` (+ `participant_count`, `remaining_seats`) | 🟡 `/actions/:id` sur mock #46 ; la carte n'y mène pas encore |
@@ -354,7 +357,7 @@ Backend = `main` au 24/09 (#40 auth/users/profiles/interests/orgs/membres/points
 |---|---|---|
 | S'inscrire / se désinscrire | ✅ `POST/DELETE /participations/:actionId` — **`PENDING` seulement**, plafond, pas le créateur | ❌ (bouton « Join » placeholder dans le mock) |
 | Voir la liste des participants | ✅ `GET /participations/action/:actionId` → `{ user_id, username, profile_picture, created_at }[]` | ❌ |
-| Voir les places restantes | ✅ `remaining_seats` sur liste et détail (null = illimité) | ❌ (type `Action` à compléter) |
+| Voir les places restantes | ✅ `remaining_seats` sur liste et détail (null = illimité) | 🟡 typé dans `Action`, pas encore affiché |
 | Mes participations | ✅ `GET /participations/me` | ❌ |
 
 ### Epic 4 — Communication
@@ -406,7 +409,7 @@ Backend = `main` au 24/09 (#40 auth/users/profiles/interests/orgs/membres/points
 | Feature | Backend | Frontend |
 |---|---|---|
 | File d'attente des actions soumises | ✅ `GET /actions?status=PENDING` | ❌ |
-| Valider / rejeter une action | ✅ `approve` (ADMIN, **créateur**, MANAGER/OWNER ; `MODERATOR` non vérifié) ; ❌ **rejet** (`REJECTED` inatteignable) | ❌ |
+| Valider / rejeter une action | ✅ `approve` (ADMIN, **créateur**, MANAGER/OWNER, ≥ 3 participants ; `MODERATOR` non vérifié) ; ❌ **rejet** (`REJECTED` inatteignable) | ❌ |
 | Masquer une activité / suggestion | ≈ `cancel` | ❌ |
 | Modérer commentaires, photos, signalements | ❌ | ❌ |
 
@@ -433,8 +436,8 @@ Backend = `main` au 24/09 (#40 auth/users/profiles/interests/orgs/membres/points
 
 ## 7. Écarts et dettes de données, dans l'ordre conseillé
 
-1. **`Action` incomplet** : ajouter `participant_count: number` et `remaining_seats: number | null` (renvoyés partout depuis #45) ;
-   régénérer `docs/api_contract.md` (§3, §11, §15, commentaires, `validated_at`).
+1. **`PATCH /actions/:id` cassé côté backend** (500 sans `organization_id`, mise à jour partielle) : ticket, et aucune
+   édition d'action côté front avant le correctif. `Action` et le contrat sont à jour depuis le 24/09.
 2. **Page détail sur l'API réelle** : `GET /actions/:id` + `GET /participations/action/:id` + `GET /actions/:id/comments`
    (+ `GET /profiles/:userId` pour l'organisateur) ; supprimer `ActionDetailData` et le mock ; lier la carte (`ActionCard`/popup) à `/actions/:id`.
    Pas de `locationName` côté API : afficher une mini-carte ou les coordonnées.
@@ -459,7 +462,7 @@ Backend = `main` au 24/09 (#40 auth/users/profiles/interests/orgs/membres/points
 - **Branché sur l'API aujourd'hui** : session/auth (#50 + fix refresh), liste et carte des actions, création depuis la carte.
   **Encore en mock** : détail d'action, profil. **Absent** : participations, amis, commentaires, organisations, admin/modération,
   photos, notifications, messagerie.
-- **Premier chantier de données** : compléter `Action`, brancher le détail puis le profil sur l'API, régénérer le contrat.
+- **Premier chantier de données** : brancher le détail (participants, commentaires, places restantes) puis le profil sur l'API.
 
 ```
                  ┌──────────── PostgreSQL ────────────┐
@@ -479,7 +482,7 @@ Backend = `main` au 24/09 (#40 auth/users/profiles/interests/orgs/membres/points
         │                        │  seuls appelants : features/*/api
         │      ┌─────────────────┼──────────────────┐
         │  features/auth    features/actions    features/profile
-        │  AuthUser ✅        Action ✅  (+2 champs)  UserProfile 🟡 mock
+        │  AuthUser ✅        Action ✅ / ActionRecord   UserProfile 🟡 mock
         │  useAuth           useActions            useProfile
         │  RequireAuth       useCreateAction       ProfilePage
         │  Login/Register    MapPage · ActionForm  (à brancher /profiles)
