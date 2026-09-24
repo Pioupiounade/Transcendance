@@ -25,6 +25,13 @@
 .withToggle {
   padding-right: 96px;
 }
+.textarea {
+  height: auto;
+  min-height: 58px;
+  padding-top: 28px;
+  line-height: 1.45;
+  resize: vertical;
+}
 
 .label {
   position: absolute;
@@ -38,7 +45,8 @@
     font-size var(--t-fast);
 }
 .input:focus + .label,
-.input:not(:placeholder-shown) + .label {
+.input:not(:placeholder-shown) + .label,
+.raised {
   top: 9px;
   font-size: var(--caption);
   font-weight: 600;
