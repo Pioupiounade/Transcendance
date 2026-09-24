@@ -29,13 +29,14 @@ type NeighborhoodMapProps = {
    * reçoit aussi la position après un glisser. Jamais appelé avec `null` par la carte : le parent décide.
    */
   onDraftChange?: (location: LatLng) => void;
-  /** Contenu du popup du brouillon (boutons du parent). */
+  /** Boutons du popup du brouillon (le titre et l'aide sont fournis par la carte). */
   draftContent?: ReactNode;
 };
 
 type Locating = 'idle' | 'pending' | 'failed';
 
 const text = ACTIONS_LABELS.map;
+const create = ACTIONS_LABELS.create;
 const PIN_SIZE = 49;
 const YOU_SIZE = 20;
 
@@ -212,7 +213,13 @@ export function NeighborhoodMap({
               },
             }}
           >
-            <Popup closeButton={false}>{draftContent}</Popup>
+            <Popup closeButton={false}>
+              <div className={styles.draftPopup}>
+                <span className={styles.popupTitle}>{create.popupTitle}</span>
+                <span className={styles.popupMeta}>{create.popupHint}</span>
+                {draftContent}
+              </div>
+            </Popup>
           </Marker>
         )}
       </MapContainer>

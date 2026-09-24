@@ -106,3 +106,18 @@
     grid-template-columns: 1fr;
   }
 }
+
+.success {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--trust-soft);
+  color: var(--brand);
+  font-weight: 600;
+}
+
+.signIn {
+  font-weight: 600;
+  color: var(--brand);
+  text-underline-offset: 3px;
+}
