@@ -1,13 +1,82 @@
-import React, { useState } from 'react';
-import { useProfile } from '../api/profileApi';
+import React, { useEffect, useState } from 'react';
+import { useProfile, createProfile, updateProfile, getProfileActivity, getMyInterests } from '../api/profileApi';
 import { ProfileView } from '../components/ProfileView';
 import { ProfileForm } from '../components/ProfileForm';
-import type { UserProfile } from '../types';
+import type { ProfileActivity, UserProfile, InterestCategory } from '../types';
+import { isApiError } from '@/shared/api';
 
 export const ProfilePage: React.FC = () => {
   const { profile, isLoading, error, setProfile } = useProfile();
   const [isEditing, setIsEditing] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
+  const [updateError, setUpdateError] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [activity, setActivity] = useState<ProfileActivity | null>(null);
+  const [activityLoading, setActivityLoading] = useState(true);
+  const [activityError, setActivityError] = useState<string | null>(null);
+  const [interests, setInterests] = useState<InterestCategory[]>([]);
+  const [interestsLoading, setInterestsLoading] = useState(true);
+  const [interestsError, setInterestsError] = useState<string | null>(null);
 
+  useEffect(() => {
+    let active = true;
+
+    getMyInterests()
+      .then((data) => {
+        if (active) setInterests(data);
+      })
+      .catch(() => {
+        if (active) setInterestsError('Unable to load interests.');
+      })
+      .finally(() => {
+        if (active) setInterestsLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+
+    getProfileActivity()
+      .then((data) => {
+        if (active) setActivity(data);
+      })
+      .catch(() => {
+        if (active) setActivityError('Unable to load profile activity.');
+      })
+      .finally(() => {
+        if (active) setActivityLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const handleCreate = async (values: UserProfile) => {
+    if (isSaving) return;
+
+    setIsSaving(true);
+    setCreateError(null);
+
+    try {
+      const savedProfile = await createProfile(values);
+      setProfile(savedProfile);
+      setIsCreating(false);
+    } catch (failure) {
+      setCreateError(
+        isApiError(failure) && failure.messages.length > 0
+          ? failure.messages.join(' ')
+          : 'Unable to create your profile.',
+      );
+    } finally {
+      setIsSaving(false);
+    }
+  };
   if (isLoading) {
     return (
       <div style={{ textAlign: 'center', padding: '4rem 1rem' }}>
@@ -16,7 +85,32 @@ export const ProfilePage: React.FC = () => {
     );
   }
 
-  if (error || !profile) {
+  if (isApiError(error) && error.status === 404 && !profile) {
+    if (isCreating) {
+      return (
+        <>
+          {createError && <p role="alert">{createError}</p>}
+          <ProfileForm
+            onSave={handleCreate}
+            onCancel={() => setIsCreating(false)}
+            isSaving={isSaving}
+          />
+        </>
+      );
+    }
+
+    return (
+      <div style={{ textAlign: 'center', padding: '4rem 1rem' }}>
+        <h2>No profile yet</h2>
+        <p>Your account does not have a profile yet.</p>
+        <button type="button" onClick={() => setIsCreating(true)}>
+          Create profile
+        </button>
+      </div>
+    );
+  }
+  
+  if (!profile) {
     return (
       <div style={{ textAlign: 'center', padding: '4rem 1rem' }}>
         <h2>Profile not found</h2>
@@ -25,30 +119,51 @@ export const ProfilePage: React.FC = () => {
     );
   }
 
-  const handleSave = (updated: UserProfile) => {
-    setProfile(updated);
-    setIsEditing(false);
-  };
+  const handleSave = async (updated: UserProfile) => {
+    if (isSaving) return;
 
-  const handleDeleteAccount = () => {
-    alert('Account deleted. (This is a placeholder action. Implement actual deletion logic.)');
+    setIsSaving(true);
+    setUpdateError(null);
+
+    try {
+      const savedProfile = await updateProfile(updated);
+      setProfile(savedProfile);
+      setIsEditing(false);
+    } catch (failure) {
+      setUpdateError(
+        isApiError(failure) && failure.messages.length > 0
+          ? failure.messages.join(' ')
+          : 'Unable to save your profile.',
+      );
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   if (isEditing) {
     return (
-      <ProfileForm
-        initialData={profile}
-        onSave={handleSave}
-        onCancel={() => setIsEditing(false)}
-      />
+      <>
+        {updateError && <p role="alert">{updateError}</p>}
+        <ProfileForm
+          initialData={profile}
+          onSave={handleSave}
+          onCancel={() => setIsEditing(false)}
+          isSaving={isSaving}
+        />
+      </>
     );
   }
 
   return (
     <ProfileView
       profile={profile}
+      activity={activity}
+      activityLoading={activityLoading}
+      activityError={activityError}
       onEdit={() => setIsEditing(true)}
-      onDeleteAccount={handleDeleteAccount}
+      interests={interests}
+      interestsLoading={interestsLoading}
+      interestsError={interestsError}
     />
   );
 };

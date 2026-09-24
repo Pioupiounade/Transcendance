@@ -1,20 +1,26 @@
 import React, { useState, useRef } from 'react';
-import type { UserProfile } from '../types';
+import type { UserProfile, InterestCategory } from '../types';
 import './ProfileForm.css';
 
 interface ProfileFormProps {
   initialData?: UserProfile;
-  onSave: (updatedProfile: UserProfile) => void;
+  initialInterests?: InterestCategory[];
+  onSave: (updatedProfile: UserProfile, selectedInterests: InterestCategory[]) => void;
   onCancel: () => void;
+  isSaving?: boolean;
 }
 
 export const ProfileForm: React.FC<ProfileFormProps> = ({
   initialData,
+  initialInterests = [],
   onSave,
   onCancel,
+  isSaving = false,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [geoLoading, setGeoLoading] = useState(false);
+  const [selectedInterests, setSelectedInterests] =
+    useState<InterestCategory[]>(initialInterests);
 
   // Field-specific validation errors
   const [avatarError, setAvatarError] = useState<string | null>(null);
@@ -125,7 +131,7 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({
 
     if (hasError) return;
 
-    onSave(formData);
+    onSave(formData, selectedInterests);
   };
 
   return (
@@ -246,14 +252,16 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({
               type="button"
               className="btn btn--secondary btn--block"
               onClick={onCancel}
+              disabled={isSaving}
             >
               Cancel
             </button>
             <button
               type="submit"
               className="btn btn--primary btn--block"
+              disabled={isSaving}
             >
-              Save Changes
+              {isSaving ? 'Saving...' : initialData ? 'Save Changes' : 'Create Profile'}
             </button>
           </div>
         </form>

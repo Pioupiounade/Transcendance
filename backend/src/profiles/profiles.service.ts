@@ -3,6 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateProfileDto } from './dto/create-profile.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { ProfileVisibility, AccountStatus } from '../../generated/prisma/client';
+import { findCommune } from './find-commune';
 
 @Injectable()
 export class ProfilesService {
@@ -36,6 +37,9 @@ async findOne(userId: string) {
       user: {
         select: {
           account_status: true,
+          interests: {
+            select: { interest: true },
+          },
         },
       },
     }
@@ -57,6 +61,7 @@ async findOne(userId: string) {
   return {
     ...safeProfile,
     user_id: safeProfile.user_id.toString(),
+    interests: user.interests.map(({ interest }) => interest),
   };
 }
 
@@ -121,6 +126,8 @@ async create(currentUserId: string, data: CreateProfileDto) {
     );
   }
 
+  const commune = await findCommune(data.location);
+
   const createdProfile = await this.prisma.profile.create({
     data: {
       user_id: BigInt(currentUserId),
@@ -128,6 +135,7 @@ async create(currentUserId: string, data: CreateProfileDto) {
       description: data.description,
       profile_picture: data.profile_picture,
       location: data.location,
+      commune,
       visibility: data.visibility,
     },
   });
@@ -183,6 +191,11 @@ async updateProfile(currentUserId: string, data: UpdateProfileDto) {
     }
   }
   
+  const communeUpdate =
+    data.location !== undefined
+      ? { commune: await findCommune(data.location) }
+      : {};
+  
   const updatedProfile = await this.prisma.profile.update({
     where: {
       user_id: BigInt(currentUserId),
@@ -193,6 +206,7 @@ async updateProfile(currentUserId: string, data: UpdateProfileDto) {
       profile_picture: data.profile_picture,
       location: data.location,
       visibility: data.visibility,
+      ...communeUpdate,
     },
   });
 

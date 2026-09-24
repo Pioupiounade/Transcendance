@@ -90,7 +90,11 @@ const refreshSession = (): Promise<boolean> => {
 const request = async <T>(method: Method, path: string, body: Body | undefined, options: RequestOptions): Promise<T> => {
   let response = await send(method, path, body, options);
 
-  if (response.status === 401 && !path.startsWith(AUTH_PREFIX) && session.exists) {
+    if (
+      response.status === 401 &&
+      (!path.startsWith(AUTH_PREFIX) || path === '/auth/me') &&
+      session.exists
+    ) {
     if (await refreshSession()) {
       response = await send(method, path, body, options);
     } else {

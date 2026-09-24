@@ -1,14 +1,28 @@
 import React, { useState, useRef } from 'react';
-import type { UserProfile } from '../types/profile';
+import type { ProfileActivity, UserProfile, InterestCategory } from '../types';
+import { Link } from 'react-router';
+import { INTEREST_LABELS } from '../interestLabels';
 
 interface ProfileViewProps {
   profile: UserProfile;
   onEdit: () => void;
-  onDeleteAccount: () => Promise<void> | void;
+  onDeleteAccount?: () => Promise<void> | void;
+  activity: ProfileActivity | null;
+  activityLoading: boolean;
+  activityError: string | null;
+  interests: InterestCategory[];
+  interestsLoading: boolean;
+  interestsError: string | null;
 }
 
 export const ProfileView: React.FC<ProfileViewProps> = ({
   profile,
+  activity,
+  activityLoading,
+  activityError,
+  interests,
+  interestsLoading,
+  interestsError,
   onEdit,
   onDeleteAccount,
 }) => {
@@ -27,7 +41,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
     setIsDeleting(true);
 
     try {
-      await onDeleteAccount();
+      await onDeleteAccount?.();
       closeDeleteModal();
     } catch (error) {
       console.error('Failed to delete account:', error);
@@ -55,9 +69,9 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
               <h1 style={{ margin: 0, fontSize: 'clamp(1rem, 4vw, 1.5rem)', wordBreak: 'break-word' }}>
                 @{profile.username}
                 </h1>
-              {profile.location && (
+                {profile.commune && (
                 <p className="help" style={{ margin: '4px 0 0' }}>
-                  Neighborhood verified
+                  {profile.commune}
                 </p>
               )}
             </div>
@@ -80,23 +94,85 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
             {profile.description || 'No description provided yet.'}
           </p>
         </div>
+        <section aria-labelledby="profile-interests-title" style={{ marginTop: '24px' }}>
+          <h2 id="profile-interests-title">Interests</h2>
 
+          {interestsLoading && <p role="status">Loading interests...</p>}
+          {interestsError && <p role="alert">{interestsError}</p>}
+
+          {!interestsLoading && !interestsError && (
+            interests.length === 0 ? (
+              <p>No interests selected yet.</p>
+            ) : (
+              <ul>
+                {interests.map((interest) => (
+                  <li key={interest}>{INTEREST_LABELS[interest]}</li>
+                ))}
+              </ul>
+            )
+          )}
+        </section>
+        {/* Activity */}
+        <section
+          aria-labelledby="profile-activity-title"
+          style={{ marginTop: '24px', paddingTop: '24px', borderTop: '1px solid var(--line)' }}
+        >
+          <h2 id="profile-activity-title">Activity</h2>
+
+          {activityLoading && <p role="status">Loading activity...</p>}
+          {activityError && <p role="alert">{activityError}</p>}
+          {activity && <p>Points: {activity.points}</p>}
+          {activity && (
+            <div>
+              <h3>Organizations</h3>
+              {activity.organizations.length === 0 ? (
+                <p>No organizations yet.</p>
+              ) : (
+                <ul>
+                  {activity.organizations.map((organization) => (
+                    <li key={organization.id}>{organization.title}</li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+          {activity && (
+            <div>
+              <h3>Actions participated in: {activity.participations.length}</h3>
+              {activity.participations.length === 0 ? (
+                <p>No actions yet.</p>
+              ) : (
+                <ul>
+                  {activity.participations.map((participation) => (
+                    <li key={participation.actionId}>
+                      <Link to={`/actions/${encodeURIComponent(participation.actionId)}`}>
+                      {participation.title}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+        </section>
         {/* Danger Zone: Delete Account */}
-        <div style={{ marginTop: '40px', paddingTop: '24px', borderTop: '1px solid var(--line)' }}>
-          <label style={{ color: 'var(--danger)' }}>Danger Zone</label>
-          <p className="help" style={{ margin: '6px 0 16px' }}>
-            Permanently delete your account and all associated data. This action cannot be undone.
-          </p>
+        {onDeleteAccount && (
+          <div style={{ marginTop: '40px', paddingTop: '24px', borderTop: '1px solid var(--line)' }}>
+            <label style={{ color: 'var(--danger)' }}>Danger Zone</label>
+            <p className="help" style={{ margin: '6px 0 16px' }}>
+              Permanently delete your account and all associated data. This action cannot be undone.
+            </p>
 
-          <button
-            type="button"
-            className="btn btn--secondary"
-            onClick={openDeleteModal}
-            style={{ color: 'var(--danger)', borderColor: 'var(--danger)' }}
-          >
-            Delete Account
-          </button>
-        </div>
+            <button
+              type="button"
+              className="btn btn--secondary"
+              onClick={openDeleteModal}
+              style={{ color: 'var(--danger)', borderColor: 'var(--danger)' }}
+            >
+              Delete Account
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Confirmation Modal */}
