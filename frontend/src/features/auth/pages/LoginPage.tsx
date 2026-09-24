@@ -1,9 +1,10 @@
 import { Navigate } from 'react-router';
+import { useForm } from '@/shared/hooks/useForm';
 import { Button, FloatingField } from '@/shared/ui';
 import { AuthLayout } from '../components/AuthLayout';
 import { useAuth } from '../hooks/useAuth';
-import { useAuthForm } from '../hooks/useAuthForm';
 import { useReturnPath } from '../hooks/useReturnPath';
+import { toAuthErrorMessage } from '../errors';
 import { AUTH_LABELS } from '../labels';
 import { AUTH_ROUTES } from '../routes';
 import { validateEmail, validatePassword } from '../validation';
@@ -15,10 +16,11 @@ const text = AUTH_LABELS.login;
 export function LoginPage() {
   const { status, signIn } = useAuth();
   const returnTo = useReturnPath();
-  const form = useAuthForm(
+  const form = useForm(
     { email: '', password: '' },
     { email: validateEmail, password: validatePassword },
     (values) => signIn({ email: values.email.trim(), password: values.password }),
+    toAuthErrorMessage,
   );
 
   // Déjà connecté (ou connexion réussie) : le changement de statut fait la redirection.

@@ -1,19 +1,20 @@
 import { useState, type FormEvent } from 'react';
-import { toAuthErrorMessage } from '../errors';
 
 type Values = Record<string, string | boolean>;
 
-type Validators<T extends Values> = { [K in keyof T]?: (value: T[K]) => string | null };
+type Validators<T extends Values> = { [K in keyof T]?: (value: T[K], values: T) => string | null };
 
 /**
- * État d'un formulaire d'auth : valeurs, erreurs de validation (affichées après blur ou soumission),
+ * État d'un formulaire contrôlé : valeurs, erreurs de validation (affichées après blur ou soumission),
  * erreur serveur, envoi en cours. À la soumission : validation complète, focus sur le premier champ
- * invalide (les `id` des champs = leurs noms), sinon `submit(values)`.
+ * invalide (les `id` des champs = leurs noms), sinon `submit(values)` ; une exception devient
+ * `serverError` via `toErrorMessage`. Aucune connaissance métier : chaque feature fournit ses validateurs.
  */
-export function useAuthForm<T extends Values>(
+export function useForm<T extends Values>(
   initial: T,
   validators: Validators<T>,
   submit: (values: T) => Promise<void>,
+  toErrorMessage: (error: unknown) => string,
 ) {
   const [values, setValues] = useState<T>(initial);
   const [touched, setTouched] = useState<Partial<Record<keyof T, boolean>>>({});
@@ -23,7 +24,7 @@ export function useAuthForm<T extends Values>(
 
   const errors: Partial<Record<keyof T, string>> = {};
   for (const name of Object.keys(validators) as (keyof T)[]) {
-    const message = validators[name]?.(values[name]);
+    const message = validators[name]?.(values[name], values);
     if (message) errors[name] = message;
   }
 
@@ -47,7 +48,7 @@ export function useAuthForm<T extends Values>(
     try {
       await submit(values);
     } catch (error) {
-      setServerError(toAuthErrorMessage(error));
+      setServerError(toErrorMessage(error));
     } finally {
       setSubmitting(false);
     }
