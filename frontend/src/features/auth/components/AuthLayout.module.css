@@ -1,19 +1,38 @@
 /* DESIGN.md §6 « Auth card », §7 breakpoints */
 .page {
+  --hero-height: 295px;
+  position: relative;
   padding-bottom: var(--s6);
 }
 
-/* Ciel de l'illustration de la maquette, sans l'illustration (pas d'asset exporté). */
+/* Illustration de la maquette (`AuthHero`), ancrée en bas et recadrée par `preserveAspectRatio: slice`. */
 .hero {
-  height: 295px;
-  background:
-    radial-gradient(circle at 84% 28%, #e4573dd9 0 44px, transparent 45px),
-    linear-gradient(#fdf6f1, #f7dccc);
+  height: var(--hero-height);
+  overflow: hidden;
+  background: #fbefe6;
+}
+.scene,
+.backdropScene {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Quelques pins très atténués (`AuthBackdrop`) sous l'illustration, derrière la carte. */
+.backdrop {
+  position: absolute;
+  inset: var(--hero-height) 0 0;
+  overflow: hidden;
+  opacity: 0.09;
+  pointer-events: none;
 }
 
 .card {
+  /* Peinte après le SVG du hero (élément remplacé), sinon il passe au-dessus de son fond. */
+  position: relative;
   max-width: 490px;
-  margin: -75px auto 0;
+  /* Chevauche le trottoir de l'illustration, pas le square (la maquette montait à -75 px). */
+  margin: -40px auto 0;
   padding: 32px 38px;
   border: 1px solid #e8e2d6;
   border-radius: var(--r-card);
@@ -62,14 +81,14 @@
 
 @media (max-width: 760px) {
   .page {
+    --hero-height: 190px;
     padding: 0 16px var(--s5);
   }
   .hero {
-    height: 190px;
     margin: 0 -16px;
   }
   .card {
-    margin-top: -35px;
+    margin-top: -20px;
     padding: 28px 23px;
   }
 }
