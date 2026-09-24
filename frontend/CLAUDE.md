@@ -52,6 +52,8 @@ Ce fichier est chargé automatiquement quand la session démarre dans `frontend/
   README complet en anglais).
 - `docs/api_contract.md` (ici, dans `frontend/`) : routes réelles du backend, généré le 23/09/2026 ; à régénérer quand
   le backend change.
+- `docs/data_model.md` (ici) : plan des données côté frontend, entités → modules deep et leurs interfaces, état de
+  chaque feature (Epics 1-9), dettes de données ; écrit le 24/09/2026, à tenir à jour à chaque feature branchée.
 
 ## Outillage
 - React 19.2, Vite 8, TypeScript 6. `tsconfig.app.json` : cible ES2023, `jsx: react-jsx`, `noUnusedLocals`,
