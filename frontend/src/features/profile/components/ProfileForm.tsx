@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import type { UserProfile, InterestCategory } from '../types';
 import './ProfileForm.css';
+import { INTEREST_LABELS } from '../interestLabels';
 
 interface ProfileFormProps {
   initialData?: UserProfile;
@@ -111,6 +112,14 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({
       profilePicture: URL.createObjectURL(file),
     }));
   };
+
+  const toggleInterest = (interest: InterestCategory) => {
+    setSelectedInterests((current) =>
+      current.includes(interest)
+        ? current.filter((item) => item !== interest)
+        : [...current, interest],
+    );
+  };  
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -246,7 +255,24 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({
           <div className="help" style={{ justifyContent: 'flex-end' }}>
             <span>{formData.description ? formData.description.length : 0} / 300</span>
           </div>
+          <fieldset style={{ border: 0, padding: 0, margin: 0 }}>
+            <legend>Interests</legend>
 
+            {(Object.keys(INTEREST_LABELS) as InterestCategory[]).map((interest) => (
+              <label
+                key={interest}
+                style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '8px' }}
+              >
+                <input
+                  type="checkbox"
+                  checked={selectedInterests.includes(interest)}
+                  onChange={() => toggleInterest(interest)}
+                  disabled={isSaving}
+                />
+                {INTEREST_LABELS[interest]}
+              </label>
+            ))}
+          </fieldset>
           <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
             <button
               type="button"

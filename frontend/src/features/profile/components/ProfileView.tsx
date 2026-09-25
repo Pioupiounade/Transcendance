@@ -82,6 +82,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
             className="btn btn--secondary profile-edit-button"
             onClick={onEdit}
             aria-label="Edit profile"
+            disabled={interestsLoading || Boolean(interestsError)}
           >
             <span className="btn-label">Edit Profile</span>
           </button>

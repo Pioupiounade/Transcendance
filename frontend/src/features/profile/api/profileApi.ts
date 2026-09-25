@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { http } from '@/shared/api';
-import type { InterestCategory, ProfileActivity, ProfileOrganization, ProfileParticipation, ProfileVisibility, UserProfile } from '../types';
+import type { PublicProfile, InterestCategory, ProfileActivity, ProfileOrganization, ProfileParticipation, ProfileVisibility, UserProfile } from '../types';
 
 type ApiProfile = {
   user_id: string;
@@ -45,6 +45,30 @@ export async function selectInterest(interest: InterestCategory): Promise<void> 
 
 export async function removeInterest(interest: InterestCategory): Promise<void> {
   await http.patch('/interests/me/remove', { interest });
+}
+
+type ApiPublicProfile = {
+  user_id: string;
+  username: string;
+  description: string | null;
+  profile_picture: string | null;
+  commune: string | null;
+  interests: InterestCategory[];
+};
+
+export async function getPublicProfile(userId: string): Promise<PublicProfile> {
+  const data = await http.get<ApiPublicProfile>(
+    `/profiles/${encodeURIComponent(userId)}`,
+  );
+
+  return {
+    userId: data.user_id,
+    username: data.username,
+    description: data.description,
+    profilePicture: data.profile_picture,
+    commune: data.commune,
+    interests: data.interests,
+  };
 }
 
 export async function getProfile(): Promise<UserProfile> {

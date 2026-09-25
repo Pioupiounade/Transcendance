@@ -7,6 +7,7 @@ export const ROUTES = {
   map: '/map',
   friends: '/friends',
   profile: '/profile',
+  publicProfile: '/profiles/:userId',
   terms: '/terms',
   privacy: '/privacy',
   actionDetail: '/actions/:id',

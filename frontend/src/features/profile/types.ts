@@ -20,6 +20,15 @@ export interface UserProfile {
   commune?: string | null;
 }
 
+export interface PublicProfile {
+  userId: string;
+  username: string;
+  description: string | null;
+  profilePicture: string | null;
+  commune: string | null;
+  interests: InterestCategory[];
+}
+
 export interface ProfileOrganization {
   id: string;
   title: string;

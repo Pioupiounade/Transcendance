@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useProfile, createProfile, updateProfile, getProfileActivity, getMyInterests } from '../api/profileApi';
+import { selectInterest, removeInterest, useProfile, createProfile, updateProfile, getProfileActivity, getMyInterests } from '../api/profileApi';
 import { ProfileView } from '../components/ProfileView';
 import { ProfileForm } from '../components/ProfileForm';
 import type { ProfileActivity, UserProfile, InterestCategory } from '../types';
@@ -57,7 +57,10 @@ export const ProfilePage: React.FC = () => {
     };
   }, []);
 
-  const handleCreate = async (values: UserProfile) => {
+  const handleCreate = async (
+    values: UserProfile,
+    selectedInterests: InterestCategory[],
+  ) => {
     if (isSaving) return;
 
     setIsSaving(true);
@@ -67,6 +70,22 @@ export const ProfilePage: React.FC = () => {
       const savedProfile = await createProfile(values);
       setProfile(savedProfile);
       setIsCreating(false);
+
+      const toSelect = selectedInterests.filter(
+        (interest) => !interests.includes(interest),
+      );
+      const results = await Promise.allSettled(toSelect.map(selectInterest));
+
+      try {
+        setInterests(await getMyInterests());
+      } catch {
+        setInterestsError('Unable to reload interests. Please reload the page.');
+        return;
+      }
+
+      if (results.some((result) => result.status === 'rejected')) {
+        setInterestsError('Some interests could not be saved. Please reload the page.');
+      }
     } catch (failure) {
       setCreateError(
         isApiError(failure) && failure.messages.length > 0
@@ -77,12 +96,12 @@ export const ProfilePage: React.FC = () => {
       setIsSaving(false);
     }
   };
-  if (isLoading) {
-    return (
-      <div style={{ textAlign: 'center', padding: '4rem 1rem' }}>
-        <p className="help" style={{ justifyContent: 'center' }}>Loading profile...</p>
-      </div>
-    );
+    if (isLoading) {
+      return (
+        <div style={{ textAlign: 'center', padding: '4rem 1rem' }}>
+          <p className="help" style={{ justifyContent: 'center' }}>Loading profile...</p>
+        </div>
+      );
   }
 
   if (isApiError(error) && error.status === 404 && !profile) {
@@ -94,6 +113,7 @@ export const ProfilePage: React.FC = () => {
             onSave={handleCreate}
             onCancel={() => setIsCreating(false)}
             isSaving={isSaving}
+            initialInterests={interests}
           />
         </>
       );
@@ -103,13 +123,12 @@ export const ProfilePage: React.FC = () => {
       <div style={{ textAlign: 'center', padding: '4rem 1rem' }}>
         <h2>No profile yet</h2>
         <p>Your account does not have a profile yet.</p>
-        <button type="button" onClick={() => setIsCreating(true)}>
+        <button type="button" onClick={() => setIsCreating(true)}  disabled={interestsLoading}>
           Create profile
         </button>
       </div>
     );
   }
-  
   if (!profile) {
     return (
       <div style={{ textAlign: 'center', padding: '4rem 1rem' }}>
@@ -119,8 +138,16 @@ export const ProfilePage: React.FC = () => {
     );
   }
 
-  const handleSave = async (updated: UserProfile) => {
+  const handleSave = async (
+    updated: UserProfile,
+    selectedInterests: InterestCategory[],
+  ) => {
     if (isSaving) return;
+
+    if (interestsLoading || interestsError) {
+      setUpdateError('Interests are unavailable. Please reload the page.');
+      return;
+    }
 
     setIsSaving(true);
     setUpdateError(null);
@@ -128,12 +155,36 @@ export const ProfilePage: React.FC = () => {
     try {
       const savedProfile = await updateProfile(updated);
       setProfile(savedProfile);
+
+      const changes = [
+        ...selectedInterests
+          .filter((interest) => !interests.includes(interest))
+          .map(selectInterest),
+        ...interests
+          .filter((interest) => !selectedInterests.includes(interest))
+          .map(removeInterest),
+      ];
+
+      const results = await Promise.allSettled(changes);
+
+      try {
+        setInterests(await getMyInterests());
+      } catch {
+        setInterestsError('Unable to reload interests. Please reload the page.');
+        throw new Error('Unable to reload interests.');
+      }
+
+      if (results.some((result) => result.status === 'rejected')) {
+        setUpdateError('Some interests could not be saved. Please try again.');
+        return;
+      }
+
       setIsEditing(false);
     } catch (failure) {
       setUpdateError(
         isApiError(failure) && failure.messages.length > 0
           ? failure.messages.join(' ')
-          : 'Unable to save your profile.',
+          : 'Unable to save your profile or interests.',
       );
     } finally {
       setIsSaving(false);
@@ -146,6 +197,7 @@ export const ProfilePage: React.FC = () => {
         {updateError && <p role="alert">{updateError}</p>}
         <ProfileForm
           initialData={profile}
+          initialInterests={interests}
           onSave={handleSave}
           onCancel={() => setIsEditing(false)}
           isSaving={isSaving}
