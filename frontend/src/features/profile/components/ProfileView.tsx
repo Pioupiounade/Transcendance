@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import type { UserProfile } from '../types/profile';
+import type { UserProfile } from '../types';
 
 interface ProfileViewProps {
   profile: UserProfile;
