@@ -2,7 +2,9 @@
 export { Button } from './Button/Button';
 export { ButtonLink } from './Button/ButtonLink';
 export { Avatar } from './Avatar/Avatar';
+export { Checkbox } from './Checkbox/Checkbox';
 export { Chip } from './Chip/Chip';
+export { FloatingField } from './FloatingField/FloatingField';
 export { Icon } from './Icon/Icon';
 export { iconMarkup } from './Icon/iconMarkup';
 export type { IconName } from './Icon/icons';

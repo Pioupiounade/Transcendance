@@ -160,7 +160,8 @@ app/            composition root : seul endroit qui connaît tout
   layout/       PageShell (Suspense des pages paresseuses), AppHeader, BottomNav (mobile), AppFooter, navItems.ts
   pages/        pages sans domaine : Home, Legal (CGU, confidentialité), NotFound, Placeholder
 features/       1 domaine métier = 1 module ; interface = index.ts
-  auth/         login, register, session, RequireAuth
+  auth/         session, RequireAuth, LoginPage, RegisterPage (#50) ; validation.ts miroir des DTO, errors.ts
+                traduit les ApiError en messages, hooks/useAuthForm.ts porte l'état des deux formulaires
   profile/      users + profiles + interests (api_contract §6-8)
   actions/      actions + carte + filtres ; owner des enums Category/ActionStatus et de leurs libellés.
                 Existant (#12) : MapPage, NeighborhoodMap, ActionCard, CategoryFilter, useActions, mapConfig.ts
@@ -176,7 +177,8 @@ features/       1 domaine métier = 1 module ; interface = index.ts
 shared/         zéro connaissance métier, réutilisable ailleurs
   api/          client HTTP (deep), index.ts
   ui/           kit DESIGN.md §9 (Button, FloatingField, CategoryChip, Dialog, Spinner, ErrorMessage…), index.ts.
-                Existant : Button, ButtonLink, Avatar, Icon (+ iconMarkup pour les hôtes HTML), Chip
+                Existant : Button, ButtonLink, Avatar, Icon (+ iconMarkup pour les hôtes HTML), Chip, FloatingField
+                (label flottant, aide/erreur reliées, bascule mot de passe), Checkbox (libellé riche)
   lib/          fonctions pures, pas de barrel (test de suppression négatif) : pageTitle, formatDate, prefersReducedMotion
   config/       env.ts : lit et valide VITE_API_URL
 styles/         tokens.css (DESIGN.md), reset.css, global.css
@@ -206,7 +208,9 @@ assets/
   messages, isNetwork }`, `session.set/clear/onExpire/userId`. Caché : base URL, Bearer, 401 →
   refresh (dédupliqué) → rejeu, `http.list` traduit le 404 en `[]`, `message` tableau normalisé, réseau → `status 0`.
   Les tokens vivent ici ; `features/auth` appelle seulement `session.set(tokens, userId)`.
-- `features/auth` : interface = `AuthProvider`, `useAuth() → { user, login, logout, register }`, `RequireAuth`.
+- `features/auth` : interface = `AuthProvider`, `useAuth() → { status, user, signIn, signUp, signOut }`, `RequireAuth`,
+  `LoginPage`, `RegisterPage` (reçoit les chemins des pages légales en props : une feature n'importe pas `app/`).
+  Après connexion, la page redirige vers `state.from` (posé par `RequireAuth`) sinon `/`.
 - `features/x/api/` : seule couche qui appelle `http`. Pages et composants ne voient que des hooks, ce qui rend
   TanStack Query branchable sans toucher aux composants.
 

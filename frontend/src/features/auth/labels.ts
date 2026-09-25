@@ -1,3 +1,44 @@
+// Textes UI de la feature auth (anglais). Les messages de validation disent ce qui ne va pas et comment corriger.
 export const AUTH_LABELS = {
   loading: 'Loading your session…',
+  fields: {
+    email: 'Email address',
+    password: 'Password',
+    show: 'Show',
+    hide: 'Hide',
+    passwordHelp: (min: number) => `At least ${min} characters.`,
+  },
+  validation: {
+    emailRequired: 'Enter your email address.',
+    emailInvalid: 'Enter a full email address, like name@example.com.',
+    passwordRequired: 'Enter your password.',
+    passwordTooShort: (min: number, missing: number) => `At least ${min} characters: ${missing} more to go.`,
+    consentRequired: 'Tick the box to continue.',
+  },
+  errors: {
+    invalidCredentials: 'Wrong email address or password.',
+    emailTaken: 'An account already uses this email address. Sign in instead?',
+    network: 'We could not reach the server. Check your connection and try again.',
+    unknown: 'Something went wrong on our side. Please try again.',
+  },
+  login: {
+    title: 'Good to see you again.',
+    lead: 'Sign in to find your neighbours and your ongoing actions.',
+    submit: 'Sign in',
+    submitting: 'Signing in…',
+    switchText: 'No account yet?',
+    switchLink: 'Create my account',
+    reassure: 'You choose what is visible on your profile.',
+  },
+  register: {
+    title: 'Welcome to the neighbourhood.',
+    lead: 'One neighbourhood, neighbours and plenty to do together.',
+    submit: 'Create my account',
+    submitting: 'Creating your account…',
+    switchText: 'Already a member?',
+    switchLink: 'Sign in',
+    reassure: 'Your precise location never shows on your profile.',
+    consent: { before: 'I accept the ', terms: 'Terms of Service', and: ' and the ', privacy: 'Privacy Policy', after: '.' },
+  },
+  reassureTitle: 'Your neighbourhood is enough.',
 } as const;
