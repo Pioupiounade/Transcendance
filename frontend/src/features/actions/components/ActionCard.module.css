@@ -1,13 +1,10 @@
 /* DESIGN.md §6 « Action card », « Tag » */
 .card {
-  display: block;
-  width: 100%;
-  padding: 17px;
+  display: grid;
   border: 1px solid var(--line);
   border-radius: var(--r-action);
   background: var(--ground);
   color: var(--ink);
-  text-align: left;
   transition:
     border-color var(--t-base),
     background-color var(--t-base);
@@ -19,6 +16,26 @@
 .selected:hover {
   border: 1.5px solid var(--brand);
   background: var(--card-selected-bg);
+}
+
+/* Le bouton porte tout le contenu ; le lien « Edit » vit à côté, jamais dedans (HTML interdit lien dans bouton). */
+.body {
+  display: block;
+  width: 100%;
+  padding: 17px;
+  border: 0;
+  border-radius: inherit;
+  background: none;
+  color: inherit;
+  text-align: left;
+}
+
+.edit {
+  justify-self: start;
+  height: 34px;
+  margin: -6px 17px 14px;
+  padding: 0 14px;
+  font-size: 13px;
 }
 
 .top {

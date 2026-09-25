@@ -25,6 +25,11 @@
   font-size: 15px;
 }
 
+.cta {
+  justify-self: start;
+  margin-top: 6px;
+}
+
 .layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 340px;
