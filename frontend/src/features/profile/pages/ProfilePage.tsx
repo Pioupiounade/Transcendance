@@ -60,6 +60,7 @@ export const ProfilePage: React.FC = () => {
   const handleCreate = async (
     values: UserProfile,
     selectedInterests: InterestCategory[],
+    avatar: File | null,
   ) => {
     if (isSaving) return;
 
@@ -67,7 +68,7 @@ export const ProfilePage: React.FC = () => {
     setCreateError(null);
 
     try {
-      const savedProfile = await createProfile(values);
+      const savedProfile = await createProfile(values, avatar);
       setProfile(savedProfile);
       setIsCreating(false);
 
@@ -141,6 +142,7 @@ export const ProfilePage: React.FC = () => {
   const handleSave = async (
     updated: UserProfile,
     selectedInterests: InterestCategory[],
+    avatar: File | null,
   ) => {
     if (isSaving) return;
 
@@ -153,7 +155,7 @@ export const ProfilePage: React.FC = () => {
     setUpdateError(null);
 
     try {
-      const savedProfile = await updateProfile(updated);
+      const savedProfile = await updateProfile(updated, avatar);
       setProfile(savedProfile);
 
       const changes = [

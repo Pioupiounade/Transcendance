@@ -7,7 +7,7 @@ type ApiProfile = {
   username: string;
   description: string | null;
   profile_picture: string | null;
-  location: number[];
+  location: number[] | null;
   visibility: ProfileVisibility;
   commune: string | null;
 };
@@ -47,6 +47,12 @@ export async function removeInterest(interest: InterestCategory): Promise<void> 
   await http.patch('/interests/me/remove', { interest });
 }
 
+export async function uploadAvatar(file: File): Promise<void> {
+  const body = new FormData();
+  body.append('file', file);
+  await http.patch('/users/me/avatar', body);
+}
+
 type ApiPublicProfile = {
   user_id: string;
   username: string;
@@ -80,7 +86,7 @@ export async function getProfile(): Promise<UserProfile> {
     description: data.description ?? undefined,
     profilePicture: data.profile_picture ?? undefined,
     visibility: data.visibility,
-    location: data.location.length === 2
+    location: data.location?.length === 2
       ? { latitude: data.location[0], longitude: data.location[1] }
       : null,
   };
@@ -126,7 +132,7 @@ export async function getProfileActivity(): Promise<ProfileActivity> {
   return { points, organizations, participations };
 }
 
-export async function createProfile(profile: UserProfile): Promise<UserProfile> {
+export async function createProfile(profile: UserProfile, avatar?: File | null): Promise<UserProfile> {
   if (!profile.location) {
     throw new Error('Location is required to create a profile');
   }
@@ -138,10 +144,11 @@ export async function createProfile(profile: UserProfile): Promise<UserProfile> 
     location: [profile.location.latitude, profile.location.longitude],
   });
 
+  if (avatar) await uploadAvatar(avatar);
   return getProfile();
 }
 
-export async function updateProfile(profile: UserProfile): Promise<UserProfile> {
+export async function updateProfile(profile: UserProfile, avatar?: File | null): Promise<UserProfile> {
   await http.patch('/profiles/me', {
     username: profile.username,
     description: profile.description,
@@ -151,6 +158,7 @@ export async function updateProfile(profile: UserProfile): Promise<UserProfile> 
       : undefined,
   });
 
+  if (avatar) await uploadAvatar(avatar);
   return getProfile();
 }
 
