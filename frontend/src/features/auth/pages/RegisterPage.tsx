@@ -1,9 +1,10 @@
 import { Link, Navigate } from 'react-router';
+import { useForm } from '@/shared/hooks/useForm';
 import { Button, Checkbox, FloatingField } from '@/shared/ui';
 import { AuthLayout } from '../components/AuthLayout';
 import { useAuth } from '../hooks/useAuth';
-import { useAuthForm } from '../hooks/useAuthForm';
 import { useReturnPath } from '../hooks/useReturnPath';
+import { toAuthErrorMessage } from '../errors';
 import { AUTH_LABELS } from '../labels';
 import { AUTH_ROUTES } from '../routes';
 import { PASSWORD_MIN_LENGTH, validateConsent, validateEmail, validateNewPassword } from '../validation';
@@ -23,10 +24,11 @@ const text = AUTH_LABELS.register;
 export function RegisterPage({ termsPath, privacyPath }: RegisterPageProps) {
   const { status, signUp } = useAuth();
   const returnTo = useReturnPath();
-  const form = useAuthForm<RegisterValues>(
+  const form = useForm<RegisterValues>(
     { email: '', password: '', consent: false },
     { email: validateEmail, password: validateNewPassword, consent: validateConsent },
     (values) => signUp({ email: values.email.trim(), password: values.password }),
+    toAuthErrorMessage,
   );
 
   if (status === 'authenticated') return <Navigate to={returnTo} replace />;

@@ -88,7 +88,19 @@ const refreshSession = (): Promise<boolean> => {
   return refreshing;
 };
 
+// Routes dont un 401 ne signifie pas « token expiré » : jamais de refresh derrière.
+const NO_REFRESH = new Set([`${AUTH_PREFIX}/login`, `${AUTH_PREFIX}/register`, `${AUTH_PREFIX}/refresh`]);
+
 const request = async <T>(method: Method, path: string, body: Body | undefined, options: RequestOptions): Promise<T> => {
+  const refreshable = session.exists && !NO_REFRESH.has(path);
+
+  // Access token perdu (rechargement de la page) : on le regagne avant d'appeler, plutôt que
+  // d'encaisser un 401 que le navigateur afficherait en erreur console.
+  if (refreshable && session.accessToken === null && !(await refreshSession())) {
+    session.expire();
+    throw new ApiError(401, []);
+  }
+
   let response = await send(method, path, body, options);
 
   const canRefresh = !path.startsWith(AUTH_PREFIX) || path === `${AUTH_PREFIX}/me`;

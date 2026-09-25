@@ -31,7 +31,14 @@ export type Action = {
   scheduled_at: string;
   created_at: string;
   updated_at: string;
+  /** Calculés par l'API sur `GET /actions` et `GET /actions/:id` (absents des réponses de POST/PATCH/approve/cancel/complete). */
+  participant_count: number;
+  /** `null` = pas de plafond (`max_participants` null). */
+  remaining_seats: number | null;
 };
+
+/** Action telle que la renvoient les mutations (`POST /actions`, `PATCH`, `approve`, `cancel`, `complete`) : sans les champs calculés. */
+export type ActionRecord = Omit<Action, 'participant_count' | 'remaining_seats'>;
 
 /** Statuts visibles sur la carte et dans les listes publiques : à venir ou validées. */
 export const OPEN_STATUSES: readonly ActionStatus[] = [ACTION_STATUS.PENDING, ACTION_STATUS.APPROVED];

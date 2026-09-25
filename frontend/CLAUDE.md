@@ -21,7 +21,7 @@ Ce fichier est chargé automatiquement quand la session démarre dans `frontend/
   seuls `npx tsc -b` et `npx eslint -f json .` fonctionnent (le formateur par défaut d'ESLint 10 plante).
 - Makefile à la racine du dépôt (= `docker compose -f docker/docker-compose.yml`) : `make up` / `make uplogs` (détaché /
   avec logs), `make down`, `make logs`, `make backend-shell`, `make re` (down -v, rebuild, up, puis `make db-update` :
-  prisma generate + db push dans le conteneur backend), `make clean` (supprime aussi les volumes : base perdue).
+  `prisma generate` + `prisma migrate deploy` dans le conteneur backend ; aussi après chaque pull du backend), `make clean` (supprime aussi les volumes : base perdue).
 - Docker : le conteneur frontend exécute `npm run dev -- --host 0.0.0.0`, le dossier est monté, `node_modules` est un
   volume nommé. Après un ajout de dépendance : `make re` ou `docker compose -f docker/docker-compose.yml build frontend`.
 
@@ -50,8 +50,10 @@ Ce fichier est chargé automatiquement quand la session démarre dans `frontend/
 - `DESIGN.md` : palette, typo, composants React à construire (§9). `_reference.html` : maquette navigable.
 - `en.subject.pdf` : sujet officiel (bloquant : HTTPS, `.env` ignoré + `.env.example`, pages CGU et confidentialité,
   README complet en anglais).
-- `docs/api_contract.md` (ici, dans `frontend/`) : routes réelles du backend, généré le 23/09/2026 ; à régénérer quand
-  le backend change.
+- `docs/api_contract.md` (ici, dans `frontend/`) : routes réelles du backend, régénéré et vérifié par sondes le 24/09/2026 ;
+  à régénérer quand le backend change (`make db-update` après chaque pull backend, sinon la base de dev est en retard).
+- `docs/data_model.md` (ici) : plan des données côté frontend, entités → modules deep et leurs interfaces, état de
+  chaque feature (Epics 1-9), dettes de données ; écrit le 24/09/2026, à tenir à jour à chaque feature branchée.
 
 ## Outillage
 - React 19.2, Vite 8, TypeScript 6. `tsconfig.app.json` : cible ES2023, `jsx: react-jsx`, `noUnusedLocals`,
@@ -121,7 +123,8 @@ Ce fichier est chargé automatiquement quand la session démarre dans `frontend/
   les lire uniquement via `shared/config/env.ts` (valide au démarrage).
 - Un seul client HTTP (wrapper `fetch`) : JSON, header `Authorization: Bearer <access_token>`, erreurs normalisées
   depuis `{ statusCode, message, error }` (`message` peut être un tableau), 401 → un essai de `POST /auth/refresh`
-  puis rejeu, sinon déconnexion.
+  puis rejeu, sinon déconnexion. Seuls `/auth/login`, `/auth/register` et `/auth/refresh` sont exempts ; sans access
+  token en mémoire (rechargement) le client rafraîchit **avant** le premier appel (un 401 serait une erreur console).
 - L'identité vient du JWT : jamais d'id utilisateur dans une query ou un body pour dire « qui je suis »
   (`creator_id` n'existe plus dans les DTO ; l'envoyer provoque un 400).
 - Les listes filtrées renvoient 404 quand elles sont vides (`GET /actions?…`, `GET /organizations?creator_id=`) :
@@ -161,10 +164,14 @@ app/            composition root : seul endroit qui connaît tout
   pages/        pages sans domaine : Home, Legal (CGU, confidentialité), NotFound, Placeholder
 features/       1 domaine métier = 1 module ; interface = index.ts
   auth/         session, RequireAuth, LoginPage, RegisterPage (#50) ; validation.ts miroir des DTO, errors.ts
-                traduit les ApiError en messages, hooks/useAuthForm.ts porte l'état des deux formulaires
+                traduit les ApiError en messages ; les formulaires utilisent shared/hooks/useForm
   profile/      users + profiles + interests (api_contract §6-8)
   actions/      actions + carte + filtres ; owner des enums Category/ActionStatus et de leurs libellés.
-                Existant (#12) : MapPage, NeighborhoodMap, ActionCard, CategoryFilter, useActions, mapConfig.ts
+                Existant (#12) : MapPage, NeighborhoodMap, ActionCard, CategoryFilter, useActions, mapConfig.ts.
+                Création depuis la carte (Epic 7) : NeighborhoodMap accepte `draft` / `onDraftChange` / `draftContent`
+                (pin brouillon déplaçable, popup), MapPage garde le lieu dans l'URL (`?at=lat,lng`, draftParam.ts),
+                CreateActionDialog = Dialog + ActionForm (deep : `{ location, onCreated, onCancel }`), validation.ts,
+                errors.ts, api/useCreateAction. ActionForm est prévu pour le futur écran créer/modifier.
   participations/, organizations/, friends/ (friend-requests + friendships)
   <feature>/
     api/        fonctions fetch typées + hooks useX : seuls appelants de shared/api
@@ -178,7 +185,11 @@ shared/         zéro connaissance métier, réutilisable ailleurs
   api/          client HTTP (deep), index.ts
   ui/           kit DESIGN.md §9 (Button, FloatingField, CategoryChip, Dialog, Spinner, ErrorMessage…), index.ts.
                 Existant : Button, ButtonLink, Avatar, Icon (+ iconMarkup pour les hôtes HTML), Chip, FloatingField
-                (label flottant, aide/erreur reliées, bascule mot de passe), Checkbox (libellé riche)
+                (label flottant, aide/erreur reliées, bascule mot de passe, types text/email/password/number/
+                datetime-local), FloatingTextarea (même habillage, privé : FieldShell + fieldA11y), Checkbox (libellé
+                riche), Dialog (`<dialog>` natif : `{ open, onClose, title, closeLabel }`, enfants montés si ouvert)
+  hooks/        hooks React sans métier, pas de barrel : useForm (valeurs, erreurs après blur/soumission, erreur
+                serveur via un mapper fourni, focus du 1er champ invalide dont l'`id` = son nom)
   lib/          fonctions pures, pas de barrel (test de suppression négatif) : pageTitle, formatDate, prefersReducedMotion
   config/       env.ts : lit et valide VITE_API_URL
 styles/         tokens.css (DESIGN.md), reset.css, global.css
@@ -197,7 +208,7 @@ assets/
 - Feature : possède des routes de `docs/api_contract.md` et/ou des écrans. Test : si le backend supprime le domaine,
   le dossier disparaît entier.
 - Partagé : ne connaît aucun type métier. `shared/api` et `shared/ui` ont un `index.ts` (plusieurs appelants) ;
-  `shared/lib` n'en a pas, import direct du fichier.
+  `shared/lib` et `shared/hooks` n'en ont pas, import direct du fichier.
 - Libellés d'enum : dans la feature propriétaire de l'enum (`features/actions/labels.ts`, réexporté par son index).
   Pas de dossier `constants` global.
 - `NeighborhoodMap` reste dans `features/actions` ; passe en `shared/ui` seulement quand un 2e domaine l'utilise.

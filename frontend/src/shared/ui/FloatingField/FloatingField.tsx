@@ -12,8 +12,10 @@ type FloatingFieldProps = {
   help?: string;
   /** Pour `type="password"` : ajoute la bascule Afficher / Masquer avec ces libellés. */
   revealLabels?: { show: string; hide: string };
-  type?: 'text' | 'email' | 'password';
+  type?: 'text' | 'email' | 'password' | 'number' | 'datetime-local';
 } & Omit<ComponentPropsWithoutRef<'input'>, 'id' | 'type' | 'placeholder' | 'className' | 'aria-invalid' | 'aria-describedby'>;
+
+const ALWAYS_FILLED = new Set(['datetime-local']);
 
 /** Champ à libellé flottant (DESIGN.md §5) : l'erreur est reliée par `aria-describedby`. */
 export function FloatingField({ id, label, error, help, revealLabels, type = 'text', ...rest }: FloatingFieldProps) {
@@ -21,6 +23,7 @@ export function FloatingField({ id, label, error, help, revealLabels, type = 'te
   const toggle = type === 'password' && revealLabels ? revealLabels : null;
   const message = error || help;
   const helpId = `${id}-help`;
+  const raised = ALWAYS_FILLED.has(type);
 
   return (
     <div className={[styles.field, error && styles.invalid].filter(Boolean).join(' ')}>
@@ -34,7 +37,7 @@ export function FloatingField({ id, label, error, help, revealLabels, type = 'te
           aria-describedby={message ? helpId : undefined}
           {...rest}
         />
-        <label htmlFor={id} className={styles.label}>
+        <label htmlFor={id} className={[styles.label, raised && styles.raised].filter(Boolean).join(' ')}>
           {label}
         </label>
         {toggle && (
