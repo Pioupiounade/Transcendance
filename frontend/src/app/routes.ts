@@ -10,5 +10,9 @@ export const ROUTES = {
   terms: '/terms',
   privacy: '/privacy',
   actionDetail: '/actions/:id',
+  createAction: '/actions/new',
+  editAction: '/actions/:id/edit',
   ...AUTH_ROUTES,
 } as const;
+
+export const editActionPath = (id: string): string => ROUTES.editAction.replace(':id', id);
