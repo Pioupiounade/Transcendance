@@ -2,7 +2,7 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateProfileDto } from './dto/create-profile.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
-import { ProfileVisibility, AccountStatus } from '../../generated/prisma/client';
+import { ProfileVisibility, AccountStatus, FriendshipStatus } from '../../generated/prisma/client';
 import { findCommune } from './find-commune';
 
 @Injectable()
@@ -28,42 +28,76 @@ async findAll() {
 }
 
 //Trouver un profil specifique avec l'user_id
-async findOne(userId: string) {
-  const profile = await this.prisma.profile.findUnique({
-    where: {
-      user_id: BigInt(userId),
-    },
-    include: {
-      user: {
-        select: {
-          account_status: true,
-          interests: {
-            select: { interest: true },
+  async findOne(userId: string, viewerId?: string) {
+    if (!/^\d+$/.test(userId)) {
+      throw new NotFoundException('Profile not found');
+    }
+
+    const profile = await this.prisma.profile.findUnique({
+      where: {
+        user_id: BigInt(userId),
+      },
+      include: {
+        user: {
+          select: {
+            account_status: true,
+            interests: {
+              select: { interest: true },
+            },
           },
         },
       },
+    });
+
+    if (
+      !profile ||
+      profile.user.account_status !== AccountStatus.ACTIVE ||
+      profile.visibility === ProfileVisibility.PRIVATE
+    ) {
+      throw new NotFoundException('Profile not found');
     }
-  });
 
-  if (!profile) {
-    throw new NotFoundException('Profile not found');
+    if (profile.visibility === ProfileVisibility.FRIENDS_ONLY) {
+      if (!viewerId) {
+        throw new NotFoundException('Profile not found');
+      }
+
+      const visitorId = BigInt(viewerId);
+
+      const visitor = await this.prisma.user.findUnique({
+        where: { user_id: visitorId },
+        select: { account_status: true },
+      });
+
+      if (visitor?.account_status !== AccountStatus.ACTIVE) {
+        throw new NotFoundException('Profile not found');
+      }
+
+      if (visitorId !== profile.user_id) {
+        const friendship = await this.prisma.friendship.findFirst({
+          where: {
+            status: FriendshipStatus.ACTIVE,
+            OR: [
+              { user1_id: visitorId, user2_id: profile.user_id },
+              { user1_id: profile.user_id, user2_id: visitorId },
+            ],
+          },
+        });
+
+        if (!friendship) {
+          throw new NotFoundException('Profile not found');
+        }
+      }
+    }
+
+    const { location, user, ...safeProfile } = profile;
+
+    return {
+      ...safeProfile,
+      user_id: safeProfile.user_id.toString(),
+      interests: user.interests.map(({ interest }) => interest),
+    };
   }
-
-  if (
-    profile.visibility !== ProfileVisibility.PUBLIC ||
-    profile.user.account_status !== AccountStatus.ACTIVE
-  ) {
-    throw new NotFoundException('Profile not found');
-  }
-
-  const { location, user, ...safeProfile } = profile;
-
-  return {
-    ...safeProfile,
-    user_id: safeProfile.user_id.toString(),
-    interests: user.interests.map(({ interest }) => interest),
-  };
-}
 
 //Trouver un profil specifique avec le username
  async findByUsername(query: string) {
