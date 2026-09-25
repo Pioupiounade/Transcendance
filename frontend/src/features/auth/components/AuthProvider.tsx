@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { session } from '@/shared/api';
+import { isApiError, session } from '@/shared/api';
 import { getMe, login, logout, register, type AuthResponse, type Credentials } from '../api/authApi';
 import { AuthContext, type AuthState } from '../hooks/authContext';
 import type { AuthStatus, AuthUser } from '../types';
@@ -23,8 +23,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const controller = new AbortController();
     getMe(controller.signal)
       .then((user) => setSnapshot({ status: 'authenticated', user }))
-      .catch(() => {
+      .catch((error) => {
         if (controller.signal.aborted) return;
+        if (isApiError(error) && error.isNetwork) {
+          setSnapshot(ANONYMOUS);
+          return;
+        }
         session.clear();
         setSnapshot(ANONYMOUS);
       });
