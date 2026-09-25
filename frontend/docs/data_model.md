@@ -344,9 +344,9 @@ Backend = `main` au 24/09 (#40 auth/users/profiles/interests/orgs/membres/points
 | Feature | Backend | Frontend |
 |---|---|---|
 | Signaler une action possible (suggestion) | pas de modèle : = `Action` `PENDING` | ✅ via la carte (Epic 7) |
-| Créer une action | ✅ `POST /actions` (JWT, actif, orga facultative, `max_participants` ≥ 3) | ✅ `ActionForm` depuis la carte ; pas encore de page `/actions/new` |
-| Modifier une action | 🟡 `PATCH /actions/:id` **cassé** : 500 sans `organization_id`, mise à jour partielle (ticket backend) | ❌ (`ActionForm` prévu pour, bloqué par le bug) |
-| Supprimer une action | ❌ (`cancel` seulement) | ❌ |
+| Créer une action | ✅ `POST /actions` (JWT, actif, orga facultative, `max_participants` ≥ 3) | ✅ `ActionForm` depuis la carte + page `/actions/new` (#33, `?at=` pré-place le pin) |
+| Modifier une action | 🟡 `PATCH /actions/:id` **cassé** : 500 sans `organization_id`, mise à jour partielle (ticket backend) | 🟡 page `/actions/:id/edit` branchée (#33, créateur/ADMIN, PENDING/APPROVED) ; l'enregistrement affiche une erreur tant que le backend répond 500, bien que les champs soient persistés |
+| Supprimer une action | ❌ (`cancel` seulement) | ✅ « Cancel this action » + confirmation depuis la page de modification (#33) = `PATCH /cancel` ; pas de vraie suppression |
 | Découvrir des actions | ✅ `GET /actions` (+ un filtre : organisation, catégorie, créateur, statut) ; pas de rayon/texte/date | ✅ carte + filtre catégorie (#12) ; ❌ page liste `/actions` (placeholder) |
 | Consulter une action | ✅ `GET /actions/:id` (+ `participant_count`, `remaining_seats`) | 🟡 `/actions/:id` sur mock #46 ; la carte n'y mène pas encore |
 | Partager une action (V2) | ❌ | ❌ |
