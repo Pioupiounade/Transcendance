@@ -1,0 +1,124 @@
+/* Maquette « dashboard » : 38 px de marge, intro + puce de lieu, carte + panneau latéral, puis la grille des suggestions. */
+.page {
+  max-width: 1800px;
+  margin: 0 auto;
+  padding: 30px 38px 28px;
+  display: grid;
+  gap: 24px;
+  /* Carte compacte : la page carte garde ses 570 px. */
+  --map-min-height: 440px;
+  --map-min-height-large: 480px;
+  --map-min-height-mobile: 340px;
+}
+
+.intro {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.eyebrow {
+  margin-bottom: 8px;
+  color: var(--terra);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1.8px;
+  text-transform: uppercase;
+}
+
+.lead {
+  margin-top: 7px;
+  color: var(--muted);
+  font-size: 15px;
+}
+
+/* DESIGN.md §6 « Location chip » */
+.chip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: none;
+  min-width: 220px;
+  padding: 10px 15px;
+  border: 1px solid var(--line);
+  border-radius: 15px;
+  background: var(--ground);
+  color: var(--brand);
+}
+.chip small {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+}
+.chip strong {
+  color: var(--ink);
+  font-size: 14px;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 22px;
+  align-items: stretch;
+}
+
+.map {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+.mapFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.privacy {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+@media (min-width: 1501px) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr) 375px;
+  }
+}
+
+@media (max-width: 1100px) {
+  .page {
+    padding: 24px;
+  }
+  .layout {
+    grid-template-columns: minmax(0, 1fr) 310px;
+    gap: 16px;
+  }
+}
+
+@media (max-width: 760px) {
+  .page {
+    padding: 24px 16px;
+    gap: 20px;
+  }
+  .intro {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+  }
+  .chip {
+    min-width: 0;
+  }
+  .layout {
+    grid-template-columns: 1fr;
+  }
+  .mapFooter {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+}

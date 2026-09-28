@@ -161,13 +161,21 @@ Inspirée de bulletproof-react et feature-sliced, réduite à ce que le projet j
 app/            composition root : seul endroit qui connaît tout
   main.tsx, App.tsx, router.tsx (AppRouter), routes.ts (ROUTES), labels.ts, lazyPage.ts
   layout/       PageShell (Suspense des pages paresseuses), AppHeader, BottomNav (mobile), AppFooter, navItems.ts
-  pages/        pages sans domaine : Home, Legal (CGU, confidentialité), NotFound, Placeholder
+  pages/        pages sans domaine : Legal (CGU, confidentialité), NotFound, Placeholder ;
+                home/ (#65) : HomePage bascule selon la session → Landing (visiteur : hero StreetScene + promesse,
+                « How it works », carte vivante des actions ouvertes + 3 prochaines, catégories, bandeau
+                d'inscription) ou Dashboard (connecté :
+                carte compacte via NeighborhoodMap, MyActionsPanel = actions que j'organise + participations
+                ouvertes par date, NearbyActions = actions ouvertes des autres triées par distance depuis
+                `profiles/me.location` sinon Saint-Cyprien). app compose les features par leurs index.
 features/       1 domaine métier = 1 module ; interface = index.ts
   auth/         session, RequireAuth, LoginPage, RegisterPage (#50) ; validation.ts miroir des DTO, errors.ts
                 traduit les ApiError en messages ; les formulaires utilisent shared/hooks/useForm
   profile/      users + profiles + interests (api_contract §6-8)
   actions/      actions + carte + filtres ; owner des enums Category/ActionStatus et de leurs libellés.
                 Existant (#12) : MapPage, NeighborhoodMap, ActionCard, CategoryFilter, useActions, mapConfig.ts.
+                Depuis le 25/09/2026 (écart assumé avec la maquette) : carte pleine largeur, cartes en grille
+                dessous ; ActionCard a un fond très léger par catégorie (`--card-*-bg` dans tokens.css).
                 Création depuis la carte (Epic 7) : NeighborhoodMap accepte `draft` / `onDraftChange` / `draftContent`
                 (pin brouillon déplaçable, popup ; sans `draftContent` = simple sélecteur de lieu), MapPage garde le
                 lieu dans l'URL (`?at=lat,lng`, draftParam.ts), CreateActionDialog = Dialog + ActionForm, validation.ts,
@@ -178,8 +186,14 @@ features/       1 domaine métier = 1 module ; interface = index.ts
                 (permissions.ts : créateur ou ADMIN, PENDING/APPROVED ; CancelActionDialog = « suppression », l'API
                 n'a que `cancel`), api/useAction, useUpdateAction, useCancelAction. Les pages reçoivent les chemins
                 (`mapPath`, `createPath`, `editPath`) en props : la feature n'importe pas `app/`. Retour sur la carte
-                par `/map?focus=<id>` (mapConfig.ts) + `state.notice`.
-  participations/, organizations/, friends/ (friend-requests + friendships)
+                par `/map?focus=<id>` (mapConfig.ts) + `state.notice`. L'index exporte aussi les briques du tableau
+                de bord : NeighborhoodMap (hauteur surchargeable par `--map-min-height*`), ActionCard (pied :
+                voisins inscrits, places ; `distance` remplace le statut), useActions, geo.ts (distanceMeters,
+                formatDistance), DEFAULT_CENTER, FOCUS_PARAM.
+  profile/      coéquipier (#38 en cours, mock) ; ajout #65 : api/myProfile.ts (`GET /profiles/me`, 404 → null,
+                useMyProfile), seul fichier à nous dans ce dossier.
+  participations/ (existant : useMyParticipations, type MyParticipation), organizations/, friends/
+                (friend-requests + friendships)
   <feature>/
     api/        fonctions fetch typées + hooks useX : seuls appelants de shared/api
     components/ privés au domaine
@@ -194,7 +208,8 @@ shared/         zéro connaissance métier, réutilisable ailleurs
                 Existant : Button, ButtonLink, Avatar, Icon (+ iconMarkup pour les hôtes HTML), Chip, FloatingField
                 (label flottant, aide/erreur reliées, bascule mot de passe, types text/email/password/number/
                 datetime-local), FloatingTextarea (même habillage, privé : FieldShell + fieldA11y), Checkbox (libellé
-                riche), Dialog (`<dialog>` natif : `{ open, onClose, title, closeLabel }`, enfants montés si ouvert)
+                riche), Dialog (`<dialog>` natif : `{ open, onClose, title, closeLabel }`, enfants montés si ouvert),
+                StreetScene (illustration de rue de la maquette, décorative ; l'hôte fixe la hauteur : auth, landing)
   hooks/        hooks React sans métier, pas de barrel : useForm (valeurs, erreurs après blur/soumission, erreur
                 serveur via un mapper fourni, focus du 1er champ invalide dont l'`id` = son nom)
   lib/          fonctions pures, pas de barrel (test de suppression négatif) : pageTitle, formatDate, prefersReducedMotion

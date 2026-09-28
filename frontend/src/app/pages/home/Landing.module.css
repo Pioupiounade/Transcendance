@@ -1,0 +1,323 @@
+/* Landing visiteur : hero illustré, sections espacées (max 1180 px), carte vivante, bandeau d'inscription. */
+.landing {
+  display: grid;
+  gap: 72px;
+  padding-bottom: 72px;
+  --map-min-height: 460px;
+  --map-min-height-large: 500px;
+  --map-min-height-mobile: 340px;
+}
+
+.eyebrow {
+  margin-bottom: 8px;
+  color: var(--terra);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1.8px;
+  text-transform: uppercase;
+}
+
+/* Hero : la promesse sur le ciel, la rue de la maquette en dessous (fond = haut du dégradé du ciel du SVG,
+   raccord invisible). L'illustration est un bloc, jamais derrière le texte. */
+.hero {
+  display: grid;
+  overflow: hidden;
+  background: #fdf6f1;
+}
+.heroScene {
+  height: 300px;
+  margin-top: 36px;
+}
+.heroCopy {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 64px 24px 0;
+  text-align: center;
+  display: grid;
+  justify-items: center;
+}
+.heroTitle {
+  font-size: 46px;
+  line-height: 1.1;
+  letter-spacing: -1.6px;
+}
+.heroLead {
+  margin-top: 16px;
+  max-width: 560px;
+  color: var(--muted);
+  font-size: 17px;
+  line-height: 1.55;
+}
+.heroActions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 26px;
+}
+.trust {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px 18px;
+  margin-top: 22px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.trust li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: #fffefacc;
+  color: var(--brand);
+}
+
+.section {
+  width: 100%;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0 38px;
+  display: grid;
+  gap: 28px;
+}
+.sectionHead {
+  max-width: 640px;
+}
+.sectionHead h2 {
+  font-size: 30px;
+  letter-spacing: -0.9px;
+  line-height: 1.15;
+}
+.sectionLead {
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 15px;
+}
+
+/* Étapes : trois cartes numérotées. */
+.steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  counter-reset: step;
+}
+.step {
+  position: relative;
+  display: grid;
+  gap: 8px;
+  padding: 24px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-panel);
+  background: var(--ground);
+}
+.step h3 {
+  font-size: 18px;
+  letter-spacing: -0.3px;
+}
+.step p {
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.55;
+}
+.stepIcon {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  margin-bottom: 6px;
+  border-radius: 14px;
+  background: var(--trust-soft);
+  color: var(--brand);
+}
+.stepNumber {
+  position: absolute;
+  top: 20px;
+  right: 22px;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--line);
+  letter-spacing: 1px;
+}
+
+/* Carte vivante : la carte de la feature + les trois prochaines actions. */
+.live {
+  max-width: 1800px;
+  padding: 0 38px;
+}
+.liveLayout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 22px;
+  align-items: start;
+}
+.liveMap {
+  min-width: 0;
+}
+.upcoming {
+  display: grid;
+  gap: 11px;
+}
+.upcomingTitle {
+  font-size: 19px;
+  letter-spacing: -0.5px;
+}
+.upcomingList {
+  display: grid;
+  gap: 11px;
+}
+.state {
+  display: grid;
+  justify-items: start;
+  gap: 12px;
+  padding: 17px;
+  border-radius: 18px;
+  background: var(--note-bg);
+  color: var(--note-ink);
+  font-size: 14px;
+}
+
+/* Catégories : une carte teintée par catégorie (palette des tags). */
+.categories {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+.category {
+  display: grid;
+  gap: 8px;
+  padding: 24px;
+  border-radius: var(--r-panel);
+  background: var(--tag-environment-bg);
+  color: var(--tag-environment-ink);
+}
+.category h3 {
+  font-size: 18px;
+  letter-spacing: -0.3px;
+}
+.category p {
+  font-size: 14px;
+  line-height: 1.55;
+  opacity: 0.85;
+}
+.categoryIcon {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  margin-bottom: 6px;
+  border-radius: 50%;
+  background: #fffefa;
+}
+.social {
+  background: var(--tag-social-bg);
+  color: var(--tag-social-ink);
+}
+.cultural {
+  background: var(--tag-culture-bg);
+  color: var(--tag-culture-ink);
+}
+
+/* Bandeau final : fond forêt, texte clair. */
+.closing {
+  width: calc(100% - 76px);
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 48px 38px;
+  border-radius: var(--r-card);
+  background: var(--brand);
+  color: #fff;
+  text-align: center;
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+}
+.closing h2 {
+  font-size: 30px;
+  letter-spacing: -0.9px;
+}
+.closing p {
+  max-width: 480px;
+  color: #e5eedfd9;
+  font-size: 15px;
+}
+.closingActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  margin-top: 14px;
+}
+.closingLink {
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  text-underline-offset: 4px;
+}
+
+@media (max-width: 1100px) {
+  .section,
+  .live {
+    padding: 0 24px;
+  }
+  .liveLayout {
+    grid-template-columns: minmax(0, 1fr) 310px;
+    gap: 16px;
+  }
+  .closing {
+    width: calc(100% - 48px);
+  }
+}
+
+@media (max-width: 760px) {
+  .landing {
+    gap: 56px;
+    padding-bottom: 56px;
+  }
+  .heroScene {
+    height: 230px;
+    margin-top: 28px;
+  }
+  .heroCopy {
+    padding: 40px 16px 0;
+    text-align: left;
+    justify-items: start;
+  }
+  .heroTitle {
+    font-size: 34px;
+    letter-spacing: -1.1px;
+  }
+  .heroLead {
+    font-size: 15px;
+  }
+  .heroActions,
+  .trust {
+    justify-content: flex-start;
+  }
+  .heroActions > * {
+    flex: 1 1 100%;
+  }
+  .section,
+  .live {
+    padding: 0 16px;
+    gap: 20px;
+  }
+  .sectionHead h2 {
+    font-size: 26px;
+  }
+  .steps,
+  .categories,
+  .liveLayout {
+    grid-template-columns: 1fr;
+  }
+  .closing {
+    width: calc(100% - 32px);
+    padding: 36px 20px;
+  }
+  .closing h2 {
+    font-size: 26px;
+  }
+}

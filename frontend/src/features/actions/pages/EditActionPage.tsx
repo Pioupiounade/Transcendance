@@ -4,7 +4,6 @@ import { useAuth } from '@/features/auth';
 import { pageTitle } from '@/shared/lib/pageTitle';
 import { Button, ButtonLink } from '@/shared/ui';
 import { useAction } from '../api/useAction';
-import { useUserMemberships } from '../api/useUserMemberships';
 import { ActionEditor } from '../components/ActionEditor';
 import { CancelActionDialog } from '../components/CancelActionDialog';
 import { ACTIONS_LABELS } from '../labels';
@@ -27,10 +26,9 @@ export function EditActionPage({ mapPath }: EditActionPageProps) {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { action, loading, notFound, error } = useAction(id);
-  const memberships = useUserMemberships(user?.user_id ?? null);
   const [cancelling, setCancelling] = useState(false);
 
-  const blocker = action ? manageBlocker(action, user, memberships) : null;
+  const blocker = action ? manageBlocker(action, user) : null;
 
   const onSaved = (saved: ActionRecord) =>
     navigate(`${mapPath}?${FOCUS_PARAM}=${saved.action_id}`, { state: { notice: text.saved } });
