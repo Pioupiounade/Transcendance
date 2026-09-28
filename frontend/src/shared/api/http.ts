@@ -78,8 +78,7 @@ const refreshSession = (): Promise<boolean> => {
       const tokens = (await parseBody(response)) as SessionTokens;
       session.set(tokens);
       return true;
-    } catch (error) {
-      if (error instanceof ApiError && error.isNetwork) throw error;
+    } catch {
       return false;
     } finally {
       refreshing = null;
@@ -103,8 +102,7 @@ const request = async <T>(method: Method, path: string, body: Body | undefined, 
 
   let response = await send(method, path, body, options);
 
-  const canRefresh = !path.startsWith(AUTH_PREFIX) || path === `${AUTH_PREFIX}/me`;
-  if (response.status === 401 && canRefresh && session.exists) {
+  if (response.status === 401 && refreshable) {
     if (await refreshSession()) {
       response = await send(method, path, body, options);
     } else {

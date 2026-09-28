@@ -29,7 +29,7 @@ type NeighborhoodMapProps = {
    * reçoit aussi la position après un glisser. Jamais appelé avec `null` par la carte : le parent décide.
    */
   onDraftChange?: (location: LatLng) => void;
-  /** Boutons du popup du brouillon (le titre et l'aide sont fournis par la carte). */
+  /** Boutons du popup du brouillon (le titre et l'aide sont fournis par la carte) ; absent = pin sans popup. */
   draftContent?: ReactNode;
 };
 
@@ -94,11 +94,20 @@ export function NeighborhoodMap({
   const [position, setPosition] = useState<LatLng | null>(null);
   const [locating, setLocating] = useState<Locating>('idle');
 
+  // Lu dans `fitToActions` sans en être une dépendance : déplacer le pin ne recadre pas la carte.
+  const draftRef = useRef(draft);
+  useEffect(() => {
+    draftRef.current = draft;
+  }, [draft]);
+
   const fitToActions = useCallback(() => {
     if (!map) return;
     const animate = !prefersReducedMotion();
     if (actions.length === 0) {
-      map.setView(DEFAULT_CENTER, DEFAULT_ZOOM, { animate });
+      // Sans action à cadrer, le brouillon (sélecteur de lieu, modification) donne le centre.
+      const spot = draftRef.current;
+      if (spot) map.setView(spot, FOCUS_ZOOM, { animate });
+      else map.setView(DEFAULT_CENTER, DEFAULT_ZOOM, { animate });
       return;
     }
     map.fitBounds(latLngBounds(actions.map((action) => action.location)), {
@@ -216,22 +225,26 @@ export function NeighborhoodMap({
               },
             }}
           >
-            <Popup closeButton={false}>
-              <div className={styles.draftPopup}>
-                <span className={styles.popupTitle}>{create.popupTitle}</span>
-                <span className={styles.popupMeta}>{create.popupHint}</span>
-                {draftContent}
-              </div>
-            </Popup>
+            {draftContent && (
+              <Popup closeButton={false}>
+                <div className={styles.draftPopup}>
+                  <span className={styles.popupTitle}>{create.popupTitle}</span>
+                  <span className={styles.popupMeta}>{create.popupHint}</span>
+                  {draftContent}
+                </div>
+              </Popup>
+            )}
           </Marker>
         )}
       </MapContainer>
 
       <div className={styles.tools}>
-        <span className={styles.tag}>
-          <span className={styles.live} aria-hidden="true" />
-          {text.nearby(actions.length)}
-        </span>
+        {actions.length > 0 && (
+          <span className={styles.tag}>
+            <span className={styles.live} aria-hidden="true" />
+            {text.nearby(actions.length)}
+          </span>
+        )}
         {onDraftChange && !draft && (
           <span className={styles.tag}>
             <Icon name="plus" size={14} strokeWidth={2.4} />

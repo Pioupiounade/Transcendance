@@ -1,17 +1,18 @@
-import styles from './AuthLayout.module.css';
+import styles from './StreetScene.module.css';
 
 // Illustration de la maquette (`mockup/index.html`, page auth) : une rue de quartier, ses immeubles,
-// ses commerces, son square et ses voisins. Décorative (aria-hidden), recadrée par `slice`.
-export function AuthHero() {
+// ses commerces, son square et ses voisins. Décorative (aria-hidden), ancrée en bas et recadrée par `slice` ;
+// l'hôte fixe la hauteur. Partagée par les pages d'auth et la landing.
+export function StreetScene() {
   return (
     <svg className={styles.scene} viewBox="0 0 1440 400" preserveAspectRatio="xMidYMax slice" aria-hidden="true" focusable="false">
       <defs>
-        <linearGradient id="auth-sky" x1="0" y1="0" x2="0" y2="1">
+        <linearGradient id="scene-sky" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0" stopColor="#FDF6F1" />
           <stop offset="1" stopColor="#F7DCCC" />
         </linearGradient>
         <pattern
-          id="auth-win"
+          id="scene-win"
           width="44"
           height="52"
           patternUnits="userSpaceOnUse"
@@ -27,18 +28,18 @@ export function AuthHero() {
           />
         </pattern>
       </defs>
-      <rect width="1440" height="400" fill="url(#auth-sky)" />
+      <rect width="1440" height="400" fill="url(#scene-sky)" />
       <circle cx="1210" cy="92" r="44" fill="#E4573D" opacity=".85" />
 
       {/* immeubles, côté gauche */}
       <g>
         <rect x="20" y="140" width="110" height="190" fill="#EED9C4" />
         <rect x="16" y="134" width="118" height="8" rx="2" fill="#D8BFA5" />
-        <rect x="28" y="156" width="94" height="130" fill="url(#auth-win)" />
+        <rect x="28" y="156" width="94" height="130" fill="url(#scene-win)" />
         <rect x="62" y="296" width="26" height="34" rx="2" fill="#6B5646" />
         <rect x="134" y="80" width="150" height="250" fill="#F4E6D6" />
         <rect x="130" y="74" width="158" height="8" rx="2" fill="#DFC8B2" />
-        <rect x="142" y="96" width="134" height="180" fill="url(#auth-win)" />
+        <rect x="142" y="96" width="134" height="180" fill="url(#scene-win)" />
         <rect x="134" y="284" width="150" height="12" fill="#E4573D" />
         <rect
           x="150"
@@ -58,7 +59,7 @@ export function AuthHero() {
           rx="2"
           fill="#D0B398"
         />
-        <rect x="296" y="136" width="104" height="150" fill="url(#auth-win)" />
+        <rect x="296" y="136" width="104" height="150" fill="url(#scene-win)" />
         <rect
           x="336"
           y="296"
@@ -69,7 +70,7 @@ export function AuthHero() {
         />
         <rect x="412" y="60" width="140" height="270" fill="#F1E2D0" />
         <rect x="408" y="54" width="148" height="8" rx="2" fill="#DAC3AB" />
-        <rect x="420" y="76" width="124" height="200" fill="url(#auth-win)" />
+        <rect x="420" y="76" width="124" height="200" fill="url(#scene-win)" />
         <rect
           x="470"
           y="296"
@@ -128,7 +129,7 @@ export function AuthHero() {
       <g>
         <rect x="890" y="100" width="130" height="230" fill="#F2E0CD" />
         <rect x="886" y="94" width="138" height="8" rx="2" fill="#DBC5AE" />
-        <rect x="898" y="116" width="114" height="160" fill="url(#auth-win)" />
+        <rect x="898" y="116" width="114" height="160" fill="url(#scene-win)" />
         <rect
           x="942"
           y="296"
@@ -146,7 +147,7 @@ export function AuthHero() {
           rx="2"
           fill="#D3B89F"
         />
-        <rect x="1032" y="66" width="144" height="210" fill="url(#auth-win)" />
+        <rect x="1032" y="66" width="144" height="210" fill="url(#scene-win)" />
         <rect x="1024" y="284" width="160" height="12" fill="#E4573D" />
         <rect
           x="1040"
@@ -166,7 +167,7 @@ export function AuthHero() {
           rx="2"
           fill="#DECBB5"
         />
-        <rect x="1196" y="146" width="104" height="140" fill="url(#auth-win)" />
+        <rect x="1196" y="146" width="104" height="140" fill="url(#scene-win)" />
         <rect
           x="1236"
           y="296"
@@ -184,7 +185,7 @@ export function AuthHero() {
           rx="2"
           fill="#D1B69D"
         />
-        <rect x="1320" y="96" width="112" height="180" fill="url(#auth-win)" />
+        <rect x="1320" y="96" width="112" height="180" fill="url(#scene-win)" />
         <rect
           x="1364"
           y="296"

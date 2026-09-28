@@ -20,9 +20,9 @@ export function AppHeader() {
 
       <nav className={styles.nav} aria-label={APP_LABELS.mainNav}>
         {links.map((item) => (
-          <NavLink key={item.to} to={item.to} end={item.end} className={styles.link}>
+          <NavLink key={item.to} to={item.to} end={item.end} className={styles.link} title={item.label}>
             <Icon name={item.icon} />
-            {item.label}
+            <span className={styles.linkLabel}>{item.label}</span>
           </NavLink>
         ))}
       </nav>

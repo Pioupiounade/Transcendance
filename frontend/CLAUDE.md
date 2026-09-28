@@ -161,18 +161,50 @@ Inspirée de bulletproof-react et feature-sliced, réduite à ce que le projet j
 app/            composition root : seul endroit qui connaît tout
   main.tsx, App.tsx, router.tsx (AppRouter), routes.ts (ROUTES), labels.ts, lazyPage.ts
   layout/       PageShell (Suspense des pages paresseuses), AppHeader, BottomNav (mobile), AppFooter, navItems.ts
-  pages/        pages sans domaine : Home, Legal (CGU, confidentialité), NotFound, Placeholder
+                (en-tête : Home, Actions, Map, Organizations, Friends ; barre mobile : 5 entrées, Friends
+                `desktopOnly` et Profile à la place ; décision du 25/09/2026)
+  pages/        pages sans domaine : Legal (CGU, confidentialité), NotFound, Placeholder ;
+                home/ (#65) : HomePage bascule selon la session → Landing (visiteur : hero StreetScene + promesse,
+                « How it works », carte vivante des actions ouvertes + 3 prochaines, catégories, bandeau
+                d'inscription) ou Dashboard (connecté :
+                carte compacte via NeighborhoodMap, MyActionsPanel = actions que j'organise + participations
+                ouvertes par date, NearbyActions = actions ouvertes des autres triées par distance depuis
+                `profiles/me.location` sinon Saint-Cyprien). app compose les features par leurs index.
 features/       1 domaine métier = 1 module ; interface = index.ts
   auth/         session, RequireAuth, LoginPage, RegisterPage (#50) ; validation.ts miroir des DTO, errors.ts
                 traduit les ApiError en messages ; les formulaires utilisent shared/hooks/useForm
   profile/      users + profiles + interests (api_contract §6-8)
   actions/      actions + carte + filtres ; owner des enums Category/ActionStatus et de leurs libellés.
                 Existant (#12) : MapPage, NeighborhoodMap, ActionCard, CategoryFilter, useActions, mapConfig.ts.
+                Depuis le 25/09/2026 (écart assumé avec la maquette) : carte pleine largeur, cartes en grille
+                dessous ; ActionCard a un fond très léger par catégorie (`--card-*-bg` dans tokens.css).
                 Création depuis la carte (Epic 7) : NeighborhoodMap accepte `draft` / `onDraftChange` / `draftContent`
-                (pin brouillon déplaçable, popup), MapPage garde le lieu dans l'URL (`?at=lat,lng`, draftParam.ts),
-                CreateActionDialog = Dialog + ActionForm (deep : `{ location, onCreated, onCancel }`), validation.ts,
-                errors.ts, api/useCreateAction. ActionForm est prévu pour le futur écran créer/modifier.
-  participations/, organizations/, friends/ (friend-requests + friendships)
+                (pin brouillon déplaçable, popup ; sans `draftContent` = simple sélecteur de lieu), MapPage garde le
+                lieu dans l'URL (`?at=lat,lng`, draftParam.ts), CreateActionDialog = Dialog + ActionForm, validation.ts,
+                errors.ts, api/useCreateAction.
+                Créer / modifier / annuler (#33, Epic 2) : ActionForm (deep : `{ location | null, action?, onSaved,
+                onCancel }`, création ou modification selon `action`), ActionEditor (carte sélecteur + formulaire),
+                CreateActionPage `/actions/new` (`?at=` pré-place le pin), EditActionPage `/actions/:id/edit`
+                (permissions.ts : créateur ou ADMIN, PENDING/APPROVED ; CancelActionDialog = « suppression », l'API
+                n'a que `cancel`), api/useAction, useUpdateAction, useCancelAction. Les pages reçoivent les chemins
+                (`mapPath`, `createPath`, `editPath`) en props : la feature n'importe pas `app/`. Retour sur la carte
+                par `/map?focus=<id>` (mapConfig.ts) + `state.notice`. L'index exporte aussi les briques du tableau
+                de bord : NeighborhoodMap (hauteur surchargeable par `--map-min-height*`), ActionCard (pied :
+                voisins inscrits, places ; `distance` remplace le statut), useActions, geo.ts (distanceMeters,
+                formatDistance), DEFAULT_CENTER, FOCUS_PARAM.
+  profile/      coéquipier (#38 en cours, mock) ; ajout #65 : api/myProfile.ts (`GET /profiles/me`, 404 → null,
+                useMyProfile), seul fichier à nous dans ce dossier.
+  participations/ (existant : useMyParticipations, type MyParticipation)
+  organizations/  #61 : OrganizationsPage `/organizations` (liste + recherche `GET /organizations/search`, debounce
+                300 ms) et OrganizationPage `/organizations/:id` (fiche publique + membres actifs) ; enums
+                OrganizationStatus / RoleOrg / MemberStatus et libellés ; chemins reçus en props (`organizationPath`,
+                `listPath`). Adhésion, création, gestion des membres : tickets suivants.
+                Constellation (25/09/2026) : OrganizationConstellation (SVG, `aria-hidden`, la liste reste l'accès
+                clavier) = graphe orienté par la force, utilisateur au centre (`profiles/me` si connecté, sinon nœud
+                générique et DEFAULT_CENTER), fils dont la longueur suit le rang de distance, fils secondaires entre
+                voisines < 1,5 km, clic = fiche, glisser = épingler. forceSimulation.ts (pur, sans d3),
+                hooks/useForceLayout (rAF, drag par pointer capture, reduced-motion = disposition immédiate).
+  friends/        (friend-requests + friendships)
   <feature>/
     api/        fonctions fetch typées + hooks useX : seuls appelants de shared/api
     components/ privés au domaine
@@ -187,9 +219,12 @@ shared/         zéro connaissance métier, réutilisable ailleurs
                 Existant : Button, ButtonLink, Avatar, Icon (+ iconMarkup pour les hôtes HTML), Chip, FloatingField
                 (label flottant, aide/erreur reliées, bascule mot de passe, types text/email/password/number/
                 datetime-local), FloatingTextarea (même habillage, privé : FieldShell + fieldA11y), Checkbox (libellé
-                riche), Dialog (`<dialog>` natif : `{ open, onClose, title, closeLabel }`, enfants montés si ouvert)
+                riche), Dialog (`<dialog>` natif : `{ open, onClose, title, closeLabel }`, enfants montés si ouvert),
+                StreetScene (illustration de rue de la maquette, décorative ; l'hôte fixe la hauteur : auth, landing)
   hooks/        hooks React sans métier, pas de barrel : useForm (valeurs, erreurs après blur/soumission, erreur
-                serveur via un mapper fourni, focus du 1er champ invalide dont l'`id` = son nom)
+                serveur via un mapper fourni, focus du 1er champ invalide dont l'`id` = son nom) ; useResource
+                (`load` stable → `{ data, loading, error, reload }`, annulation, utilisé par organizations ;
+                candidat pour remplacer les hooks maison de actions/participations)
   lib/          fonctions pures, pas de barrel (test de suppression négatif) : pageTitle, formatDate, prefersReducedMotion
   config/       env.ts : lit et valide VITE_API_URL
 styles/         tokens.css (DESIGN.md), reset.css, global.css
@@ -221,17 +256,16 @@ assets/
   Les tokens vivent ici ; `features/auth` appelle seulement `session.set(tokens, userId)`.
 - `features/auth` : interface = `AuthProvider`, `useAuth() → { status, user, signIn, signUp, signOut }`, `RequireAuth`,
   `LoginPage`, `RegisterPage` (reçoit les chemins des pages légales en props : une feature n'importe pas `app/`).
-  Après connexion, la page redirige vers `state.from` (posé par `RequireAuth`) sinon `/`.
+  Après connexion, la page redirige vers `state.from` (posé par `RequireAuth`, query comprise) sinon `/`.
 - `features/x/api/` : seule couche qui appelle `http`. Pages et composants ne voient que des hooks, ce qui rend
   TanStack Query branchable sans toucher aux composants.
 
 ### Chargement paresseux
 Exports nommés partout, barrels compris. Un seul helper, `app/lazyPage.ts` :
 ```ts
-export const lazyPage = <T extends Record<K, ComponentType>, K extends keyof T>(
-  load: () => Promise<T>, name: K,
-) => lazy(() => load().then((m) => ({ default: m[name] })));
-// router.tsx : lazyPage(() => import('@/features/actions'), 'ActionsPage')
+export const lazyPage = <P extends object>(load: () => Promise<ComponentType<P>>) =>
+  lazy(() => load().then((page) => ({ default: page })));
+// router.tsx : lazyPage(() => import('@/features/actions').then((m) => m.MapPage)) ; les props de la page sont conservées
 ```
 Un chunk = une feature. Jamais d'export default dans un barrel.
 

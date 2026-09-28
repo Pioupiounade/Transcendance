@@ -302,27 +302,31 @@ export class ActionsService {
     return createdAction;
   }
 
-  //9. mettre a jour les donnees de l'action
+  // 9. Mettre à jour les données de l'action
   async update(id: string, data: UpdateActionDto, currentUserId: string) {
+    const actionIdBigInt = BigInt(id);
+    const userIdBigInt = BigInt(currentUserId);
+
+    // 1. Vérification de l'existence de l'action
     const action = await this.prisma.action.findUnique({
-      where: {
-        action_id: BigInt(id),
-      },
+      where: { action_id: actionIdBigInt },
     });
 
     if (!action) {
       throw new NotFoundException('Action not found');
     }
 
-    if (action.status === ActionStatus.CANCELLED || action.status === ActionStatus.COMPLETED ||
-      action.status === ActionStatus.REJECTED) {
+    if (
+      action.status === ActionStatus.CANCELLED ||
+      action.status === ActionStatus.COMPLETED ||
+      action.status === ActionStatus.REJECTED
+    ) {
       throw new BadRequestException('This action can no longer be modified');
     }
 
+    // 2. Vérification de l'utilisateur courant
     const currentUser = await this.prisma.user.findUnique({
-      where: {
-        user_id: BigInt(currentUserId),
-      },
+      where: { user_id: userIdBigInt },
     });
 
     if (!currentUser) {
@@ -330,22 +334,21 @@ export class ActionsService {
     }
 
     const isAdmin = currentUser.role === RoleApp.ADMIN;
-
-    const isCreator = action.creator_id === BigInt(currentUserId);
+    const isCreator = action.creator_id === userIdBigInt;
 
     let isManagerOrOwner = false;
-
     if (action.organization_id) {
       const membership = await this.prisma.organizationMember.findUnique({
         where: {
           organization_id_user_id: {
             organization_id: action.organization_id,
-            user_id: BigInt(currentUserId),
+            user_id: userIdBigInt,
           },
         },
       });
 
-      isManagerOrOwner = membership?.status === MemberStatus.ACTIVE &&
+      isManagerOrOwner =
+        membership?.status === MemberStatus.ACTIVE &&
         (membership.role === RoleOrg.MANAGER || membership.role === RoleOrg.OWNER);
     }
 
@@ -353,136 +356,74 @@ export class ActionsService {
       throw new ForbiddenException('You are not allowed to update this action');
     }
 
-    let newOrganizationId: bigint | undefined;
+    // 3. Traitement de organization_id
+    let newOrganizationId: bigint | null | undefined = undefined;
 
     if (data.organization_id !== undefined) {
-      newOrganizationId = BigInt(data.organization_id);
+      if (data.organization_id === null) {
+        newOrganizationId = null;
+      } else {
+        const parsedOrgId = BigInt(data.organization_id);
 
-      const newOrganization = await this.prisma.organization.findUnique({
-        where: {
-          organization_id: newOrganizationId,
-        },
-      });
+        const newOrganization = await this.prisma.organization.findUnique({
+          where: { organization_id: parsedOrgId },
+        });
 
-      if (!newOrganization) {
-        throw new NotFoundException('Organization not found');
-      }
+        if (!newOrganization) {
+          throw new NotFoundException('Organization not found');
+        }
 
-      if (
-        newOrganization.organization_status !== OrganizationStatus.ACTIVE
-      ) {
-        throw new BadRequestException(
-          'Only an active organization can be assigned to an action',
-        );
-      }
+        if (newOrganization.organization_status !== OrganizationStatus.ACTIVE) {
+          throw new BadRequestException(
+            'Only an active organization can be assigned to an action',
+          );
+        }
 
-      if (!isAdmin) {
-        const newMembership =
-          await this.prisma.organizationMember.findUnique({
+        if (!isAdmin) {
+          const newMembership = await this.prisma.organizationMember.findUnique({
             where: {
               organization_id_user_id: {
-                organization_id: newOrganizationId,
-                user_id: BigInt(currentUserId),
+                organization_id: parsedOrgId,
+                user_id: userIdBigInt,
               },
             },
           });
 
-        const canAssignOrganization =
-          newMembership?.status === MemberStatus.ACTIVE &&
-          (
-            newMembership.role === RoleOrg.MANAGER ||
-            newMembership.role === RoleOrg.OWNER
-          );
+          const canAssignOrganization =
+            newMembership?.status === MemberStatus.ACTIVE &&
+            (newMembership.role === RoleOrg.MANAGER ||
+              newMembership.role === RoleOrg.OWNER);
 
-        if (!canAssignOrganization) {
-          throw new ForbiddenException(
-            'You are not allowed to assign this action to this organization',
-          );
+          if (!canAssignOrganization) {
+            throw new ForbiddenException(
+              'You are not allowed to assign this action to this organization',
+            );
+          }
         }
+
+        newOrganizationId = parsedOrgId;
       }
     }
 
-    let updatedAction = await this.prisma.action.update({
-      where: {
-        action_id: BigInt(id),
-      },
-      data: {
-        title: data.title,
-        description: data.description,
-        organization_id: newOrganizationId,
-        location: data.location,
-        category: data.category,
-        imagesList: data.imagesList,
-        scheduled_at: data.scheduled_at ? new Date(data.scheduled_at) : undefined,
-      },
-    });
-
-    const newOrganization = await this.prisma.organization.findUnique({
-      where: {
-        organization_id: newOrganizationId,
-      },
-    });
-
-    if (!newOrganization) {
-      throw new NotFoundException('Organization not found');
-    }
-
-    if (
-      newOrganization.organization_status !== OrganizationStatus.ACTIVE
-    ) {
-      throw new BadRequestException(
-        'Only an active organization can be assigned to an action',
-      );
-    }
-
-    if (!isAdmin && newOrganizationId) {
-      const newMembership =
-        await this.prisma.organizationMember.findUnique({
-          where: {
-            organization_id_user_id: {
-              organization_id: newOrganizationId,
-              user_id: BigInt(currentUserId),
-            },
-          },
-        });
-
-      const canAssignOrganization =
-        newMembership?.status === MemberStatus.ACTIVE &&
-        (
-          newMembership.role === RoleOrg.MANAGER ||
-          newMembership.role === RoleOrg.OWNER
-        );
-
-      if (!canAssignOrganization) {
-        throw new ForbiddenException(
-          'You are not allowed to assign this action to this organization',
-        );
-      }
-    }
+    // 4. Update de l'action (en transaction pour gérer la concurrence sur max_participants)
+    let updatedAction;
 
     for (let attempt = 0; attempt < 3; attempt++) {
       try {
         updatedAction = await this.prisma.$transaction(
           async (tx) => {
             if (data.max_participants !== undefined) {
-              if (
-                data.max_participants < action.min_participants
-              ) {
+              if (data.max_participants < action.min_participants) {
                 throw new BadRequestException(
                   'Maximum participants cannot be lower than minimum participants',
                 );
               }
 
-              const participantCount =
-                await tx.participation.count({
-                  where: {
-                    action_id: action.action_id,
-                  },
-                });
+              const participantCount = await tx.participation.count({
+                where: { action_id: action.action_id },
+              });
 
-              if (
-                data.max_participants < participantCount
-              ) {
+              if (data.max_participants < participantCount) {
                 throw new BadRequestException(
                   'Maximum participants cannot be lower than current participants count',
                 );
@@ -490,9 +431,7 @@ export class ActionsService {
             }
 
             return tx.action.update({
-              where: {
-                action_id: BigInt(id),
-              },
+              where: { action_id: actionIdBigInt },
               data: {
                 title: data.title,
                 description: data.description,
@@ -508,27 +447,21 @@ export class ActionsService {
             });
           },
           {
-            isolationLevel:
-              Prisma.TransactionIsolationLevel.Serializable,
+            isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
           },
         );
 
         break;
       } catch (error) {
         if (
-          error instanceof
-          Prisma.PrismaClientKnownRequestError &&
+          error instanceof Prisma.PrismaClientKnownRequestError &&
           error.code === 'P2034'
         ) {
-          if (attempt < 2) {
-            continue;
-          }
-
+          if (attempt < 2) continue;
           throw new BadRequestException(
             'Action capacity was modified concurrently, please try again',
           );
         }
-
         throw error;
       }
     }
@@ -539,14 +472,13 @@ export class ActionsService {
       );
     }
 
+    // 5. Formatage de la réponse pour le frontend
     return {
       ...updatedAction,
       action_id: updatedAction.action_id.toString(),
       creator_id: updatedAction.creator_id.toString(),
-      organization_id:
-        updatedAction.organization_id?.toString() ?? null,
-      validated_by_user_id:
-        updatedAction.validated_by_user_id?.toString() ?? null,
+      organization_id: updatedAction.organization_id?.toString() ?? null,
+      validated_by_user_id: updatedAction.validated_by_user_id?.toString() ?? null,
     };
   }
 
@@ -909,7 +841,7 @@ export class ActionsService {
     }
 
     return this.prisma.actionComment.findMany({
-      where : { action_id: actionId },
+      where: { action_id: actionId },
       orderBy: { created_at: 'desc' },
       include: {
         user: {

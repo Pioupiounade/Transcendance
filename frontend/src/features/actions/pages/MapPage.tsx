@@ -3,7 +3,7 @@ import { Link, useLocation, useSearchParams } from 'react-router';
 import { AUTH_ROUTES, useAuth } from '@/features/auth';
 import { pageTitle } from '@/shared/lib/pageTitle';
 import { prefersReducedMotion } from '@/shared/lib/prefersReducedMotion';
-import { Button, Icon } from '@/shared/ui';
+import { Button, ButtonLink, Icon } from '@/shared/ui';
 import { useActions } from '../api/useActions';
 import { ActionCard } from '../components/ActionCard';
 import { CategoryFilter } from '../components/CategoryFilter';
@@ -11,21 +11,32 @@ import { CreateActionDialog } from '../components/CreateActionDialog';
 import { NeighborhoodMap } from '../components/NeighborhoodMap';
 import { DRAFT_PARAM, formatDraft, parseDraft } from '../draftParam';
 import { ACTIONS_LABELS } from '../labels';
+import { FOCUS_PARAM } from '../mapConfig';
+import { canManageAction } from '../permissions';
 import { OPEN_STATUSES, type ActionRecord, type Category, type LatLng } from '../types';
 import styles from './MapPage.module.css';
 
 const text = ACTIONS_LABELS.map;
 const create = ACTIONS_LABELS.create;
 
-export function MapPage() {
+type MapPageProps = {
+  /** Chemins des pages créer / modifier : `app/` les connaît, la feature non. */
+  createPath: string;
+  editPath: (id: string) => string;
+};
+
+export function MapPage({ createPath, editPath }: MapPageProps) {
   const { actions, loading, error, reload } = useActions();
-  const { status } = useAuth();
+  const { status, user } = useAuth();
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const [category, setCategory] = useState<Category | null>(null);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  // À l'arrivée depuis créer/modifier : `?focus=<id>` sélectionne l'action, `state.notice` confirme.
+  const [selectedId, setSelectedId] = useState<string | null>(() => searchParams.get(FOCUS_PARAM));
   const [composing, setComposing] = useState(false);
-  const [notice, setNotice] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(
+    () => (location.state as { notice?: string } | null)?.notice ?? null,
+  );
   const listRef = useRef<HTMLUListElement>(null);
 
   // Le brouillon vit dans l'URL (`?at=lat,lng`) : il survit à un passage par /login et au rechargement.
@@ -82,6 +93,10 @@ export function MapPage() {
         <p className={styles.eyebrow}>{text.eyebrow}</p>
         <h1>{text.title}</h1>
         <p className={styles.lead}>{text.lead}</p>
+        <ButtonLink to={createPath} className={styles.cta}>
+          <Icon name="plus" size={16} strokeWidth={2.4} />
+          {create.cta}
+        </ButtonLink>
       </header>
 
       <CategoryFilter value={category} onChange={setCategory} />
@@ -138,7 +153,12 @@ export function MapPage() {
           <ul ref={listRef} className={styles.cards}>
             {visible.map((action) => (
               <li key={action.action_id} data-action-id={action.action_id}>
-                <ActionCard action={action} selected={action.action_id === selected} onSelect={setSelectedId} />
+                <ActionCard
+                  action={action}
+                  selected={action.action_id === selected}
+                  onSelect={setSelectedId}
+                  editTo={canManageAction(action, user) ? editPath(action.action_id) : undefined}
+                />
               </li>
             ))}
           </ul>

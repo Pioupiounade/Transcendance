@@ -5,13 +5,12 @@
   padding-bottom: var(--s6);
 }
 
-/* Illustration de la maquette (`AuthHero`), ancrée en bas et recadrée par `preserveAspectRatio: slice`. */
+/* Illustration partagée (`shared/ui` StreetScene), ancrée en bas et recadrée par `preserveAspectRatio: slice`. */
 .hero {
   height: var(--hero-height);
   overflow: hidden;
   background: #fbefe6;
 }
-.scene,
 .backdropScene {
   display: block;
   width: 100%;
