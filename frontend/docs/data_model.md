@@ -358,7 +358,7 @@ Backend = `main` au 24/09 (#40 auth/users/profiles/interests/orgs/membres/points
 | S'inscrire / se désinscrire | ✅ `POST/DELETE /participations/:actionId` — **`PENDING` seulement**, plafond, pas le créateur | ❌ (bouton « Join » placeholder dans le mock) |
 | Voir la liste des participants | ✅ `GET /participations/action/:actionId` → `{ user_id, username, profile_picture, created_at }[]` | ❌ |
 | Voir les places restantes | ✅ `remaining_seats` sur liste et détail (null = illimité) | 🟡 typé dans `Action`, pas encore affiché |
-| Mes participations | ✅ `GET /participations/me` | ❌ |
+| Mes participations | ✅ `GET /participations/me` | 🟡 `features/participations` (`useMyParticipations`), affichées dans « My actions » du tableau de bord (#65) |
 
 ### Epic 4 — Communication
 

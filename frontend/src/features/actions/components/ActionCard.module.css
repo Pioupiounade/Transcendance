@@ -1,6 +1,8 @@
 /* DESIGN.md §6 « Action card », « Tag » */
 .card {
   display: grid;
+  align-content: start;
+  height: 100%; /* rangées régulières dans une grille */
   border: 1px solid var(--line);
   border-radius: var(--r-action);
   background: var(--ground);
@@ -11,6 +13,16 @@
 }
 .card:hover {
   border-color: var(--brand);
+}
+/* Teinte discrète par catégorie ; la sélection garde son propre fond et sa bordure forêt. */
+.environmentCard {
+  background: var(--card-environment-bg);
+}
+.socialCard {
+  background: var(--card-social-bg);
+}
+.culturalCard {
+  background: var(--card-culture-bg);
 }
 .selected,
 .selected:hover {
@@ -95,4 +107,31 @@
   -webkit-line-clamp: 2;
   line-clamp: 2;
   overflow: hidden;
+}
+
+/* Pied de carte (maquette « card-bottom ») : voisins inscrits, places restantes. */
+.bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 13px;
+  padding-top: 11px;
+  border-top: 1px solid #dde2d4;
+  font-size: 12px;
+}
+
+.people {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+}
+
+.seats {
+  color: var(--brand);
+  font-weight: 700;
+}
+.seatsFull {
+  color: var(--muted);
 }

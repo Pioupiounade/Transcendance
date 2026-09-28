@@ -5,7 +5,6 @@ import { pageTitle } from '@/shared/lib/pageTitle';
 import { prefersReducedMotion } from '@/shared/lib/prefersReducedMotion';
 import { Button, ButtonLink, Icon } from '@/shared/ui';
 import { useActions } from '../api/useActions';
-import { useUserMemberships } from '../api/useUserMemberships';
 import { ActionCard } from '../components/ActionCard';
 import { CategoryFilter } from '../components/CategoryFilter';
 import { CreateActionDialog } from '../components/CreateActionDialog';
@@ -29,7 +28,6 @@ type MapPageProps = {
 export function MapPage({ createPath, editPath }: MapPageProps) {
   const { actions, loading, error, reload } = useActions();
   const { status, user } = useAuth();
-  const memberships = useUserMemberships(user?.user_id ?? null);
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const [category, setCategory] = useState<Category | null>(null);
@@ -159,7 +157,7 @@ export function MapPage({ createPath, editPath }: MapPageProps) {
                   action={action}
                   selected={action.action_id === selected}
                   onSelect={setSelectedId}
-                    editTo={canManageAction(action, user, memberships) ? editPath(action.action_id) : undefined}
+                  editTo={canManageAction(action, user) ? editPath(action.action_id) : undefined}
                 />
               </li>
             ))}

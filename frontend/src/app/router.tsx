@@ -3,7 +3,7 @@ import { LoginPage, RegisterPage, RequireAuth } from '@/features/auth';
 import { APP_LABELS } from './labels';
 import { lazyPage } from './lazyPage';
 import { PageShell } from './layout/PageShell';
-import { HomePage } from './pages/HomePage';
+import { HomePage } from './pages/home/HomePage';
 import { LegalPage } from './pages/LegalPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { PlaceholderPage } from './pages/PlaceholderPage';

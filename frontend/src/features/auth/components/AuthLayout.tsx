@@ -1,10 +1,9 @@
 import type { ReactNode } from 'react';
-import { Link, useLocation } from 'react-router';
+import { Link } from 'react-router';
 import { pageTitle } from '@/shared/lib/pageTitle';
-import { Icon } from '@/shared/ui';
+import { Icon, StreetScene } from '@/shared/ui';
 import { AUTH_LABELS } from '../labels';
 import { AuthBackdrop } from './AuthBackdrop';
-import { AuthHero } from './AuthHero';
 import styles from './AuthLayout.module.css';
 
 type AuthLayoutProps = {
@@ -20,7 +19,7 @@ type AuthLayoutProps = {
   children: ReactNode;
 };
 
-/** Hero + carte centrée (DESIGN.md §6 « Auth card ») ; le formulaire est passé en enfant. */
+/** Hero (`StreetScene`) + carte centrée (DESIGN.md §6 « Auth card ») ; le formulaire est passé en enfant. */
 export function AuthLayout({
   pageName,
   title,
@@ -31,13 +30,11 @@ export function AuthLayout({
   switchTo,
   children,
 }: AuthLayoutProps) {
-  const location = useLocation();
-
   return (
     <div className={styles.page}>
       <title>{pageTitle(pageName)}</title>
       <div className={styles.hero}>
-        <AuthHero />
+        <StreetScene />
       </div>
       <div className={styles.backdrop}>
         <AuthBackdrop />
@@ -55,7 +52,7 @@ export function AuthLayout({
           </p>
         </div>
         <p className={styles.switchLine}>
-          {switchText} <Link to={switchTo} state={location.state}>{switchLink}</Link>
+          {switchText} <Link to={switchTo}>{switchLink}</Link>
         </p>
       </section>
     </div>

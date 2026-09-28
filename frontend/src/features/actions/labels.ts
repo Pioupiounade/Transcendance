@@ -102,6 +102,12 @@ export const ACTIONS_LABELS = {
     saving: 'Saving…',
     cancel: 'Cancel',
   },
+  card: {
+    neighbours: (count: number) => (count === 1 ? '1 neighbour' : `${count} neighbours`),
+    seatsLeft: (count: number) => (count === 1 ? '1 seat left' : `${count} seats left`),
+    full: 'Full',
+    openToAll: 'Open to all',
+  },
   validation: {
     titleRequired: 'Give your action a title.',
     descriptionRequired: 'Describe what you will do together.',
