@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
+import { useParams } from 'react-router';
 import { useProfile } from '../api/profileApi';
 import { ProfileView } from '../components/ProfileView';
 import { ProfileForm } from '../components/ProfileForm';
 import type { UserProfile } from '../types';
 
 export const ProfilePage: React.FC = () => {
-  const { profile, isLoading, error, setProfile } = useProfile();
+  const { username } = useParams<{ username?: string }>();
+  const { profile, isLoading, error, setProfile } = useProfile(username);
   const [isEditing, setIsEditing] = useState(false);
 
   if (isLoading) {
