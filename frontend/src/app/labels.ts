@@ -15,6 +15,7 @@ export const APP_LABELS = {
     home: 'Home',
     actions: 'Actions',
     map: 'Map',
+    organizations: 'Organizations',
     friends: 'Friends',
     profile: 'Profile',
   },

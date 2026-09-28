@@ -161,6 +161,8 @@ Inspirée de bulletproof-react et feature-sliced, réduite à ce que le projet j
 app/            composition root : seul endroit qui connaît tout
   main.tsx, App.tsx, router.tsx (AppRouter), routes.ts (ROUTES), labels.ts, lazyPage.ts
   layout/       PageShell (Suspense des pages paresseuses), AppHeader, BottomNav (mobile), AppFooter, navItems.ts
+                (en-tête : Home, Actions, Map, Organizations, Friends ; barre mobile : 5 entrées, Friends
+                `desktopOnly` et Profile à la place ; décision du 25/09/2026)
   pages/        pages sans domaine : Legal (CGU, confidentialité), NotFound, Placeholder ;
                 home/ (#65) : HomePage bascule selon la session → Landing (visiteur : hero StreetScene + promesse,
                 « How it works », carte vivante des actions ouvertes + 3 prochaines, catégories, bandeau
@@ -192,8 +194,17 @@ features/       1 domaine métier = 1 module ; interface = index.ts
                 formatDistance), DEFAULT_CENTER, FOCUS_PARAM.
   profile/      coéquipier (#38 en cours, mock) ; ajout #65 : api/myProfile.ts (`GET /profiles/me`, 404 → null,
                 useMyProfile), seul fichier à nous dans ce dossier.
-  participations/ (existant : useMyParticipations, type MyParticipation), organizations/, friends/
-                (friend-requests + friendships)
+  participations/ (existant : useMyParticipations, type MyParticipation)
+  organizations/  #61 : OrganizationsPage `/organizations` (liste + recherche `GET /organizations/search`, debounce
+                300 ms) et OrganizationPage `/organizations/:id` (fiche publique + membres actifs) ; enums
+                OrganizationStatus / RoleOrg / MemberStatus et libellés ; chemins reçus en props (`organizationPath`,
+                `listPath`). Adhésion, création, gestion des membres : tickets suivants.
+                Constellation (25/09/2026) : OrganizationConstellation (SVG, `aria-hidden`, la liste reste l'accès
+                clavier) = graphe orienté par la force, utilisateur au centre (`profiles/me` si connecté, sinon nœud
+                générique et DEFAULT_CENTER), fils dont la longueur suit le rang de distance, fils secondaires entre
+                voisines < 1,5 km, clic = fiche, glisser = épingler. forceSimulation.ts (pur, sans d3),
+                hooks/useForceLayout (rAF, drag par pointer capture, reduced-motion = disposition immédiate).
+  friends/        (friend-requests + friendships)
   <feature>/
     api/        fonctions fetch typées + hooks useX : seuls appelants de shared/api
     components/ privés au domaine
@@ -211,7 +222,9 @@ shared/         zéro connaissance métier, réutilisable ailleurs
                 riche), Dialog (`<dialog>` natif : `{ open, onClose, title, closeLabel }`, enfants montés si ouvert),
                 StreetScene (illustration de rue de la maquette, décorative ; l'hôte fixe la hauteur : auth, landing)
   hooks/        hooks React sans métier, pas de barrel : useForm (valeurs, erreurs après blur/soumission, erreur
-                serveur via un mapper fourni, focus du 1er champ invalide dont l'`id` = son nom)
+                serveur via un mapper fourni, focus du 1er champ invalide dont l'`id` = son nom) ; useResource
+                (`load` stable → `{ data, loading, error, reload }`, annulation, utilisé par organizations ;
+                candidat pour remplacer les hooks maison de actions/participations)
   lib/          fonctions pures, pas de barrel (test de suppression négatif) : pageTitle, formatDate, prefersReducedMotion
   config/       env.ts : lit et valide VITE_API_URL
 styles/         tokens.css (DESIGN.md), reset.css, global.css

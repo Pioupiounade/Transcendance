@@ -72,7 +72,7 @@ export function Landing() {
       </section>
 
       <section className={styles.section} aria-labelledby="how-title">
-        <header className={styles.sectionHead}>
+        <header className={[styles.sectionHead, styles.centered].join(' ')}>
           <p className={styles.eyebrow}>{text.how.eyebrow}</p>
           <h2 id="how-title">{text.how.title}</h2>
         </header>
