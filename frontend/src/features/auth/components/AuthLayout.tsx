@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Link } from 'react-router';
+import { Link, useLocation } from 'react-router';
 import { pageTitle } from '@/shared/lib/pageTitle';
 import { Icon } from '@/shared/ui';
 import { AUTH_LABELS } from '../labels';
@@ -31,6 +31,8 @@ export function AuthLayout({
   switchTo,
   children,
 }: AuthLayoutProps) {
+  const location = useLocation();
+
   return (
     <div className={styles.page}>
       <title>{pageTitle(pageName)}</title>
@@ -53,7 +55,7 @@ export function AuthLayout({
           </p>
         </div>
         <p className={styles.switchLine}>
-          {switchText} <Link to={switchTo}>{switchLink}</Link>
+          {switchText} <Link to={switchTo} state={location.state}>{switchLink}</Link>
         </p>
       </section>
     </div>
