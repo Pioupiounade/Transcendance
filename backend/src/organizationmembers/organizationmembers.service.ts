@@ -89,7 +89,7 @@ export class OrganizationmembersService {
         });
 
         return members.map((member) => ({
-            ...members,
+            ...member,
             organization_id: member.organization_id.toString(),
             user_id: member.user_id.toString(),
             user: member.user ? {
