@@ -107,7 +107,13 @@ export const MOCK_ACTIONS_DB: Record<string, ActionDetailData> = {
  */
 export async function getActionById(id: string): Promise<ActionDetailData> {
   await new Promise((resolve) => setTimeout(resolve, 300));
-  return MOCK_ACTIONS_DB[id] || MOCK_ACTIONS_DB['action-approved'];
+  const action = MOCK_ACTIONS_DB[id];
+
+  if (!action) {
+    throw new Error(`Action not found: ${id}`);
+  }
+
+  return action;
 }
 
 /**
