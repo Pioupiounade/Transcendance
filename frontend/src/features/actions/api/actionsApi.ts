@@ -1,22 +1,51 @@
-import { http } from '@/shared/api';
-import type { Action, ActionRecord, Category, LatLng } from '../types';
+import { http, ApiError } from '@/shared/api';
+import type { Action, ActionRecord, ActionStatus, Category } from '../types';
+import { MOCK_ACTIONS_DB } from './actionDetailMock';
 
-/** Toutes les actions, tous statuts (pas de filtre serveur par rayon : voir docs/api_contract.md §15). */
-export const fetchActions = (signal?: AbortSignal) => http.list<Action>('/actions', { signal });
-
-/** Body de `POST /actions` (`CreateActionDto`, docs/api_contract.md §15) : l'identité vient du JWT. */
-export type CreateActionInput = {
-  title: string;
-  description: string;
-  category: Category;
-  /** `[latitude, longitude]`. */
-  location: LatLng;
-  /** Date ISO. */
-  scheduled_at: string;
-  /** ≥ 3 côté backend ; omis = sans limite. */
-  max_participants?: number;
-  organization_id?: number;
+const CATEGORY_MAP: Record<string, Category> = {
+  environment: 'ENVIRONMENT',
+  social: 'SOCIAL',
+  cultural: 'CULTURAL',
 };
 
-/** Crée une action (`PENDING`, créateur = utilisateur connecté). 401 → session expirée, 400/403 → refus métier. */
-export const createAction = (input: CreateActionInput) => http.post<ActionRecord>('/actions', input);
+const STATUS_MAP: Record<string, ActionStatus> = {
+  pending: 'PENDING',
+  approved: 'APPROVED',
+  rejected: 'REJECTED',
+  completed: 'COMPLETED',
+  cancelled: 'CANCELLED',
+};
+
+export const createAction = (record: ActionRecord, signal?: AbortSignal) =>
+  http.post<ActionRecord>('/actions', record, { signal });
+
+export async function fetchActions(signal?: AbortSignal): Promise<Action[]> {
+  await new Promise((resolve) => setTimeout(resolve, 300));
+  if (signal?.aborted) throw new ApiError(0, []);
+
+  return Object.values(MOCK_ACTIONS_DB).map((detail) => {
+    const participantCount = detail.participants?.length ?? detail.currentParticipants;
+    const remainingSeats = detail.maxParticipants ? Math.max(0, detail.maxParticipants - participantCount) : null;
+
+    return {
+      action_id: detail.id,
+      title: detail.title,
+      description: detail.description,
+      creator_id: detail.organizer.userId,
+      organization_id: detail.organizationId ?? null,
+      min_participants: detail.minParticipants,
+      max_participants: detail.maxParticipants,
+      location: [48.8566, 2.3522],
+      status: STATUS_MAP[detail.status] ?? 'PENDING',
+      category: CATEGORY_MAP[detail.category] ?? 'ENVIRONMENT',
+      imagesList: detail.images,
+      validated_by_user_id: detail.validatedByUserId ?? null,
+      validated_at: detail.validatedAt ?? null,
+      scheduled_at: detail.scheduledAt,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      participant_count: participantCount,
+      remaining_seats: remainingSeats,
+    };
+  });
+}

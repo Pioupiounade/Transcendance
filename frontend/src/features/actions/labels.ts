@@ -4,8 +4,8 @@ import type { ActionStatus, Category } from './types';
 // Seul endroit qui traduit les enums de l'API (frontend/CLAUDE.md, « Appels API »).
 export const CATEGORY_LABELS: Record<Category, string> = {
   ENVIRONMENT: 'Environment',
-  SOCIAL: 'Mutual aid',
-  CULTURAL: 'Culture & sharing',
+  SOCIAL: 'Social',
+  CULTURAL: 'Cultural',
 };
 
 /** Icône de chaque catégorie (maquette : feuille, cœur, soleil), pour les puces, les tags et les pins. */
@@ -16,8 +16,8 @@ export const CATEGORY_ICONS: Record<Category, IconName> = {
 };
 
 export const ACTION_STATUS_LABELS: Record<ActionStatus, string> = {
-  PENDING: 'Upcoming',
-  APPROVED: 'Confirmed',
+  PENDING: 'Pending',
+  APPROVED: 'Approved',
   REJECTED: 'Rejected',
   CANCELLED: 'Cancelled',
   COMPLETED: 'Completed',

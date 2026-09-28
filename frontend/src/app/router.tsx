@@ -9,10 +9,8 @@ import { NotFoundPage } from './pages/NotFoundPage';
 import { PlaceholderPage } from './pages/PlaceholderPage';
 import { ROUTES } from './routes';
 import { ProfilePage } from '../features/profile';
-import { ActionDetailPage } from '@/features/actions';
+import { ActionsListPage, ActionDetailPage } from '@/features/actions';
 
-// Routes en données. Une page = une ligne ; les pages de feature sont chargées
-// paresseusement (un chunk par feature), `PageShell` fournit le Suspense.
 const MapPage = lazyPage(() => import('@/features/actions'), 'MapPage');
 
 const router = createBrowserRouter([
@@ -21,7 +19,7 @@ const router = createBrowserRouter([
     element: <PageShell />,
     children: [
       { index: true, element: <HomePage /> },
-      { path: ROUTES.actions, element: <PlaceholderPage title={APP_LABELS.nav.actions} /> },
+      { path: ROUTES.actions, element: <ActionsListPage /> },
       { path: ROUTES.map, element: <MapPage /> },
       { path: ROUTES.friends, element: <PlaceholderPage title={APP_LABELS.nav.friends} /> },
       { path: ROUTES.login, element: <LoginPage /> },
@@ -32,12 +30,9 @@ const router = createBrowserRouter([
       { path: ROUTES.profileDetail, element: <ProfilePage /> },
       { path: ROUTES.profile, element: <ProfilePage /> },
       {
-        // Routes protégées : RequireAuth redirige vers /login avec state.from.
         element: <RequireAuth />,
         children: [],
       },
-      // Contournement local pour tester le mockup sans authentification :
-      // { path: ROUTES.profile, element: <ProfilePage /> },
       { path: '*', element: <NotFoundPage /> },
     ],
   },
