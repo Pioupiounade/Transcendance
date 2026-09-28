@@ -10,6 +10,8 @@ export type NavItem = {
   end?: boolean;
   /** Entrée mise en avant au centre de la barre mobile. */
   primary?: boolean;
+  /** Présente dans l'en-tête seulement : la barre mobile garde cinq entrées. */
+  desktopOnly?: boolean;
 };
 
 // Une seule source pour l'en-tête desktop et la barre mobile.
@@ -17,6 +19,7 @@ export const NAV_ITEMS: readonly NavItem[] = [
   { to: ROUTES.home, label: APP_LABELS.nav.home, icon: 'home', end: true },
   { to: ROUTES.actions, label: APP_LABELS.nav.actions, icon: 'leaf' },
   { to: ROUTES.map, label: APP_LABELS.nav.map, icon: 'map', primary: true },
-  { to: ROUTES.friends, label: APP_LABELS.nav.friends, icon: 'users' },
+  { to: ROUTES.organizations, label: APP_LABELS.nav.organizations, icon: 'building' },
+  { to: ROUTES.friends, label: APP_LABELS.nav.friends, icon: 'users', desktopOnly: true },
   { to: ROUTES.profile, label: APP_LABELS.nav.profile, icon: 'user' },
 ];

@@ -1,4 +1,4 @@
-/* Barre de navigation inférieure, mobile uniquement (≤ 760 px). Cinq entrées, la centrale mise en avant. */
+/* Barre de navigation inférieure, mobile uniquement (≤ 760 px). Cinq entrées (une colonne chacune), la centrale mise en avant. */
 .bar {
   display: none;
 }
@@ -9,7 +9,8 @@
     inset: auto 0 0 0;
     z-index: 10;
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
     height: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom));
     padding-bottom: env(safe-area-inset-bottom);
     background: var(--ground);

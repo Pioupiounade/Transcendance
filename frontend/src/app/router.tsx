@@ -7,7 +7,7 @@ import { HomePage } from './pages/home/HomePage';
 import { LegalPage } from './pages/LegalPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { PlaceholderPage } from './pages/PlaceholderPage';
-import { ROUTES, editActionPath } from './routes';
+import { ROUTES, editActionPath, organizationPath } from './routes';
 import { ProfilePage } from '../features/profile';
 
 // Routes en données. Une page = une ligne ; les pages de feature sont chargées
@@ -16,6 +16,8 @@ const MapPage = lazyPage(() => import('@/features/actions').then((m) => m.MapPag
 const CreateActionPage = lazyPage(() => import('@/features/actions').then((m) => m.CreateActionPage));
 const EditActionPage = lazyPage(() => import('@/features/actions').then((m) => m.EditActionPage));
 const ActionDetailPage = lazyPage(() => import('@/features/actions').then((m) => m.ActionDetailPage));
+const OrganizationsPage = lazyPage(() => import('@/features/organizations').then((m) => m.OrganizationsPage));
+const OrganizationPage = lazyPage(() => import('@/features/organizations').then((m) => m.OrganizationPage));
 
 const router = createBrowserRouter([
   {
@@ -25,6 +27,8 @@ const router = createBrowserRouter([
       { index: true, element: <HomePage /> },
       { path: ROUTES.actions, element: <PlaceholderPage title={APP_LABELS.nav.actions} /> },
       { path: ROUTES.map, element: <MapPage createPath={ROUTES.createAction} editPath={editActionPath} /> },
+      { path: ROUTES.organizations, element: <OrganizationsPage organizationPath={organizationPath} /> },
+      { path: ROUTES.organization, element: <OrganizationPage listPath={ROUTES.organizations} /> },
       { path: ROUTES.friends, element: <PlaceholderPage title={APP_LABELS.nav.friends} /> },
       { path: ROUTES.login, element: <LoginPage /> },
       { path: ROUTES.register, element: <RegisterPage termsPath={ROUTES.terms} privacyPath={ROUTES.privacy} /> },

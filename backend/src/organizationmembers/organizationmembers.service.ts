@@ -8,9 +8,9 @@ export class OrganizationmembersService {
     constructor(
         private prisma: PrismaService,
         private pointtransactionService: PointtransactionService,
-    ) {}
+    ) { }
 
-// Find a specific member by username
+    // Find a specific member by username
     async findMemberByUsername(organizationId: bigint, username: string) {
         const membership = await this.prisma.organizationMember.findFirst({
             where: {
@@ -18,31 +18,31 @@ export class OrganizationmembersService {
                 status: MemberStatus.ACTIVE,
 
                 user: {
-                account_status: AccountStatus.ACTIVE,
+                    account_status: AccountStatus.ACTIVE,
 
-                profile: {
-                    username: username,
-                },
+                    profile: {
+                        username: username,
+                    },
                 },
             },
 
             include: {
-            user: {
-                select: {
-                user_id: true,
-                account_status: true,
-
-                profile: {
+                user: {
                     select: {
-                    username: true,
-                    description: true,
-                    profile_picture: true,
+                        user_id: true,
+                        account_status: true,
+
+                        profile: {
+                            select: {
+                                username: true,
+                                description: true,
+                                profile_picture: true,
+                            },
+                        },
                     },
                 },
-                },
             },
-            },
-            });
+        });
 
         if (!membership) {
             throw new NotFoundException('Active member not found in this organization');
@@ -51,11 +51,11 @@ export class OrganizationmembersService {
         return membership;
     }
 
-// Get all the members of the organization - active members
+    // Get all the members of the organization - active members
     async findAllMembers(organizationId: bigint) {
         const organization = await this.prisma.organization.findUnique({
             where: {
-            organization_id: organizationId,
+                organization_id: organizationId,
             },
         });
 
@@ -63,38 +63,47 @@ export class OrganizationmembersService {
             throw new NotFoundException('Organization not found');
         }
 
-        return this.prisma.organizationMember.findMany({
+        const members = await this.prisma.organizationMember.findMany({
             where: {
-            organization_id: organizationId,
-            status: MemberStatus.ACTIVE,
-            user: {
-                account_status: AccountStatus.ACTIVE,
-            },
+                organization_id: organizationId,
+                status: MemberStatus.ACTIVE,
+                user: {
+                    account_status: AccountStatus.ACTIVE,
+                },
             },
             include: {
-            user: {
-                select: {
-                user_id: true,
-                account_status: true,
-
-                profile: {
+                user: {
                     select: {
-                    username: true,
-                    description: true,
-                    profile_picture: true,
+                        user_id: true,
+                        account_status: true,
+                        profile: {
+                            select: {
+                                username: true,
+                                description: true,
+                                profile_picture: true,
+                            },
+                        },
                     },
                 },
-                },
-            },
             },
         });
+
+        return members.map((member) => ({
+            ...members,
+            organization_id: member.organization_id.toString(),
+            user_id: member.user_id.toString(),
+            user: member.user ? {
+                ...member.user,
+                user_id: member.user.user_id.toString(),
+            } : null,
+        }));
     }
 
-// Get all the members of the organization - active, banned, pending, rejected
+    // Get all the members of the organization - active, banned, pending, rejected
     async findAllMemberships(organizationId: bigint, requesterId: bigint) {
         const requester = await this.prisma.user.findUnique({
             where: {
-            user_id: requesterId,
+                user_id: requesterId,
             },
         });
 
@@ -108,55 +117,55 @@ export class OrganizationmembersService {
 
         if (requester.role !== RoleApp.ADMIN) {
             const membership = await this.prisma.organizationMember.findUnique({
-            where: {
-                organization_id_user_id: {
-                organization_id: organizationId,
-                user_id: requesterId,
+                where: {
+                    organization_id_user_id: {
+                        organization_id: organizationId,
+                        user_id: requesterId,
+                    },
                 },
-            },
             });
 
             if (!membership) {
-            throw new ForbiddenException('You are not a member of this organization');
+                throw new ForbiddenException('You are not a member of this organization');
             }
 
             if (membership.status !== MemberStatus.ACTIVE) {
-            throw new ForbiddenException('Your membership is not active');
+                throw new ForbiddenException('Your membership is not active');
             }
 
             if (membership.role !== RoleOrg.MANAGER && membership.role !== RoleOrg.OWNER) {
-            throw new ForbiddenException('You do not have permission to view memberships');
+                throw new ForbiddenException('You do not have permission to view memberships');
             }
         }
 
         return this.prisma.organizationMember.findMany({
             where: {
-            organization_id: organizationId,
+                organization_id: organizationId,
             },
             include: {
-            user: {
-                select: {
-                user_id: true,
-                account_status: true,
-
-                profile: {
+                user: {
                     select: {
-                    username: true,
-                    description: true,
-                    profile_picture: true,
+                        user_id: true,
+                        account_status: true,
+
+                        profile: {
+                            select: {
+                                username: true,
+                                description: true,
+                                profile_picture: true,
+                            },
+                        },
                     },
                 },
-                },
-            },
             },
         });
     }
 
-// Get all the organization a user is a member of
+    // Get all the organization a user is a member of
     async findOrganizationsByUser(userId: bigint) {
         const user = await this.prisma.user.findUnique({
             where: {
-            user_id: userId,
+                user_id: userId,
             },
         });
 
@@ -170,11 +179,11 @@ export class OrganizationmembersService {
 
         return this.prisma.organizationMember.findMany({
             where: {
-            user_id: userId,
-            status: MemberStatus.ACTIVE,
+                user_id: userId,
+                status: MemberStatus.ACTIVE,
             },
             include: {
-            organization: true,
+                organization: true,
             },
         });
     }
@@ -182,7 +191,7 @@ export class OrganizationmembersService {
     private async getManagementContext(requesterId: bigint, organizationId: bigint) {
         const requester = await this.prisma.user.findUnique({
             where: {
-            user_id: requesterId,
+                user_id: requesterId,
             },
         });
 
@@ -196,7 +205,7 @@ export class OrganizationmembersService {
 
         const organization = await this.prisma.organization.findUnique({
             where: {
-            organization_id: organizationId,
+                organization_id: organizationId,
             },
         });
 
@@ -216,7 +225,7 @@ export class OrganizationmembersService {
         };
     }
 
-// Helper prive pour eviter de repeter les controles :
+    // Helper prive pour eviter de repeter les controles :
     private async checkCanManageMembers(requesterId: bigint, organizationId: bigint) {
         const {
             requester,
@@ -227,19 +236,19 @@ export class OrganizationmembersService {
 
         if (requester.role === RoleApp.ADMIN) {
             return {
-            requester,
-            requesterMembership: null,
+                requester,
+                requesterMembership: null,
             };
         }
 
         const requesterMembership =
             await this.prisma.organizationMember.findUnique({
-            where: {
-                organization_id_user_id: {
-                organization_id: organizationId,
-                user_id: requesterId,
+                where: {
+                    organization_id_user_id: {
+                        organization_id: organizationId,
+                        user_id: requesterId,
+                    },
                 },
-            },
             });
 
         if (
@@ -247,7 +256,7 @@ export class OrganizationmembersService {
             requesterMembership.status !== MemberStatus.ACTIVE
         ) {
             throw new ForbiddenException(
-            'Requester is not an active member of the organization',
+                'Requester is not an active member of the organization',
             );
         }
 
@@ -256,7 +265,7 @@ export class OrganizationmembersService {
             requesterMembership.role !== RoleOrg.OWNER
         ) {
             throw new ForbiddenException(
-            'You do not have permission to manage members',
+                'You do not have permission to manage members',
             );
         }
 
@@ -266,7 +275,7 @@ export class OrganizationmembersService {
         };
     }
 
-// Add a user to an organization
+    // Add a user to an organization
     async addMember(requesterId: bigint, organizationId: bigint, targetUserId: bigint) {
         await this.checkCanManageMembers(
             requesterId,
@@ -275,7 +284,7 @@ export class OrganizationmembersService {
 
         const targetUser = await this.prisma.user.findUnique({
             where: {
-            user_id: targetUserId,
+                user_id: targetUserId,
             },
         });
 
@@ -289,43 +298,43 @@ export class OrganizationmembersService {
 
         const existingMembership =
             await this.prisma.organizationMember.findUnique({
-            where: {
-                organization_id_user_id: {
-                organization_id: organizationId,
-                user_id: targetUserId,
+                where: {
+                    organization_id_user_id: {
+                        organization_id: organizationId,
+                        user_id: targetUserId,
+                    },
                 },
-            },
             });
 
         if (existingMembership?.status === MemberStatus.PENDING) {
-        throw new ConflictException('This user already has a pending membership request');
+            throw new ConflictException('This user already has a pending membership request');
         }
 
         if (existingMembership?.status === MemberStatus.ACTIVE) {
-        throw new ConflictException('This user is already a member of the organization');
+            throw new ConflictException('This user is already a member of the organization');
         }
 
         if (existingMembership?.status === MemberStatus.REJECTED) {
-        throw new ConflictException('A membership request for this user has already been rejected');
+            throw new ConflictException('A membership request for this user has already been rejected');
         }
 
         const membership = await this.prisma.$transaction(
             async (tx) => {
                 const createdMembership = await tx.organizationMember.create({
-                data: {
-                    organization_id: organizationId,
-                    user_id: targetUserId,
-                    status: MemberStatus.ACTIVE,
-                    role: RoleOrg.MEMBER,
-                    validated_by_org_man: true,
-                    validated_at: new Date(),
-                },
+                    data: {
+                        organization_id: organizationId,
+                        user_id: targetUserId,
+                        status: MemberStatus.ACTIVE,
+                        role: RoleOrg.MEMBER,
+                        validated_by_org_man: true,
+                        validated_at: new Date(),
+                    },
                 });
 
                 await this.pointtransactionService.rewardOwnerForNewMember(
-                organizationId,
-                targetUserId,
-                tx,
+                    organizationId,
+                    targetUserId,
+                    tx,
                 );
 
                 return createdMembership;
@@ -335,15 +344,15 @@ export class OrganizationmembersService {
         return membership;
     }
 
-// Remove a user from an organization
+    // Remove a user from an organization
     async removeMember(requesterId: bigint, organizationId: bigint, targetUserId: bigint) {
         const {
             requester,
             requesterMembership,
-            } = await this.checkCanManageMembers(
+        } = await this.checkCanManageMembers(
             requesterId,
             organizationId,
-            );
+        );
 
         if (requesterId === targetUserId) {
             throw new BadRequestException('Use leaveOrganization to leave the organization');
@@ -351,19 +360,19 @@ export class OrganizationmembersService {
 
         const targetMembership =
             await this.prisma.organizationMember.findUnique({
-            where: {
-                organization_id_user_id: {
-                organization_id: organizationId,
-                user_id: targetUserId,
+                where: {
+                    organization_id_user_id: {
+                        organization_id: organizationId,
+                        user_id: targetUserId,
+                    },
                 },
-            },
-            include: {
-            user: {
-                select: {
-                account_status: true,
+                include: {
+                    user: {
+                        select: {
+                            account_status: true,
+                        },
+                    },
                 },
-            },
-            },
             });
 
         if (!targetMembership) {
@@ -387,45 +396,45 @@ export class OrganizationmembersService {
             requester.role !== RoleApp.ADMIN &&
             requesterMembership?.role === RoleOrg.MANAGER &&
             targetMembership.role !== RoleOrg.MEMBER
-           ) {
+        ) {
             throw new ForbiddenException('A manager can only remove members');
-            }
+        }
 
         const membershipCreatedAt = targetMembership.created_at;
 
         const removedMembership = await this.prisma.$transaction(
             async (tx) => {
                 const deletedMembership = await tx.organizationMember.delete({
-                where: {
-                    organization_id_user_id: {
-                    organization_id: organizationId,
-                    user_id: targetUserId,
+                    where: {
+                        organization_id_user_id: {
+                            organization_id: organizationId,
+                            user_id: targetUserId,
+                        },
                     },
-                },
                 });
 
                 await this.pointtransactionService.penalizeOwnerForMemberRemoval(
-                organizationId,
-                targetUserId,
-                membershipCreatedAt,
-                tx,
+                    organizationId,
+                    targetUserId,
+                    membershipCreatedAt,
+                    tx,
                 );
 
                 return deletedMembership;
             },
-            );
+        );
 
         return removedMembership;
     }
 
-// Ban a user from an organization
+    // Ban a user from an organization
     async banMember(requesterId: bigint, organizationId: bigint, targetUserId: bigint) {
         const {
-        requester,
-        requesterMembership,
+            requester,
+            requesterMembership,
         } = await this.checkCanManageMembers(
-        requesterId,
-        organizationId,
+            requesterId,
+            organizationId,
         );
 
         if (requesterId === targetUserId) {
@@ -435,18 +444,18 @@ export class OrganizationmembersService {
         const targetMembership = await this.prisma.organizationMember.findUnique({
             where: {
                 organization_id_user_id: {
-                organization_id: organizationId,
-                user_id: targetUserId,
+                    organization_id: organizationId,
+                    user_id: targetUserId,
                 },
             },
             include: {
-            user: {
-                select: {
-                account_status: true,
+                user: {
+                    select: {
+                        account_status: true,
+                    },
                 },
             },
-            },
-            });
+        });
 
         if (!targetMembership) {
             throw new NotFoundException('User is not a member of this organization');
@@ -472,54 +481,54 @@ export class OrganizationmembersService {
             requester.role !== RoleApp.ADMIN &&
             requesterMembership?.role === RoleOrg.MANAGER &&
             targetMembership.role !== RoleOrg.MEMBER
-            ) {
+        ) {
             throw new ForbiddenException(
                 'A manager can only ban members',
             );
-            }
+        }
 
         const membershipCreatedAt = targetMembership.created_at;
 
         const bannedMembership = await this.prisma.$transaction(
             async (tx) => {
                 const updatedMembership = await tx.organizationMember.update({
-                where: {
-                    organization_id_user_id: {
-                    organization_id: organizationId,
-                    user_id: targetUserId,
+                    where: {
+                        organization_id_user_id: {
+                            organization_id: organizationId,
+                            user_id: targetUserId,
+                        },
                     },
-                },
-                data: {
-                    status: MemberStatus.BANNED,
-                },
+                    data: {
+                        status: MemberStatus.BANNED,
+                    },
                 });
 
                 await this.pointtransactionService.penalizeOwnerForMemberBan(
-                organizationId,
-                targetUserId,
-                membershipCreatedAt,
-                tx,
+                    organizationId,
+                    targetUserId,
+                    membershipCreatedAt,
+                    tx,
                 );
 
                 await this.pointtransactionService.penalizeBannedUser(
-                organizationId,
-                targetUserId,
-                membershipCreatedAt,
-                tx,
+                    organizationId,
+                    targetUserId,
+                    membershipCreatedAt,
+                    tx,
                 );
 
                 return updatedMembership;
             },
-            );
+        );
 
         return bannedMembership;
     }
 
-// Join an organization
+    // Join an organization
     async joinOrganization(userId: bigint, organizationId: bigint) {
         const user = await this.prisma.user.findUnique({
             where: {
-            user_id: userId,
+                user_id: userId,
             },
         });
 
@@ -535,7 +544,7 @@ export class OrganizationmembersService {
             where: {
                 organization_id: organizationId,
             },
-            });
+        });
 
         if (!organization) {
             throw new NotFoundException('Organization not found');
@@ -548,11 +557,11 @@ export class OrganizationmembersService {
         const existingMembership = await this.prisma.organizationMember.findUnique({
             where: {
                 organization_id_user_id: {
-                organization_id: organizationId,
-                user_id: userId,
+                    organization_id: organizationId,
+                    user_id: userId,
                 },
             },
-            });
+        });
 
         if (existingMembership?.status === MemberStatus.BANNED) {
             throw new ForbiddenException('You are banned from this organization');
@@ -572,17 +581,17 @@ export class OrganizationmembersService {
 
         return this.prisma.organizationMember.create({
             data: {
-            organization_id: organizationId,
-            user_id: userId,
-            role: RoleOrg.MEMBER,
-            status: MemberStatus.PENDING,
-            validated_by_org_man: false,
-            validated_at: null,
+                organization_id: organizationId,
+                user_id: userId,
+                role: RoleOrg.MEMBER,
+                status: MemberStatus.PENDING,
+                validated_by_org_man: false,
+                validated_at: null,
             },
         });
     }
 
-// Approve a membership request
+    // Approve a membership request
     async approveMembership(requesterId: bigint, organizationId: bigint, targetUserId: bigint) {
         await this.checkCanManageMembers(
             requesterId,
@@ -592,18 +601,18 @@ export class OrganizationmembersService {
         const membership = await this.prisma.organizationMember.findUnique({
             where: {
                 organization_id_user_id: {
-                organization_id: organizationId,
-                user_id: targetUserId,
+                    organization_id: organizationId,
+                    user_id: targetUserId,
                 },
             },
             include: {
-            user: {
-                select: {
-                account_status: true,
+                user: {
+                    select: {
+                        account_status: true,
+                    },
                 },
             },
-            },
-            });
+        });
 
         if (!membership) {
             throw new NotFoundException('Membership request not found');
@@ -618,36 +627,36 @@ export class OrganizationmembersService {
         }
 
         const updatedMembership = await this.prisma.$transaction(
-        async (tx) => {
-            const activatedMembership = await tx.organizationMember.update({
-            where: {
-                organization_id_user_id: {
-                organization_id: organizationId,
-                user_id: targetUserId,
-                },
-            },
-            data: {
-                status: MemberStatus.ACTIVE,
-                role: RoleOrg.MEMBER,
-                validated_by_org_man: true,
-                validated_at: new Date(),
-            },
-            });
+            async (tx) => {
+                const activatedMembership = await tx.organizationMember.update({
+                    where: {
+                        organization_id_user_id: {
+                            organization_id: organizationId,
+                            user_id: targetUserId,
+                        },
+                    },
+                    data: {
+                        status: MemberStatus.ACTIVE,
+                        role: RoleOrg.MEMBER,
+                        validated_by_org_man: true,
+                        validated_at: new Date(),
+                    },
+                });
 
-            await this.pointtransactionService.rewardOwnerForNewMember(
-            organizationId,
-            targetUserId,
-            tx,
-            );
+                await this.pointtransactionService.rewardOwnerForNewMember(
+                    organizationId,
+                    targetUserId,
+                    tx,
+                );
 
-            return activatedMembership;
-        },
+                return activatedMembership;
+            },
         );
 
         return updatedMembership;
     }
 
-// Deny a membership request
+    // Deny a membership request
     async denyMembership(requesterId: bigint, organizationId: bigint, targetUserId: bigint) {
         await this.checkCanManageMembers(
             requesterId,
@@ -657,11 +666,11 @@ export class OrganizationmembersService {
         const membership = await this.prisma.organizationMember.findUnique({
             where: {
                 organization_id_user_id: {
-                organization_id: organizationId,
-                user_id: targetUserId,
+                    organization_id: organizationId,
+                    user_id: targetUserId,
                 },
             },
-            });
+        });
 
         if (!membership) {
             throw new NotFoundException('Membership request not found');
@@ -673,24 +682,24 @@ export class OrganizationmembersService {
 
         return this.prisma.organizationMember.update({
             where: {
-            organization_id_user_id: {
-                organization_id: organizationId,
-                user_id: targetUserId,
-            },
+                organization_id_user_id: {
+                    organization_id: organizationId,
+                    user_id: targetUserId,
+                },
             },
             data: {
-            status: MemberStatus.REJECTED,
-            validated_by_org_man: false,
-            validated_at: new Date(),
+                status: MemberStatus.REJECTED,
+                validated_by_org_man: false,
+                validated_at: new Date(),
             },
         });
     }
 
-// Leave an organization
+    // Leave an organization
     async leaveOrganization(userId: bigint, organizationId: bigint) {
         const user = await this.prisma.user.findUnique({
             where: {
-            user_id: userId,
+                user_id: userId,
             },
         });
 
@@ -706,7 +715,7 @@ export class OrganizationmembersService {
             where: {
                 organization_id: organizationId,
             },
-            });
+        });
 
         if (!organization) {
             throw new NotFoundException('Organization not found');
@@ -719,11 +728,11 @@ export class OrganizationmembersService {
         const membership = await this.prisma.organizationMember.findUnique({
             where: {
                 organization_id_user_id: {
-                organization_id: organizationId,
-                user_id: userId,
+                    organization_id: organizationId,
+                    user_id: userId,
                 },
             },
-            });
+        });
 
         if (!membership) {
             throw new NotFoundException('You are not a member of this organization');
@@ -740,31 +749,31 @@ export class OrganizationmembersService {
         const membershipCreatedAt = membership.created_at;
 
         const removedMembership = await this.prisma.$transaction(
-        async (tx) => {
-            const deletedMembership = await tx.organizationMember.delete({
-            where: {
-                organization_id_user_id: {
-                organization_id: organizationId,
-                user_id: userId,
-                },
+            async (tx) => {
+                const deletedMembership = await tx.organizationMember.delete({
+                    where: {
+                        organization_id_user_id: {
+                            organization_id: organizationId,
+                            user_id: userId,
+                        },
+                    },
+                });
+
+                await this.pointtransactionService.penalizeOwnerForMemberLeaving(
+                    organizationId,
+                    userId,
+                    membershipCreatedAt,
+                    tx,
+                );
+
+                return deletedMembership;
             },
-            });
-
-            await this.pointtransactionService.penalizeOwnerForMemberLeaving(
-            organizationId,
-            userId,
-            membershipCreatedAt,
-            tx,
-            );
-
-            return deletedMembership;
-        },
         );
 
         return removedMembership;
     }
 
-// Helper pour checker que c'est le owner ou l'admin
+    // Helper pour checker que c'est le owner ou l'admin
     private async checkCanManageRoles(requesterId: bigint, organizationId: bigint) {
         const {
             requester,
@@ -780,11 +789,11 @@ export class OrganizationmembersService {
         const requesterMembership = await this.prisma.organizationMember.findUnique({
             where: {
                 organization_id_user_id: {
-                organization_id: organizationId,
-                user_id: requesterId,
+                    organization_id: organizationId,
+                    user_id: requesterId,
                 },
             },
-            });
+        });
 
         if (!requesterMembership || requesterMembership.status !== MemberStatus.ACTIVE) {
             throw new ForbiddenException('Requester is not an active member of the organization');
@@ -795,7 +804,7 @@ export class OrganizationmembersService {
         }
     }
 
-// Promote a member to manager
+    // Promote a member to manager
     async promoteToManager(requesterId: bigint, organizationId: bigint, targetUserId: bigint) {
         await this.checkCanManageRoles(
             requesterId,
@@ -805,18 +814,18 @@ export class OrganizationmembersService {
         const membership = await this.prisma.organizationMember.findUnique({
             where: {
                 organization_id_user_id: {
-                organization_id: organizationId,
-                user_id: targetUserId,
+                    organization_id: organizationId,
+                    user_id: targetUserId,
                 },
             },
             include: {
-            user: {
-                select: {
-                account_status: true,
+                user: {
+                    select: {
+                        account_status: true,
+                    },
                 },
             },
-            },
-            });
+        });
 
         if (!membership) {
             throw new NotFoundException('User is not a member of this organization');
@@ -836,18 +845,18 @@ export class OrganizationmembersService {
 
         return this.prisma.organizationMember.update({
             where: {
-            organization_id_user_id: {
-                organization_id: organizationId,
-                user_id: targetUserId,
-            },
+                organization_id_user_id: {
+                    organization_id: organizationId,
+                    user_id: targetUserId,
+                },
             },
             data: {
-            role: RoleOrg.MANAGER,
+                role: RoleOrg.MANAGER,
             },
         });
     }
 
-// Demote a manager to member
+    // Demote a manager to member
     async demoteToMember(requesterId: bigint, organizationId: bigint, targetUserId: bigint) {
         await this.checkCanManageRoles(
             requesterId,
@@ -857,18 +866,18 @@ export class OrganizationmembersService {
         const membership = await this.prisma.organizationMember.findUnique({
             where: {
                 organization_id_user_id: {
-                organization_id: organizationId,
-                user_id: targetUserId,
+                    organization_id: organizationId,
+                    user_id: targetUserId,
                 },
             },
             include: {
-            user: {
-                select: {
-                account_status: true,
+                user: {
+                    select: {
+                        account_status: true,
+                    },
                 },
             },
-            },
-            });
+        });
 
         if (!membership) {
             throw new NotFoundException('User is not a member of this organization');
@@ -888,18 +897,18 @@ export class OrganizationmembersService {
 
         return this.prisma.organizationMember.update({
             where: {
-            organization_id_user_id: {
-                organization_id: organizationId,
-                user_id: targetUserId,
-            },
+                organization_id_user_id: {
+                    organization_id: organizationId,
+                    user_id: targetUserId,
+                },
             },
             data: {
-            role: RoleOrg.MEMBER,
+                role: RoleOrg.MEMBER,
             },
         });
     }
 
-// Transfer ownership
+    // Transfer ownership
     async transferOwnership(requesterId: bigint, organizationId: bigint, newOwnerId: bigint) {
         await this.checkCanManageRoles(
             requesterId,
@@ -909,18 +918,18 @@ export class OrganizationmembersService {
         const newOwnerMembership = await this.prisma.organizationMember.findUnique({
             where: {
                 organization_id_user_id: {
-                organization_id: organizationId,
-                user_id: newOwnerId,
+                    organization_id: organizationId,
+                    user_id: newOwnerId,
                 },
             },
             include: {
-            user: {
-                select: {
-                account_status: true,
+                user: {
+                    select: {
+                        account_status: true,
+                    },
                 },
             },
-            },
-            });
+        });
 
         if (!newOwnerMembership) {
             throw new NotFoundException('New owner is not a member of this organization');
@@ -944,7 +953,7 @@ export class OrganizationmembersService {
                 role: RoleOrg.OWNER,
                 status: MemberStatus.ACTIVE,
             },
-            });
+        });
 
         if (!currentOwner) {
             throw new NotFoundException('Current organization owner not found');
@@ -952,27 +961,27 @@ export class OrganizationmembersService {
 
         return this.prisma.$transaction([
             this.prisma.organizationMember.update({
-            where: {
-                organization_id_user_id: {
-                organization_id: organizationId,
-                user_id: currentOwner.user_id,
+                where: {
+                    organization_id_user_id: {
+                        organization_id: organizationId,
+                        user_id: currentOwner.user_id,
+                    },
                 },
-            },
-            data: {
-                role: RoleOrg.MANAGER,
-            },
+                data: {
+                    role: RoleOrg.MANAGER,
+                },
             }),
 
             this.prisma.organizationMember.update({
-            where: {
-                organization_id_user_id: {
-                organization_id: organizationId,
-                user_id: newOwnerId,
+                where: {
+                    organization_id_user_id: {
+                        organization_id: organizationId,
+                        user_id: newOwnerId,
+                    },
                 },
-            },
-            data: {
-                role: RoleOrg.OWNER,
-            },
+                data: {
+                    role: RoleOrg.OWNER,
+                },
             }),
         ]);
     }
