@@ -1,7 +1,11 @@
 // D'après docs/api_contract.md §2 (enums) et §3 (forme `Action`).
 export const CATEGORY = { ENVIRONMENT: 'ENVIRONMENT', SOCIAL: 'SOCIAL', CULTURAL: 'CULTURAL' } as const;
 export type Category = (typeof CATEGORY)[keyof typeof CATEGORY];
-
+export interface ActionParticipant{
+  userId: string;
+  name: string;
+  avatarUrl?: string;
+}
 export const ACTION_STATUS = {
   PENDING: 'PENDING',
   APPROVED: 'APPROVED',
@@ -73,4 +77,6 @@ export type ActionDetailData = {
   validatedByUserId?: string;
   validatedAt?: string;
   organizationId?: string;
+  participants?:ActionParticipant[];
+  isJoined?: boolean;
 };

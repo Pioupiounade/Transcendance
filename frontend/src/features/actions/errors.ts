@@ -3,7 +3,7 @@ import { ACTIONS_LABELS } from './labels';
 
 const t = ACTIONS_LABELS.errors;
 
-/** Traduit une erreur de création d'action en message affichable. */
+/** Traduit une erreur de création, modification ou annulation d'action en message affichable. */
 export const toActionErrorMessage = (error: unknown): string => {
   if (!isApiError(error)) return t.unknown;
   if (error.isNetwork) return t.network;

@@ -8,5 +8,6 @@ export { Dialog } from './Dialog/Dialog';
 export { FloatingField } from './FloatingField/FloatingField';
 export { FloatingTextarea } from './FloatingField/FloatingTextarea';
 export { Icon } from './Icon/Icon';
+export { StreetScene } from './StreetScene/StreetScene';
 export { iconMarkup } from './Icon/iconMarkup';
 export type { IconName } from './Icon/icons';

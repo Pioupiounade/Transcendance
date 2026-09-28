@@ -7,7 +7,7 @@ import styles from './BottomNav.module.css';
 export function BottomNav() {
   return (
     <nav className={styles.bar} aria-label={APP_LABELS.mobileNav}>
-      {NAV_ITEMS.map((item) =>
+      {NAV_ITEMS.filter((item) => !item.desktopOnly).map((item) =>
         item.primary ? (
           <NavLink key={item.to} to={item.to} end={item.end} className={`${styles.item} ${styles.primary}`}>
             <span className={styles.primaryIcon}>
