@@ -169,9 +169,16 @@ features/       1 domaine métier = 1 module ; interface = index.ts
   actions/      actions + carte + filtres ; owner des enums Category/ActionStatus et de leurs libellés.
                 Existant (#12) : MapPage, NeighborhoodMap, ActionCard, CategoryFilter, useActions, mapConfig.ts.
                 Création depuis la carte (Epic 7) : NeighborhoodMap accepte `draft` / `onDraftChange` / `draftContent`
-                (pin brouillon déplaçable, popup), MapPage garde le lieu dans l'URL (`?at=lat,lng`, draftParam.ts),
-                CreateActionDialog = Dialog + ActionForm (deep : `{ location, onCreated, onCancel }`), validation.ts,
-                errors.ts, api/useCreateAction. ActionForm est prévu pour le futur écran créer/modifier.
+                (pin brouillon déplaçable, popup ; sans `draftContent` = simple sélecteur de lieu), MapPage garde le
+                lieu dans l'URL (`?at=lat,lng`, draftParam.ts), CreateActionDialog = Dialog + ActionForm, validation.ts,
+                errors.ts, api/useCreateAction.
+                Créer / modifier / annuler (#33, Epic 2) : ActionForm (deep : `{ location | null, action?, onSaved,
+                onCancel }`, création ou modification selon `action`), ActionEditor (carte sélecteur + formulaire),
+                CreateActionPage `/actions/new` (`?at=` pré-place le pin), EditActionPage `/actions/:id/edit`
+                (permissions.ts : créateur ou ADMIN, PENDING/APPROVED ; CancelActionDialog = « suppression », l'API
+                n'a que `cancel`), api/useAction, useUpdateAction, useCancelAction. Les pages reçoivent les chemins
+                (`mapPath`, `createPath`, `editPath`) en props : la feature n'importe pas `app/`. Retour sur la carte
+                par `/map?focus=<id>` (mapConfig.ts) + `state.notice`.
   participations/, organizations/, friends/ (friend-requests + friendships)
   <feature>/
     api/        fonctions fetch typées + hooks useX : seuls appelants de shared/api
@@ -221,17 +228,16 @@ assets/
   Les tokens vivent ici ; `features/auth` appelle seulement `session.set(tokens, userId)`.
 - `features/auth` : interface = `AuthProvider`, `useAuth() → { status, user, signIn, signUp, signOut }`, `RequireAuth`,
   `LoginPage`, `RegisterPage` (reçoit les chemins des pages légales en props : une feature n'importe pas `app/`).
-  Après connexion, la page redirige vers `state.from` (posé par `RequireAuth`) sinon `/`.
+  Après connexion, la page redirige vers `state.from` (posé par `RequireAuth`, query comprise) sinon `/`.
 - `features/x/api/` : seule couche qui appelle `http`. Pages et composants ne voient que des hooks, ce qui rend
   TanStack Query branchable sans toucher aux composants.
 
 ### Chargement paresseux
 Exports nommés partout, barrels compris. Un seul helper, `app/lazyPage.ts` :
 ```ts
-export const lazyPage = <T extends Record<K, ComponentType>, K extends keyof T>(
-  load: () => Promise<T>, name: K,
-) => lazy(() => load().then((m) => ({ default: m[name] })));
-// router.tsx : lazyPage(() => import('@/features/actions'), 'ActionsPage')
+export const lazyPage = <P extends object>(load: () => Promise<ComponentType<P>>) =>
+  lazy(() => load().then((page) => ({ default: page })));
+// router.tsx : lazyPage(() => import('@/features/actions').then((m) => m.MapPage)) ; les props de la page sont conservées
 ```
 Un chunk = une feature. Jamais d'export default dans un barrel.
 

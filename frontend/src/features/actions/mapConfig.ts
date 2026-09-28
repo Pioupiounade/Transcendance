@@ -9,3 +9,6 @@ export const FOCUS_ZOOM = 16;
 export const FIT_PADDING: [number, number] = [48, 48];
 
 export const TILE_URL = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+
+/** Paramètre d'URL de la carte : action à sélectionner à l'arrivée (`/map?focus=<id>`), posé par créer/modifier. */
+export const FOCUS_PARAM = 'focus';

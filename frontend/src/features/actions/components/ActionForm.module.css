@@ -13,6 +13,12 @@
   font-weight: 600;
   color: var(--muted);
 }
+.location:focus {
+  outline: none;
+}
+.locationMissing {
+  color: var(--danger);
+}
 
 .group {
   display: grid;
