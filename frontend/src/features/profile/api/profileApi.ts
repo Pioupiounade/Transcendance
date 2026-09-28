@@ -70,8 +70,14 @@ export function useProfile(identifier?: string) {
 
   useEffect(() => {
     let isMounted = true;
-    setIsLoading(true);
-    setError(null);
+
+    // Se déclenche de manière asynchrone pour éviter le warning React
+    Promise.resolve().then(() => {
+      if (isMounted) {
+        setIsLoading(true);
+        setError(null);
+      }
+    });
 
     getProfile(identifier)
       .then((data) => {
