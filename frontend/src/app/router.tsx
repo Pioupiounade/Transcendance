@@ -29,10 +29,12 @@ const router = createBrowserRouter([
       { path: ROUTES.terms, element: <LegalPage title={APP_LABELS.pages.terms.title} /> },
       { path: ROUTES.privacy, element: <LegalPage title={APP_LABELS.pages.privacy.title} /> },
       { path: ROUTES.actionDetail, element: <ActionDetailPage /> },
+      { path: ROUTES.profileDetail, element: <ProfilePage /> },
+      { path: ROUTES.profile, element: <ProfilePage /> },
       {
         // Routes protégées : RequireAuth redirige vers /login avec state.from.
         element: <RequireAuth />,
-        children: [{ path: ROUTES.profile, element: <ProfilePage /> }],
+        children: [],
       },
       // Contournement local pour tester le mockup sans authentification :
       // { path: ROUTES.profile, element: <ProfilePage /> },
