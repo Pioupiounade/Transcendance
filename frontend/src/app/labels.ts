@@ -27,86 +27,82 @@ export const APP_LABELS = {
       ctaActions: 'Browse actions',
       ctaJoin: 'Create an account',
     },
-    landing: {
-      eyebrow: 'Your neighbourhood, a few steps away',
-      title: 'Doing things together, close to home.',
-      lead: 'Pioupiounades gathers the citizen actions of your neighbourhood: a clean-up, a shared garden, a helping hand, a walk. Find one near you, or suggest your own.',
-      ctaJoin: 'Create my account',
-      ctaExplore: 'Explore the map',
-      trust: ['Free, for neighbours only', 'Your precise location stays private', 'Every action is reviewed before it goes live'],
-      how: {
-        eyebrow: 'How it works',
-        title: 'Three steps, one neighbourhood.',
-        steps: [
-          { title: 'Look around', body: 'Every action sits on the map of your neighbourhood: pick a pin, read what is planned and when.' },
-          { title: 'Join in, or suggest', body: 'Take a seat in an action that speaks to you, or tap the map to suggest one right where it is needed.' },
-          { title: 'Meet your neighbours', body: 'Show up, do it together, and earn points as your neighbourhood comes alive.' },
-        ],
-      },
-      live: {
-        eyebrow: 'Happening now',
-        title: 'What is going on in Saint-Cyprien?',
-        lead: 'A live look at the actions your neighbours are preparing. No account needed to browse.',
-        upcoming: 'Coming up',
-        loading: 'Loading actions…',
-        error: 'The actions could not be loaded.',
-        retry: 'Try again',
-        empty: 'Nothing planned yet. The first action could be yours.',
-        cta: 'See everything on the map',
-      },
-      categories: {
-        eyebrow: 'What neighbours do together',
-        title: 'Three ways to get involved.',
-        items: {
-          ENVIRONMENT: 'Clean-ups, plantings, shared gardens: taking care of the places we all use.',
-          SOCIAL: 'A hand with the groceries, a repair, a coffee with someone who lives alone.',
-          CULTURAL: 'Walks, workshops, books and music: sharing what we know and love.',
+    terms: {
+      title: 'Terms of Service',
+      lastUpdated: 'Last updated: September 2026',
+      intro:
+        'Welcome to Pioupiounades. Many local initiatives exist but remain invisible. Our mission is to connect neighbors, local associations, and independent shops so everyone can discover, join, and act together close to home. By using Pioupiounades, you agree to these Terms of Service.',
+      sections: [
+        {
+          heading: '1. Mission & Core Values',
+          content:
+            'Pioupiounades facilitates local citizen initiatives based on four pillars: Proximity (walking distance actions), Simplicity (one-click participation), Kindness (embellishing, repairing, and sharing), and Local Impact (we are all neighbors). Users engage in community projects to strengthen neighborhood life.',
         },
-      },
-      closing: {
-        title: 'Ready to meet your neighbours?',
-        lead: 'Creating an account takes a minute. Your email, a password, and you are in.',
-        cta: 'Create my account',
-        signIn: 'I already have an account',
-      },
+        {
+          heading: '2. User Registration & Eligibility',
+          content:
+            'To create citizen actions, RSVP to initiatives, or message fellow neighbors, you must maintain an active account. You agree to provide authentic profile details and protect your account credentials. Actions can be proposed by residents, non-profit associations, or local shops.',
+        },
+        {
+          heading: '3. Community Conduct & Benevolence',
+          content:
+            'All interactions must remain respectful and constructive. Harassment, vandalism incitement, hate speech, commercial spam, and unsafe activities are strictly prohibited. Moderators and administrators reserve the right to suspend or ban any account that violates neighborhood community standards.',
+        },
+        {
+          heading: '4. Voluntary Participation & Limitation of Liability',
+          content:
+            'Pioupiounades operates purely as a neighborhood coordination and communication platform. We do not provide physical supervision, site inspections, or insurance coverage for on-site events. Participation in any cleanup, gardening, or local meetup occurs entirely at your own risk. Always exercise common sense and follow local safety regulations.',
+        },
+        {
+          heading: '5. Photos & User-Generated Content',
+          content:
+            'Users and organizers can post photos to illustrate project ideas and document before-and-after results. You retain rights to your pictures but grant Pioupiounades permission to display them across the platform to inspire other neighbors. Do not upload photos infringing on copyright or individual privacy.',
+        },
+        {
+          heading: '6. Account Termination & Self-Service Deletion',
+          content:
+            'You may leave the platform at any time. Using the account deletion feature in your Profile settings permanently wipes your profile, authentication data, and account records from our servers.',
+        },
+      ],
     },
-    dashboard: {
-      eyebrow: 'A few steps away, a lot can happen.',
-      greeting: (name: string) => `Hi ${name}, your neighbourhood has ideas.`,
-      anonymousName: 'neighbour',
-      lead: 'A little time, a helping hand. Find your next action.',
-      exploring: 'Exploring',
-      defaultArea: 'Saint-Cyprien, Toulouse',
-      homeArea: 'Around your home',
-      mapLabel: 'Open actions around you',
-      openMap: 'Open the map',
-      suggest: 'Suggest an action',
-      agenda: {
-        title: 'My actions',
-        loading: 'Loading your actions…',
-        error: 'Your actions could not be loaded.',
-        empty: 'Nothing planned yet.',
-        emptyLead: 'Join an action nearby or suggest one to your neighbours.',
-        organiser: 'You organise',
-        participant: 'You joined',
-        more: (count: number) => (count === 1 ? '1 more on the map' : `${count} more on the map`),
-        edit: 'Edit',
-        view: 'See on the map',
-      },
-      nearby: {
-        title: 'Near you',
-        lead: 'Open actions, closest first.',
-        loading: 'Looking around…',
-        error: 'The actions nearby could not be loaded.',
-        retry: 'Try again',
-        empty: 'Nothing around yet. Be the first to suggest an action!',
-      },
-      note: { title: 'Small gestures bring us closer.', body: 'No need to be an expert. Wanting to take part is enough.' },
-      privacy: 'Your precise location stays private.',
-      motto: 'A livelier neighbourhood, one meeting at a time.',
+    privacy: {
+      title: 'Privacy Policy',
+      lastUpdated: 'Last updated: September 2026',
+      intro:
+        'At Pioupiounades, protecting your personal data and honoring your local privacy is central to our values. This Privacy Policy details how we handle your information in full compliance with the General Data Protection Regulation (GDPR).',
+      sections: [
+        {
+          heading: '1. What We Collect',
+          content:
+            'We collect only what is strictly necessary to run the neighborhood network: your chosen username, email address, securely hashed password (plain-text passwords are never stored), optional biography, avatar, and photos uploaded to document citizen actions.',
+        },
+        {
+          heading: '2. Location & Neighborhood Privacy',
+          content:
+            'Your neighborhood or coordinates are used strictly for internal spatial proximity queries (finding initiatives within walking distance). Your exact real-time location is never sold, shared with advertisers, or displayed publicly to other users.',
+        },
+        {
+          heading: '3. Community Media & Uploaded Photos',
+          content:
+            'Images uploaded to showcase before-and-after improvements, report spots to beautify, or personalize your profile are stored securely with strict size and format validation. They are used exclusively to illustrate community projects.',
+        },
+        {
+          heading: '4. Messaging & Neighborhood Notifications',
+          content:
+            'Direct messaging is restricted to accepted friends or fellow action participants. Notifications regarding upcoming events, reminders, comments, and project updates are sent solely to keep you informed of activities you opted into.',
+        },
+        {
+          heading: '5. Your GDPR Rights & Erasure',
+          content:
+            'You have full control over your personal data: the right to access, rectify, or permanently erase your profile. Deleting your account through your profile settings immediately and irreversibly removes your personal information from our active database.',
+        },
+        {
+          heading: '6. Security & Cookies',
+          content:
+            'We utilize only functional session authentication cookies required for technical operation. All traffic between your browser and our backend is encrypted in transit using industry-standard HTTPS and secure WebSocket connections.',
+        },
+      ],
     },
-    terms: { title: 'Terms of Service' },
-    privacy: { title: 'Privacy Policy' },
     notFound: { title: 'Page not found', lead: 'This address leads nowhere.', back: 'Back to home' },
     loading: 'Loading…',
     placeholder: 'This screen is coming in a future ticket.',
