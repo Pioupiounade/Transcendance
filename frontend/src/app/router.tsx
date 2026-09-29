@@ -7,6 +7,7 @@ import { HomePage } from './pages/home/HomePage';
 import { LegalPage } from './pages/LegalPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { PlaceholderPage } from './pages/PlaceholderPage';
+import { ActionsListPage, ActionDetailPage } from '@/features/actions';
 import { ROUTES, editActionPath, organizationPath } from './routes';
 import { ProfilePage, PublicProfilePage } from '../features/profile';
 
@@ -25,7 +26,7 @@ const router = createBrowserRouter([
     element: <PageShell />,
     children: [
       { index: true, element: <HomePage /> },
-      { path: ROUTES.actions, element: <PlaceholderPage title={APP_LABELS.nav.actions} /> },
+      { path: ROUTES.actions, element: <ActionsListPage /> },
       { path: ROUTES.map, element: <MapPage createPath={ROUTES.createAction} editPath={editActionPath} /> },
       { path: ROUTES.organizations, element: <OrganizationsPage organizationPath={organizationPath} /> },
       { path: ROUTES.organization, element: <OrganizationPage listPath={ROUTES.organizations} /> },
@@ -35,9 +36,10 @@ const router = createBrowserRouter([
       { path: ROUTES.terms, element: <LegalPage title={APP_LABELS.pages.terms.title} /> },
       { path: ROUTES.privacy, element: <LegalPage title={APP_LABELS.pages.privacy.title} /> },
       { path: ROUTES.actionDetail, element: <ActionDetailPage /> },
+      { path: ROUTES.profileDetail, element: <ProfilePage /> },
+      { path: ROUTES.profile, element: <ProfilePage /> },
       { path: ROUTES.publicProfile, element: <PublicProfilePage /> },
       {
-        // Routes protégées : RequireAuth redirige vers /login avec state.from.
         element: <RequireAuth />,
         children: [
           { path: ROUTES.profile, element: <ProfilePage /> },
@@ -45,8 +47,6 @@ const router = createBrowserRouter([
           { path: ROUTES.editAction, element: <EditActionPage mapPath={ROUTES.map} /> },
         ],
       },
-      // Contournement local pour tester le mockup sans authentification :
-      // { path: ROUTES.profile, element: <ProfilePage /> },
       { path: '*', element: <NotFoundPage /> },
     ],
   },
