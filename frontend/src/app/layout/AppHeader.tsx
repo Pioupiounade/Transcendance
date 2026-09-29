@@ -1,6 +1,6 @@
 import { Link, NavLink } from 'react-router';
 import { useAuth } from '@/features/auth';
-import { Avatar, ButtonLink, Icon } from '@/shared/ui';
+import { Avatar, Button, ButtonLink, Icon } from '@/shared/ui';
 import { APP_LABELS } from '../labels';
 import { ROUTES } from '../routes';
 import { Brandmark } from './Brandmark';
@@ -8,7 +8,7 @@ import { NAV_ITEMS } from './navItems';
 import styles from './AppHeader.module.css';
 
 export function AppHeader() {
-  const { status, user } = useAuth();
+  const { status, user, signOut } = useAuth();
   const links = NAV_ITEMS.filter((item) => item.to !== ROUTES.profile);
 
   return (
@@ -32,6 +32,11 @@ export function AppHeader() {
           <Link to={ROUTES.profile} className={styles.profileLink} aria-label={APP_LABELS.myProfile}>
             <Avatar name={user.email} />
           </Link>
+        )}
+        {status === 'authenticated' && (
+          <Button variant="secondary" onClick={() => void signOut()}>
+            {APP_LABELS.signOut}
+          </Button>
         )}
         {status === 'anonymous' && (
           <ButtonLink to={ROUTES.login} variant="secondary">
