@@ -19,7 +19,6 @@ const EditActionPage = lazyPage(() => import('@/features/actions').then((m) => m
 const ActionDetailPage = lazyPage(() => import('@/features/actions').then((m) => m.ActionDetailPage));
 const OrganizationsPage = lazyPage(() => import('@/features/organizations').then((m) => m.OrganizationsPage));
 const OrganizationPage = lazyPage(() => import('@/features/organizations').then((m) => m.OrganizationPage));
-
 const router = createBrowserRouter([
   {
     path: ROUTES.home,
@@ -37,7 +36,6 @@ const router = createBrowserRouter([
       { path: ROUTES.privacy, element: <LegalPage title={APP_LABELS.pages.privacy.title} /> },
       { path: ROUTES.actionDetail, element: <ActionDetailPage /> },
       { path: ROUTES.profileDetail, element: <ProfilePage /> },
-      { path: ROUTES.profile, element: <ProfilePage /> },
       { path: ROUTES.publicProfile, element: <PublicProfilePage /> },
       {
         element: <RequireAuth />,
