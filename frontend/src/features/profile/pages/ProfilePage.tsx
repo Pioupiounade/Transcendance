@@ -1,14 +1,16 @@
 import React, { useState } from 'react';
 import { useParams } from 'react-router';
-import { useProfile } from '../api/profileApi';
+import { CURRENT_USERNAME, useProfile } from '../api/profileApi';
 import { ProfileView } from '../components/ProfileView';
 import { ProfileForm } from '../components/ProfileForm';
-import type { UserProfile } from '../types';
+import type { FriendshipStatus, UserProfile } from '../types';
 
 export const ProfilePage: React.FC = () => {
   const { username } = useParams<{ username?: string }>();
   const { profile, isLoading, error, setProfile } = useProfile(username);
   const [isEditing, setIsEditing] = useState(false);
+
+  const isOwnProfile = !username || username === CURRENT_USERNAME;
 
   if (isLoading) {
     return (
@@ -22,7 +24,9 @@ export const ProfilePage: React.FC = () => {
     return (
       <div style={{ textAlign: 'center', padding: '4rem 1rem' }}>
         <h2>Profile not found</h2>
-        <p className="help help--error" style={{ justifyContent: 'center' }}>Unable to load profile data.</p>
+        <p className="help help--error" style={{ justifyContent: 'center' }}>
+          Unable to load profile data.
+        </p>
       </div>
     );
   }
@@ -36,7 +40,11 @@ export const ProfilePage: React.FC = () => {
     alert('Account deleted. (This is a placeholder action. Implement actual deletion logic.)');
   };
 
-  if (isEditing) {
+  const handleFriendshipChange = (newStatus: FriendshipStatus) => {
+    setProfile((prev) => (prev ? { ...prev, friendshipStatus: newStatus } : null));
+  };
+
+  if (isEditing && isOwnProfile) {
     return (
       <ProfileForm
         initialData={profile}
@@ -49,8 +57,10 @@ export const ProfilePage: React.FC = () => {
   return (
     <ProfileView
       profile={profile}
+      isOwnProfile={isOwnProfile}
       onEdit={() => setIsEditing(true)}
       onDeleteAccount={handleDeleteAccount}
+      onFriendshipChange={handleFriendshipChange}
     />
   );
 };

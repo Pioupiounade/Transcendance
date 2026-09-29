@@ -182,3 +182,42 @@ textarea:focus {
   cursor: pointer;
   color: #64748b;
 }
+
+/* Friendship CTA & Status Badges */
+.friendship-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.friendship-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 44px;
+  padding: 0 20px;
+  border-radius: 9999px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  box-sizing: border-box;
+}
+
+.friendship-badge--friends {
+  background: var(--tag-environment-bg, #e5eedf);
+  color: var(--brand, #265c4b);
+  border: 1.5px solid var(--brand, #265c4b);
+}
+
+.friendship-badge--pending {
+  background: var(--tag-environment-bg, #e5eedf);
+  color: var(--brand, #265c4b);
+  border: 1.5px solid var(--brand, #265c4b);
+}
+
+.friendship-badge--blocked {
+  background: var(--danger-soft, #fbedea);
+  color: var(--danger, #b93832);
+  border: 1.5px solid var(--danger, #b93832);
+}
