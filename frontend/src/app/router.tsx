@@ -7,9 +7,8 @@ import { HomePage } from './pages/home/HomePage';
 import { LegalPage } from './pages/LegalPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { PlaceholderPage } from './pages/PlaceholderPage';
-import { ROUTES } from './routes';
+import { ROUTES, editActionPath, organizationPath } from './routes';
 import { ProfilePage, PublicProfilePage } from '../features/profile';
-import { ActionDetailPage } from '@/features/actions';
 
 // Routes en données. Une page = une ligne ; les pages de feature sont chargées
 // paresseusement (un chunk par feature), `PageShell` fournit le Suspense.
