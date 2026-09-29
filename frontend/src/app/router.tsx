@@ -8,7 +8,7 @@ import { LegalPage } from './pages/LegalPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { PlaceholderPage } from './pages/PlaceholderPage';
 import { ROUTES, editActionPath, organizationPath } from './routes';
-import { ProfilePage } from '../features/profile';
+import { ProfilePage, PublicProfilePage } from '../features/profile';
 
 // Routes en données. Une page = une ligne ; les pages de feature sont chargées
 // paresseusement (un chunk par feature), `PageShell` fournit le Suspense.
@@ -35,8 +35,7 @@ const router = createBrowserRouter([
       { path: ROUTES.terms, element: <LegalPage title={APP_LABELS.pages.terms.title} /> },
       { path: ROUTES.privacy, element: <LegalPage title={APP_LABELS.pages.privacy.title} /> },
       { path: ROUTES.actionDetail, element: <ActionDetailPage /> },
-      { path: ROUTES.profileDetail, element: <ProfilePage /> },
-      { path: ROUTES.profile, element: <ProfilePage /> },
+      { path: ROUTES.publicProfile, element: <PublicProfilePage /> },
       {
         // Routes protégées : RequireAuth redirige vers /login avec state.from.
         element: <RequireAuth />,

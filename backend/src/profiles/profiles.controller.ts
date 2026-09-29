@@ -3,6 +3,8 @@ import { ProfilesService } from './profiles.service';
 import { CreateProfileDto } from './dto/create-profile.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth-guard';
+import { OptionalJwtAuthGuard } from '../auth/guards/optional-jwt-auth-guard';
+
 
 @Controller('profiles')
 export class ProfilesController {
@@ -24,9 +26,10 @@ export class ProfilesController {
     return this.profilesService.findOwnProfile(req.user.id);
   }
 
+  @UseGuards(OptionalJwtAuthGuard)
   @Get(':userId')
-  findOne(@Param('userId') userId: string) {
-    return this.profilesService.findOne(userId);
+  findOne(@Param('userId') userId: string, @Req() req: any) {
+    return this.profilesService.findOne(userId, req.user?.id);
   }
 
   @UseGuards(JwtAuthGuard)
