@@ -1,6 +1,8 @@
+import { useState } from 'react';
 import { useForm } from '@/shared/hooks/useForm';
 import { Button, FloatingField, FloatingTextarea, Icon } from '@/shared/ui';
 import { useCreateAction } from '../api/useCreateAction';
+import { useUpdateAction } from '../api/useUpdateAction';
 import { toActionErrorMessage } from '../errors';
 import { ACTIONS_LABELS, CATEGORY_ICONS, CATEGORY_LABELS } from '../labels';
 import { CATEGORY, type ActionRecord, type LatLng } from '../types';
@@ -10,6 +12,7 @@ import {
   TITLE_MAX_LENGTH,
   isCategory,
   localDateTimeNow,
+  toLocalDateTimeValue,
   validateCategory,
   validateDescription,
   validateMaxParticipants,
@@ -19,9 +22,11 @@ import {
 import styles from './ActionForm.module.css';
 
 type ActionFormProps = {
-  /** Lieu choisi sur la carte : le formulaire ne le modifie pas. */
-  location: LatLng;
-  onCreated: (action: ActionRecord) => void;
+  /** Lieu choisi sur la carte ; `null` = pas encore choisi (le formulaire le réclame à l'envoi). */
+  location: LatLng | null;
+  /** Présente = modification de cette action (`PATCH`) ; absente = création (`POST`). */
+  action?: ActionRecord;
+  onSaved: (action: ActionRecord) => void;
   onCancel: () => void;
 };
 
@@ -29,43 +34,69 @@ type Values = { title: string; description: string; category: string; scheduledA
 
 const text = ACTIONS_LABELS.form;
 
+const toValues = (action: ActionRecord | undefined): Values =>
+  action
+    ? {
+        title: action.title,
+        description: action.description,
+        category: action.category,
+        scheduledAt: toLocalDateTimeValue(action.scheduled_at),
+        maxParticipants: action.max_participants?.toString() ?? '',
+      }
+    : { title: '', description: '', category: '', scheduledAt: '', maxParticipants: '' };
+
 /**
- * Formulaire de création d'action : validation miroir du DTO, envoi, erreurs serveur, focus sur le
- * premier champ invalide. Le parent ne fournit que le lieu et reçoit l'action créée.
+ * Formulaire d'action, création ou modification : validation miroir du DTO, envoi, erreurs serveur,
+ * focus sur le premier champ invalide. Le parent fournit le lieu et reçoit l'action enregistrée.
  */
-export function ActionForm({ location, onCreated, onCancel }: ActionFormProps) {
+export function ActionForm({ location, action, onSaved, onCancel }: ActionFormProps) {
   const create = useCreateAction();
+  const update = useUpdateAction();
+  const [initial] = useState(() => toValues(action));
+  const [spotMissing, setSpotMissing] = useState(false);
   const form = useForm<Values>(
-    { title: '', description: '', category: '', scheduledAt: '', maxParticipants: '' },
+    initial,
     {
       title: validateTitle,
       description: validateDescription,
       category: validateCategory,
-      scheduledAt: validateScheduledAt,
+      // Une date déjà passée reste acceptée tant qu'elle n'est pas modifiée (action en cours).
+      scheduledAt: (value) => (action && value === initial.scheduledAt ? null : validateScheduledAt(value)),
       maxParticipants: validateMaxParticipants,
     },
     async (values) => {
       if (!isCategory(values.category)) return; // exclu par la validation
-      const action = await create({
+      if (location === null) {
+        setSpotMissing(true);
+        document.getElementById('spot')?.focus();
+        return;
+      }
+      const input = {
         title: values.title.trim(),
         description: values.description.trim(),
         category: values.category,
         location,
         scheduled_at: new Date(values.scheduledAt).toISOString(),
         ...(values.maxParticipants.trim() !== '' && { max_participants: Number(values.maxParticipants) }),
-      });
-      onCreated(action);
+      };
+      onSaved(action ? await update(action.action_id, input) : await create(input));
     },
     toActionErrorMessage,
   );
 
   const categoryError = form.errorOf('category');
+  const spotError = spotMissing && location === null;
 
   return (
     <form className={styles.form} noValidate onSubmit={form.handleSubmit}>
-      <p className={styles.location}>
-        <Icon name="pin" size={16} />
-        {text.location(location[0], location[1])}
+      <p
+        id="spot"
+        tabIndex={-1}
+        className={[styles.location, spotError && styles.locationMissing].filter(Boolean).join(' ')}
+        role={spotError ? 'alert' : undefined}
+      >
+        <Icon name={spotError ? 'alert' : 'pin'} size={16} />
+        {location ? text.location(location[0], location[1]) : spotError ? text.spotMissing : text.pickSpot}
       </p>
 
       <FloatingField
@@ -157,8 +188,12 @@ export function ActionForm({ location, onCreated, onCancel }: ActionFormProps) {
         <Button variant="secondary" onClick={onCancel} disabled={form.submitting}>
           {text.cancel}
         </Button>
-        <Button type="submit" loading={form.submitting} loadingLabel={text.submitting}>
-          {text.submit}
+        <Button
+          type="submit"
+          loading={form.submitting}
+          loadingLabel={action ? text.saving : text.submitting}
+        >
+          {action ? text.save : text.submit}
         </Button>
       </div>
     </form>

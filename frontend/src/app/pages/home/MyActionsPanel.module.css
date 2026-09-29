@@ -1,0 +1,170 @@
+/* Panneau latéral (DESIGN.md §6 « Profile » : panels radius 22, boîte date 58 px) */
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-panel);
+  background: var(--ground);
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.head h2 {
+  font-size: 19px;
+  letter-spacing: -0.5px;
+}
+
+.count {
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: var(--trust-soft);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.state {
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.empty {
+  display: grid;
+  justify-items: start;
+  gap: 6px;
+  padding: 4px 0 8px;
+  font-size: 14px;
+}
+.empty strong {
+  font-size: 15px;
+}
+.empty p {
+  color: var(--muted);
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+
+.list {
+  display: grid;
+  gap: 4px;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 58px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid #eceadf;
+}
+.row:last-child {
+  border-bottom: 0;
+}
+
+.date {
+  display: grid;
+  place-items: center;
+  height: 58px;
+  border-radius: 13px;
+  background: #f1f3e8;
+  color: var(--brand);
+  line-height: 1.05;
+}
+.date strong {
+  font-size: 20px;
+  letter-spacing: -0.5px;
+}
+.date small {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+.body {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.title {
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: -0.2px;
+  text-decoration: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.title:hover {
+  color: var(--brand);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Seule une action validée l'affiche : « Upcoming » est le cas normal, inutile de le répéter. */
+.confirmed {
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--trust-soft);
+  color: var(--brand);
+  font-weight: 700;
+}
+
+.more {
+  align-self: flex-start;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--brand);
+  text-underline-offset: 3px;
+}
+
+/* DESIGN.md §6 « Neighbour note » */
+.note {
+  display: flex;
+  gap: 12px;
+  margin-top: auto;
+  padding: 17px 19px;
+  border-radius: 18px;
+  background: var(--note-bg);
+  color: var(--brand);
+}
+.note strong {
+  display: block;
+  color: var(--ink);
+  font-size: 14px;
+}
+.note p {
+  margin-top: 4px;
+  color: var(--note-ink);
+  font-size: 12px;
+}
+
+@media (max-width: 760px) {
+  .panel {
+    padding: 18px 16px;
+  }
+  .row {
+    grid-template-columns: 52px minmax(0, 1fr);
+  }
+  .date {
+    height: 52px;
+  }
+}

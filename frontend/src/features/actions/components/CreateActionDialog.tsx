@@ -18,7 +18,7 @@ export function CreateActionDialog({ location, onClose, onCreated }: CreateActio
   return (
     <Dialog open={location !== null} onClose={onClose} title={text.dialogTitle} closeLabel={text.close}>
       <p className={styles.lead}>{text.dialogLead}</p>
-      {location && <ActionForm location={location} onCreated={onCreated} onCancel={onClose} />}
+      {location && <ActionForm location={location} onSaved={onCreated} onCancel={onClose} />}
     </Dialog>
   );
 }

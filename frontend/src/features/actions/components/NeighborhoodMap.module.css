@@ -3,7 +3,8 @@
   position: relative;
   /* Les z-index internes de Leaflet (400 à 1000) restent sous l'en-tête et la barre mobile. */
   isolation: isolate;
-  min-height: 570px;
+  /* Hauteurs surchargeables par l'hôte (tableau de bord : carte plus basse). */
+  min-height: var(--map-min-height, 570px);
   border: 1px solid var(--map-line);
   border-radius: 25px;
   overflow: hidden;
@@ -224,13 +225,13 @@
 
 @media (min-width: 1501px) {
   .map {
-    min-height: 630px;
+    min-height: var(--map-min-height-large, 630px);
   }
 }
 
 @media (max-width: 760px) {
   .map {
-    min-height: 430px;
+    min-height: var(--map-min-height-mobile, 430px);
   }
   .tools {
     top: 12px;

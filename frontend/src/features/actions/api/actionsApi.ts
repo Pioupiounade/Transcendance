@@ -8,44 +8,35 @@ const CATEGORY_MAP: Record<string, Category> = {
   cultural: 'CULTURAL',
 };
 
-const STATUS_MAP: Record<string, ActionStatus> = {
-  pending: 'PENDING',
-  approved: 'APPROVED',
-  rejected: 'REJECTED',
-  completed: 'COMPLETED',
-  cancelled: 'CANCELLED',
+/** Une action enrichie (`participant_count`, `remaining_seats`). 404 → `ApiError` status 404. */
+export const fetchAction = (id: string, signal?: AbortSignal) => http.get<Action>(`/actions/${id}`, { signal });
+
+/** Body de `POST /actions` (`CreateActionDto`, docs/api_contract.md §15) : l'identité vient du JWT. */
+export type CreateActionInput = {
+  title: string;
+  description: string;
+  category: Category;
+  /** `[latitude, longitude]`. */
+  location: LatLng;
+  /** Date ISO. */
+  scheduled_at: string;
+  /** ≥ 3 côté backend ; omis = sans limite. */
+  max_participants?: number;
+  organization_id?: number;
 };
 
-export const createAction = (record: ActionRecord, signal?: AbortSignal) =>
-  http.post<ActionRecord>('/actions', record, { signal });
+/** Crée une action (`PENDING`, créateur = utilisateur connecté). 401 → session expirée, 400/403 → refus métier. */
+export const createAction = (input: CreateActionInput) => http.post<ActionRecord>('/actions', input);
 
-export async function fetchActions(signal?: AbortSignal): Promise<Action[]> {
-  await new Promise((resolve) => setTimeout(resolve, 300));
-  if (signal?.aborted) throw new ApiError(0, []);
+/**
+ * Body de `PATCH /actions/:id` (`UpdateActionDto`) : tout est facultatif, `max_participants` ne peut pas être
+ * remis à « sans limite » (le DTO refuse `null`). L'organisation ne se change pas depuis le frontend.
+ */
+export type UpdateActionInput = Partial<Omit<CreateActionInput, 'organization_id'>>;
 
-  return Object.values(MOCK_ACTIONS_DB).map((detail) => {
-    const participantCount = detail.participants?.length ?? detail.currentParticipants;
-    const remainingSeats = detail.maxParticipants ? Math.max(0, detail.maxParticipants - participantCount) : null;
+/** Modifie une action ouverte (créateur, ADMIN ou manager de l'organisation). 400 « can no longer be modified » sinon. */
+export const updateAction = (id: string, input: UpdateActionInput) =>
+  http.patch<ActionRecord>(`/actions/${id}`, input);
 
-    return {
-      action_id: detail.id,
-      title: detail.title,
-      description: detail.description,
-      creator_id: detail.organizer.userId,
-      organization_id: detail.organizationId ?? null,
-      min_participants: detail.minParticipants,
-      max_participants: detail.maxParticipants,
-      location: [48.8566, 2.3522],
-      status: STATUS_MAP[detail.status] ?? 'PENDING',
-      category: CATEGORY_MAP[detail.category] ?? 'ENVIRONMENT',
-      imagesList: detail.images,
-      validated_by_user_id: detail.validatedByUserId ?? null,
-      validated_at: detail.validatedAt ?? null,
-      scheduled_at: detail.scheduledAt,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      participant_count: participantCount,
-      remaining_seats: remainingSeats,
-    };
-  });
-}
+/** Annule une action `PENDING`/`APPROVED` (seule « suppression » offerte par l'API). */
+export const cancelAction = (id: string) => http.patch<ActionRecord>(`/actions/${id}/cancel`);

@@ -44,10 +44,21 @@ export const validateMaxParticipants = (value: string): string | null => {
   return null;
 };
 
+/** `YYYY-MM-DDTHH:mm` en heure locale, la forme d'un `datetime-local`. */
+const toLocalDateTimeInput = (date: Date): string => {
+  const offsetMs = date.getTimezoneOffset() * 60_000;
+  return new Date(date.getTime() - offsetMs).toISOString().slice(0, 16);
+};
+
 /** Valeur `min` d'un `datetime-local` : maintenant, en heure locale, à la minute. */
 export const localDateTimeNow = (): string => {
   const now = new Date();
   now.setSeconds(0, 0);
-  const offsetMs = now.getTimezoneOffset() * 60_000;
-  return new Date(now.getTime() - offsetMs).toISOString().slice(0, 16);
+  return toLocalDateTimeInput(now);
+};
+
+/** Date ISO de l'API → valeur d'un `datetime-local` ; chaîne vide si invalide. */
+export const toLocalDateTimeValue = (iso: string): string => {
+  const date = new Date(iso);
+  return Number.isNaN(date.getTime()) ? '' : toLocalDateTimeInput(date);
 };

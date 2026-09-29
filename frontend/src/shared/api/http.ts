@@ -7,7 +7,7 @@ import { session, type SessionTokens } from './session';
 
 type Method = 'GET' | 'POST' | 'PATCH' | 'DELETE';
 type Query = Record<string, string | number | boolean | null | undefined>;
-type Body = Record<string, unknown> | unknown[];
+type Body = Record<string, unknown> | unknown[] | FormData;
 
 export type RequestOptions = {
   /** Paramètres de query string ; les valeurs null/undefined sont omises. */
@@ -50,13 +50,13 @@ const toApiError = (status: number, payload: unknown): ApiError => {
 
 const send = async (method: Method, path: string, body: Body | undefined, options: RequestOptions): Promise<Response> => {
   const headers = new Headers({ Accept: 'application/json' });
-  if (body !== undefined) headers.set('Content-Type', 'application/json');
+  if (body !== undefined && !(body instanceof FormData)) headers.set('Content-Type', 'application/json');
   if (session.accessToken) headers.set('Authorization', `Bearer ${session.accessToken}`);
   try {
     return await fetch(buildUrl(path, options.query), {
       method,
       headers,
-      body: body === undefined ? undefined : JSON.stringify(body),
+      body: body === undefined ? undefined : body instanceof FormData ? body : JSON.stringify(body),
       signal: options.signal,
     });
   } catch (error) {
@@ -78,8 +78,7 @@ const refreshSession = (): Promise<boolean> => {
       const tokens = (await parseBody(response)) as SessionTokens;
       session.set(tokens);
       return true;
-    } catch (error) {
-      if (error instanceof ApiError && error.isNetwork) throw error;
+    } catch {
       return false;
     } finally {
       refreshing = null;
@@ -103,8 +102,11 @@ const request = async <T>(method: Method, path: string, body: Body | undefined, 
 
   let response = await send(method, path, body, options);
 
-  const canRefresh = !path.startsWith(AUTH_PREFIX) || path === `${AUTH_PREFIX}/me`;
-  if (response.status === 401 && canRefresh && session.exists) {
+    if (
+      response.status === 401 &&
+      (!path.startsWith(AUTH_PREFIX) || path === '/auth/me') &&
+      session.exists
+    ) {
     if (await refreshSession()) {
       response = await send(method, path, body, options);
     } else {

@@ -50,8 +50,8 @@ dans `features/<x>/api/*` sans toucher aux composants.
 | **Action** | `action_id`, `title`, `description`, `creator_id`, `organization_id?`, `min_participants` (défaut 3), `max_participants?`, `location`, `status`, `category`, `imagesList`, `validated_by_user_id?`, `validated_at?`, `scheduled_at`. **L'API ajoute `participant_count` et `remaining_seats`** (liste et détail, depuis #45) | `/actions/*` (7 + 2 commentaires) | `features/actions` → `Action` (§4.7) | ✅ liste, carte, création (`Action` enrichie, `ActionRecord` pour les mutations) · 🟡 détail (mock `ActionDetailData`) |
 | **ActionComment** | `comment_id`, `content` (≤ 1024), `user_id`, `action_id`, dates ; renvoyé avec `user: { user_id, profile: { username, profile_picture } \| null }` | `POST/GET /actions/:id/comments` | `features/actions` (prévu) | ❌ |
 | **Participation** | (`action_id`, `user_id`), `created_at` | `/participations/*` (4) | `features/participations` (prévu) | ❌ |
-| **Organization** | `organization_id`, `title`, `description`, `organization_status`, `address`, `location`, `creator_id` | `/organizations/*` (8) | `features/organizations` (prévu) | ❌ |
-| **OrganizationMember** | (`organization_id`, `user_id`), `status` MemberStatus, `role` RoleOrg, `validated_by_org_man`, `validated_at?` | `/organization-members/*` (14) | `features/organizations` (prévu) | ❌ |
+| **Organization** | `organization_id`, `title`, `description`, `organization_status`, `address`, `location`, `creator_id` | `/organizations/*` (8) | `features/organizations` → `Organization` | 🟡 liste + recherche + fiche publique (#61) ; création/édition ❌ |
+| **OrganizationMember** | (`organization_id`, `user_id`), `status` MemberStatus, `role` RoleOrg, `validated_by_org_man`, `validated_at?` | `/organization-members/*` (14) | `features/organizations` → `OrganizationMember` | 🟡 membres actifs affichés sur la fiche (#61) ; adhésion/gestion ❌ |
 | **FriendRequest** | `friend_request_id`, `requester_id`, `addressee_id`, `status`, `responded_at?` | `/friend-requests/*` (5) | `features/friends` (prévu) | ❌ (`/friends` = placeholder) |
 | **Friendship** | (`user1_id`, `user2_id`), `status` ACTIVE/BLOCKED, `blocked_by_user_id?` | `/friendships/*` (5) | `features/friends` (prévu) | ❌ |
 | **PointTransaction** | `point_transaction_id`, `user_id`, `points`, `reason`, `event_key` (unique, idempotence) | 1 route admin, **aucune lecture** : le solde est `User.points` | `features/auth` (`user.points`) | 🟡 solde disponible, jamais affiché |
@@ -96,7 +96,7 @@ Règle : un enum est possédé par une feature, traduit dans son `labels.ts`, ja
 | `AccountStatus` | `ACTIVE`, `SUSPENDED`, `DEACTIVATED` | `features/auth` (`ACCOUNT_STATUS`) | — |
 | `ProfileVisibility` | `PUBLIC`, `PRIVATE`, `FRIENDS_ONLY` | `features/profile` (type union seulement) | select du mock : à revoir avec le contrat (`FRIENDS_ONLY` traité comme privé par l'API) |
 | `InterestCategory` | 9 valeurs `ENV_*`, `SOCIAL_*`, `CULTURAL_*` | à créer dans `features/profile` | ❌ |
-| `OrganizationStatus`, `MemberStatus`, `RoleOrg` | voir contrat §2 | à créer dans `features/organizations` | ❌ |
+| `OrganizationStatus`, `MemberStatus`, `RoleOrg` | voir contrat §2 | `features/organizations/types.ts` (#61) | ✅ |
 | `FriendRequestStatus`, `FriendshipStatus` | voir contrat §2 | à créer dans `features/friends` | ❌ |
 | `PointReason` | 10 valeurs | jamais reçu par le front (pas de route de lecture) | — |
 
@@ -344,9 +344,9 @@ Backend = `main` au 24/09 (#40 auth/users/profiles/interests/orgs/membres/points
 | Feature | Backend | Frontend |
 |---|---|---|
 | Signaler une action possible (suggestion) | pas de modèle : = `Action` `PENDING` | ✅ via la carte (Epic 7) |
-| Créer une action | ✅ `POST /actions` (JWT, actif, orga facultative, `max_participants` ≥ 3) | ✅ `ActionForm` depuis la carte ; pas encore de page `/actions/new` |
-| Modifier une action | 🟡 `PATCH /actions/:id` **cassé** : 500 sans `organization_id`, mise à jour partielle (ticket backend) | ❌ (`ActionForm` prévu pour, bloqué par le bug) |
-| Supprimer une action | ❌ (`cancel` seulement) | ❌ |
+| Créer une action | ✅ `POST /actions` (JWT, actif, orga facultative, `max_participants` ≥ 3) | ✅ `ActionForm` depuis la carte + page `/actions/new` (#33, `?at=` pré-place le pin) |
+| Modifier une action | 🟡 `PATCH /actions/:id` **cassé** : 500 sans `organization_id`, mise à jour partielle (ticket backend) | 🟡 page `/actions/:id/edit` branchée (#33, créateur/ADMIN, PENDING/APPROVED) ; l'enregistrement affiche une erreur tant que le backend répond 500, bien que les champs soient persistés |
+| Supprimer une action | ❌ (`cancel` seulement) | ✅ « Cancel this action » + confirmation depuis la page de modification (#33) = `PATCH /cancel` ; pas de vraie suppression |
 | Découvrir des actions | ✅ `GET /actions` (+ un filtre : organisation, catégorie, créateur, statut) ; pas de rayon/texte/date | ✅ carte + filtre catégorie (#12) ; ❌ page liste `/actions` (placeholder) |
 | Consulter une action | ✅ `GET /actions/:id` (+ `participant_count`, `remaining_seats`) | 🟡 `/actions/:id` sur mock #46 ; la carte n'y mène pas encore |
 | Partager une action (V2) | ❌ | ❌ |
@@ -358,7 +358,7 @@ Backend = `main` au 24/09 (#40 auth/users/profiles/interests/orgs/membres/points
 | S'inscrire / se désinscrire | ✅ `POST/DELETE /participations/:actionId` — **`PENDING` seulement**, plafond, pas le créateur | ❌ (bouton « Join » placeholder dans le mock) |
 | Voir la liste des participants | ✅ `GET /participations/action/:actionId` → `{ user_id, username, profile_picture, created_at }[]` | ❌ |
 | Voir les places restantes | ✅ `remaining_seats` sur liste et détail (null = illimité) | 🟡 typé dans `Action`, pas encore affiché |
-| Mes participations | ✅ `GET /participations/me` | ❌ |
+| Mes participations | ✅ `GET /participations/me` | 🟡 `features/participations` (`useMyParticipations`), affichées dans « My actions » du tableau de bord (#65) |
 
 ### Epic 4 — Communication
 
