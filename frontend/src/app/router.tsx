@@ -7,7 +7,7 @@ import { HomePage } from './pages/home/HomePage';
 import { LegalPage } from './pages/LegalPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { PlaceholderPage } from './pages/PlaceholderPage';
-import { ActionsListPage, ActionDetailPage } from '@/features/actions';
+import { ActionsListPage } from '@/features/actions';
 import { ROUTES, editActionPath, organizationPath } from './routes';
 import { ProfilePage, PublicProfilePage } from '../features/profile';
 

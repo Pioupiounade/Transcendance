@@ -11,6 +11,9 @@ const CATEGORY_MAP: Record<string, Category> = {
 /** Une action enrichie (`participant_count`, `remaining_seats`). 404 → `ApiError` status 404. */
 export const fetchAction = (id: string, signal?: AbortSignal) => http.get<Action>(`/actions/${id}`, { signal });
 
+/** Récupère la liste des actions. */
+export const fetchActions = (signal?: AbortSignal) => http.get<Action[]>('/actions', { signal });
+
 /** Body de `POST /actions` (`CreateActionDto`, docs/api_contract.md §15) : l'identité vient du JWT. */
 export type CreateActionInput = {
   title: string;
