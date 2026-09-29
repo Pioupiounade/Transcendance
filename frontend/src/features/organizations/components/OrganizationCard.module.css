@@ -1,0 +1,82 @@
+/* DESIGN.md §6 « Action card » adaptée : icône bâtiment, titre, adresse, description sur deux lignes. */
+.card {
+  display: flex;
+  gap: 14px;
+  height: 100%;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-action);
+  background: var(--ground);
+  color: var(--ink);
+  text-decoration: none;
+  transition:
+    border-color var(--t-base),
+    background-color var(--t-base);
+}
+.card:hover {
+  border-color: var(--brand);
+  background: var(--card-selected-bg);
+}
+.inactive {
+  opacity: 0.7;
+}
+
+.icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: var(--trust-soft);
+  color: var(--brand);
+}
+
+.body {
+  display: grid;
+  align-content: start;
+  gap: 5px;
+  min-width: 0;
+}
+
+.top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.title {
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: -0.3px;
+}
+
+.status {
+  flex: none;
+  padding: 3px 8px;
+  border-radius: var(--r-tag);
+  background: var(--note-bg);
+  color: var(--note-ink);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.address {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.description {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  font-size: 13px;
+  color: var(--muted);
+}

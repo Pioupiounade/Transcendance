@@ -3,7 +3,8 @@
   position: relative;
   /* Les z-index internes de Leaflet (400 à 1000) restent sous l'en-tête et la barre mobile. */
   isolation: isolate;
-  min-height: 570px;
+  /* Hauteurs surchargeables par l'hôte (tableau de bord : carte plus basse). */
+  min-height: var(--map-min-height, 570px);
   border: 1px solid var(--map-line);
   border-radius: 25px;
   overflow: hidden;
@@ -68,6 +69,16 @@
   color: var(--muted);
 }
 
+/* Popup du brouillon : titre, aide, boutons du parent. */
+.draftPopup {
+  display: grid;
+  gap: 8px;
+  min-width: 190px;
+}
+.draftPopup .popupMeta {
+  margin: 0;
+}
+
 /* Leaflet applique `leaflet-div-icon` (fond blanc, bordure) sauf si on fournit une classe. */
 .pinWrap {
   background: none;
@@ -106,6 +117,31 @@
   scale: 1.12;
 }
 
+/* Brouillon : pin claire, bord pointillé forêt, halo qui respire (coupé par prefers-reduced-motion, global.css). */
+.draft {
+  background: var(--ground);
+  color: var(--brand);
+  border: 3px dashed var(--brand);
+  cursor: grab;
+  animation: breathe 1.6s ease-in-out infinite;
+}
+.draft:active {
+  cursor: grabbing;
+}
+@keyframes breathe {
+  0%,
+  100% {
+    box-shadow:
+      0 5px 0 #274c3520,
+      0 0 0 0 #265c4b33;
+  }
+  50% {
+    box-shadow:
+      0 5px 0 #274c3520,
+      0 0 0 12px #265c4b00;
+  }
+}
+
 .you {
   display: block;
   width: 20px;
@@ -122,10 +158,10 @@
   position: absolute;
   top: 19px;
   left: 19px;
-  right: 19px;
+  right: 70px; /* laisse le contrôle de zoom (en haut à droite) libre */
   z-index: 1001;
   display: flex;
-  justify-content: space-between;
+  flex-wrap: wrap;
   gap: 10px;
   pointer-events: none;
 }
@@ -189,18 +225,19 @@
 
 @media (min-width: 1501px) {
   .map {
-    min-height: 630px;
+    min-height: var(--map-min-height-large, 630px);
   }
 }
 
 @media (max-width: 760px) {
   .map {
-    min-height: 430px;
+    min-height: var(--map-min-height-mobile, 430px);
   }
   .tools {
     top: 12px;
     left: 12px;
-    right: 12px;
+    right: 60px;
+    gap: 6px;
   }
   .tag {
     font-size: 11px;

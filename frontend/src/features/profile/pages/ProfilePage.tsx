@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { selectInterest, removeInterest, useProfile, createProfile, updateProfile, getProfileActivity, getMyInterests } from '../api/profileApi';
+import { useParams } from 'react-router';
 import { ProfileView } from '../components/ProfileView';
 import { ProfileForm } from '../components/ProfileForm';
 import type { ProfileActivity, UserProfile, InterestCategory } from '../types';
 import { isApiError } from '@/shared/api';
 
 export const ProfilePage: React.FC = () => {
-  const { profile, isLoading, error, setProfile } = useProfile();
+  const { username } = useParams<{ username?: string }>();
+  const { profile, isLoading, error, setProfile } = useProfile(username);
   const [isEditing, setIsEditing] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);

@@ -162,21 +162,36 @@ export async function updateProfile(profile: UserProfile, avatar?: File | null):
   return getProfile();
 }
 
-export function useProfile() {
+export async function getAllProfiles(): Promise<UserProfile[]> {
+  await new Promise((resolve) => setTimeout(resolve, 300));
+  return MOCK_USER_PROFILES;
+}
+
+export function useProfile(identifier?: string) {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
     let isMounted = true;
-    setIsLoading(true);
 
-    getProfile()
+    // Se déclenche de manière asynchrone pour éviter le warning React
+    Promise.resolve().then(() => {
+      if (isMounted) {
+        setIsLoading(true);
+        setError(null);
+      }
+    });
+
+    getProfile(identifier)
       .then((data) => {
         if (isMounted) setProfile(data);
       })
       .catch((err) => {
-        if (isMounted) setError(err as Error);
+        if (isMounted) {
+          setError(err as Error);
+          setProfile(null);
+        }
       })
       .finally(() => {
         if (isMounted) setIsLoading(false);
@@ -185,7 +200,7 @@ export function useProfile() {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [identifier]);
 
   return { profile, isLoading, error, setProfile };
 }

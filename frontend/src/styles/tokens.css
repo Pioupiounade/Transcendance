@@ -40,6 +40,10 @@
   --note-bg: #eee8d8;
   --note-ink: #69715d;
   --card-selected-bg: #f3f6ea;
+  /* Fonds de carte d'action, très légers, teintés par catégorie (chaleur sans bruit). */
+  --card-environment-bg: #f1f6ea;
+  --card-social-bg: #fbeee5;
+  --card-culture-bg: #fbf2dd;
 
   /* Espacements (DESIGN.md §3) */
   --s1: 4px;

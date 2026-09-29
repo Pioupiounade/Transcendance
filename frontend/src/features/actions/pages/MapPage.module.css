@@ -25,17 +25,21 @@
   font-size: 15px;
 }
 
+.cta {
+  justify-self: start;
+  margin-top: 6px;
+}
+
+/* Carte pleine largeur, la liste en grille dessous (choix du 25/09/2026, en écart avec la maquette). */
 .layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 340px;
-  gap: 22px;
-  align-items: start;
+  gap: 26px;
 }
 
 .list {
   display: flex;
   flex-direction: column;
-  gap: 11px;
+  gap: 14px;
 }
 
 .listTitle {
@@ -70,7 +74,8 @@
 
 .cards {
   display: grid;
-  gap: 11px;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 14px;
 }
 
 .note {
@@ -81,19 +86,12 @@
   color: var(--muted);
 }
 
-@media (min-width: 1501px) {
-  .layout {
-    grid-template-columns: minmax(0, 1fr) 375px;
-  }
-}
-
 @media (max-width: 1100px) {
   .page {
     padding: 24px;
   }
   .layout {
-    grid-template-columns: minmax(0, 1fr) 310px;
-    gap: 16px;
+    gap: 20px;
   }
 }
 
@@ -102,7 +100,22 @@
     padding: 24px 16px;
     gap: 16px;
   }
-  .layout {
+  .cards {
     grid-template-columns: 1fr;
   }
+}
+
+.success {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--trust-soft);
+  color: var(--brand);
+  font-weight: 600;
+}
+
+.signIn {
+  font-weight: 600;
+  color: var(--brand);
+  text-underline-offset: 3px;
 }

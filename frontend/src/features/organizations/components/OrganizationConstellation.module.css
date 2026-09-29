@@ -1,0 +1,208 @@
+/* Constellation : cadre arrondi sur fond « ciel » (surface → ground), poussière d'étoiles, halo autour du centre. */
+.constellation {
+  position: relative;
+}
+
+.frame {
+  position: relative;
+  height: clamp(400px, 60vh, 660px);
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--r-card);
+  background: radial-gradient(circle at 50% 50%, var(--ground) 0%, var(--surface) 70%, #f1ede3 100%);
+  box-shadow: var(--shadow);
+  user-select: none;
+}
+
+.canvas {
+  display: block;
+  position: absolute;
+  inset: 0;
+}
+
+.star {
+  fill: var(--brand);
+  opacity: 0.16;
+}
+
+.haloIn {
+  stop-color: var(--trust-soft);
+  stop-opacity: 0.75;
+}
+.haloOut {
+  stop-color: var(--trust-soft);
+  stop-opacity: 0;
+}
+
+/* Anneaux décoratifs : trait fin pointillé. */
+.ring {
+  fill: none;
+  stroke: var(--brand);
+  stroke-opacity: 0.14;
+  stroke-dasharray: 3 7;
+  stroke-linecap: round;
+}
+
+/* Fils : utilisateur → organisation (plein, forêt), organisation ↔ voisine (pointillé, plus discret). */
+.link {
+  stroke: var(--brand);
+  stroke-opacity: 0.3;
+  stroke-width: 1.4;
+  transition:
+    stroke-opacity var(--t-base),
+    stroke-width var(--t-base);
+}
+.neighbourLink {
+  stroke: var(--terra);
+  stroke-opacity: 0.3;
+  stroke-width: 1.2;
+  stroke-dasharray: 2 6;
+  stroke-linecap: round;
+  transition: stroke-opacity var(--t-base);
+}
+.linkActive {
+  stroke-opacity: 0.9;
+  stroke-width: 2;
+}
+
+/* Nœud organisation : lien SVG, disque forêt sur halo doux, icône bâtiment, titre puis distance. */
+.node {
+  cursor: grab;
+  touch-action: none;
+  outline: none;
+}
+.node:active {
+  cursor: grabbing;
+}
+.nodeInactive {
+  opacity: 0.55;
+}
+
+.nodeGlow {
+  fill: var(--trust-soft);
+  opacity: 0.9;
+  transition: r var(--t-base);
+}
+.nodeDisc {
+  fill: var(--brand);
+  stroke: var(--ground);
+  stroke-width: 3;
+  transition:
+    fill var(--t-base),
+    r var(--t-base);
+}
+.nodeIcon {
+  color: var(--ground);
+  pointer-events: none;
+}
+.node:hover .nodeGlow {
+  r: 36px;
+}
+.node:hover .nodeDisc {
+  fill: var(--terra);
+}
+
+.label,
+.distance {
+  text-anchor: middle;
+  paint-order: stroke;
+  stroke: var(--surface);
+  stroke-width: 4px;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+.label {
+  fill: var(--ink);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+}
+.distance {
+  fill: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+/* Le centre : avatar HTML posé par-dessus le SVG, ancré sur le point (cx, cy). */
+.you {
+  position: absolute;
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+.youAvatar {
+  box-shadow:
+    0 0 0 6px var(--trust-soft),
+    0 10px 30px #265c4b2a;
+}
+.youDisc {
+  display: grid;
+  place-items: center;
+  width: 68px;
+  height: 68px;
+  border: 3px solid var(--ground);
+  border-radius: 50%;
+  background: var(--terra);
+  color: var(--ground);
+  box-shadow:
+    0 0 0 6px #b6533926,
+    0 10px 30px #b653392a;
+}
+.youDiscCompact {
+  width: 56px;
+  height: 56px;
+}
+.youLabel {
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--ground);
+  border: 1px solid var(--line);
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.legend,
+.hint {
+  position: absolute;
+  bottom: 14px;
+  margin: 0;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: #fffefacc;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+  pointer-events: none;
+}
+.legend {
+  left: 16px;
+}
+.hint {
+  right: 16px;
+}
+
+@media (max-width: 760px) {
+  .frame {
+    height: 480px;
+    border-radius: var(--r-panel);
+  }
+  .label {
+    font-size: 12px;
+  }
+  .hint {
+    display: none;
+  }
+  /* Sous le cadre, en légende : dedans, la pastille cacherait le nœud du bas. */
+  .legend {
+    position: static;
+    margin-top: 8px;
+    padding: 0;
+    background: none;
+    text-align: center;
+  }
+}

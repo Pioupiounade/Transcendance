@@ -1,0 +1,23 @@
+/* Partagé par LoginPage et RegisterPage. */
+.form {
+  display: grid;
+  gap: 12px;
+  margin-top: 23px;
+}
+
+.consent {
+  margin-top: 4px;
+}
+
+.serverError {
+  padding: 12px 16px;
+  border-radius: var(--r-field);
+  background: var(--danger-soft);
+  color: var(--danger);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.submit {
+  margin-top: 12px;
+}

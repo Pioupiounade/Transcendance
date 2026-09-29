@@ -1,6 +1,6 @@
 import React from 'react';
 import { useParams } from 'react-router';
-import { useActionDetail } from '../api/actionsApi';
+import { useActionDetail } from '../api/actionDetailMock';
 import { ActionDetailsView } from '../components/ActionDetailsView';
 
 /**

@@ -1,6 +1,8 @@
-// Interface de la feature auth. Login / register : ticket suivant.
+// Interface de la feature auth : session, garde de route, pages de connexion et d'inscription.
 export { AuthProvider } from './components/AuthProvider';
 export { RequireAuth } from './components/RequireAuth';
+export { LoginPage } from './pages/LoginPage';
+export { RegisterPage } from './pages/RegisterPage';
 export { useAuth } from './hooks/useAuth';
 export { AUTH_ROUTES } from './routes';
 export { ROLE_APP, ACCOUNT_STATUS } from './types';
