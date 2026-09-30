@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { selectInterest, removeInterest, useProfile, createProfile, updateProfile, getProfileActivity, getMyInterests } from '../api/profileApi';
 import { useParams } from 'react-router';
-import { CURRENT_USERNAME, useProfile } from '../api/profileApi';
 import { ProfileView } from '../components/ProfileView';
 import { ProfileForm } from '../components/ProfileForm';
-import type { ProfileActivity, UserProfile, InterestCategory } from '../types';
+import type { ProfileActivity, UserProfile, InterestCategory, FriendshipStatus } from '../types';
 import { isApiError } from '@/shared/api';
 
 export const ProfilePage: React.FC = () => {
@@ -122,8 +121,9 @@ export const ProfilePage: React.FC = () => {
         </>
       );
     }
+  }
 
-  const isOwnProfile = !username || username === CURRENT_USERNAME;
+  //const isOwnProfile = !username || username === CURRENT_USERNAME;
 
   if (isLoading) {
     return (

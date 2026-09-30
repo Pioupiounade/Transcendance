@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { FriendshipCTA } from './FriendshipCTA';
 import './ProfileForm.css';
-import type { ProfileActivity, UserProfile, InterestCategory, UserProfile, FriendshipStatus } from '../types';
+import type { ProfileActivity, InterestCategory, UserProfile, FriendshipStatus } from '../types';
 import { Link } from 'react-router';
 import { INTEREST_LABELS } from '../interestLabels';
 
@@ -51,7 +51,6 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
       closeDeleteModal();
     } catch (error) {
       console.error('Failed to delete account:', error);
-      setIsDeleting(false);
     } finally {
       setIsDeleting(false);
     }
@@ -112,11 +111,12 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
             </button>
           ) : (
             <FriendshipCTA
-              userId={profile.id}
+              userId={profile.username}
               status={profile.friendshipStatus ?? 'NONE'}
               onStatusChange={onFriendshipChange}
             />
           )}
+        </div>
 
         {/* Bio / Description */}
         <div style={{ marginTop: '16px' }}>
@@ -125,8 +125,6 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
             {profile.description || 'No description provided yet.'}
           </p>
         </div>
-        <section aria-labelledby="profile-interests-title" style={{ marginTop: '24px' }}>
-          <h2 id="profile-interests-title">Interests</h2>
 
         {/* Interests Section */}
         <section aria-labelledby="profile-interests-title" style={{ marginTop: '24px' }}>

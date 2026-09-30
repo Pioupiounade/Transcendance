@@ -20,7 +20,6 @@ export interface UserProfile {
   visibility: ProfileVisibility;
   profilePicture?: string;
   friendshipStatus?: FriendshipStatus;
-}
   commune?: string | null;
 }
 
@@ -48,4 +47,3 @@ export interface ProfileActivity {
   organizations: ProfileOrganization[];
   participations: ProfileParticipation[];
 }
-
