@@ -1,14 +1,30 @@
-import { Body, Controller, Get, Post, Param, Patch, Query, Req, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Post,
+  Param,
+  Patch,
+  Query,
+  UseInterceptors,
+  UploadedFile,
+  ParseFilePipe,
+  MaxFileSizeValidator,
+  Req,
+  UseGuards,
+  BadRequestException,
+} from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { WebpCompressorPipe } from '../common/shart-transform.pipe';
 import { ProfilesService } from './profiles.service';
 import { CreateProfileDto } from './dto/create-profile.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth-guard';
-import { OptionalJwtAuthGuard } from '../auth/guards/optional-jwt-auth-guard';
-
+import { createStorageOptions } from '../common/multer.config';
 
 @Controller('profiles')
 export class ProfilesController {
-  constructor(private profilesService: ProfilesService) {}
+  constructor(private profilesService: ProfilesService) { }
 
   @Get()
   findAll() {
@@ -26,10 +42,9 @@ export class ProfilesController {
     return this.profilesService.findOwnProfile(req.user.id);
   }
 
-  @UseGuards(OptionalJwtAuthGuard)
   @Get(':userId')
-  findOne(@Param('userId') userId: string, @Req() req: any) {
-    return this.profilesService.findOne(userId, req.user?.id);
+  findOne(@Param('userId') userId: string) {
+    return this.profilesService.findOne(userId);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -48,5 +63,30 @@ export class ProfilesController {
     @Body() data: UpdateProfileDto,
   ) {
     return this.profilesService.updateProfile(req.user.id, data);
+  }
+
+  @Patch('me/avatar')
+  @UseGuards(JwtAuthGuard)
+  @UseInterceptors(FileInterceptor('file', createStorageOptions('avatars')))
+  async uploadAvatar(
+    @Req() req: any,
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [new MaxFileSizeValidator({ maxSize: 5 * 1024 * 1024 })],
+      }),
+      new WebpCompressorPipe({ quality: 80 }), // Résolution intacte, conversion .webp (q: 80)
+    )
+    processedFilename: string,
+  ) {
+    const userId = req.user?.id ?? req.user?.user_id ?? req.user?.sub;
+
+    if (!userId) {
+      throw new BadRequestException('User ID not found in request');
+    }
+
+    const avatarUrl = `/static/avatars/${processedFilename}`;
+    return this.profilesService.updateProfile(String(userId), {
+      profile_picture: avatarUrl,
+    });
   }
 }
