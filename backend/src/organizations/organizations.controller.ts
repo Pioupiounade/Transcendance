@@ -1,8 +1,9 @@
-import { Body, Controller, Get, Post, Param, Patch, Query, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, Param, Patch, Query, Req, UseGuards, Delete } from '@nestjs/common';
 import { OrganizationsService } from './organizations.service';
 import { CreateOrganizationDto } from './dto/create-organization.dto';
 import { UpdateOrganizationDto } from './dto/update-organization.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth-guard';
+import { OrganizationCommentDto } from './dto/organization-comments.dto';
 
 @Controller('organizations')
 export class OrganizationsController {
@@ -102,5 +103,33 @@ export class OrganizationsController {
       id,
       req.user.id,
     );
+  }
+
+  // Endpoint for Comments
+
+  @UseGuards(JwtAuthGuard)
+  @Post(':id/comments')
+  addComment(
+    @Req() req: any,
+    @Param('id') id: string,
+    @Body() data: OrganizationCommentDto,
+  ) {
+    return this.organizationsService.addComment(BigInt(id), BigInt(req.user.id), data.comment);
+  }
+
+  @Get(':id/comments')
+  getComments(
+    @Param('id') id: string,
+  ) {
+    return this.organizationsService.getComments(BigInt(id));
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete('comments/:commentId')
+  async deleteComment(
+    @Req() req: any,
+    @Param('commentId') commentId: string,
+  ) {
+    return this.organizationsService.deleteComment(BigInt(commentId), BigInt(req.user.id));
   }
 }
