@@ -34,4 +34,7 @@ clean:
 backend-shell:
 	$(COMPOSE) exec backend sh
 
+seed:
+	$(COMPOSE) exec backend npx prisma db seed
+
 .PHONY: all up down re db-push logs clean backend-shell
