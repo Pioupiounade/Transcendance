@@ -159,7 +159,8 @@ model Action {
   location         Float[]
   status           ActionStatus @default(PENDING)
   category         Category
-  imagesList       String[]     @default([])
+  images_before    String[] @default([])
+  images_after     String[] @default([])
 
   validated_by_user_id BigInt?
   validated_at         DateTime?

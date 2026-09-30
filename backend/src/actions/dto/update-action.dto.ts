@@ -29,7 +29,12 @@ export class UpdateActionDto {
   @IsOptional()
   @IsArray()
   @IsString({ each:true })
-  imagesList?: string[];
+  images_before?: string[];
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each:true })
+  images_after?: string[];
 
   @IsOptional()
   @IsInt()
