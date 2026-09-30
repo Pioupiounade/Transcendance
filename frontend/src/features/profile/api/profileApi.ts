@@ -163,8 +163,53 @@ export async function updateProfile(profile: UserProfile, avatar?: File | null):
 }
 
 export async function getAllProfiles(): Promise<UserProfile[]> {
-  await new Promise((resolve) => setTimeout(resolve, 300));
-  return MOCK_USER_PROFILES;
+  await new Promise((resolve) => setTimeout(resolve, 200));
+  return [...MOCK_USER_PROFILES];
+}
+
+export async function sendFriendRequest(targetUserId: string): Promise<FriendshipStatus> {
+  await new Promise((resolve) => setTimeout(resolve, 250));
+  const user = MOCK_USER_PROFILES.find((p) => p.id === targetUserId);
+  if (user) {
+    user.friendshipStatus = 'PENDING_SENT';
+  }
+  return 'PENDING_SENT';
+}
+
+export async function acceptFriendRequest(targetUserId: string): Promise<FriendshipStatus> {
+  await new Promise((resolve) => setTimeout(resolve, 250));
+  const user = MOCK_USER_PROFILES.find((p) => p.id === targetUserId);
+  if (user) {
+    user.friendshipStatus = 'ACCEPTED';
+  }
+  return 'ACCEPTED';
+}
+
+export async function declineFriendRequest(targetUserId: string): Promise<FriendshipStatus> {
+  await new Promise((resolve) => setTimeout(resolve, 250));
+  const user = MOCK_USER_PROFILES.find((p) => p.id === targetUserId);
+  if (user) {
+    user.friendshipStatus = 'NONE';
+  }
+  return 'NONE';
+}
+
+export async function cancelOrRemoveFriend(targetUserId: string): Promise<FriendshipStatus> {
+  await new Promise((resolve) => setTimeout(resolve, 250));
+  const user = MOCK_USER_PROFILES.find((p) => p.id === targetUserId);
+  if (user) {
+    user.friendshipStatus = 'NONE';
+  }
+  return 'NONE';
+}
+
+export async function unblockUser(targetUserId: string): Promise<FriendshipStatus> {
+  await new Promise((resolve) => setTimeout(resolve, 250));
+  const user = MOCK_USER_PROFILES.find((p) => p.id === targetUserId);
+  if (user) {
+    user.friendshipStatus = 'NONE';
+  }
+  return 'NONE';
 }
 
 export function useProfile(identifier?: string) {
@@ -177,7 +222,6 @@ export function useProfile(identifier?: string) {
     setIsLoading(true);
     setError(null);
 
-    // Se déclenche de manière asynchrone pour éviter le warning React
     Promise.resolve().then(() => {
       if (isMounted) {
         setIsLoading(true);

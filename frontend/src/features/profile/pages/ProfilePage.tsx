@@ -3,7 +3,7 @@ import { selectInterest, removeInterest, useProfile, createProfile, updateProfil
 import { useParams } from 'react-router';
 import { ProfileView } from '../components/ProfileView';
 import { ProfileForm } from '../components/ProfileForm';
-import type { ProfileActivity, UserProfile, InterestCategory } from '../types';
+import type { ProfileActivity, UserProfile, InterestCategory, FriendshipStatus } from '../types';
 import { isApiError } from '@/shared/api';
 
 export const ProfilePage: React.FC = () => {
@@ -121,7 +121,11 @@ export const ProfilePage: React.FC = () => {
         </>
       );
     }
+  }
 
+  //const isOwnProfile = !username || username === CURRENT_USERNAME;
+
+  if (isLoading) {
     return (
       <div style={{ textAlign: 'center', padding: '4rem 1rem' }}>
         <h2>No profile yet</h2>
@@ -136,7 +140,9 @@ export const ProfilePage: React.FC = () => {
     return (
       <div style={{ textAlign: 'center', padding: '4rem 1rem' }}>
         <h2>Profile not found</h2>
-        <p className="help help--error" style={{ justifyContent: 'center' }}>Unable to load profile data.</p>
+        <p className="help help--error" style={{ justifyContent: 'center' }}>
+          Unable to load profile data.
+        </p>
       </div>
     );
   }
@@ -195,7 +201,11 @@ export const ProfilePage: React.FC = () => {
     }
   };
 
-  if (isEditing) {
+  const handleFriendshipChange = (newStatus: FriendshipStatus) => {
+    setProfile((prev) => (prev ? { ...prev, friendshipStatus: newStatus } : null));
+  };
+
+  if (isEditing && isOwnProfile) {
     return (
       <>
         {updateError && <p role="alert">{updateError}</p>}
@@ -213,10 +223,13 @@ export const ProfilePage: React.FC = () => {
   return (
     <ProfileView
       profile={profile}
+      isOwnProfile={isOwnProfile}
+      onEdit={() => setIsEditing(true)}
+      onDeleteAccount={handleDeleteAccount}
+      onFriendshipChange={handleFriendshipChange}
       activity={activity}
       activityLoading={activityLoading}
       activityError={activityError}
-      onEdit={() => setIsEditing(true)}
       interests={interests}
       interestsLoading={interestsLoading}
       interestsError={interestsError}

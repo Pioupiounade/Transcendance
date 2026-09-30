@@ -1,5 +1,7 @@
 export type ProfileVisibility = 'PUBLIC' | 'PRIVATE' | 'FRIENDS_ONLY';
 
+export type FriendshipStatus = 'NONE' | 'PENDING_SENT' | 'PENDING_RECEIVED' | 'ACCEPTED' | 'BLOCKED';
+
 export type InterestCategory =
   | 'ENV_FLOWER_POWER'
   | 'ENV_CLEAN'
@@ -17,6 +19,7 @@ export interface UserProfile {
   description?: string;
   visibility: ProfileVisibility;
   profilePicture?: string;
+  friendshipStatus?: FriendshipStatus;
   commune?: string | null;
 }
 
@@ -44,4 +47,3 @@ export interface ProfileActivity {
   organizations: ProfileOrganization[];
   participations: ProfileParticipation[];
 }
-
