@@ -23,6 +23,10 @@ db-update:
 	$(COMPOSE) exec -T backend npx prisma generate
 	$(COMPOSE) exec -T backend npx prisma migrate deploy
 
+db-reset:
+	$(COMPOSE) exec -T backend npx prisma migrate reset --force
+	@echo "Database reset and seeded."
+
 logs:
 	$(COMPOSE) logs -f
 
@@ -36,5 +40,6 @@ backend-shell:
 
 seed:
 	$(COMPOSE) exec backend npx prisma db seed
+	@echo "Database seeded."
 
 .PHONY: all up down re db-push logs clean backend-shell
