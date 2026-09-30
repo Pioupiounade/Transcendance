@@ -71,6 +71,7 @@ model Profile {
   description     String?
   profile_picture String?
   location        Float[]
+  commune         String?
   visibility      ProfileVisibility @default(PUBLIC)
 
   // 2. Champs de relation Prisma

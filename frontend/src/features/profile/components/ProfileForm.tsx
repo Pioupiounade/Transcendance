@@ -1,20 +1,29 @@
-import React, { useState, useRef } from 'react';
-import type { UserProfile } from '../types';
+import React, { useEffect, useState, useRef } from 'react';
+import type { UserProfile, InterestCategory } from '../types';
 import './ProfileForm.css';
+import { INTEREST_LABELS } from '../interestLabels';
 
 interface ProfileFormProps {
   initialData?: UserProfile;
-  onSave: (updatedProfile: UserProfile) => void;
+  initialInterests?: InterestCategory[];
+  onSave: (updatedProfile: UserProfile, selectedInterests: InterestCategory[], avatar: File | null) => void;
   onCancel: () => void;
+  isSaving?: boolean;
 }
 
 export const ProfileForm: React.FC<ProfileFormProps> = ({
   initialData,
+  initialInterests = [],
   onSave,
   onCancel,
+  isSaving = false,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const previewUrlRef = useRef<string | null>(null);
   const [geoLoading, setGeoLoading] = useState(false);
+  const [avatar, setAvatar] = useState<File | null>(null);
+  const [selectedInterests, setSelectedInterests] =
+    useState<InterestCategory[]>(initialInterests);
 
   // Field-specific validation errors
   const [avatarError, setAvatarError] = useState<string | null>(null);
@@ -32,6 +41,10 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({
       profilePicture: '',
     }
   );
+
+  useEffect(() => () => {
+    if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
+  }, []);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
@@ -101,11 +114,23 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({
       return;
     }
 
+    const previewUrl = URL.createObjectURL(file);
+    if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
+    previewUrlRef.current = previewUrl;
+    setAvatar(file);
     setFormData((prev) => ({
       ...prev,
-      profilePicture: URL.createObjectURL(file),
+      profilePicture: previewUrl,
     }));
   };
+
+  const toggleInterest = (interest: InterestCategory) => {
+    setSelectedInterests((current) =>
+      current.includes(interest)
+        ? current.filter((item) => item !== interest)
+        : [...current, interest],
+    );
+  };  
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -126,7 +151,7 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({
 
     if (hasError) return;
 
-    onSave(formData);
+    onSave(formData, selectedInterests, avatar);
   };
 
   return (
@@ -241,20 +266,39 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({
           <div className="help" style={{ justifyContent: 'flex-end' }}>
             <span>{formData.description ? formData.description.length : 0} / 300</span>
           </div>
+          <fieldset style={{ border: 0, padding: 0, margin: 0 }}>
+            <legend>Interests</legend>
 
+            {(Object.keys(INTEREST_LABELS) as InterestCategory[]).map((interest) => (
+              <label
+                key={interest}
+                style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '8px' }}
+              >
+                <input
+                  type="checkbox"
+                  checked={selectedInterests.includes(interest)}
+                  onChange={() => toggleInterest(interest)}
+                  disabled={isSaving}
+                />
+                {INTEREST_LABELS[interest]}
+              </label>
+            ))}
+          </fieldset>
           <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
             <button
               type="button"
               className="btn btn--secondary btn--block"
               onClick={onCancel}
+              disabled={isSaving}
             >
               Cancel
             </button>
             <button
               type="submit"
               className="btn btn--primary btn--block"
+              disabled={isSaving}
             >
-              Save Changes
+              {isSaving ? 'Saving...' : initialData ? 'Save Changes' : 'Create Profile'}
             </button>
           </div>
         </form>

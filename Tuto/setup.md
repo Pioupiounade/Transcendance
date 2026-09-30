@@ -80,3 +80,8 @@ Quand je m'installe sur un nouvel ordi:
     rm -rf dist
     npm run build
 ```
+
+-> tester le front
+```
+    curl -sS 'http://localhost:5173/'
+```

@@ -1,11 +1,18 @@
-import { http } from '@/shared/api';
-import type { Action, ActionRecord, Category, LatLng } from '../types';
+import { http, ApiError } from '@/shared/api';
+import type { Action, ActionRecord, ActionStatus, Category } from '../types';
+import { MOCK_ACTIONS_DB } from './actionDetailMock';
 
-/** Toutes les actions, tous statuts (pas de filtre serveur par rayon : voir docs/api_contract.md §15). */
-export const fetchActions = (signal?: AbortSignal) => http.list<Action>('/actions', { signal });
+const CATEGORY_MAP: Record<string, Category> = {
+  environment: 'ENVIRONMENT',
+  social: 'SOCIAL',
+  cultural: 'CULTURAL',
+};
 
 /** Une action enrichie (`participant_count`, `remaining_seats`). 404 → `ApiError` status 404. */
 export const fetchAction = (id: string, signal?: AbortSignal) => http.get<Action>(`/actions/${id}`, { signal });
+
+/** Récupère la liste des actions. */
+export const fetchActions = (signal?: AbortSignal) => http.get<Action[]>('/actions', { signal });
 
 /** Body de `POST /actions` (`CreateActionDto`, docs/api_contract.md §15) : l'identité vient du JWT. */
 export type CreateActionInput = {

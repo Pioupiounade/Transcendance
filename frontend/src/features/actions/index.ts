@@ -14,3 +14,4 @@ export type { Action, ActionRecord, ActionStatus, Category, LatLng } from './typ
 export { CATEGORY_LABELS, ACTION_STATUS_LABELS, CATEGORY_ICONS } from './labels';
 export * from './components/ActionDetailsView';
 export * from './pages/ActionDetailPage';
+export * from './pages/ActionsListPage';
