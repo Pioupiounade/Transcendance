@@ -292,7 +292,8 @@ export class ActionsService {
         category: data.category,
         location: data.location,
         scheduled_at: data.scheduled_at,
-        imagesList: data.imagesList ?? [],
+        images_before: data.images_before ?? [],
+        images_after: data.images_after ?? [],
         organization_id: organizationId,
         max_participants: data.max_participants,
         creator_id: BigInt(currentUserId),
@@ -438,7 +439,8 @@ export class ActionsService {
                 organization_id: newOrganizationId,
                 location: data.location,
                 category: data.category,
-                imagesList: data.imagesList,
+                images_before: data.images_before ?? [],
+                images_after: data.images_after ?? [],
                 max_participants: data.max_participants,
                 scheduled_at: data.scheduled_at
                   ? new Date(data.scheduled_at)
@@ -857,5 +859,80 @@ export class ActionsService {
         }
       }
     });
+  }
+
+  async updatePhotoBefore(id: string, photoUrl: string, userId: string) {
+    const actionId = BigInt(id);
+
+    const action = await this.prisma.action.findUnique({
+      where: { action_id: actionId },
+    });
+
+    if (!action) {
+      throw new NotFoundException('Action not found');
+    }
+
+    if (action.creator_id !== BigInt(userId)) {
+      throw new ForbiddenException('You are not allowed to upload photos for this action');
+    }
+
+    if (action.images_before.length >= 3) {
+      throw new BadRequestException('You can only upload up to 3 photos before the action');
+    }
+
+    const updatedAction = await this.prisma.action.update({
+      where: { action_id: actionId },
+      data: {
+        images_before: {
+          push: photoUrl,
+        }
+      },
+    });
+
+    return this.serializeAction(updatedAction);
+  }
+
+  async updatePhotoAfter(id: string, photoUrl: string, userId: string) {
+    const actionId = BigInt(id);
+
+    const action = await this.prisma.action.findUnique({
+      where: { action_id: actionId },
+      include : { participation: true }
+    });
+
+    if (!action) {
+      throw new NotFoundException('Action not found');
+    }
+
+    const isParticipant = action.participation.some(participation => participation.user_id === BigInt(userId));
+
+    if (!isParticipant && action.creator_id !== BigInt(userId)) {
+      throw new ForbiddenException('You are not allowed to upload photos for this action');
+    }
+
+    if (action.images_after.length >= 3) {
+      throw new BadRequestException('You can only upload up to 3 photos after the action');
+    }
+
+    const updatedAction = await this.prisma.action.update({
+      where: { action_id: actionId },
+      data: {
+        images_after: {
+          push: photoUrl,
+        }
+      },
+    });
+    return this.serializeAction(updatedAction);
+  }
+
+  // Helper pour sérialiser les BigInt en string (pour éviter l'erreur 500 JSON)
+  private serializeAction(action: any) {
+    return {
+      ...action,
+      action_id: action.action_id.toString(),
+      creator_id: action.creator_id.toString(),
+      organization_id: action.organization_id ? action.organization_id.toString() : null,
+      validated_by_user_id: action.validated_by_user_id ? action.validated_by_user_id.toString() : null,
+    };
   }
 }

@@ -1,11 +1,30 @@
-import { Body, Controller, Get, Post, Param, Patch, Query, Req, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Post,
+  Param,
+  Patch,
+  Query,
+  Req,
+  UseGuards,
+  UseInterceptors,
+  UploadedFile,
+  ParseFilePipe,
+  MaxFileSizeValidator,
+  FileTypeValidator,
+} from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { ActionsService } from './actions.service';
 import { CreateActionDto } from './dto/create-action.dto';
-import { CreateCommentDto } from './dto/create-comment.dto';
-import { ParseIntPipe } from '@nestjs/common';
 import { UpdateActionDto } from './dto/update-action.dto';
 import { Category, ActionStatus } from '../../generated/prisma/client';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth-guard';
+import { createStorageOptions } from '../common/multer.config';
+import { WebpCompressorPipe } from '../common/shart-transform.pipe';
+import { CreateCommentDto } from './dto/create-comment.dto';
+import { ParseIntPipe } from '@nestjs/common/pipes/parse-int.pipe';
+import { DeleteFileOnErrorInterceptor } from '../common/interceptor';
 
 @Controller('actions')
 export class ActionsController {
@@ -118,5 +137,49 @@ export class ActionsController {
   @Get(':id/comments')
   async getComments(@Param('id', ParseIntPipe) actionId: string) {
     return this.actionsService.getComments(BigInt(actionId));
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post(':id/photo-before')
+  @UseInterceptors(FileInterceptor('file', createStorageOptions('actions')),
+    DeleteFileOnErrorInterceptor
+  )
+  uploadPhotoBefore(
+    @Param('id') id: string,
+    @Req() req: any,
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [
+          new MaxFileSizeValidator({ maxSize: 10 * 1024 * 1024 }), // 10MB
+        ],
+      }),
+      WebpCompressorPipe,
+    )
+    processedFilename: string,
+  ) {
+    const photoUrl = `/static/actions/${processedFilename}`;
+    return this.actionsService.updatePhotoBefore(id, photoUrl, req.user.id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post(':id/photo-after')
+  @UseInterceptors(FileInterceptor('file', createStorageOptions('actions')),
+    DeleteFileOnErrorInterceptor
+  )
+  uploadPhotoAfter(
+    @Param('id') id: string,
+    @Req() req: any,
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [
+          new MaxFileSizeValidator({ maxSize: 10 * 1024 * 1024 }), // 10MB
+        ],
+      }),
+      WebpCompressorPipe,
+    )
+    processedFilename: string,
+  ) {
+    const photoUrl = `/static/actions/${processedFilename}`;
+    return this.actionsService.updatePhotoAfter(id, photoUrl, req.user.id);
   }
 }

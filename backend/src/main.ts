@@ -27,25 +27,37 @@
 
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
-
+import * as fs from 'fs';
+import * as path from 'path';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
-  (BigInt.prototype as any).toJSON = function () {
-    return this.toString();
-  };
+	(BigInt.prototype as any).toJSON = function () {
+		return this.toString();
+	};
 
-  const app = await NestFactory.create(AppModule);
+	const uploadDirs = ['uploads/avatars', 'uploads/poi', 'uploads/actions'];
 
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      forbidNonWhitelisted: true,
-      transform: true,
-    }),
-  );
+	uploadDirs.forEach((dir) => {
+		const fullPath = path.join(process.cwd(), dir);
+		if (!fs.existsSync(fullPath)) {
+			fs.mkdirSync(fullPath, { recursive: true, mode: 0o777 });
+		} else {
+			fs.chmodSync(fullPath, 0o777);
+		}
+	});
 
-  await app.listen(process.env.PORT ?? 3000);
+	const app = await NestFactory.create(AppModule);
+
+	app.useGlobalPipes(
+		new ValidationPipe({
+			whitelist: true,
+			forbidNonWhitelisted: true,
+			transform: true,
+		}),
+	);
+
+	await app.listen(process.env.PORT ?? 3000);
 }
 
 bootstrap();
