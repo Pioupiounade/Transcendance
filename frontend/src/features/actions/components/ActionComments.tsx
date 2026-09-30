@@ -1,0 +1,93 @@
+import { useId } from 'react';
+import { Link, useLocation } from 'react-router';
+import { AUTH_ROUTES, useAuth } from '@/features/auth';
+import { Button, CommentComposer, CommentThread, type ThreadComment } from '@/shared/ui';
+import { useActionComments } from '../api/useActionComments';
+import { usePostComment } from '../api/usePostComment';
+import { toCommentErrorMessage } from '../errors';
+import { ACTIONS_LABELS } from '../labels';
+import type { ActionComment } from '../types';
+import { COMMENT_MAX_LENGTH, validateComment } from '../validation';
+import styles from './ActionComments.module.css';
+
+type ActionCommentsProps = {
+  /** Id réel (numérique) de l'action : la discussion vit dans l'API. */
+  actionId: string;
+};
+
+const text = ACTIONS_LABELS.comments;
+
+const toThreadComment = (comment: ActionComment, myUserId: string | null): ThreadComment => ({
+  id: comment.comment_id,
+  author: comment.user.profile?.username ?? text.anonymousAuthor,
+  avatar: comment.user.profile?.profile_picture,
+  createdAt: comment.created_at,
+  content: comment.content,
+  mine: comment.user_id === myUserId,
+});
+
+/**
+ * Discussion publique d'une action (Epic 4, #70) : lecture pour tous, écriture connecté (lien de connexion sinon),
+ * plus récent en premier, mon nouveau commentaire s'insère en tête. Pas d'édition ni de suppression (API).
+ */
+export function ActionComments({ actionId }: ActionCommentsProps) {
+  const titleId = useId();
+  const { status, user } = useAuth();
+  const location = useLocation();
+  const { comments, loading, notFound, error, reload, prepend } = useActionComments(actionId);
+  const postComment = usePostComment();
+
+  const submit = async (content: string) => {
+    prepend(await postComment(actionId, content));
+  };
+  const items = comments.map((comment) => toThreadComment(comment, user?.user_id ?? null));
+  const ready = !loading && error === null;
+
+  return (
+    <section className={styles.section} aria-labelledby={titleId}>
+      <div className={styles.head}>
+        <h2 id={titleId} className={styles.title}>
+          {text.title}
+        </h2>
+        {ready && <span className={styles.count}>{items.length}</span>}
+      </div>
+
+      {status === 'authenticated' && (
+        <CommentComposer
+          label={text.label}
+          maxLength={COMMENT_MAX_LENGTH}
+          submitLabel={text.submit}
+          submittingLabel={text.submitting}
+          validate={validateComment}
+          onSubmit={submit}
+          describeError={toCommentErrorMessage}
+        />
+      )}
+      {status === 'anonymous' && (
+        <p className={styles.signIn}>
+          <Link to={AUTH_ROUTES.login} state={{ from: location }}>
+            {text.signIn}
+          </Link>
+        </p>
+      )}
+
+      {loading && (
+        <p className={styles.muted} role="status">
+          {text.loading}
+        </p>
+      )}
+      {error && (
+        <div className={styles.state} role="alert">
+          <p>{notFound ? text.notFound : text.error}</p>
+          {!notFound && (
+            <Button variant="text" onClick={reload}>
+              {text.retry}
+            </Button>
+          )}
+        </div>
+      )}
+      {ready && items.length === 0 && <p className={styles.muted}>{text.empty}</p>}
+      {ready && items.length > 0 && <CommentThread comments={items} mineLabel={text.you} />}
+    </section>
+  );
+}
