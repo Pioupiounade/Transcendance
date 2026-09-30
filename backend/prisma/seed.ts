@@ -226,9 +226,9 @@ async function main() {
   }
 
   const paris = await ensureOrganization(
-  'Demo - Paris Collective',
-  ids.alice,
-  OrganizationStatus.ACTIVE,
+    'Demo - Paris Collective',
+    ids.alice,
+    OrganizationStatus.ACTIVE,
   );
 
   const neighborhood = await ensureOrganization(
@@ -283,8 +283,8 @@ async function main() {
   console.log('Friendships and pending friend request ready');
 
   const gardening = await ensureAction('Demo - Gardening Together', ids.alice, {
-  organizationId: paris.organization_id,
-  category: Category.ENVIRONMENT,
+    organizationId: paris.organization_id,
+    category: Category.ENVIRONMENT,
   });
 
   const awaitingApproval = await ensureAction(
@@ -330,9 +330,9 @@ async function main() {
   );
 
   await ensureComment(
-  gardening.action_id,
-  ids.bob,
-  'I can bring some plants!',
+    gardening.action_id,
+    ids.bob,
+    'I can bring some plants!',
   );
 
   await ensureComment(
@@ -350,11 +350,11 @@ async function main() {
   console.log('Demo comments ready');
 }
 
-  main()
-    .catch((error: unknown) => {
-      console.error(error);
-      process.exitCode = 1;
-    })
-    .finally(async () => {
-      await prisma.$disconnect();
-    });
+main()
+  .catch((error: unknown) => {
+    console.error(error);
+    process.exitCode = 1;
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });
