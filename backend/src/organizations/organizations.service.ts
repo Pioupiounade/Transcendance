@@ -2,14 +2,14 @@ import { Injectable, NotFoundException, BadRequestException, ForbiddenException 
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateOrganizationDto } from './dto/create-organization.dto';
 import { UpdateOrganizationDto } from './dto/update-organization.dto';
-import { AccountStatus, RoleApp, RoleOrg, MemberStatus, OrganizationStatus} from '../../generated/prisma/client';
+import { AccountStatus, RoleApp, RoleOrg, MemberStatus, OrganizationStatus } from '../../generated/prisma/client';
 
 @Injectable()
 export class OrganizationsService {
- 
-  constructor(private prisma: PrismaService) {}
 
-//1. recuperer toutes les organisations
+  constructor(private prisma: PrismaService) { }
+
+  //1. recuperer toutes les organisations
   async findAll() {
     const organizations = await this.prisma.organization.findMany();
 
@@ -20,7 +20,7 @@ export class OrganizationsService {
     }));
   }
 
-//2. recupere une organisation grace a son id
+  //2. recupere une organisation grace a son id
   async findOne(id: string) { // Nest JS recupere l'id de l'URL comme un string
     const organization = await this.prisma.organization.findUnique({
       where: {
@@ -28,11 +28,11 @@ export class OrganizationsService {
       },
     });
 
-    if(!organization) {
+    if (!organization) {
       throw new NotFoundException('Organization not found');
     }
-    
-     // On retourne l'organisation avec son BigInt converti en string
+
+    // On retourne l'organisation avec son BigInt converti en string
     return {
       ...organization,
       organization_id: organization.organization_id.toString(),
@@ -40,7 +40,7 @@ export class OrganizationsService {
     };
   }
 
-//3. organizations par creator_id
+  //3. organizations par creator_id
   async findByCreator(id: string) {
     const organizations = await this.prisma.organization.findMany({
       where: {
@@ -48,18 +48,18 @@ export class OrganizationsService {
       },
     });
 
-    if(organizations.length === 0) {
+    if (organizations.length === 0) {
       throw new NotFoundException('No organizations created by this user');
     }
-  
+
     return organizations.map((organization) => ({
-          ...organization,
+      ...organization,
       organization_id: organization.organization_id.toString(),
       creator_id: organization.creator_id.toString(),
     }));
   }
 
-//4. organizations par zone
+  //4. organizations par zone
   async findByRadius(lat: number, lng: number, radiusKm: number) {
     const organizations = await this.prisma.organization.findMany();
 
@@ -92,8 +92,8 @@ export class OrganizationsService {
     const a =
       Math.sin(dLat / 2) ** 2 +
       Math.cos(this.toRadians(lat1)) *
-        Math.cos(this.toRadians(lat2)) *
-        Math.sin(dLng / 2) ** 2;
+      Math.cos(this.toRadians(lat2)) *
+      Math.sin(dLng / 2) ** 2;
 
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
@@ -104,7 +104,7 @@ export class OrganizationsService {
     return degrees * (Math.PI / 180);
   }
 
-//5. organizations par nom - autofill
+  //5. organizations par nom - autofill
   async searchByName(query: string) {
     const organizations = await this.prisma.organization.findMany({
       where: {
@@ -124,7 +124,7 @@ export class OrganizationsService {
   }
 
 
-//6. creer une nouvelle organisation
+  //6. creer une nouvelle organisation
   async create(currentUserId: string, data: CreateOrganizationDto) {
     const creator = await this.prisma.user.findUnique({
       where: {
@@ -158,7 +158,7 @@ export class OrganizationsService {
     };
   }
 
-//7. mettre a jour les donnees de l'organisation
+  //7. mettre a jour les donnees de l'organisation
   async update(id: string, data: UpdateOrganizationDto, currentUserId: string,) {
     const organization = await this.prisma.organization.findUnique({
       where: {
@@ -206,16 +206,16 @@ export class OrganizationsService {
     }
 
     const updatedOrganization = await this.prisma.organization.update({
-        where: {
-          organization_id: BigInt(id),
-        },
-        data: {
-          title: data.title,
-          description: data.description,
-          address: data.address,
-          location: data.location,
-        },
-      });
+      where: {
+        organization_id: BigInt(id),
+      },
+      data: {
+        title: data.title,
+        description: data.description,
+        address: data.address,
+        location: data.location,
+      },
+    });
 
     return {
       ...updatedOrganization,
@@ -224,7 +224,7 @@ export class OrganizationsService {
     };
   }
 
-//8. susprendre une organisation
+  //8. susprendre une organisation
   async suspend(id: string, currentUserId: string,) {
     const organization = await this.prisma.organization.findUnique({
       where: {
@@ -249,19 +249,19 @@ export class OrganizationsService {
     if (currentUser.role !== RoleApp.ADMIN) {
       throw new ForbiddenException('Only an admin can suspend an organization');
     }
-  
+
     if (organization.organization_status !== OrganizationStatus.ACTIVE) {
       throw new BadRequestException('Only an active organization can be suspended');
     }
 
     const updatedOrganization = await this.prisma.organization.update({
-        where: {
-          organization_id: BigInt(id),
-        },
-        data: {
-          organization_status: OrganizationStatus.SUSPENDED,
-        },
-      });
+      where: {
+        organization_id: BigInt(id),
+      },
+      data: {
+        organization_status: OrganizationStatus.SUSPENDED,
+      },
+    });
 
     return {
       ...updatedOrganization,
@@ -271,7 +271,7 @@ export class OrganizationsService {
   }
 
 
-//9. desactiver une organisation
+  //9. desactiver une organisation
   async deactivate(id: string, currentUserId: string) {
     const organization = await this.prisma.organization.findUnique({
       where: {
@@ -342,7 +342,7 @@ export class OrganizationsService {
     };
   }
 
-//10. reactiver une organisation
+  //10. reactiver une organisation
   async reactivate(id: string, currentUserId: string) {
     const organization = await this.prisma.organization.findUnique({
       where: {
@@ -421,5 +421,92 @@ export class OrganizationsService {
       organization_id: updatedOrganization.organization_id.toString(),
       creator_id: updatedOrganization.creator_id.toString(),
     };
+  }
+
+  // Comments
+
+  async addComment(organizationId: bigint, userId: bigint, comment: string) {
+    const org = await this.prisma.organization.findUnique({
+      where: { organization_id: organizationId },
+    });
+
+    if (!org) {
+      throw new NotFoundException('Organization not found');
+    }
+
+    return this.prisma.organizationComment.create({
+      data: {
+        organization_id: organizationId,
+        user_id: userId,
+        content: comment
+      },
+        include: {
+          user: {
+            select: {
+              user_id: true,
+              profile: {
+                select: {
+                  username: true,
+                  profile_picture: true,
+                },
+              },
+            },
+          },
+        },
+    });
+  }
+
+  async getComments(organizationId: bigint) {
+    const org = await this.prisma.organization.findUnique({
+      where: {
+        organization_id: organizationId,
+      },
+    });
+
+    if (!org) {
+      throw new NotFoundException('Organization not found');
+    }
+
+    return this.prisma.organizationComment.findMany({
+      where: { organization_id: organizationId, },
+      orderBy: { created_at: 'desc', },
+      include: {
+        user: {
+          select: {
+            user_id: true,
+            profile: {
+              select: {
+                username: true,
+                profile_picture: true,
+              },
+            },
+          },
+        },
+      },
+    });
+  }
+
+  async deleteComment(commentId: bigint, currentUserId: bigint) {
+    const comment = await this.prisma.organizationComment.findUnique({
+      where: {  comment_id: commentId },
+      include: { organization: true },
+    });
+
+    if (!comment) {
+      throw new NotFoundException('Comment not found');
+    }
+
+    const isAuthor = comment.user_id === currentUserId;
+    const isOwner = comment.organization.creator_id === currentUserId;
+
+    if (!isAuthor && !isOwner) {
+      throw new ForbiddenException('You are not allowed to delete this comment');
+    }
+
+    await this.prisma.organizationComment.delete({
+      where: { comment_id: commentId },
+    });
+
+    return { message: 'Comment deleted successfully' };
   }
 }
