@@ -23,6 +23,16 @@ export const validateDescription = (value: string): string | null => {
   return null;
 };
 
+/** Miroir de `CreateCommentDto` : non vide, ≤ 1024 caractères. */
+export const COMMENT_MAX_LENGTH = 1024;
+
+export const validateComment = (value: string): string | null => {
+  const content = value.trim();
+  if (content === '') return t.commentRequired;
+  if (content.length > COMMENT_MAX_LENGTH) return t.tooLong(COMMENT_MAX_LENGTH);
+  return null;
+};
+
 export const isCategory = (value: string): value is Category => Object.values<string>(CATEGORY).includes(value);
 
 export const validateCategory = (value: string): string | null => (isCategory(value) ? null : t.categoryRequired);
