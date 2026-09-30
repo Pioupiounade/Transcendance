@@ -108,7 +108,7 @@
     justify-content: space-between;
   }
   .nav,
-  .actions {
+  .profileLink {
     display: none;
   }
 }
