@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { FriendshipStatus } from '../types';
 import {
   acceptFriendRequest,
@@ -21,6 +21,11 @@ export const FriendshipCTA: React.FC<FriendshipCTAProps> = ({
 }) => {
   const [currentStatus, setCurrentStatus] = useState<FriendshipStatus>(initialStatus);
   const [isMutating, setIsMutating] = useState(false);
+
+  useEffect(() => {
+    setCurrentStatus(initialStatus);
+    setIsMutating(false);
+  }, [userId, initialStatus]);
 
   const handleSend = async () => {
     setIsMutating(true);
