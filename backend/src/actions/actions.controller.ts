@@ -148,10 +148,9 @@ export class ActionsController {
       new ParseFilePipe({
         validators: [
           new MaxFileSizeValidator({ maxSize: 10 * 1024 * 1024 }), // 10MB
-          new FileTypeValidator({ fileType: /(jpg|jpeg|png|webp)$/ }),
         ],
       }),
-      WebpCompressorPipe, // Ou le nom de ton Pipe de compression
+      WebpCompressorPipe,
     )
     processedFilename: string,
   ) {
@@ -169,7 +168,6 @@ export class ActionsController {
       new ParseFilePipe({
         validators: [
           new MaxFileSizeValidator({ maxSize: 10 * 1024 * 1024 }), // 10MB
-          new FileTypeValidator({ fileType: /(jpg|jpeg|png|webp)$/ }),
         ],
       }),
       WebpCompressorPipe,

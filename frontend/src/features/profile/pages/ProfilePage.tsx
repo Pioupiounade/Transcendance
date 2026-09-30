@@ -123,7 +123,7 @@ export const ProfilePage: React.FC = () => {
     }
   }
 
-  //const isOwnProfile = !username || username === CURRENT_USERNAME;
+  const isOwnProfile = !username; // || username === CURRENT_USERNAME;
 
   if (isLoading) {
     return (
@@ -225,7 +225,7 @@ export const ProfilePage: React.FC = () => {
       profile={profile}
       isOwnProfile={isOwnProfile}
       onEdit={() => setIsEditing(true)}
-      onDeleteAccount={handleDeleteAccount}
+      //onDeleteAccount={handleDeleteAccount}
       onFriendshipChange={handleFriendshipChange}
       activity={activity}
       activityLoading={activityLoading}
