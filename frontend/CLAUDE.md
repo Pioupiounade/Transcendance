@@ -192,6 +192,9 @@ features/       1 domaine métier = 1 module ; interface = index.ts
                 de bord : NeighborhoodMap (hauteur surchargeable par `--map-min-height*`), ActionCard (pied :
                 voisins inscrits, places ; `distance` remplace le statut), useActions, geo.ts (distanceMeters,
                 formatDistance), DEFAULT_CENTER, FOCUS_PARAM.
+                Discussion (#70, Epic 4) : ActionComments `{ actionId }` sous la fiche (`GET`/`POST /actions/:id/comments`,
+                api/useActionComments + usePostComment, validateComment ≤ 1024, toCommentErrorMessage) ; monté par
+                ActionDetailPage pour un id numérique seulement tant que la fiche est un mock (#34, à brancher par #60).
   profile/      coéquipier (#38 en cours, mock) ; ajout #65 : api/myProfile.ts (`GET /profiles/me`, 404 → null,
                 useMyProfile), seul fichier à nous dans ce dossier.
   participations/ (existant : useMyParticipations, type MyParticipation)
@@ -220,7 +223,9 @@ shared/         zéro connaissance métier, réutilisable ailleurs
                 (label flottant, aide/erreur reliées, bascule mot de passe, types text/email/password/number/
                 datetime-local), FloatingTextarea (même habillage, privé : FieldShell + fieldA11y), Checkbox (libellé
                 riche), Dialog (`<dialog>` natif : `{ open, onClose, title, closeLabel }`, enfants montés si ouvert),
-                StreetScene (illustration de rue de la maquette, décorative ; l'hôte fixe la hauteur : auth, landing)
+                StreetScene (illustration de rue de la maquette, décorative ; l'hôte fixe la hauteur : auth, landing),
+                CommentThread (fil à plat `{ comments: ThreadComment[], mineLabel }`) et CommentComposer (zone de texte +
+                compteur + bouton : `{ label, maxLength, submitLabel, submittingLabel, validate, onSubmit, describeError }`)
   hooks/        hooks React sans métier, pas de barrel : useForm (valeurs, erreurs après blur/soumission, erreur
                 serveur via un mapper fourni, focus du 1er champ invalide dont l'`id` = son nom) ; useResource
                 (`load` stable → `{ data, loading, error, reload }`, annulation, utilisé par organizations ;
