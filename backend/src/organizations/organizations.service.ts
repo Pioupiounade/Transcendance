@@ -426,14 +426,87 @@ export class OrganizationsService {
   // Comments
 
   async addComment(organizationId: bigint, userId: bigint, comment: string) {
-    // TODO
+    const org = await this.prisma.organization.findUnique({
+      where: { organization_id: organizationId },
+    });
+
+    if (!org) {
+      throw new NotFoundException('Organization not found');
+    }
+
+    return this.prisma.organizationComment.create({
+      data: {
+        organization_id: organizationId,
+        user_id: userId,
+        content: comment
+      },
+        include: {
+          user: {
+            select: {
+              user_id: true,
+              profile: {
+                select: {
+                  username: true,
+                  profile_picture: true,
+                },
+              },
+            },
+          },
+        },
+    });
   }
 
   async getComments(organizationId: bigint) {
-    // TODO
+    const org = await this.prisma.organization.findUnique({
+      where: {
+        organization_id: organizationId,
+      },
+    });
+
+    if (!org) {
+      throw new NotFoundException('Organization not found');
+    }
+
+    return this.prisma.organizationComment.findMany({
+      where: { organization_id: organizationId, },
+      orderBy: { created_at: 'desc', },
+      include: {
+        user: {
+          select: {
+            user_id: true,
+            profile: {
+              select: {
+                username: true,
+                profile_picture: true,
+              },
+            },
+          },
+        },
+      },
+    });
   }
 
   async deleteComment(commentId: bigint, currentUserId: bigint) {
-    // TODO
+    const comment = await this.prisma.organizationComment.findUnique({
+      where: {  comment_id: commentId },
+      include: { organization: true },
+    });
+
+    if (!comment) {
+      throw new NotFoundException('Comment not found');
+    }
+
+    const isAuthor = comment.user_id === currentUserId;
+    const isOwner = comment.organization.creator_id === currentUserId;
+
+    if (!isAuthor && !isOwner) {
+      throw new ForbiddenException('You are not allowed to delete this comment');
+    }
+
+    await this.prisma.organizationComment.delete({
+      where: { comment_id: commentId },
+    });
+
+    return { message: 'Comment deleted successfully' };
   }
 }
