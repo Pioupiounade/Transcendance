@@ -24,6 +24,7 @@ import { createStorageOptions } from '../common/multer.config';
 import { WebpCompressorPipe } from '../common/shart-transform.pipe';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { ParseIntPipe } from '@nestjs/common/pipes/parse-int.pipe';
+import { DeleteFileOnErrorInterceptor } from '../common/interceptor';
 
 @Controller('actions')
 export class ActionsController {
@@ -140,7 +141,9 @@ export class ActionsController {
 
   @UseGuards(JwtAuthGuard)
   @Post(':id/photo-before')
-  @UseInterceptors(FileInterceptor('file', createStorageOptions('actions')))
+  @UseInterceptors(FileInterceptor('file', createStorageOptions('actions')),
+    DeleteFileOnErrorInterceptor
+  )
   uploadPhotoBefore(
     @Param('id') id: string,
     @Req() req: any,
@@ -160,7 +163,9 @@ export class ActionsController {
 
   @UseGuards(JwtAuthGuard)
   @Post(':id/photo-after')
-  @UseInterceptors(FileInterceptor('file', createStorageOptions('actions')))
+  @UseInterceptors(FileInterceptor('file', createStorageOptions('actions')),
+    DeleteFileOnErrorInterceptor
+  )
   uploadPhotoAfter(
     @Param('id') id: string,
     @Req() req: any,

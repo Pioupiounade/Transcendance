@@ -21,6 +21,7 @@ import { CreateProfileDto } from './dto/create-profile.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth-guard';
 import { createStorageOptions } from '../common/multer.config';
+import { DeleteFileOnErrorInterceptor } from '../common/interceptor';
 
 @Controller('profiles')
 export class ProfilesController {
@@ -67,7 +68,9 @@ export class ProfilesController {
 
   @Patch('me/avatar')
   @UseGuards(JwtAuthGuard)
-  @UseInterceptors(FileInterceptor('file', createStorageOptions('avatars')))
+  @UseInterceptors(FileInterceptor('file', createStorageOptions('avatars')),
+    DeleteFileOnErrorInterceptor
+  )
   async uploadAvatar(
     @Req() req: any,
     @UploadedFile(
