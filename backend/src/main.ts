@@ -41,7 +41,9 @@ async function bootstrap() {
 	uploadDirs.forEach((dir) => {
 		const fullPath = path.join(process.cwd(), dir);
 		if (!fs.existsSync(fullPath)) {
-			fs.mkdirSync(fullPath, { recursive: true });
+			fs.mkdirSync(fullPath, { recursive: true, mode: 0o777 });
+		} else {
+			fs.chmodSync(fullPath, 0o777);
 		}
 	});
 

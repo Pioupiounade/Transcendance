@@ -27,6 +27,7 @@ logs:
 	$(COMPOSE) logs -f
 
 clean:
+	$(COMPOSE) run --rm --entrypoint rm backend -rf /app/uploads
 	$(COMPOSE) down -v --remove-orphans
 	@echo "Cleaned up containers and volumes."
 
