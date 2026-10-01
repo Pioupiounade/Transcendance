@@ -82,11 +82,27 @@
   font-size: 14px;
 }
 
+/* À gauche « About » puis la discussion, à droite les membres sur toute la hauteur. La 2e rangée en `1fr`
+   absorbe la hauteur des membres : « About » garde sa hauteur propre, sans vide avant la discussion. */
 .body {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 340px;
+  grid-template-rows: auto 1fr;
+  grid-template-areas:
+    'about members'
+    'discussion members';
   gap: 22px;
   align-items: start;
+}
+.about {
+  grid-area: about;
+}
+.membersPanel {
+  grid-area: members;
+}
+.discussion {
+  grid-area: discussion;
+  min-width: 0;
 }
 
 .panel {
@@ -179,6 +195,11 @@
   }
   .body {
     grid-template-columns: 1fr;
+    grid-template-rows: none;
+    grid-template-areas:
+      'about'
+      'members'
+      'discussion';
   }
   .panel {
     padding: 18px 16px;

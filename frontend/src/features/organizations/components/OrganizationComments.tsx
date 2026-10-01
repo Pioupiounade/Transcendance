@@ -1,0 +1,110 @@
+import { useId, useState } from 'react';
+import { Link, useLocation } from 'react-router';
+import { AUTH_ROUTES, useAuth } from '@/features/auth';
+import { Button, CommentComposer, CommentThread, type ThreadComment } from '@/shared/ui';
+import { postOrganizationComment } from '../api/organizationsApi';
+import { useOrganizationComments } from '../api/useOrganizationComments';
+import { toCommentErrorMessage } from '../errors';
+import { ORGANIZATIONS_LABELS } from '../labels';
+import type { OrganizationComment } from '../types';
+import { COMMENT_MAX_LENGTH, validateComment } from '../validation';
+import { DeleteCommentDialog } from './DeleteCommentDialog';
+import styles from './OrganizationComments.module.css';
+
+type OrganizationCommentsProps = {
+  organizationId: string;
+  /** Créateur de l'organisation : il peut supprimer n'importe quel commentaire (règle du backend). */
+  creatorId: string;
+};
+
+const text = ORGANIZATIONS_LABELS.comments;
+
+/**
+ * Discussion publique d'une organisation (Epic 4, #71) : lecture pour tous, écriture connecté (lien de connexion
+ * sinon), plus récent en premier. Suppression par l'auteur ou le créateur de l'organisation, après confirmation.
+ */
+export function OrganizationComments({ organizationId, creatorId }: OrganizationCommentsProps) {
+  const titleId = useId();
+  const { status, user } = useAuth();
+  const location = useLocation();
+  const { comments, loading, error, reload, prepend, remove } = useOrganizationComments(organizationId);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const myUserId = user?.user_id ?? null;
+  const toThreadComment = (comment: OrganizationComment): ThreadComment => ({
+    id: comment.comment_id,
+    author: comment.user.profile?.username ?? text.anonymousAuthor,
+    avatar: comment.user.profile?.profile_picture,
+    createdAt: comment.created_at,
+    content: comment.content,
+    mine: comment.user_id === myUserId,
+    canDelete: myUserId !== null && (comment.user_id === myUserId || creatorId === myUserId),
+  });
+  const items = comments.map(toThreadComment);
+  const ready = !loading && error === null;
+
+  const submit = async (content: string) => {
+    prepend(await postOrganizationComment(organizationId, content));
+  };
+
+  return (
+    <section className={styles.panel} aria-labelledby={titleId}>
+      <div className={styles.head}>
+        <h2 id={titleId} className={styles.title}>
+          {text.title}
+        </h2>
+        {ready && <span className={styles.count}>{items.length}</span>}
+      </div>
+
+      {status === 'authenticated' && (
+        <CommentComposer
+          label={text.label}
+          maxLength={COMMENT_MAX_LENGTH}
+          submitLabel={text.submit}
+          submittingLabel={text.submitting}
+          validate={validateComment}
+          onSubmit={submit}
+          describeError={toCommentErrorMessage}
+        />
+      )}
+      {status === 'anonymous' && (
+        <p className={styles.signIn}>
+          <Link to={AUTH_ROUTES.login} state={{ from: location }}>
+            {text.signIn}
+          </Link>
+        </p>
+      )}
+
+      {loading && (
+        <p className={styles.muted} role="status">
+          {text.loading}
+        </p>
+      )}
+      {error && (
+        <div className={styles.state} role="alert">
+          <p>{text.error}</p>
+          <Button variant="text" onClick={reload}>
+            {text.retry}
+          </Button>
+        </div>
+      )}
+      {ready && items.length === 0 && <p className={styles.muted}>{text.empty}</p>}
+      {ready && items.length > 0 && (
+        <CommentThread
+          comments={items}
+          mineLabel={text.you}
+          deletion={{ label: text.delete, onRequest: setDeletingId }}
+        />
+      )}
+
+      <DeleteCommentDialog
+        comment={items.find((item) => item.id === deletingId) ?? null}
+        onClose={() => setDeletingId(null)}
+        onDeleted={(commentId) => {
+          remove(commentId);
+          setDeletingId(null);
+        }}
+      />
+    </section>
+  );
+}
