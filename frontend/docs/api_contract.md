@@ -6,6 +6,15 @@ Généré le 2026-09-24 par lecture de `backend/src/**/*.controller.ts`, `backen
 (flux complet création → participations → `approve` → commentaires → `complete` → points ; amis ; organisation).
 Ce fichier décrit ce que le code **fait**, pas ce que `Docs/prisma_rules.md` prévoit. À régénérer à chaque changement du backend.
 
+**Mise à jour partielle du 2026-10-01** (backend `39bc86e3`, PR #88 photos et #89 commentaires d'organisation) — seules
+les routes de commentaires d'organisation ont été relues et **vérifiées par sondes** (§3 `OrganizationComment`, §12).
+Le reste du fichier date du 24/09 et est **périmé sur ces points**, à régénérer : `imagesList` est remplacé par
+`images_before` / `images_after` (3 photos max chacun, routes d'upload dans `actions.controller.ts` et
+`profiles.controller.ts`), `Profile.commune` ajouté, `PATCH /actions/:id` ne renvoie plus 500 mais **remet les deux
+listes de photos à `[]`** quand elles sont absentes du body. Dev : #88 importe `sharp`, `uuid` et `@types/multer`
+absents de `backend/package.json` (le backend ne compile pas sans `npm install --no-save sharp uuid @types/multer`
+dans le conteneur) ; `make db-update` puis `make seed` (comptes `demo.seed.<prénom>@example.test`, `DemoPass123!`).
+
 **Changements depuis la version du 2026-09-23** (commit `c22b7785`) — PR #43 amis, #44 actions, #45 participations, #49 commentaires :
 - `GET /actions` et `GET /actions/:id` renvoient en plus **`participant_count`** et **`remaining_seats`** (§3, §15). Les mutations
   (`POST`, `PATCH`, `approve`, `cancel`, `complete`) renvoient l'action **sans** ces deux champs (`ActionRecord`).
@@ -138,6 +147,12 @@ type ActionComment = {
   user: { user_id: string; profile: { username: string; profile_picture: string | null } | null };
 };
 
+// Commentaire d'organisation (01/10) : même forme que `ActionComment`, `organization_id` à la place de `action_id`.
+type OrganizationComment = {
+  comment_id: string; content: string; created_at: string; updated_at: string; user_id: string; organization_id: string;
+  user: { user_id: string; profile: { username: string; profile_picture: string | null } | null };
+};
+
 type Participation = { action_id: string; user_id: string; created_at: string };
 type Participant = UserCard & { created_at: string };
 type MyParticipation = {
@@ -264,6 +279,9 @@ Script : `tests/test-participations-autonome.sh`.
 | `PATCH /organizations/:id/suspend` | JWT, **ADMIN** | — | `Organization` (`SUSPENDED`) | 404 ; 403 « Only an admin can suspend an organization » ; 400 « Only an active organization can be suspended » |
 | `PATCH /organizations/:id/deactivate` | JWT | — | `Organization` (`CLOSED`) | 404 ; 403 « You are not allowed to close this organization » (mêmes rôles que `update`) ; 400 « Organization is not active » |
 | `PATCH /organizations/:id/reactivate` | JWT | — | `Organization` (`ACTIVE`) | 404 ; `SUSPENDED` → 403 « Only an admin can reactivate a suspended organization » ; `CLOSED` → 403 « You are not allowed to reactivate this organization » (mêmes rôles que `update`) ; 400 « Organization is already active » |
+| `POST /organizations/:id/comments` | JWT | body `OrganizationCommentDto` : **`comment`** (string non vide, ≤ 1024 ; ≠ `content` des actions) | 201 `OrganizationComment` (champ `content`, avec `user`) | 401 « Invalid token » ; 400 « comment should not be empty », « Comment must not exceed 1024 characters », « property content should not exist » ; 404 « Organization not found » ; id non numérique → 500. **Accepte des espaces seuls** et une organisation `SUSPENDED` (aucune vérification de statut) |
+| `GET /organizations/:id/comments` | aucun | — | `OrganizationComment[]` (plus récent en premier, `[]` si vide) | 404 « Organization not found » ; id non numérique → 500 |
+| `DELETE /organizations/comments/:commentId` | JWT | — | 200 `{ message: "Comment deleted successfully" }` | 404 « Comment not found » ; 403 « You are not allowed to delete this comment » (sauf **l'auteur** ou **le créateur de l'organisation** `creator_id` ; ni `ADMIN` ni `OWNER`/`MANAGER`) ; id non numérique → 500 |
 
 ## 13. Organization members — `/organization-members` (`organizationmembers.controller.ts`) — **nouveau**
 
