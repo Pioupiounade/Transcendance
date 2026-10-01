@@ -50,7 +50,7 @@ export async function removeInterest(interest: InterestCategory): Promise<void> 
 export async function uploadAvatar(file: File): Promise<void> {
   const body = new FormData();
   body.append('file', file);
-  await http.patch('/users/me/avatar', body);
+  await http.patch('/profiles/me/avatar', body);
 }
 
 type ApiPublicProfile = {
