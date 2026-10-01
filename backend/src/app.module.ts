@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-
+import { join } from 'path';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
@@ -15,13 +15,17 @@ import { ParticipationsModule } from './participations/participations.module';
 import { OrganizationmembersModule } from './organizationmembers/organizationmembers.module';
 import { PointtransactionModule } from './pointtransaction/pointtransaction.module';
 import { AuthModule } from "./auth/auth.module";
+import { ServeStaticModule } from '@nestjs/serve-static';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
     }),
-
+    ServeStaticModule.forRoot({
+      rootPath: join(process.cwd(), 'uploads'),
+      serveRoot: '/static',
+    }),
     PrismaModule,
     UsersModule,
     OrganizationsModule,
