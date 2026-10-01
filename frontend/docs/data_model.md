@@ -2,7 +2,7 @@
 
 État au 2026-09-24, branche `feature/map-create-action` (= `main` + `fix/main-build` + `feature/50-auth-ui` + Epic 7).
 Sources de vérité, dans l'ordre : `backend/prisma/schema.prisma` (la base) → `docs/api_contract.md` (ce que l'API
-fait réellement, régénéré et vérifié par sondes le 24/09) → `features/<x>/types.ts` (ce que le front en voit).
+fait réellement, régénéré et vérifié par sondes le 24/09, resondé le 01/10) → `features/<x>/types.ts` (ce que le front en voit).
 Ce document ne duplique pas le contrat : il dit **où vit chaque donnée côté front, par quel module deep elle passe,
 et ce qu'un appelant doit savoir**. Les termes Module / Interface / Deep / Seam sont ceux de `CLAUDE.md`.
 
@@ -45,9 +45,9 @@ dans `features/<x>/api/*` sans toucher aux composants.
 | Entité Prisma | Clé, champs qui comptent | Exposée par | Feature front propriétaire → type | État front |
 |---|---|---|---|---|
 | **User** | `user_id`, `email` (unique), `role` RoleApp, `account_status`, `points`, dates. `password_hash` et `refresh_token` jamais renvoyés | `/auth/*` (5), `/users/*` (9) | `features/auth` → `AuthUser` (= `User` du contrat) | ✅ session, login, register, `/auth/me` |
-| **Profile** | `user_id` (PK = FK User, 1:1), `username` (unique), `description?`, `profile_picture?` (URL), `location` (seulement sur `GET /profiles/me`), `visibility` | `/profiles/*` (6) | `features/profile` → `UserProfile` **(mock, forme ≠ contrat)** | 🟡 page mock, aucun appel API |
+| **Profile** | `user_id` (PK = FK User, 1:1), `username` (unique), `description?`, `profile_picture?` (URL), `location` (seulement sur `GET /profiles/me`), `commune?` (déduite de `location`, 01/10), `visibility` | `/profiles/*` (7, dont l'avatar) | `features/profile` → `UserProfile` **(mock, forme ≠ contrat)** | 🟡 page mock, aucun appel API |
 | **UserInterest** | (`user_id`, `interest` InterestCategory), 9 valeurs | `/interests/*` (3) | `features/profile` (prévu) | ❌ |
-| **Action** | `action_id`, `title`, `description`, `creator_id`, `organization_id?`, `min_participants` (défaut 3), `max_participants?`, `location`, `status`, `category`, `imagesList`, `validated_by_user_id?`, `validated_at?`, `scheduled_at`. **L'API ajoute `participant_count` et `remaining_seats`** (liste et détail, depuis #45) | `/actions/*` (7 + 2 commentaires) | `features/actions` → `Action` (§4.7) | ✅ liste, carte, création (`Action` enrichie, `ActionRecord` pour les mutations) · 🟡 détail (mock `ActionDetailData`) |
+| **Action** | `action_id`, `title`, `description`, `creator_id`, `organization_id?`, `min_participants` (défaut 3), `max_participants?`, `location`, `status`, `category`, `images_before`, `images_after` (ex-`imagesList`, 01/10), `validated_by_user_id?`, `validated_at?`, `scheduled_at`. **L'API ajoute `participant_count` et `remaining_seats`** (liste et détail, depuis #45) | `/actions/*` (7 + 2 commentaires) | `features/actions` → `Action` (§4.7) | ✅ liste, carte, création (`Action` enrichie, `ActionRecord` pour les mutations) · 🟡 détail (mock `ActionDetailData`) |
 | **ActionComment** | `comment_id`, `content` (≤ 1024), `user_id`, `action_id`, dates ; renvoyé avec `user: { user_id, profile: { username, profile_picture } \| null }` | `POST/GET /actions/:id/comments` | `features/actions` → `ActionComment` | ✅ lecture + envoi sur la page d'action (#70, id numérique seulement tant que la fiche est un mock) |
 | **Participation** | (`action_id`, `user_id`), `created_at` | `/participations/*` (4) | `features/participations` (prévu) | ❌ |
 | **Organization** | `organization_id`, `title`, `description`, `organization_status`, `address`, `location`, `creator_id` | `/organizations/*` (8) | `features/organizations` → `Organization` | 🟡 liste + recherche + fiche publique (#61) ; création/édition ❌ |
@@ -106,8 +106,8 @@ Règle : un enum est possédé par une feature, traduit dans son `labels.ts`, ja
 - **Action** : `PENDING` (création, inscriptions ouvertes) → `APPROVED` (`approve` : ADMIN, **le créateur lui-même**,
   MANAGER/OWNER de l'orga, **et au moins 3 participants hors créateur**) → `COMPLETED` (`complete`, même règle, distribue les
   points) ; `PENDING`/`APPROVED` → `CANCELLED` (`cancel`). `REJECTED` est **inatteignable** (pas de route). Pas de suppression.
-  Une action ne se modifie plus une fois `CANCELLED`/`COMPLETED`/`REJECTED`. **`PATCH /actions/:id` est cassé** (500 sans
-  `organization_id` dans le body, mise à jour partiellement appliquée) : pas d'édition avant le correctif backend.
+  Une action ne se modifie plus une fois `CANCELLED`/`COMPLETED`/`REJECTED`. `PATCH /actions/:id` ne renvoie plus 500 (corrigé,
+  vérifié le 01/10) mais **remet `images_before` / `images_after` à `[]`** quand le body ne les contient pas.
 - **Participation** : possible **uniquement sur `PENDING`** (join et leave), plafond `max_participants`, le créateur ne
   peut pas s'inscrire. Cohérent avec `approve` (≥ 3 participants) : `PENDING` = ouverte, `APPROVED` = confirmée et close.
   La contradiction est avec `Docs/user_stories.md` (modération avant publication) : à trancher en équipe.
@@ -140,7 +140,7 @@ Règle : un enum est possédé par une feature, traduit dans son `labels.ts`, ja
   +5 au créateur par participant ; membres d'orga ±5 à l'`OWNER` ; ban −15 ; suspension −50. Un bénéficiaire non `ACTIVE`
   fait **échouer la route appelante** (à afficher explicitement sur `complete`).
 - **Non couvert par l'API aujourd'hui** (ne pas contourner, ticket backend) : édition d'action fiable (bug `PATCH`), rejet d'action, suppression d'action ou de compte,
-  upload de fichiers (🔜 branche `19-epic-5-photo-upload…` : `PATCH /profiles/me/avatar` + images d'action), notifications,
+  service des fichiers uploadés (les routes d'upload existent depuis le 01/10, mais `/static/...` n'est servi par rien), notifications,
   messagerie, lecture des points, annulation d'une demande d'amitié ou d'adhésion, recherche par texte/date/rayon d'actions.
 
 ---
@@ -246,7 +246,7 @@ import { MapPage, ActionDetailPage, ActionDetailsView,
 type LatLng = [latitude: number, longitude: number];
 type Action = { action_id, title, description, creator_id, organization_id: string | null,
                 min_participants: number | null, max_participants: number | null, location: LatLng,
-                status: ActionStatus, category: Category, imagesList: string[],
+                status: ActionStatus, category: Category, images_before: string[], images_after: string[],
                 validated_by_user_id: string | null, validated_at: string | null,
                 scheduled_at, created_at, updated_at,
                 participant_count: number, remaining_seats: number | null }   // calculés par GET /actions(/:id)
@@ -336,7 +336,7 @@ Backend = `main` au 24/09 (#40 auth/users/profiles/interests/orgs/membres/points
 | Créer un compte | ✅ `POST /auth/register` (e-mail + mot de passe ≥ 8) | 🔜 `RegisterPage` (#50, PR) |
 | Se connecter / se déconnecter | ✅ `login`, `logout`, `refresh`, `me` | 🔜 `LoginPage`, `signOut` en en-tête (#50) ; session persistée ✅ (fix `http.ts` sur cette branche) |
 | Créer son profil (particulier / asso / commerce) | ✅ `POST /profiles` (username, location, visibilité) ; pas de « type » de profil : une asso = une `Organization` | 🟡 `ProfileForm` mock, pas d'appel |
-| Modifier son profil | ✅ `PATCH /profiles/me` ; avatar 🔜 (branche upload) | 🟡 mock |
+| Modifier son profil | ✅ `PATCH /profiles/me` ; avatar ✅ `PATCH /profiles/me/avatar` (01/10, image non servie) | 🟡 mock |
 | Supprimer son compte | ❌ (seulement `PATCH /users/me/deactivate`, irréversible) | 🟡 bouton + `alert()` |
 | Consulter un profil | ✅ `GET /profiles/:userId` (public + actif), `GET /profiles/search?q=` | ❌ |
 | Centres d'intérêt | ✅ `/interests/me` (select/remove/list) | ❌ |
@@ -349,7 +349,7 @@ Backend = `main` au 24/09 (#40 auth/users/profiles/interests/orgs/membres/points
 |---|---|---|
 | Signaler une action possible (suggestion) | pas de modèle : = `Action` `PENDING` | ✅ via la carte (Epic 7) |
 | Créer une action | ✅ `POST /actions` (JWT, actif, orga facultative, `max_participants` ≥ 3) | ✅ `ActionForm` depuis la carte + page `/actions/new` (#33, `?at=` pré-place le pin) |
-| Modifier une action | 🟡 `PATCH /actions/:id` **cassé** : 500 sans `organization_id`, mise à jour partielle (ticket backend) | 🟡 page `/actions/:id/edit` branchée (#33, créateur/ADMIN, PENDING/APPROVED) ; l'enregistrement affiche une erreur tant que le backend répond 500, bien que les champs soient persistés |
+| Modifier une action | ✅ `PATCH /actions/:id` (500 corrigé, vérifié le 01/10) ; 🟡 efface les photos absentes du body (ticket backend) | ✅ page `/actions/:id/edit` branchée (#33, créateur/ADMIN, PENDING/APPROVED) ; le formulaire ne renvoie pas encore `images_before` / `images_after` |
 | Supprimer une action | ❌ (`cancel` seulement) | ✅ « Cancel this action » + confirmation depuis la page de modification (#33) = `PATCH /cancel` ; pas de vraie suppression |
 | Découvrir des actions | ✅ `GET /actions` (+ un filtre : organisation, catégorie, créateur, statut) ; pas de rayon/texte/date | ✅ carte + filtre catégorie (#12) ; ❌ page liste `/actions` (placeholder) |
 | Consulter une action | ✅ `GET /actions/:id` (+ `participant_count`, `remaining_seats`) | 🟡 `/actions/:id` sur mock #46 ; la carte n'y mène pas encore |
@@ -377,8 +377,8 @@ Backend = `main` au 24/09 (#40 auth/users/profiles/interests/orgs/membres/points
 
 | Feature | Backend | Frontend |
 |---|---|---|
-| Photo de profil | 🔜 branche `19-epic-5-photo-upload…` : `PATCH /profiles/me/avatar` ; aujourd'hui `profile_picture` = URL libre | 🟡 input fichier local dans le mock, rien n'est envoyé |
-| Photos d'action (suggestion, avant, après) | 🔜 même branche (`imagesList` persistée depuis #44, upload non mergé) | ❌ (`imagesList` transporté mais jamais affiché ni saisi) |
+| Photo de profil | 🟡 `PATCH /profiles/me/avatar` (multipart `file`, 5 Mo, WebP) depuis le 01/10 ; l'URL `/static/avatars/…` n'est servie par aucune route | 🟡 input fichier local dans le mock, rien n'est envoyé |
+| Photos d'action (suggestion, avant, après) | 🟡 `POST /actions/:id/photo-before` (créateur) et `photo-after` (créateur ou participant), 3 max chacune, depuis le 01/10 ; URLs `/static/actions/…` non servies | ❌ (`images_before` / `images_after` typés dans `Action`, jamais affichés ni saisis) |
 
 ### Epic 6 — Notifications
 
@@ -440,8 +440,8 @@ Backend = `main` au 24/09 (#40 auth/users/profiles/interests/orgs/membres/points
 
 ## 7. Écarts et dettes de données, dans l'ordre conseillé
 
-1. **`PATCH /actions/:id` cassé côté backend** (500 sans `organization_id`, mise à jour partielle) : ticket, et aucune
-   édition d'action côté front avant le correctif. `Action` et le contrat sont à jour depuis le 24/09.
+1. **`PATCH /actions/:id` efface les photos** absentes du body (le 500 est corrigé) : ticket backend, ou renvoyer
+   `images_before` / `images_after` depuis le formulaire d'édition. `Action` et le contrat sont à jour au 01/10.
 2. **Page détail sur l'API réelle** : `GET /actions/:id` + `GET /participations/action/:id` + `GET /actions/:id/comments`
    (+ `GET /profiles/:userId` pour l'organisateur) ; supprimer `ActionDetailData` et le mock ; lier la carte (`ActionCard`/popup) à `/actions/:id`.
    Pas de `locationName` côté API : afficher une mini-carte ou les coordonnées.
@@ -451,7 +451,8 @@ Backend = `main` au 24/09 (#40 auth/users/profiles/interests/orgs/membres/points
    `PENDING` seulement » vs flux de modération.
 5. **Amis** (`features/friends`), **commentaires** sur le détail, puis **organisations** (après le correctif `OWNER` backend).
 6. **TanStack Query** : remplacer l'intérieur de `useActions`, `useCreateAction`, `useProfile` ; les composants ne bougent pas.
-7. **Backend à demander par ticket** : rejet d'action, suppression (action, compte), upload (en cours), recherche d'actions par
+7. **Backend à demander par ticket** : rejet d'action, suppression (action, compte), **service des fichiers uploadés** (`/static`), `OptionalJwtAuthGuard` sur
+   `GET /profiles/:userId` (profils `FRIENDS_ONLY` / `PRIVATE` invisibles pour tous), dépendances `sharp` / `uuid` dans `package.json`, recherche d'actions par
    rayon/texte/date, lecture des points, membre `OWNER` à la création d'une organisation, CORS ou Nginx, `.env` versionnés.
 8. **Contradictions doc/code à trancher** (audit du 20/09) : qui valide une action (modérateur vs créateur), inscription sur
    action approuvée, blocage de n'importe qui vs d'un ami, réactivation d'un compte désactivé.

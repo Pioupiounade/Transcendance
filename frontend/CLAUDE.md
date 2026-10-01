@@ -50,7 +50,7 @@ Ce fichier est chargé automatiquement quand la session démarre dans `frontend/
 - `DESIGN.md` : palette, typo, composants React à construire (§9). `_reference.html` : maquette navigable.
 - `en.subject.pdf` : sujet officiel (bloquant : HTTPS, `.env` ignoré + `.env.example`, pages CGU et confidentialité,
   README complet en anglais).
-- `docs/api_contract.md` (ici, dans `frontend/`) : routes réelles du backend, régénéré et vérifié par sondes le 24/09/2026 ;
+- `docs/api_contract.md` (ici, dans `frontend/`) : routes réelles du backend, régénéré le 24/09/2026 et resondé le 01/10/2026 (photos, avatar, commentaires d'organisation) ;
   à régénérer quand le backend change (`make db-update` après chaque pull backend, sinon la base de dev est en retard).
 - `docs/data_model.md` (ici) : plan des données côté frontend, entités → modules deep et leurs interfaces, état de
   chaque feature (Epics 1-9), dettes de données ; écrit le 24/09/2026, à tenir à jour à chaque feature branchée.
