@@ -1,0 +1,68 @@
+/* Fil de commentaires (DESIGN.md §6 : cartes chaudes, avatars ronds, méta en caption). */
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 16px;
+}
+
+.item {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.body {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+  margin: 0;
+  font-size: var(--caption);
+  color: var(--muted);
+}
+
+.author {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.mineTag {
+  padding: 1px 7px;
+  border-radius: var(--r-tag);
+  background: var(--trust-soft);
+  color: var(--brand);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+
+.date {
+  font-weight: 600;
+}
+
+.content {
+  margin: 0;
+  line-height: 1.5;
+  color: var(--ink);
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+.composer {
+  display: grid;
+  gap: 10px;
+  justify-items: end;
+}
+.composer > :first-child {
+  justify-self: stretch;
+}
