@@ -125,17 +125,22 @@ export const ProfilePage: React.FC = () => {
 
   const isOwnProfile = !username; // || username === CURRENT_USERNAME;
 
-  if (isLoading) {
+  if (isOwnProfile && isApiError(error) && error.status === 404 && !profile) {
     return (
       <div style={{ textAlign: 'center', padding: '4rem 1rem' }}>
         <h2>No profile yet</h2>
         <p>Your account does not have a profile yet.</p>
-        <button type="button" onClick={() => setIsCreating(true)}  disabled={interestsLoading}>
+        <button
+          type="button"
+          onClick={() => setIsCreating(true)}
+          disabled={interestsLoading}
+        >
           Create profile
         </button>
       </div>
     );
   }
+
   if (!profile) {
     return (
       <div style={{ textAlign: 'center', padding: '4rem 1rem' }}>
