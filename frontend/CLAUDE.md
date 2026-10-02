@@ -224,7 +224,18 @@ features/       1 domaine métier = 1 module ; interface = index.ts
                 que la fiche d'action est un mock, #60), filtrées côté client sur `useActions` : la route filtrée
                 répond 404 quand elle est vide, donc une erreur console. Panneau « Where » = `PlaceMap` de la
                 feature actions (mini-carte à un pin, hauteur par `--map-min-height*`). Pas de « Leave » (décision
-                du 02/10/2026). Gestion des membres : #62.
+                du 02/10/2026).
+                Gestion (#62) : OrganizationManagePage `/organizations/:id/manage` (sous `RequireAuth`), ouverte par
+                le bouton « Manage » de la fiche pour les MANAGER, OWNER et ADMIN. Le droit d'entrer se lit dans la
+                liste publique des membres avant d'appeler `GET …/memberships` (403 = erreur console). Onglets
+                (ManageTabs, motif ARIA, `?tab=`) : Requests (approuver, refuser avec confirmation ; refusées en
+                lecture seule), Members (MemberActionDialog = choix d'une action, puis ConfirmDialog : promouvoir,
+                rétrograder, céder la propriété, retirer, bannir ; bannis en lecture seule), Settings (nom,
+                description, adresse ; fermer / rouvrir). permissions.ts = miroir des règles du backend (jamais
+                sur soi ni sur le owner, un manager n'agit que sur des MEMBER, rôles réservés au owner / ADMIN).
+                Les réponses du backend sont rejouées localement (pas de rechargement de liste). Organisation
+                inactive : demandes et membres en lecture seule. Manques backend : pas de débannissement, pas
+                d'OWNER à la création d'une organisation, pas d'« ajouter un membre » côté UI (non demandé).
   admin/          Epic 8, réservé au rôle ADMIN. #22 : AdminLayout (route parente `/admin/*`, pose le thème sombre
                 `data-theme="admin"` sur <html> le temps de la visite) et AdminUsersPage `/admin/users` (tous les
                 comptes via `GET /users`, recherche par e-mail et filtre par statut côté client, 20 par 20,
