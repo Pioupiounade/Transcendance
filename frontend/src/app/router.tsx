@@ -8,7 +8,7 @@ import { LegalPage } from './pages/LegalPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { PlaceholderPage } from './pages/PlaceholderPage';
 import { ActionsListPage } from '@/features/actions';
-import { ROUTES, editActionPath, organizationPath } from './routes';
+import { ROUTES, editActionPath, mapFocusPath, organizationPath } from './routes';
 import { ProfilePage, PublicProfilePage } from '../features/profile';
 
 // Routes en données. Une page = une ligne ; les pages de feature sont chargées
@@ -30,7 +30,7 @@ const router = createBrowserRouter([
       { path: ROUTES.actions, element: <ActionsListPage /> },
       { path: ROUTES.map, element: <MapPage createPath={ROUTES.createAction} editPath={editActionPath} /> },
       { path: ROUTES.organizations, element: <OrganizationsPage organizationPath={organizationPath} /> },
-      { path: ROUTES.organization, element: <OrganizationPage listPath={ROUTES.organizations} /> },
+      { path: ROUTES.organization, element: <OrganizationPage listPath={ROUTES.organizations} upcomingActionPath={mapFocusPath} /> },
       { path: ROUTES.friends, element: <PlaceholderPage title={APP_LABELS.nav.friends} /> },
       { path: ROUTES.login, element: <LoginPage /> },
       { path: ROUTES.register, element: <RegisterPage termsPath={ROUTES.terms} privacyPath={ROUTES.privacy} /> },
