@@ -151,7 +151,6 @@ export const ORGANIZATIONS_LABELS = {
       title: 'Name',
       description: 'Description',
       address: 'Address',
-      required: 'This field is required.',
       save: 'Save changes',
       saving: 'Saving…',
       saved: 'The organization was updated.',
@@ -205,6 +204,7 @@ export const ORGANIZATIONS_LABELS = {
   },
   validation: {
     commentRequired: 'Write something first.',
+    required: 'This field is required.',
     tooLong: (max: number) => `Keep it under ${max} characters.`,
   },
   errors: {

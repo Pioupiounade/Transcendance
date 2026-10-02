@@ -5,6 +5,7 @@ import { closeOrganization, reopenOrganization, updateOrganization } from '../ap
 import { toManageErrorMessage } from '../errors';
 import { ORGANIZATIONS_LABELS } from '../labels';
 import { ORGANIZATION_STATUS, type Organization } from '../types';
+import { DESCRIPTION_MAX_LENGTH, validateDescription, validateRequired } from '../validation';
 import styles from './ManagePanels.module.css';
 import own from './SettingsPanel.module.css';
 
@@ -19,13 +20,12 @@ type SettingsPanelProps = {
 };
 
 const text = ORGANIZATIONS_LABELS.manage.settings;
-const required = (value: string) => (value.trim() === '' ? text.required : null);
 
 /** Réglages : nom, description, adresse (`PATCH /organizations/:id`), puis fermer ou rouvrir l'organisation. */
 export function SettingsPanel({ organization, isAdmin, onChanged, onConfirm }: SettingsPanelProps) {
   const form = useForm(
     { title: organization.title, description: organization.description, address: organization.address },
-    { title: required, description: required, address: required },
+    { title: validateRequired, description: validateDescription, address: validateRequired },
     async (values) => {
       const updated = await updateOrganization(organization.organization_id, {
         title: values.title.trim(),
@@ -84,6 +84,8 @@ export function SettingsPanel({ organization, isAdmin, onChanged, onConfirm }: S
             id="description"
             label={text.description}
             rows={4}
+            maxLength={DESCRIPTION_MAX_LENGTH}
+            help={`${form.values.description.length}/${DESCRIPTION_MAX_LENGTH}`}
             value={form.values.description}
             onChange={(event) => form.setValue('description', event.target.value)}
             onBlur={() => form.touch('description')}
