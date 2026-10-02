@@ -17,6 +17,10 @@
   --terra: #b65339;
   --surface: #f8f5ef;
   --ground: #fffefa;
+  --ground-hover: #eeede4;
+  --ground-press: #efefec;
+  --field-bg: #fff;
+  --on-brand: #fff;
   --trust: #265c4b;
   --trust-soft: #e5eedf;
   --ink: #263f36;
@@ -26,6 +30,8 @@
   --line: #dddcd2;
   --danger: #b93832;
   --danger-soft: #fbedea;
+  --disabled-bg: #e2e4dc;
+  --disabled-ink: #687267;
   --culture: #90681f;
   --tag-culture-bg: #f6ebca;
   --tag-culture-ink: #78551b;

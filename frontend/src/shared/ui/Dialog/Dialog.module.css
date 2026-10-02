@@ -33,7 +33,7 @@
   color: var(--ink);
 }
 .close:hover {
-  background: #eeede4;
+  background: var(--ground-hover);
 }
 
 .title {
