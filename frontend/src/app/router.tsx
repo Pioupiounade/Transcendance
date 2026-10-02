@@ -8,7 +8,7 @@ import { LegalPage } from './pages/LegalPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { PlaceholderPage } from './pages/PlaceholderPage';
 import { ActionsListPage } from '@/features/actions';
-import { ROUTES, editActionPath, mapFocusPath, organizationPath } from './routes';
+import { ROUTES, editActionPath, mapFocusPath, organizationManagePath, organizationPath } from './routes';
 import { ProfilePage, PublicProfilePage } from '../features/profile';
 
 // Routes en données. Une page = une ligne ; les pages de feature sont chargées
@@ -19,6 +19,9 @@ const EditActionPage = lazyPage(() => import('@/features/actions').then((m) => m
 const ActionDetailPage = lazyPage(() => import('@/features/actions').then((m) => m.ActionDetailPage));
 const OrganizationsPage = lazyPage(() => import('@/features/organizations').then((m) => m.OrganizationsPage));
 const OrganizationPage = lazyPage(() => import('@/features/organizations').then((m) => m.OrganizationPage));
+const OrganizationManagePage = lazyPage(() =>
+  import('@/features/organizations').then((m) => m.OrganizationManagePage),
+);
 const AdminLayout = lazyPage(() => import('@/features/admin').then((m) => m.AdminLayout));
 const AdminUsersPage = lazyPage(() => import('@/features/admin').then((m) => m.AdminUsersPage));
 const router = createBrowserRouter([
@@ -30,7 +33,16 @@ const router = createBrowserRouter([
       { path: ROUTES.actions, element: <ActionsListPage /> },
       { path: ROUTES.map, element: <MapPage createPath={ROUTES.createAction} editPath={editActionPath} /> },
       { path: ROUTES.organizations, element: <OrganizationsPage organizationPath={organizationPath} /> },
-      { path: ROUTES.organization, element: <OrganizationPage listPath={ROUTES.organizations} upcomingActionPath={mapFocusPath} /> },
+      {
+        path: ROUTES.organization,
+        element: (
+          <OrganizationPage
+            listPath={ROUTES.organizations}
+            upcomingActionPath={mapFocusPath}
+            managePath={organizationManagePath}
+          />
+        ),
+      },
       { path: ROUTES.friends, element: <PlaceholderPage title={APP_LABELS.nav.friends} /> },
       { path: ROUTES.login, element: <LoginPage /> },
       { path: ROUTES.register, element: <RegisterPage termsPath={ROUTES.terms} privacyPath={ROUTES.privacy} /> },
@@ -45,6 +57,10 @@ const router = createBrowserRouter([
           { path: ROUTES.profile, element: <ProfilePage /> },
           { path: ROUTES.createAction, element: <CreateActionPage mapPath={ROUTES.map} /> },
           { path: ROUTES.editAction, element: <EditActionPage mapPath={ROUTES.map} /> },
+          {
+            path: ROUTES.organizationManage,
+            element: <OrganizationManagePage organizationPath={organizationPath} />,
+          },
           {
             // Espace d'administration : un non-admin voit la page 404, l'espace n'est pas annoncé.
             element: <RequireRole role={ROLE_APP.ADMIN} denied={<NotFoundPage />} />,

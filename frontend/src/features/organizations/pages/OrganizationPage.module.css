@@ -84,8 +84,12 @@
 
 /* Ma relation à l'organisation (rôle ou « Join »), poussée à droite de l'en-tête. */
 .membership {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
   margin-left: auto;
-  flex: none;
 }
 
 /* À gauche « About », les actions puis la discussion ; à droite le lieu puis les membres. La dernière rangée en
