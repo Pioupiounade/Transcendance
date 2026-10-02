@@ -25,6 +25,16 @@ export const toJoinFailure = (error: unknown): JoinFailure => {
   return fail(t.unknown);
 };
 
+/** Traduit une erreur de gestion (adhésions, rôles, réglages) : le backend explique ses refus en anglais. */
+export const toManageErrorMessage = (error: unknown): string => {
+  if (!isApiError(error)) return t.unknown;
+  if (error.isNetwork) return t.network;
+  if (error.status === 401) return t.signedOut;
+  if (error.messages.length > 0) return t.manageRejected(error.messages.join(' '));
+  if (error.status === 403) return t.notAllowed;
+  return t.unknown;
+};
+
 /** Traduit une erreur d'envoi ou de suppression de commentaire en message affichable. */
 export const toCommentErrorMessage = (error: unknown): string => {
   if (!isApiError(error)) return t.unknown;
