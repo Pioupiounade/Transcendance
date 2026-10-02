@@ -1,0 +1,56 @@
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px 20px;
+}
+
+.search {
+  flex: 0 1 340px;
+}
+
+.scope {
+  display: flex;
+  gap: 8px;
+}
+
+/* Le tri se cale à droite ; quand la barre passe à la ligne, il suit le flux. */
+.sort {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-left: auto;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.select {
+  height: 43px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-field);
+  background: var(--field-bg);
+  color: var(--ink);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 400;
+  cursor: pointer;
+  transition: border-color var(--t-fast);
+}
+.select:hover {
+  border-color: var(--brand);
+}
+
+@media (max-width: 760px) {
+  .toolbar {
+    gap: 12px 16px;
+  }
+  .search {
+    flex-basis: 100%;
+  }
+  .select {
+    height: 38px;
+  }
+}

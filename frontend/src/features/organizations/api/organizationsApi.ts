@@ -10,10 +10,6 @@ import type {
 /** Toutes les organisations, tous statuts (docs/api_contract.md §12). */
 export const fetchOrganizations = (signal?: AbortSignal) => http.list<Organization>('/organizations', { signal });
 
-/** Recherche par sous-chaîne du titre (15 max). */
-export const searchOrganizations = (query: string, signal?: AbortSignal) =>
-  http.list<Organization>('/organizations/search', { query: { q: query }, signal });
-
 /** Adhésions actives d'un utilisateur, avec son rôle dans chaque organisation (route publique, §13) ; aucune → `[]`. */
 export const fetchUserMemberships = (userId: string, signal?: AbortSignal) =>
   http.get<MembershipWithOrganization[]>(`/organization-members/user/${userId}/organizations`, { signal });

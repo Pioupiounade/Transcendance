@@ -1,14 +1,11 @@
-import { useCallback } from 'react';
 import { useResource } from '@/shared/hooks/useResource';
-import { fetchOrganizations, searchOrganizations } from './organizationsApi';
+import type { Organization } from '../types';
+import { fetchOrganizations } from './organizationsApi';
 
-/** Liste ou recherche (quand `query` n'est pas vide), avec ses états. */
-export function useOrganizations(query: string) {
-  const q = query.trim();
-  const load = useCallback(
-    (signal: AbortSignal) => (q === '' ? fetchOrganizations(signal) : searchOrganizations(q, signal)),
-    [q],
-  );
-  const { data, loading, error, reload } = useResource(load);
-  return { organizations: data ?? [], loading, error, reload };
+const NO_ORGANIZATIONS: Organization[] = [];
+
+/** Toutes les organisations, avec leurs états. La recherche et le tri se font ensuite côté client (directory.ts). */
+export function useOrganizations() {
+  const { data, loading, error, reload } = useResource(fetchOrganizations);
+  return { organizations: data ?? NO_ORGANIZATIONS, loading, error, reload };
 }
