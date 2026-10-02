@@ -79,6 +79,38 @@
   /* mobile ≤ 760px · tablette 761–1100px · desktop > 1100px · large > 1500px */
 }
 
+/* Thème de l'espace d'administration (#22) : nuit de forêt, accent inversé (la terracotta devient la couleur
+   d'action, la sauge l'accent secondaire) pour qu'on sache toujours qu'on est côté admin. Posé sur <html> par
+   `AdminLayout` ; ne redéfinit que des couleurs. Contrastes vérifiés (texte ≥ 4.5:1). */
+:root[data-theme='admin'] {
+  color-scheme: dark;
+  --brand: #e58a6b;
+  --brand-hover: #ee9c80;
+  --brand-press: #d97a5a;
+  --on-brand: #24130d;
+  --terra: #9fd3b5;
+  --surface: #111c18;
+  --ground: #1a2922;
+  --ground-hover: #223429;
+  --ground-press: #2a3f33;
+  --field-bg: #131f1a;
+  --trust: #9fd3b5;
+  --trust-soft: #223a2f;
+  --ink: #f4f0e6;
+  --muted: #a8b7ad;
+  --line: #344a40;
+  --danger: #f59a8f;
+  --danger-soft: #3d2320;
+  --disabled-bg: #25342d;
+  --disabled-ink: #8a9a90;
+  --avatar-bg: #3a4d43;
+  --avatar-ink: #f4f0e6;
+  --note-bg: #1f3028;
+  --note-ink: #b7c5b8;
+  --card-selected-bg: #20332a;
+  --shadow: 0 8px 30px #0000004d;
+}
+
 @media (prefers-reduced-motion: reduce) {
   :root {
     --t-fast: 0ms;
