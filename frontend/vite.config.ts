@@ -14,7 +14,7 @@ export default defineConfig(({ mode }) => {
           [apiUrl]: {
             target: proxyTarget,
             changeOrigin: true,
-            rewrite: (path) => path.slice(apiUrl.length),
+            rewrite: (path: string) => path.slice(apiUrl.length),
           },
         }
       : {}),
