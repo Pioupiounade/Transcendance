@@ -1,5 +1,5 @@
 import { Link, NavLink } from 'react-router';
-import { useAuth } from '@/features/auth';
+import { ROLE_APP, useAuth } from '@/features/auth';
 import { Avatar, Button, ButtonLink, Icon } from '@/shared/ui';
 import { APP_LABELS } from '../labels';
 import { ROUTES } from '../routes';
@@ -28,6 +28,12 @@ export function AppHeader() {
       </nav>
 
       <div className={styles.actions}>
+        {user?.role === ROLE_APP.ADMIN && (
+          <NavLink to={ROUTES.admin} className={styles.adminLink}>
+            <Icon name="shield" size={18} />
+            <span className={styles.adminLabel}>{APP_LABELS.admin}</span>
+          </NavLink>
+        )}
         {status === 'authenticated' && user && (
           <Link to={ROUTES.profile} className={styles.profileLink} aria-label={APP_LABELS.myProfile}>
             <Avatar name={user.email} />

@@ -11,6 +11,7 @@ export const APP_LABELS = {
   signIn: 'Sign in',
   signOut: 'Sign out',
   myProfile: 'My profile',
+  admin: 'Admin',
   nav: {
     home: 'Home',
     actions: 'Actions',

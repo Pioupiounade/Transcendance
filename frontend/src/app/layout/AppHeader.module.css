@@ -65,6 +65,31 @@
   border-radius: 50%;
 }
 
+/* Entrée de l'espace d'administration, visible des seuls admins : une pastille, pleine quand on y est. */
+.adminLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 44px;
+  padding: 0 16px;
+  border: 1.5px solid var(--brand);
+  border-radius: var(--r-btn);
+  color: var(--brand);
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+  transition:
+    background-color var(--t-fast),
+    color var(--t-fast);
+}
+.adminLink:hover {
+  background: var(--trust-soft);
+}
+.adminLink[aria-current='page'] {
+  background: var(--brand);
+  color: var(--on-brand);
+}
+
 @media (max-width: 1100px) {
   .topbar {
     padding: 0 24px;
@@ -110,5 +135,38 @@
   .nav,
   .profileLink {
     display: none;
+  }
+  /* L'entrée admin reste dans l'en-tête (la barre basse garde cinq entrées) : icône seule, libellé lu. */
+  .actions {
+    gap: 8px;
+  }
+  .adminLink {
+    justify-content: center;
+    width: 44px;
+    padding: 0;
+  }
+  .adminLabel {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+}
+
+/* Très petits écrans : l'en-tête se resserre pour laisser la place à l'entrée admin. */
+@media (max-width: 400px) {
+  .topbar:has(.adminLink) {
+    padding: 0 12px;
+  }
+  .topbar:has(.adminLink) .actions {
+    gap: 6px;
+  }
+  .topbar:has(.adminLink) .wordmark {
+    gap: 6px;
+    font-size: 21px;
+    letter-spacing: -1px;
   }
 }

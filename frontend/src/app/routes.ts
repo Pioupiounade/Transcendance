@@ -16,6 +16,8 @@ export const ROUTES = {
   editAction: '/actions/:id/edit',
   organizations: '/organizations',
   organization: '/organizations/:id',
+  admin: '/admin',
+  adminUsers: '/admin/users',
   ...AUTH_ROUTES,
 } as const;
 
