@@ -211,6 +211,20 @@ features/       1 domaine métier = 1 module ; interface = index.ts
                 générique et DEFAULT_CENTER), fils dont la longueur suit le rang de distance, fils secondaires entre
                 voisines < 1,5 km, clic = fiche, glisser = épingler. forceSimulation.ts (pur, sans d3),
                 hooks/useForceLayout (rAF, drag par pointer capture, reduced-motion = disposition immédiate).
+                Discussion (#71, Epic 4) : OrganizationComments `{ organizationId, creatorId }` sur la fiche, sous
+                « About » (`GET`/`POST /organizations/:id/comments`, body `{ comment }` ; `DELETE
+                /organizations/comments/:id` par l'auteur ou le créateur, confirmé par DeleteCommentDialog) ;
+                api/useOrganizationComments (`prepend`, `remove`), validation.ts, errors.ts.
+                Fiche complète (#64) : en-tête avec MembershipStatus (mon rôle si je suis dans la liste publique des
+                membres actifs, sinon « Join » = `POST /organization-members/organization/:id/join` ; anonyme →
+                `/login` avec `state.from` ; pas de « Join » sur une organisation inactive). Le backend ne laisse pas
+                un demandeur lire sa demande : après rechargement le bouton revient, et `toJoinFailure` traduit le
+                409 / 403 du second clic (en attente, refusée, déjà membre, banni). OrganizationActions = actions à
+                venir (lien vers la carte, `upcomingActionPath` fourni par `app/`) puis terminées (sans lien tant
+                que la fiche d'action est un mock, #60), filtrées côté client sur `useActions` : la route filtrée
+                répond 404 quand elle est vide, donc une erreur console. Panneau « Where » = `PlaceMap` de la
+                feature actions (mini-carte à un pin, hauteur par `--map-min-height*`). Pas de « Leave » (décision
+                du 02/10/2026). Gestion des membres : #62.
   admin/          Epic 8, réservé au rôle ADMIN. #22 : AdminLayout (route parente `/admin/*`, pose le thème sombre
                 `data-theme="admin"` sur <html> le temps de la visite) et AdminUsersPage `/admin/users` (tous les
                 comptes via `GET /users`, recherche par e-mail et filtre par statut côté client, 20 par 20,
