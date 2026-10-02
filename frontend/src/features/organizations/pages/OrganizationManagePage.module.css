@@ -4,6 +4,7 @@
   margin: 0 auto;
   padding: 30px 38px 40px;
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 20px;
 }
 
@@ -22,7 +23,12 @@
 
 .head {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 6px;
+}
+.head h1,
+.back {
+  overflow-wrap: anywhere;
 }
 
 .eyebrow {
@@ -71,6 +77,7 @@
 
 .panels {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 20px;
 }
 
