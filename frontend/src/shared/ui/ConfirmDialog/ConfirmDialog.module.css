@@ -1,0 +1,54 @@
+.confirm {
+  display: grid;
+  gap: 14px;
+  margin-top: 10px;
+}
+
+.body {
+  font-size: 15px;
+  overflow-wrap: anywhere;
+}
+
+.effects {
+  display: grid;
+  gap: 6px;
+  padding-left: 18px;
+  list-style: disc;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.error {
+  padding: 12px 16px;
+  border-radius: var(--r-field);
+  background: var(--danger-soft);
+  color: var(--danger);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+/* Action destructive : même forme qu'un bouton primaire, couleur d'erreur (DESIGN.md §1). */
+.danger {
+  background: var(--danger);
+}
+.danger:hover,
+.danger:active {
+  background: var(--danger);
+  filter: brightness(0.88);
+}
+
+@media (max-width: 760px) {
+  .actions {
+    flex-direction: column-reverse;
+  }
+  .actions > * {
+    width: 100%;
+  }
+}
