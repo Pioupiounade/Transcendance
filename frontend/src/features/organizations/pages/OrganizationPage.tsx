@@ -3,6 +3,7 @@ import { formatDayMonth } from '@/shared/lib/formatDate';
 import { pageTitle } from '@/shared/lib/pageTitle';
 import { Avatar, ButtonLink, Icon } from '@/shared/ui';
 import { useOrganization, useOrganizationMembers } from '../api/useOrganization';
+import { OrganizationComments } from '../components/OrganizationComments';
 import { ORGANIZATIONS_LABELS, ORGANIZATION_STATUS_LABELS, ROLE_ORG_LABELS } from '../labels';
 import { ORGANIZATION_STATUS } from '../types';
 import styles from './OrganizationPage.module.css';
@@ -20,7 +21,7 @@ const sinceLabel = (iso: string): string => {
   return parts ? `${parts.month} ${year}` : '';
 };
 
-/** `/organizations/:id` : fiche publique (titre, adresse, description, membres actifs). Adhésion : ticket suivant. */
+/** `/organizations/:id` : fiche publique (titre, adresse, description, membres actifs, discussion #71). Adhésion : ticket suivant. */
 export function OrganizationPage({ listPath }: OrganizationPageProps) {
   const { id = '' } = useParams<{ id: string }>();
   const { organization, loading, notFound, error } = useOrganization(id);
@@ -72,13 +73,13 @@ export function OrganizationPage({ listPath }: OrganizationPageProps) {
           </header>
 
           <div className={styles.body}>
-            <section className={styles.panel} aria-labelledby="about-title">
+            <section className={[styles.panel, styles.about].join(' ')} aria-labelledby="about-title">
               <h2 id="about-title">{text.about}</h2>
               <p className={styles.description}>{organization.description}</p>
               <p className={styles.since}>{text.since(sinceLabel(organization.created_at))}</p>
             </section>
 
-            <section className={styles.panel} aria-labelledby="members-title">
+            <section className={[styles.panel, styles.membersPanel].join(' ')} aria-labelledby="members-title">
               <div className={styles.panelHead}>
                 <h2 id="members-title">{text.members}</h2>
                 {!members.loading && !members.error && <span className={styles.count}>{members.members.length}</span>}
@@ -111,6 +112,10 @@ export function OrganizationPage({ listPath }: OrganizationPageProps) {
                 </ul>
               )}
             </section>
+
+            <div className={styles.discussion}>
+              <OrganizationComments organizationId={organization.organization_id} creatorId={organization.creator_id} />
+            </div>
           </div>
         </>
       )}

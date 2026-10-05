@@ -37,3 +37,14 @@ export type OrganizationMember = {
     profile: { username: string; description: string | null; profile_picture: string | null } | null;
   };
 };
+
+/** Commentaire public d'une organisation (`/organizations/:id/comments`) ; `profile` null = auteur sans profil. */
+export type OrganizationComment = {
+  comment_id: string;
+  content: string;
+  created_at: string;
+  updated_at: string;
+  user_id: string;
+  organization_id: string;
+  user: { user_id: string; profile: { username: string; profile_picture: string | null } | null };
+};

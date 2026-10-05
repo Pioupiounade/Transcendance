@@ -50,7 +50,7 @@ Ce fichier est chargé automatiquement quand la session démarre dans `frontend/
 - `DESIGN.md` : palette, typo, composants React à construire (§9). `_reference.html` : maquette navigable.
 - `en.subject.pdf` : sujet officiel (bloquant : HTTPS, `.env` ignoré + `.env.example`, pages CGU et confidentialité,
   README complet en anglais).
-- `docs/api_contract.md` (ici, dans `frontend/`) : routes réelles du backend, régénéré et vérifié par sondes le 24/09/2026 ;
+- `docs/api_contract.md` (ici, dans `frontend/`) : routes réelles du backend, régénéré le 24/09/2026 et resondé le 01/10/2026 (photos, avatar, commentaires d'organisation) ;
   à régénérer quand le backend change (`make db-update` après chaque pull backend, sinon la base de dev est en retard).
 - `docs/data_model.md` (ici) : plan des données côté frontend, entités → modules deep et leurs interfaces, état de
   chaque feature (Epics 1-9), dettes de données ; écrit le 24/09/2026, à tenir à jour à chaque feature branchée.
@@ -207,6 +207,10 @@ features/       1 domaine métier = 1 module ; interface = index.ts
                 générique et DEFAULT_CENTER), fils dont la longueur suit le rang de distance, fils secondaires entre
                 voisines < 1,5 km, clic = fiche, glisser = épingler. forceSimulation.ts (pur, sans d3),
                 hooks/useForceLayout (rAF, drag par pointer capture, reduced-motion = disposition immédiate).
+                Discussion (#71, Epic 4) : OrganizationComments `{ organizationId, creatorId }` sur la fiche, sous
+                « About » (`GET`/`POST /organizations/:id/comments`, body `{ comment }` ; `DELETE
+                /organizations/comments/:id` par l'auteur ou le créateur, confirmé par DeleteCommentDialog) ;
+                api/useOrganizationComments (`prepend`, `remove`), validation.ts, errors.ts.
   friends/        (friend-requests + friendships)
   <feature>/
     api/        fonctions fetch typées + hooks useX : seuls appelants de shared/api
@@ -224,7 +228,8 @@ shared/         zéro connaissance métier, réutilisable ailleurs
                 datetime-local), FloatingTextarea (même habillage, privé : FieldShell + fieldA11y), Checkbox (libellé
                 riche), Dialog (`<dialog>` natif : `{ open, onClose, title, closeLabel }`, enfants montés si ouvert),
                 StreetScene (illustration de rue de la maquette, décorative ; l'hôte fixe la hauteur : auth, landing),
-                CommentThread (fil à plat `{ comments: ThreadComment[], mineLabel }`) et CommentComposer (zone de texte +
+                CommentThread (fil à plat `{ comments: ThreadComment[], mineLabel, deletion? }` : bouton de
+                suppression sur les commentaires `canDelete`, la confirmation reste chez l'appelant) et CommentComposer (zone de texte +
                 compteur + bouton : `{ label, maxLength, submitLabel, submittingLabel, validate, onSubmit, describeError }`)
   hooks/        hooks React sans métier, pas de barrel : useForm (valeurs, erreurs après blur/soumission, erreur
                 serveur via un mapper fourni, focus du 1er champ invalide dont l'`id` = son nom) ; useResource

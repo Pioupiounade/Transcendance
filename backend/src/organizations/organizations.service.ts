@@ -1,8 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ForbiddenException, HttpException, HttpStatus } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateOrganizationDto } from './dto/create-organization.dto';
 import { UpdateOrganizationDto } from './dto/update-organization.dto';
-import { AccountStatus, RoleApp, RoleOrg, MemberStatus, OrganizationStatus } from '../../generated/prisma/client';
+import { AccountStatus, RoleApp, RoleOrg, MemberStatus, OrganizationStatus, Prisma } from '../../generated/prisma/client';
 
 @Injectable()
 export class OrganizationsService {
@@ -434,26 +434,61 @@ export class OrganizationsService {
       throw new NotFoundException('Organization not found');
     }
 
-    return this.prisma.organizationComment.create({
-      data: {
-        organization_id: organizationId,
-        user_id: userId,
-        content: comment
-      },
-        include: {
-          user: {
-            select: {
-              user_id: true,
-              profile: {
-                select: {
-                  username: true,
-                  profile_picture: true,
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      try {
+        return await this.prisma.$transaction(
+          async (tx) => {
+            const lastComment = await tx.organizationComment.findFirst({
+              where: { user_id: userId },
+              orderBy: { created_at: 'desc' },
+            });
+
+            if (lastComment) {
+              const diffTime = (Date.now() - lastComment.created_at.getTime()) / 1000;
+              if (diffTime < 15) {
+                throw new HttpException(
+                  'You can only post a comment every 15 seconds',
+                  HttpStatus.TOO_MANY_REQUESTS,
+                );
+              }
+            }
+
+            return tx.organizationComment.create({
+              data: {
+                organization_id: organizationId,
+                user_id: userId,
+                content: comment,
+              },
+              include: {
+                user: {
+                  select: {
+                    user_id: true,
+                    profile: {
+                      select: {
+                        username: true,
+                        profile_picture: true,
+                      },
+                    },
+                  },
                 },
               },
-            },
+            });
           },
-        },
-    });
+          { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
+        );
+      } catch (error) {
+        if (
+          error instanceof Prisma.PrismaClientKnownRequestError &&
+          error.code === 'P2034' &&
+          attempt < 2
+        ) {
+          continue;
+        }
+        throw error;
+      }
+    }
+
+    throw new BadRequestException('Comment could not be posted, please try again');
   }
 
   async getComments(organizationId: bigint) {
