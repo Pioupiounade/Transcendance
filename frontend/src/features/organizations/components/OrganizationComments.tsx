@@ -29,6 +29,7 @@ export function OrganizationComments({ organizationId, creatorId }: Organization
   const location = useLocation();
   const { comments, loading, error, reload, prepend, remove } = useOrganizationComments(organizationId);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [isCoolingDown, setIsCoolingDown] = useState(false);
 
   const myUserId = user?.user_id ?? null;
   const toThreadComment = (comment: OrganizationComment): ThreadComment => ({
@@ -44,7 +45,11 @@ export function OrganizationComments({ organizationId, creatorId }: Organization
   const ready = !loading && error === null;
 
   const submit = async (content: string) => {
-    prepend(await postOrganizationComment(organizationId, content));
+    const comment = await postOrganizationComment(organizationId, content);
+    prepend(comment);
+    
+    setIsCoolingDown(true);
+    setTimeout(() => setIsCoolingDown(false), 15000); // 15 second delay
   };
 
   return (
@@ -65,6 +70,7 @@ export function OrganizationComments({ organizationId, creatorId }: Organization
           validate={validateComment}
           onSubmit={submit}
           describeError={toCommentErrorMessage}
+          disabled={isCoolingDown}
         />
       )}
       {status === 'anonymous' && (

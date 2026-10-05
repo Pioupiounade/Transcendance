@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ForbiddenException, HttpException, HttpStatus } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateOrganizationDto } from './dto/create-organization.dto';
 import { UpdateOrganizationDto } from './dto/update-organization.dto';
@@ -432,6 +432,18 @@ export class OrganizationsService {
 
     if (!org) {
       throw new NotFoundException('Organization not found');
+    }
+
+    const lastComment = await this.prisma.organizationComment.findFirst({
+      where: { user_id: userId },
+      orderBy: { created_at: 'desc' },
+    });
+
+    if (lastComment) {
+      const diffTime = (Date.now() - lastComment.created_at.getTime()) / 1000;
+      if (diffTime < 15) {
+        throw new HttpException('You can only post a comment every 15 seconds', HttpStatus.TOO_MANY_REQUESTS);
+      }
     }
 
     return this.prisma.organizationComment.create({
