@@ -14,6 +14,7 @@ type CommentComposerProps = {
   /** Envoi du contenu (déjà `trim`). Une exception est traduite par `describeError` et affichée sous le champ. */
   onSubmit: (content: string) => Promise<void>;
   describeError: (error: unknown) => string;
+  disabled?: boolean;
 };
 
 /** Formulaire d'un commentaire : zone de texte avec compteur, bouton, erreur reliée au champ. Vidé après l'envoi. */
@@ -25,15 +26,19 @@ export function CommentComposer({
   validate,
   onSubmit,
   describeError,
+  disabled = false,
 }: CommentComposerProps) {
   const id = useId();
   const [value, setValue] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
+  const isFormDisabled = disabled || submitting;
+
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (submitting) return;
+    if (isFormDisabled) return;
+  
     const message = validate(value);
     if (message !== null) {
       setError(message);
@@ -61,13 +66,13 @@ export function CommentComposer({
         value={value}
         error={error}
         help={`${value.length}/${maxLength}`}
-        disabled={submitting}
+        disabled={isFormDisabled}
         onChange={(event) => {
           setValue(event.target.value);
           setError(null);
         }}
       />
-      <Button type="submit" disabled={submitting}>
+      <Button type="submit" disabled={isFormDisabled || value.trim().length === 0}>
         {submitting ? submittingLabel : submitLabel}
       </Button>
     </form>
