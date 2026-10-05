@@ -10,6 +10,7 @@ export const toCommentErrorMessage = (error: unknown): string => {
   if (error.status === 401) return t.signedOut;
   if (error.status === 403) return t.notAllowed;
   if (error.status === 404) return t.notFound;
+  if (error.status === 429) return t.tooManyRequests;
   // 400 : validation du DTO ; le backend explique en anglais.
   if (error.status === 400 && error.messages.length > 0) return t.rejected(error.messages.join(' '));
   return t.unknown;

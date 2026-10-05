@@ -69,6 +69,7 @@ export const ORGANIZATIONS_LABELS = {
     signedOut: 'Your session has expired. Sign in again to continue.',
     notAllowed: 'You are not allowed to do this.',
     notFound: 'This comment or organization no longer exists.',
+    tooManyRequests: 'Please wait 15 seconds before posting another comment.',
     rejected: (reason: string) => `Your comment was not accepted: ${reason}`,
     network: 'We could not reach the server. Check your connection and try again.',
     unknown: 'Something went wrong on our side. Please try again.',
