@@ -37,7 +37,7 @@ export function CommentComposer({
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (submitting) return;
+    if (isFormDisabled) return;
   
     const message = validate(value);
     if (message !== null) {
