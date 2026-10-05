@@ -133,9 +133,7 @@ export function ActionsListPage() {
         <CreateActionDialog
           location={null}
           onClose={() => setIsCreateOpen(false)}
-          onCreated={(action) => {
-              setIsCreateOpen(false);
-           }}
+          onCreated={() => setIsCreateOpen(false)}
         />
       )}
     </div>

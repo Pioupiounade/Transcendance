@@ -223,14 +223,14 @@ Script de test manuel : `tests/test_auth.sh` (curl + jq).
 
 | Route | Guard | Entrée | Réponse | Erreurs / règles |
 |---|---|---|---|---|
-| `GET /users` | aucun | — | `User[]` (tous statuts) | — |
+| `GET /users` | aucun | — | `User[]` (tous statuts, ordre non garanti) | **aucune garde** : e-mails, rôles et statuts de tous les comptes lisibles sans connexion (à signaler). Utilisée par `/admin/users` (#22) |
 | `GET /users/me` | JWT | — | `User` | 404 « User not found ». Équivalent de `GET /auth/me` |
 | `GET /users/:id` | aucun | — | `User` | 404 « User not found » |
 | `POST /users` | aucun | body `CreateUserDto` (`email`, `password` ≥ 8) | 201 `User` | 400 « Email is already used ». Doublon de `/auth/register` sans tokens |
 | `PATCH /users/me/email` | JWT | body `UpdateUserDto` : `email?` (format e-mail) | `User` | 400 « Email is already used » ; body vide = aucune modification |
 | `PATCH /users/me/password` | JWT | body `UpdatePasswordDto` : `password` (≥ 8) | `User` | aucune vérification de l'ancien mot de passe |
 | `PATCH /users/me/deactivate` | JWT | — | `User` (`DEACTIVATED`) | irréversible via l'API (voir `reactivate`) ; le JWT reste valide jusqu'à expiration |
-| `PATCH /users/:id/suspend` | JWT, **ADMIN** | — | `User` (`SUSPENDED`) ; crée une transaction **−50** points (`USER_SUSPENDED`) | 404 « User not found » (appelant), « User to suspend not found » ; 403 « Only an admin can suspend a user » ; 400 « User is already suspended » |
+| `PATCH /users/:id/suspend` | JWT, **ADMIN** | — | `User` (`SUSPENDED`) ; crée une transaction **−50** points (`USER_SUSPENDED`) ; **`points` de la réponse = solde d'avant la pénalité** (vérifié le 02/10/2026 : relire `GET /users/:id`) | 404 « User not found » (appelant), « User to suspend not found » ; 403 « Only an admin can suspend a user » ; 400 « User is already suspended » |
 | `PATCH /users/:id/reactivate` | JWT, **ADMIN** | — | `User` (`ACTIVE`) | 404 ; 403 « Only an admin can reactivate a user » ; 400 « Only a suspended account can be reactivated » (un compte `DEACTIVATED` n'est **pas** réactivable) |
 
 Pas de route de suppression de compte.

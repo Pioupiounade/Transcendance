@@ -24,7 +24,7 @@
   padding: 10px 16px;
   border-radius: var(--r-btn);
   background: var(--ink);
-  color: #fff;
+  color: var(--ground);
   font-weight: 600;
   text-decoration: none;
 }

@@ -1,5 +1,5 @@
-import { createBrowserRouter, RouterProvider } from 'react-router';
-import { LoginPage, RegisterPage, RequireAuth } from '@/features/auth';
+import { createBrowserRouter, Navigate, RouterProvider } from 'react-router';
+import { LoginPage, RegisterPage, RequireAuth, RequireRole, ROLE_APP } from '@/features/auth';
 import { APP_LABELS } from './labels';
 import { lazyPage } from './lazyPage';
 import { PageShell } from './layout/PageShell';
@@ -19,6 +19,8 @@ const EditActionPage = lazyPage(() => import('@/features/actions').then((m) => m
 const ActionDetailPage = lazyPage(() => import('@/features/actions').then((m) => m.ActionDetailPage));
 const OrganizationsPage = lazyPage(() => import('@/features/organizations').then((m) => m.OrganizationsPage));
 const OrganizationPage = lazyPage(() => import('@/features/organizations').then((m) => m.OrganizationPage));
+const AdminLayout = lazyPage(() => import('@/features/admin').then((m) => m.AdminLayout));
+const AdminUsersPage = lazyPage(() => import('@/features/admin').then((m) => m.AdminUsersPage));
 const router = createBrowserRouter([
   {
     path: ROUTES.home,
@@ -43,6 +45,20 @@ const router = createBrowserRouter([
           { path: ROUTES.profile, element: <ProfilePage /> },
           { path: ROUTES.createAction, element: <CreateActionPage mapPath={ROUTES.map} /> },
           { path: ROUTES.editAction, element: <EditActionPage mapPath={ROUTES.map} /> },
+          {
+            // Espace d'administration : un non-admin voit la page 404, l'espace n'est pas annoncé.
+            element: <RequireRole role={ROLE_APP.ADMIN} denied={<NotFoundPage />} />,
+            children: [
+              {
+                path: ROUTES.admin,
+                element: <AdminLayout />,
+                children: [
+                  { index: true, element: <Navigate to={ROUTES.adminUsers} replace /> },
+                  { path: ROUTES.adminUsers, element: <AdminUsersPage /> },
+                ],
+              },
+            ],
+          },
         ],
       },
       { path: '*', element: <NotFoundPage /> },

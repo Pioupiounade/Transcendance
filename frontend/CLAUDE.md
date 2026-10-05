@@ -146,6 +146,10 @@ Ce fichier est chargé automatiquement quand la session démarre dans `frontend/
   Identifiants de code en anglais. Textes UI centralisés (`app/labels.ts`, `features/<x>/labels.ts`).
 - Pages obligatoires (sujet, sous peine de rejet) : Politique de confidentialité et Conditions d'utilisation, accessibles
   depuis le footer, avec un contenu réel.
+- Thème : `styles/tokens.css` porte le thème clair (`:root`) et le thème sombre de l'espace admin
+  (`:root[data-theme='admin']`, accent inversé terracotta / sauge, contrastes vérifiés). Un composant ne code jamais
+  une couleur en dur : il lit un token (`--on-brand`, `--ground-hover`, `--field-bg`, `--disabled-*`…), sinon il casse
+  dans le thème sombre.
 - Zéro erreur ni warning dans la console navigateur (exigence du sujet). Cible : dernière version stable de Chrome,
   responsive du mobile au desktop.
 
@@ -207,10 +211,15 @@ features/       1 domaine métier = 1 module ; interface = index.ts
                 générique et DEFAULT_CENTER), fils dont la longueur suit le rang de distance, fils secondaires entre
                 voisines < 1,5 km, clic = fiche, glisser = épingler. forceSimulation.ts (pur, sans d3),
                 hooks/useForceLayout (rAF, drag par pointer capture, reduced-motion = disposition immédiate).
-                Discussion (#71, Epic 4) : OrganizationComments `{ organizationId, creatorId }` sur la fiche, sous
-                « About » (`GET`/`POST /organizations/:id/comments`, body `{ comment }` ; `DELETE
-                /organizations/comments/:id` par l'auteur ou le créateur, confirmé par DeleteCommentDialog) ;
-                api/useOrganizationComments (`prepend`, `remove`), validation.ts, errors.ts.
+  admin/          Epic 8, réservé au rôle ADMIN. #22 : AdminLayout (route parente `/admin/*`, pose le thème sombre
+                `data-theme="admin"` sur <html> le temps de la visite) et AdminUsersPage `/admin/users` (tous les
+                comptes via `GET /users`, recherche par e-mail et filtre par statut côté client, 20 par 20,
+                bloquer / débloquer = `suspend` / `reactivate` avec AccountActionDialog ; pas d'action sur son
+                propre compte ni sur un compte `DEACTIVATED`). `blockUser` relit le compte : la réponse de `suspend`
+                porte les points d'avant la pénalité de 50. Accès : `RequireAuth` > `RequireRole` (feature auth),
+                un non-admin voit la page 404 ; entrée « Admin » dans l'en-tête pour les seuls admins (icône seule
+                sur mobile, la barre basse garde cinq entrées). Modération (#23) et catégories / rôles (#24) :
+                pages sœurs à venir, backend incomplet.
   friends/        (friend-requests + friendships)
   <feature>/
     api/        fonctions fetch typées + hooks useX : seuls appelants de shared/api

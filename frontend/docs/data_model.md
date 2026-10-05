@@ -93,8 +93,8 @@ Règle : un enum est possédé par une feature, traduit dans son `labels.ts`, ja
 |---|---|---|---|
 | `Category` | `ENVIRONMENT`, `SOCIAL`, `CULTURAL` | `features/actions` (`CATEGORY`) | Environment · Mutual aid · Culture & sharing ; icônes leaf · heart · sun ; pins forêt · terracotta · ocre |
 | `ActionStatus` | `PENDING`, `APPROVED`, `REJECTED`, `CANCELLED`, `COMPLETED` | `features/actions` (`ACTION_STATUS`, `OPEN_STATUSES` = PENDING + APPROVED) | Upcoming · Confirmed · Rejected · Cancelled · Completed |
-| `RoleApp` | `USER`, `ADMIN`, `MODERATOR` | `features/auth` (`ROLE_APP`) | — (pas encore affiché) |
-| `AccountStatus` | `ACTIVE`, `SUSPENDED`, `DEACTIVATED` | `features/auth` (`ACCOUNT_STATUS`) | — |
+| `RoleApp` | `USER`, `ADMIN`, `MODERATOR` | `features/auth` (`ROLE_APP`) | User · Admin · Moderator (`features/admin/labels.ts`, espace admin seulement) |
+| `AccountStatus` | `ACTIVE`, `SUSPENDED`, `DEACTIVATED` | `features/auth` (`ACCOUNT_STATUS`) | Active · Blocked · Deactivated (`features/admin/labels.ts`) ; icônes check · lock · close |
 | `ProfileVisibility` | `PUBLIC`, `PRIVATE`, `FRIENDS_ONLY` | `features/profile` (type union seulement) | select du mock : à revoir avec le contrat (`FRIENDS_ONLY` traité comme privé par l'API) |
 | `InterestCategory` | 9 valeurs `ENV_*`, `SOCIAL_*`, `CULTURAL_*` | à créer dans `features/profile` | ❌ |
 | `OrganizationStatus`, `MemberStatus`, `RoleOrg` | voir contrat §2 | `features/organizations/types.ts` (#61) | ✅ |
@@ -224,6 +224,7 @@ import { AuthProvider, useAuth, RequireAuth, LoginPage, RegisterPage, AUTH_ROUTE
 useAuth() → { status: 'loading' | 'anonymous' | 'authenticated', user: AuthUser | null,
               signIn({ email, password }), signUp({ email, password }), signOut() }   // signIn/signUp rejettent l'ApiError
 <RequireAuth />            // route parente sans path : loading → message, anonyme → /login avec state.from, sinon <Outlet/>
+<RequireRole role denied /> // sous RequireAuth : rôle exact → <Outlet/>, sinon `denied` (la page 404) ; confort d'UI, le backend revérifie
 AUTH_ROUTES                // { login: '/login', register: '/register' } : app/routes.ts les compose
 <RegisterPage termsPath privacyPath />   // une feature n'importe pas app/ : les chemins légaux arrivent en props
 type AuthUser = { user_id, email, role, account_status, points, created_at, updated_at }   // = User du contrat
@@ -276,6 +277,21 @@ Modules internes et leurs interfaces (un appelant lit ceci, pas l'implémentatio
 
 Le type de transition `ActionDetailData` (camelCase, `locationName`, `organizer`, `currentParticipants`) est celui du
 mock #46 : **il ne correspond à aucune réponse de l'API** et disparaîtra à l'alignement (§7).
+
+### 4.7 bis `features/admin` — espace d'administration (Epic 8, #22)
+
+```ts
+import { AdminLayout, AdminUsersPage } from '@/features/admin';
+
+<AdminLayout />      // route parente de `/admin/*` : thème sombre sur <html> (`data-theme="admin"`), puis <Outlet/>
+<AdminUsersPage />   // `/admin/users` : comptes, recherche, filtre, bloquer / débloquer
+```
+
+Caché : `api/adminUsersApi` (`fetchUsers` = `GET /users`, `blockUser` = `suspend` puis relecture du compte,
+`unblockUser` = `reactivate`), `UsersTable` (tableau → cartes sous 760 px), `AccountActionDialog` (confirmation, erreurs
+traduites par `errors.ts`), `labels.ts` (libellés des rôles et statuts de compte). Le type des comptes est `AuthUser`
+(feature auth) : `GET /users` renvoie la même forme. La page garde en mémoire les comptes modifiés (réponse du backend)
+au lieu de recharger la liste.
 
 ### 4.8 `features/profile` — profil (code coéquipier #38/#48, mock)
 
@@ -400,8 +416,8 @@ Backend = `main` au 24/09 (#40 auth/users/profiles/interests/orgs/membres/points
 
 | Feature | Backend | Frontend |
 |---|---|---|
-| Statut des comptes (actif / suspendu / désactivé) | ✅ `PATCH /users/:id/suspend|reactivate` (ADMIN, −50 points), `GET /users` | ❌ |
-| Bloquer / débloquer un compte | = suspend/reactivate | ❌ |
+| Statut des comptes (actif / suspendu / désactivé) | ✅ `PATCH /users/:id/suspend|reactivate` (ADMIN, −50 points), `GET /users` (sans garde, sans nom d'utilisateur) | ✅ `/admin/users` (#22) : liste, recherche par e-mail, filtre par statut |
+| Bloquer / débloquer un compte | = suspend/reactivate ; la réponse de `suspend` porte les points d'avant la pénalité | ✅ #22 : confirmation, compte relu après blocage ; rien sur son propre compte ni sur un `DEACTIVATED` |
 | Gérer les organisations (validation, suspension, fermeture) | ✅ `suspend` (ADMIN), `deactivate`, `reactivate` ; pas de « validation » (créée `ACTIVE`) | ❌ |
 | Gérer les catégories d'action | ❌ (enum figé) | ❌ |
 | Attribuer / retirer un rôle | ❌ (`role` en base uniquement) | ❌ |

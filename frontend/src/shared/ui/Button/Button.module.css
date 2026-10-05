@@ -32,7 +32,7 @@
 
 .primary {
   background: var(--brand);
-  color: #fff;
+  color: var(--on-brand);
 }
 .primary:hover {
   background: var(--brand-hover);
@@ -42,8 +42,8 @@
 }
 .primary:disabled,
 .primary[aria-disabled='true'] {
-  background: #e2e4dc;
-  color: #687267;
+  background: var(--disabled-bg);
+  color: var(--disabled-ink);
 }
 
 .secondary {
@@ -52,10 +52,10 @@
   border-color: var(--line);
 }
 .secondary:hover {
-  background: #eeede4;
+  background: var(--ground-hover);
 }
 .secondary:active {
-  background: #efefec;
+  background: var(--ground-press);
 }
 
 .text {
