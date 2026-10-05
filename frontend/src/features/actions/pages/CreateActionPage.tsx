@@ -7,6 +7,9 @@ import { ACTIONS_LABELS } from '../labels';
 import { FOCUS_PARAM } from '../mapConfig';
 import type { ActionRecord } from '../types';
 import styles from './ActionEditorPage.module.css';
+import { useEffect } from 'react';
+import { getCurrentUserSummary } from '@/features/profile/api/profileApi';
+import { fetchManageableOrganizations } from '@/features/organizations/api/organizationsApi';
 
 const text = ACTIONS_LABELS.create;
 
@@ -24,6 +27,18 @@ export function CreateActionPage({ mapPath }: CreateActionPageProps) {
 
   const onSaved = (action: ActionRecord) =>
     navigate(`${mapPath}?${FOCUS_PARAM}=${action.action_id}`, { state: { notice: text.submitted } });
+
+  useEffect(() => {
+    const testOrganizations = async () => {
+      const currentUser = await getCurrentUserSummary();
+
+      const organizations = await fetchManageableOrganizations(
+        currentUser.userId,
+      );
+    };
+
+    testOrganizations();
+  }, []);
 
   return (
     <section className={styles.page}>

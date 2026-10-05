@@ -212,26 +212,37 @@ export async function unblockUser(targetUserId: string): Promise<FriendshipStatu
   return 'NONE';
 }
 
-export function useProfile(identifier?: string) {
+export function useProfile(userId?: string) {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
     let isMounted = true;
+
     setIsLoading(true);
     setError(null);
 
-    Promise.resolve().then(() => {
-      if (isMounted) {
-        setIsLoading(true);
-        setError(null);
-      }
-    });
+    const request = userId
+      ? getPublicProfile(userId)
+      : getProfile();
 
-    getProfile(identifier)
+    request
       .then((data) => {
-        if (isMounted) setProfile(data);
+        if (!isMounted) return;
+
+        if (userId) {
+          setProfile({
+            username: data.username,
+            commune: data.commune,
+            description: data.description ?? undefined,
+            profilePicture: data.profilePicture ?? undefined,
+            visibility: 'PUBLIC',
+            location: null,
+          });
+        } else {
+          setProfile(data as UserProfile);
+        }
       })
       .catch((err) => {
         if (isMounted) {
@@ -246,7 +257,7 @@ export function useProfile(identifier?: string) {
     return () => {
       isMounted = false;
     };
-  }, [identifier]);
+  }, [userId]);
 
   return { profile, isLoading, error, setProfile };
 }

@@ -19,6 +19,7 @@ const text = ACTIONS_LABELS.comments;
 
 const toThreadComment = (comment: ActionComment, myUserId: string | null): ThreadComment => ({
   id: comment.comment_id,
+  authorId: comment.user_id,
   author: comment.user.profile?.username ?? text.anonymousAuthor,
   avatar: comment.user.profile?.profile_picture,
   createdAt: comment.created_at,

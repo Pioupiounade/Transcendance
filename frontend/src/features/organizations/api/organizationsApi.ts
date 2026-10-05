@@ -15,3 +15,32 @@ export const fetchOrganization = (id: string, signal?: AbortSignal) =>
 /** Membres actifs (comptes actifs) d'une organisation, route publique (§13). */
 export const fetchOrganizationMembers = (id: string, signal?: AbortSignal) =>
   http.list<OrganizationMember>(`/organization-members/organization/${id}/members`, { signal });
+
+export async function fetchManageableOrganizations(
+  userId: string,
+  signal?: AbortSignal,
+): Promise<Organization[]> {
+  const organizations = await fetchOrganizations(signal);
+
+  const manageable: Organization[] = [];
+
+  for (const organization of organizations) {
+    const members = await fetchOrganizationMembers(
+      organization.organization_id,
+      signal,
+    );
+
+    const membership = members.find(
+      (member) => member.user_id === userId,
+    );
+
+    if (
+      membership?.status === 'ACTIVE' &&
+      (membership.role === 'OWNER' || membership.role === 'MANAGER')
+    ) {
+      manageable.push(organization);
+    }
+  }
+
+  return manageable;
+}

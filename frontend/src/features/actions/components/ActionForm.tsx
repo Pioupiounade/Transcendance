@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from '@/shared/hooks/useForm';
 import { Button, FloatingField, FloatingTextarea, Icon } from '@/shared/ui';
 import { useCreateAction } from '../api/useCreateAction';
@@ -6,6 +6,10 @@ import { useUpdateAction } from '../api/useUpdateAction';
 import { toActionErrorMessage } from '../errors';
 import { ACTIONS_LABELS, CATEGORY_ICONS, CATEGORY_LABELS } from '../labels';
 import { CATEGORY, type ActionRecord, type LatLng } from '../types';
+import { getCurrentUserSummary } from '@/features/profile/api/profileApi';
+import { fetchManageableOrganizations } from '@/features/organizations/api/organizationsApi';
+import type { Organization } from '@/features/organizations/types';
+
 import {
   DESCRIPTION_MAX_LENGTH,
   MAX_PARTICIPANTS_MIN,
@@ -54,6 +58,36 @@ export function ActionForm({ location, action, onSaved, onCancel }: ActionFormPr
   const update = useUpdateAction();
   const [initial] = useState(() => toValues(action));
   const [spotMissing, setSpotMissing] = useState(false);
+  const [organizations, setOrganizations] = useState<Organization[]>([]);
+  const [organizationId, setOrganizationId] = useState('');
+
+  useEffect(() => {
+    if (action) return;
+
+    const controller = new AbortController();
+
+    const loadOrganizations = async () => {
+      try {
+        const { userId } = await getCurrentUserSummary();
+
+        const manageable = await fetchManageableOrganizations(
+          userId,
+          controller.signal,
+        );
+
+        setOrganizations(manageable);
+      } catch (error) {
+        if (!controller.signal.aborted) {
+          console.error('Unable to load manageable organizations:', error);
+        }
+      }
+    };
+
+    loadOrganizations();
+
+    return () => controller.abort();
+  }, [action]);
+
   const form = useForm<Values>(
     initial,
     {
@@ -77,7 +111,15 @@ export function ActionForm({ location, action, onSaved, onCancel }: ActionFormPr
         category: values.category,
         location,
         scheduled_at: new Date(values.scheduledAt).toISOString(),
-        ...(values.maxParticipants.trim() !== '' && { max_participants: Number(values.maxParticipants) }),
+
+        ...(values.maxParticipants.trim() !== '' && {
+          max_participants: Number(values.maxParticipants),
+        }),
+
+        ...(!action &&
+          organizationId !== '' && {
+            organization_id: Number(organizationId),
+          }),
       };
       onSaved(action ? await update(action.action_id, input) : await create(input));
     },
@@ -151,6 +193,27 @@ export function ActionForm({ location, action, onSaved, onCancel }: ActionFormPr
           </p>
         )}
       </fieldset>
+
+      {!action && organizations.length > 0 && (
+        <label>
+          Create as
+          <select
+            value={organizationId}
+            onChange={(event) => setOrganizationId(event.target.value)}
+          >
+            <option value="">Myself</option>
+
+            {organizations.map((organization) => (
+              <option
+                key={organization.organization_id}
+                value={organization.organization_id}
+              >
+                {organization.title}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
 
       <div className={styles.row}>
         <FloatingField
