@@ -437,9 +437,9 @@ Backend = `main` au 24/09 (#40 auth/users/profiles/interests/orgs/membres/points
 
 | Feature | Backend | Frontend |
 |---|---|---|
-| Créer / consulter / chercher / modifier une organisation | ✅ 8 routes, rayon sur `GET /organizations` | ❌ |
-| Membres : rejoindre, approuver, refuser, retirer, bannir, quitter, rôles, transfert | ✅ 14 routes, mais **aucun `OWNER` créé à la création** → gestion cassée tant que le backend ne le corrige pas | ❌ |
-| Actions portées par une organisation | ✅ `organization_id` à la création (MANAGER/OWNER) | ❌ (champ non proposé) |
+| Créer / consulter / chercher / modifier une organisation | ✅ 8 routes, rayon sur `GET /organizations` | 🟡 liste, recherche (#61) et fiche publique (#64 : « About », lieu sur mini-carte, actions, membres, discussion #71) ; ❌ créer / modifier |
+| Membres : rejoindre, approuver, refuser, retirer, bannir, quitter, rôles, transfert | ✅ 14 routes, mais **aucun `OWNER` créé à la création** → gestion cassée tant que le backend ne le corrige pas ; un demandeur ne peut **pas lire** sa demande | 🟡 #64 : « Join » sur la fiche (anonyme → `/login`), badge de mon rôle ; l'état d'une demande n'apparaît qu'en recliquant (409 traduit) ; gestion : #62 |
+| Actions portées par une organisation | ✅ `organization_id` à la création (MANAGER/OWNER) ; `GET /actions?organization_id=` (404 si vide) | 🟡 #64 : à venir + terminées sur la fiche, filtrées côté client sur `GET /actions` (pas de 404 en console) ; ❌ champ non proposé à la création |
 
 ### Transverse (sujet ft_transcendence)
 

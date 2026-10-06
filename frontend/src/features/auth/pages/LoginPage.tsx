@@ -1,8 +1,9 @@
-import { Navigate } from 'react-router';
+import { Navigate, useNavigate } from 'react-router';
 import { useForm } from '@/shared/hooks/useForm';
 import { Button, FloatingField } from '@/shared/ui';
 import { AuthLayout } from '../components/AuthLayout';
 import { useAuth } from '../hooks/useAuth';
+import { useReturnPath } from '../hooks/useReturnPath';
 import { toAuthErrorMessage } from '../errors';
 import { AUTH_LABELS } from '../labels';
 import { AUTH_ROUTES } from '../routes';
@@ -14,15 +15,20 @@ const text = AUTH_LABELS.login;
 
 export function LoginPage() {
   const { status, signIn } = useAuth();
-    const form = useForm(
+  const navigate = useNavigate();
+  const returnTo = useReturnPath();
+  const form = useForm(
     { email: '', password: '' },
     { email: validateEmail, password: validatePassword },
-    (values) => signIn({ email: values.email.trim(), password: values.password }),
+    async (values) => {
+      await signIn({ email: values.email.trim(), password: values.password });
+      navigate(returnTo, { replace: true });
+    },
     toAuthErrorMessage,
   );
 
   // Déjà connecté (ou connexion réussie) : le changement de statut fait la redirection.
-  if (status === 'authenticated') return <Navigate to="/" replace />;
+  if (status === 'authenticated') return <Navigate to={returnTo} replace />;
   return (
     <AuthLayout
       pageName={text.submit}

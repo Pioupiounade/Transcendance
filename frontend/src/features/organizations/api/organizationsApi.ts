@@ -1,5 +1,5 @@
 import { http } from '@/shared/api';
-import type { Organization, OrganizationComment, OrganizationMember } from '../types';
+import type { Membership, Organization, OrganizationComment, OrganizationMember } from '../types';
 
 /** Toutes les organisations, tous statuts (docs/api_contract.md §12). */
 export const fetchOrganizations = (signal?: AbortSignal) => http.list<Organization>('/organizations', { signal });
@@ -15,6 +15,13 @@ export const fetchOrganization = (id: string, signal?: AbortSignal) =>
 /** Membres actifs (comptes actifs) d'une organisation, route publique (§13). */
 export const fetchOrganizationMembers = (id: string, signal?: AbortSignal) =>
   http.list<OrganizationMember>(`/organization-members/organization/${id}/members`, { signal });
+
+/**
+ * Demande d'adhésion (JWT) : crée une adhésion `PENDING`, à valider par un gestionnaire. 409 = demande déjà en
+ * attente, déjà membre ou demande déjà refusée ; 403 = banni ; 400 = organisation inactive (§13).
+ */
+export const joinOrganization = (id: string) =>
+  http.post<Membership>(`/organization-members/organization/${id}/join`);
 
 /** Commentaires d'une organisation, du plus récent au plus ancien (route publique). 404 → organisation inconnue. */
 export const fetchOrganizationComments = (organizationId: string, signal?: AbortSignal) =>
