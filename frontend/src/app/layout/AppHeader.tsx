@@ -1,4 +1,4 @@
-import { Link, NavLink } from 'react-router';
+import { Link, NavLink, useLocation } from 'react-router';
 import { ROLE_APP, useAuth } from '@/features/auth';
 import { Avatar, Button, ButtonLink, Icon } from '@/shared/ui';
 import { APP_LABELS } from '../labels';
@@ -9,6 +9,7 @@ import styles from './AppHeader.module.css';
 
 export function AppHeader() {
   const { status, user, signOut } = useAuth();
+  const location = useLocation();
   const links = NAV_ITEMS.filter((item) => item.to !== ROUTES.profile);
 
   return (
@@ -45,7 +46,7 @@ export function AppHeader() {
           </Button>
         )}
         {status === 'anonymous' && (
-          <ButtonLink to={ROUTES.login} variant="secondary">
+          <ButtonLink to={ROUTES.login} state={{ from: location }} variant="secondary">
             {APP_LABELS.signIn}
           </ButtonLink>
         )}
