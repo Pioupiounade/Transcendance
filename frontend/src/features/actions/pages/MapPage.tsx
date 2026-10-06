@@ -13,20 +13,19 @@ import { DRAFT_PARAM, formatDraft, parseDraft } from '../draftParam';
 import { ACTIONS_LABELS } from '../labels';
 import { FOCUS_PARAM } from '../mapConfig';
 import { canManageAction } from '../permissions';
-import { OPEN_STATUSES, type ActionRecord, type Category, type LatLng } from '../types';
 import styles from './MapPage.module.css';
 import { getCurrentUserSummary, getProfileParticipations } from '@/features/profile/api/profileApi';
+import type { ActionRecord, Category, LatLng } from '../types';
 
 const text = ACTIONS_LABELS.map;
 const create = ACTIONS_LABELS.create;
 
 type MapPageProps = {
   /** Chemins des pages créer / modifier : `app/` les connaît, la feature non. */
-  createPath: string;
   editPath: (id: string) => string;
 };
 
-export function MapPage({ createPath, editPath }: MapPageProps) {
+export function MapPage({ editPath }: MapPageProps) {
   const { actions, loading, error, reload } = useActions();
   const { status, user } = useAuth();
   const location = useLocation();

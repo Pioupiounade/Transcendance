@@ -1,12 +1,5 @@
-import { http, ApiError } from '@/shared/api';
-import type { Action, ActionRecord, ActionStatus, Category } from '../types';
-import { MOCK_ACTIONS_DB } from './actionDetailMock';
-
-const CATEGORY_MAP: Record<string, Category> = {
-  environment: 'ENVIRONMENT',
-  social: 'SOCIAL',
-  cultural: 'CULTURAL',
-};
+import { http } from '@/shared/api';
+import type { Action, ActionRecord, Category, LatLng } from '../types';
 
 /** Une action enrichie (`participant_count`, `remaining_seats`). 404 → `ApiError` status 404. */
 export const fetchAction = (id: string, signal?: AbortSignal) => http.get<Action>(`/actions/${id}`, { signal });
@@ -43,3 +36,7 @@ export const updateAction = (id: string, input: UpdateActionInput) =>
 
 /** Annule une action `PENDING`/`APPROVED` (seule « suppression » offerte par l'API). */
 export const cancelAction = (id: string) => http.patch<ActionRecord>(`/actions/${id}/cancel`);
+
+export const approveAction = (id: string) => http.patch<ActionRecord>(`/actions/${id}/approve`);
+
+export const completeAction = (id: string) =>  http.patch<ActionRecord>(`/actions/${id}/complete`);

@@ -27,7 +27,7 @@ export function LoginPage() {
     <AuthLayout
       pageName={text.submit}
       title={text.title}
-      lead={text.lead}q
+      lead={text.lead}
       reassure={text.reassure}
       switchText={text.switchText}
       switchLink={text.switchLink}

@@ -10,6 +10,9 @@ interface ActionDetailsViewProps {
   currentUserId?: string | null;
   onJoin?: () => Promise<void> | void;
   onLeave?: () => Promise<void> | void;
+  onEdit?: () => void;
+  onApprove?: () => Promise<void> | void;
+  onComplete?: () => Promise<void> | void;
 }
 
 export const ActionDetailsView: React.FC<ActionDetailsViewProps> = ({
@@ -18,6 +21,10 @@ export const ActionDetailsView: React.FC<ActionDetailsViewProps> = ({
   currentUserId,
   onJoin,
   onLeave,
+  onEdit,
+  onApprove,
+  onComplete,
+  
 }) => {
   const {
     title,
@@ -113,14 +120,40 @@ export const ActionDetailsView: React.FC<ActionDetailsViewProps> = ({
   return (
     <div className="dashboard">
       <div className="card">
-        <div className="header">
-          <span className="chip">{category}</span>
-          <span className={`chip status-${status}`}>{status}</span>
-          {status === 'approved' && validatedAt && (
-            <span className="chip verified">✓ Action verified</span>
-          )}
-        </div>
+        <div className="header"
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            gap: '16px',
+          }}
+        >
+          <div>
+            <span className="chip">{category}</span>
+            <span className={`chip status-${status}`}>{status}</span>
 
+            {status === 'approved' && validatedAt && (
+              <span className="chip verified">✓ Action verified</span>
+            )}
+          </div>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            {onApprove && (
+              <Button onClick={onApprove}>
+                Approve Action
+              </Button>
+            )}
+            {onComplete && (
+              <Button onClick={onComplete}>
+                Complete Action
+              </Button>
+            )}
+            {onEdit && (
+              <Button onClick={onEdit}>
+                Edit Action
+              </Button>
+            )}
+          </div>
+        </div>
         <h2>{title}</h2>
         <div className="organizer">
           <Link

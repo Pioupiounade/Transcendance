@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router';
-import { fetchAction } from '../api/actionsApi';
+import { useNavigate, useParams } from 'react-router';
+import { completeAction, approveAction, fetchAction } from '../api/actionsApi';
 import type { Action, ActionDetailData, ActionParticipant } from '../types';
 import { ActionComments } from '../components/ActionComments';
 import { ActionDetailsView } from '../components/ActionDetailsView';
@@ -53,12 +53,14 @@ currentUserId: string | null): ActionDetailData => ({
     participants,
   });
 
-export const ActionDetailPage: React.FC = () => {
+  type ActionDetailPageProps = { editPath: (id: string) => string; };
+
+export const ActionDetailPage: React.FC<ActionDetailPageProps> = ({ editPath }) => {
+  
   const { id } = useParams<{ id: string }>();
 
   const [action, setAction] = useState<Action | null>(null);
-  const [creatorProfile, setCreatorProfile] =
-    useState<PublicProfile | null>(null);
+  const [creatorProfile, setCreatorProfile] = useState<PublicProfile | null>(null);
 
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<unknown>(null);
@@ -68,6 +70,8 @@ export const ActionDetailPage: React.FC = () => {
   const [participants, setParticipants] = useState<ActionParticipant[]>([]);
 
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (!id) {
@@ -179,6 +183,24 @@ export const ActionDetailPage: React.FC = () => {
     setAction(updatedAction);
   };
 
+  const handleApprove = async () => {
+    if (!id) return;
+
+    await approveAction(id);
+
+    const updatedAction = await fetchAction(id);
+    setAction(updatedAction);
+  };
+
+  const handleComplete = async () => {
+    if (!id) return;
+
+    await completeAction(id);
+
+    const updatedAction = await fetchAction(id);
+    setAction(updatedAction);
+  };
+
   if (isLoading) {
     return (
       <div style={{ textAlign: 'center', padding: 'var(--s4)' }}>
@@ -196,6 +218,23 @@ export const ActionDetailPage: React.FC = () => {
     );
   }
 
+  const isCreator = currentUserId !== null && action.creator_id === currentUserId;
+
+  const canEdit = isCreator && action.status === 'PENDING';
+
+  const canApprove = isCreator && action.status === 'PENDING' &&
+  action.participant_count >= (action.min_participants ?? 0);
+  
+  const canComplete = isCreator && action.status === 'APPROVED';
+  
+  const canComment = currentUserId !== null &&
+  (
+    action.creator_id === currentUserId ||
+    participants.some(
+      (participant) => participant.userId === currentUserId,
+    )
+  );
+
   return (
     <>
       <ActionDetailsView
@@ -209,8 +248,18 @@ export const ActionDetailPage: React.FC = () => {
         currentUserId={currentUserId}
         onJoin={handleJoin}
         onLeave={handleLeave}
+        onEdit={
+          canEdit
+           ? () => navigate(editPath(action.action_id))
+           : undefined
+        }
+        onApprove={canApprove ? handleApprove : undefined}
+        onComplete={canComplete ? handleComplete : undefined}
       />
-      <ActionComments actionId={action.action_id} />
+      <ActionComments
+        actionId={action.action_id}
+        canComment={canComment}
+      />
     </>
   );
 };

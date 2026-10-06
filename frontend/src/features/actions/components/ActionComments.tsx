@@ -13,6 +13,7 @@ import styles from './ActionComments.module.css';
 type ActionCommentsProps = {
   /** Id réel (numérique) de l'action : la discussion vit dans l'API. */
   actionId: string;
+  canComment: boolean;
 };
 
 const text = ACTIONS_LABELS.comments;
@@ -31,7 +32,7 @@ const toThreadComment = (comment: ActionComment, myUserId: string | null): Threa
  * Discussion publique d'une action (Epic 4, #70) : lecture pour tous, écriture connecté (lien de connexion sinon),
  * plus récent en premier, mon nouveau commentaire s'insère en tête. Pas d'édition ni de suppression (API).
  */
-export function ActionComments({ actionId }: ActionCommentsProps) {
+export function ActionComments({ actionId, canComment }: ActionCommentsProps) {
   const titleId = useId();
   const { status, user } = useAuth();
   const location = useLocation();
@@ -53,7 +54,7 @@ export function ActionComments({ actionId }: ActionCommentsProps) {
         {ready && <span className={styles.count}>{items.length}</span>}
       </div>
 
-      {status === 'authenticated' && (
+      {status === 'authenticated' && canComment && (
         <CommentComposer
           label={text.label}
           maxLength={COMMENT_MAX_LENGTH}
