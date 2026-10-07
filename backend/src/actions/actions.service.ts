@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ForbiddenException, HttpException, HttpStatus } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateActionDto } from './dto/create-action.dto';
 import { CreateCommentDto } from './dto/create-comment.dto';
@@ -824,9 +824,7 @@ export class ActionsService {
 
   async addComment(actionId: bigint, userId: bigint, dto: CreateCommentDto) {
     const action = await this.prisma.action.findUnique({
-      where: {
-        action_id: actionId,
-      },
+      where: { action_id: actionId }
     });
 
     if (!action) {
@@ -850,25 +848,43 @@ export class ActionsService {
       throw new ForbiddenException('Only the creator or participants of the action can comment');
     }
 
-    const comment = await this.prisma.actionComment.create({
-      data: {
-        action_id: actionId,
-        user_id: userId,
-        content: dto.content,
-      },
-      include: {
-        user: {
-          select: {
-            user_id: true,
-            profile: {
-              select: {
-                username: true,
-                profile_picture: true,
+    const comment = await this.prisma.$transaction(async (tx) => {
+      const lastComment = await tx.actionComment.findFirst({
+        where: { user_id: userId },
+        orderBy: { created_at: 'desc' },
+      });
+
+      if (lastComment) {
+        const diffTime = (Date.now() - lastComment.created_at.getTime()) / 1000;
+
+        if (diffTime < 15) {
+          throw new HttpException(
+            'You can only post a comment every 15 seconds',
+            HttpStatus.TOO_MANY_REQUESTS,
+          );
+        }
+      }
+
+      return tx.actionComment.create({
+        data: {
+          action_id: actionId,
+          user_id: userId,
+          content: dto.content,
+        },
+        include: {
+          user: {
+            select: {
+              user_id: true,
+              profile: {
+                select: {
+                  username: true,
+                  profile_picture: true,
+                },
               },
             },
           },
         },
-      },
+      });
     });
 
     const participations = await this.prisma.participation.findMany({
@@ -901,7 +917,6 @@ export class ActionsService {
         link: `/actions/${action.action_id.toString()}`,
       });
     }
-
     return comment;
   }
 

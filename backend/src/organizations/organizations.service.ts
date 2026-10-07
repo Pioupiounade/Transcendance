@@ -448,8 +448,7 @@ export class OrganizationsService {
             });
 
             if (lastComment) {
-              const diffTime =
-                (Date.now() - lastComment.created_at.getTime()) / 1000;
+              const diffTime = (Date.now() - lastComment.created_at.getTime()) / 1000;
 
               if (diffTime < 15) {
                 throw new HttpException(

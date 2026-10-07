@@ -1,4 +1,4 @@
-import { useId } from 'react';
+import { useId, useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router';
 import { AUTH_ROUTES, useAuth } from '@/features/auth';
 import { Button, CommentComposer, CommentThread, type ThreadComment } from '@/shared/ui';
@@ -17,6 +17,15 @@ type ActionCommentsProps = {
 };
 
 const text = ACTIONS_LABELS.comments;
+const COMMENT_COOLDOWN_MS = 15_000;
+
+const cooldownKey = (actionId: string) => `action-comment-cooldown:${actionId}`;
+
+const readCooldownUntil = (actionId: string): number => {
+  const stored = window.sessionStorage.getItem(cooldownKey(actionId));
+  const until = stored === null ? 0 : Number(stored);
+  return Number.isFinite(until) && until > Date.now() ? until : 0;
+}
 
 const toThreadComment = (comment: ActionComment, myUserId: string | null): ThreadComment => ({
   id: comment.comment_id,
@@ -39,8 +48,40 @@ export function ActionComments({ actionId, canComment }: ActionCommentsProps) {
   const { comments, loading, notFound, error, reload, prepend } = useActionComments(actionId);
   const postComment = usePostComment();
 
+  const [cooldownUntil, setCooldownUntil] = useState(() => readCooldownUntil(actionId));
+  const isCoolingDown = cooldownUntil !== 0;
+
+  useEffect(() => {
+    if (cooldownUntil === 0) return;
+
+    const remaining = cooldownUntil - Date.now();
+    if (remaining <= 0) {
+      setCooldownUntil(0);
+      return;
+    }
+
+    const timeout = window.setTimeout(() => setCooldownUntil(0), remaining);
+    return () => window.clearTimeout(timeout);
+  }, [cooldownUntil]);
+
   const submit = async (content: string) => {
-    prepend(await postComment(actionId, content));
+    if (isCoolingDown) return;
+
+    try {
+      const comment = await postComment(actionId, content);
+      prepend(comment);
+
+      const until = Date.now() + COMMENT_COOLDOWN_MS;
+      window.sessionStorage.setItem(cooldownKey(actionId), String(until));
+      setCooldownUntil(until);
+    } catch (error: any) {
+      if (error?.response?.status === 429 || error?.status === 429) {
+        const until = Date.now() + COMMENT_COOLDOWN_MS;
+        window.sessionStorage.setItem(cooldownKey(actionId), String(until));
+        setCooldownUntil(until);
+      }
+      throw error; 
+    }
   };
   const items = comments.map((comment) => toThreadComment(comment, user?.user_id ?? null));
   const ready = !loading && error === null;
@@ -63,6 +104,7 @@ export function ActionComments({ actionId, canComment }: ActionCommentsProps) {
           validate={validateComment}
           onSubmit={submit}
           describeError={toCommentErrorMessage}
+          disabled={isCoolingDown}
         />
       )}
       {status === 'anonymous' && (
