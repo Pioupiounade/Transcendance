@@ -1,11 +1,15 @@
 import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { SendFriendRequestDto } from './dto/send-friend-request.dto';
-import { FriendRequestStatus, FriendshipStatus, AccountStatus, Prisma } from '../../generated/prisma/client';
+import { FriendRequestStatus, FriendshipStatus, AccountStatus, Prisma, NotificationType } from '../../generated/prisma/client';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class FriendRequestsService {
-    constructor(private prisma: PrismaService) {}
+    constructor(
+    private prisma: PrismaService,
+    private notificationsService: NotificationsService,
+    ) {}
 
 private async getActiveUser(userId: string) {
   const user = await this.prisma.user.findUnique({
@@ -135,6 +139,13 @@ private async getActiveUser(userId: string) {
                 Prisma.TransactionIsolationLevel.Serializable,
             },
         );
+
+        await this.notificationsService.notifyUser({
+           userId: sentRequest.addressee_id,
+           type: NotificationType.FRIEND_REQUEST,
+           title: 'New friend request',
+           message: 'You received a new friend request.',
+        });
 
         return {
             ...sentRequest,

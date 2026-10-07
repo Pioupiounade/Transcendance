@@ -4,9 +4,9 @@ import { CreateActionDto } from './dto/create-action.dto';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { UpdateActionDto } from './dto/update-action.dto';
 import { Category } from '../../generated/prisma/client';
-import { ActionStatus, OrganizationStatus, RoleApp, RoleOrg, MemberStatus, AccountStatus, Prisma } from '../../generated/prisma/client';
+import { ActionStatus, OrganizationStatus, RoleApp, RoleOrg, MemberStatus, AccountStatus, Prisma, NotificationType } from '../../generated/prisma/client';
 import { PointtransactionService } from '../pointtransaction/pointtransaction.service';
-
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class ActionsService {
@@ -14,6 +14,7 @@ export class ActionsService {
   constructor(
     private prisma: PrismaService,
     private pointtransactionService: PointtransactionService,
+    private notificationsService: NotificationsService,
   ) { }
 
   //1. recuperer toutes les actions
@@ -574,6 +575,25 @@ export class ActionsService {
       },
     });
 
+    const participations = await this.prisma.participation.findMany({
+      where: {
+        action_id: BigInt(id),
+      },
+      select: {
+        user_id: true,
+      },
+    });
+
+    for (const participation of participations) {
+      await this.notificationsService.notifyUser({
+        userId: participation.user_id,
+        type: NotificationType.ACTION_APPROVED,
+        title: 'Action approved',
+        message: `The action "${updatedAction.title}" has been approved. Visit the action page for the latest date, time and useful information.`,
+        link: `/actions/${updatedAction.action_id.toString()}`,
+      });
+    }
+
     return {
       ...updatedAction,
       action_id: updatedAction.action_id.toString(),
@@ -656,6 +676,8 @@ export class ActionsService {
         status: ActionStatus.CANCELLED,
       },
     });
+
+    await this.notifyActionStatus(updatedAction, 'cancelled');
 
     return {
       ...updatedAction,
@@ -789,6 +811,8 @@ export class ActionsService {
       },
     );
 
+    await this.notifyActionStatus(updatedAction, 'completed');
+
     return {
       ...updatedAction,
       action_id: updatedAction.action_id.toString(),
@@ -809,6 +833,24 @@ export class ActionsService {
       throw new NotFoundException('Action not found');
     }
 
+    const isCreator = action.creator_id === userId;
+
+    const participation = await this.prisma.participation.findUnique({
+      where: {
+        action_id_user_id: {
+          action_id: actionId,
+          user_id: userId,
+        },
+      },
+    });
+
+    const isParticipant = participation !== null;
+
+    if (!isCreator && !isParticipant) {
+      throw new ForbiddenException('Only the creator or participants of the action can comment');
+    }
+
+    const comment = await this.prisma.actionComment.create({
     const isCreator = action.creator_id === userId;
 
     const participation = await this.prisma.participation.findUnique({
@@ -848,6 +890,39 @@ export class ActionsService {
         },
       },
     });
+
+    const participations = await this.prisma.participation.findMany({
+      where: {
+        action_id: actionId,
+      },
+      select: {
+        user_id: true,
+      },
+    });
+
+    const recipientIds = new Set<bigint>();
+
+    if (action.creator_id !== userId) {
+      recipientIds.add(action.creator_id);
+    }
+
+    for (const participation of participations) {
+      if (participation.user_id !== userId) {
+        recipientIds.add(participation.user_id);
+      }
+    }
+
+    for (const recipientId of recipientIds) {
+      await this.notificationsService.notifyUser({
+        userId: recipientId,
+        type: NotificationType.ACTION_COMMENT,
+        title: 'New comment on an action',
+        message: `A new comment was posted on "${action.title}".`,
+        link: `/actions/${action.action_id.toString()}`,
+      });
+    }
+
+    return comment;
   }
 
   async getComments(actionId: bigint) {
@@ -942,6 +1017,31 @@ export class ActionsService {
       },
     });
     return this.serializeAction(updatedAction);
+  }
+
+  private async notifyActionStatus(
+    action: { action_id: bigint; creator_id: bigint; title: string },
+    status: string,
+  ) {
+    try {
+      const participations = await this.prisma.participation.findMany({
+        where: { action_id: action.action_id },
+        select: { user_id: true },
+      });
+      const recipientIds = new Set<bigint>([action.creator_id, ...participations.map((item) => item.user_id)]);
+
+      for (const recipientId of recipientIds) {
+        await this.notificationsService.notifyUser({
+          userId: recipientId,
+          type: NotificationType.ACTION_STATUS_CHANGED,
+          title: 'Action status changed',
+          message: `The action "${action.title}" is now ${status}.`,
+          link: `/actions/${action.action_id.toString()}`,
+        });
+      }
+    } catch {
+      return;
+    }
   }
 
   // Helper pour sérialiser les BigInt en string (pour éviter l'erreur 500 JSON)

@@ -1,13 +1,16 @@
 import { Injectable, NotFoundException, BadRequestException, ForbiddenException, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { AccountStatus, RoleApp, RoleOrg, MemberStatus, OrganizationStatus } from '../../generated/prisma/client';
+import { AccountStatus, RoleApp, RoleOrg, MemberStatus, OrganizationStatus, NotificationType } from '../../generated/prisma/client';
 import { PointtransactionService } from '../pointtransaction/pointtransaction.service';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class OrganizationmembersService {
     constructor(
         private prisma: PrismaService,
         private pointtransactionService: PointtransactionService,
+        private notificationsService: NotificationsService,
+
     ) { }
 
     // Find a specific member by username
@@ -590,16 +593,44 @@ export class OrganizationmembersService {
             throw new ConflictException('A previous membership request has already been rejected');
         }
 
-        return this.prisma.organizationMember.create({
-            data: {
-                organization_id: organizationId,
-                user_id: userId,
-                role: RoleOrg.MEMBER,
-                status: MemberStatus.PENDING,
-                validated_by_org_man: false,
-                validated_at: null,
+        const membership = await this.prisma.organizationMember.create({
+  data: {
+    organization_id: organizationId,
+    user_id: userId,
+    role: RoleOrg.MEMBER,
+    status: MemberStatus.PENDING,
+    validated_by_org_man: false,
+    validated_at: null,
+  },
+});
+
+        const managers = await this.prisma.organizationMember.findMany({
+        where: {
+            organization_id: organizationId,
+            status: MemberStatus.ACTIVE,
+            role: {
+            in: [RoleOrg.OWNER, RoleOrg.MANAGER],
             },
+            user: {
+            account_status: AccountStatus.ACTIVE,
+            },
+        },
+        select: {
+            user_id: true,
+        },
         });
+
+        for (const manager of managers) {
+        await this.notificationsService.notifyUser({
+            userId: manager.user_id,
+            type: NotificationType.ORGANIZATION_JOIN_REQUEST,
+            title: 'New organization membership request',
+            message: `A user requested to join "${organization.title}".`,
+            link: `/organizations/${organization.organization_id.toString()}`,
+        });
+        }
+
+        return membership;
     }
 
     // Approve a membership request

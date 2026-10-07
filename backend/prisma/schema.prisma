@@ -60,6 +60,9 @@ model User {
   comments ActionComment[]
 
   organization_comments OrganizationComment[]
+
+  notifications           Notification[]
+  notificationPreferences NotificationPreference[]
 }
 
 // --------------------------------------------------
@@ -112,9 +115,9 @@ model Organization {
   updated_at DateTime @updatedAt
 
   // 2. Champs de relation Prisma
-  creator User                 @relation("OrganizationCreator", fields: [creator_id], references: [user_id])
-  members OrganizationMember[]
-  actions Action[]
+  creator  User                  @relation("OrganizationCreator", fields: [creator_id], references: [user_id])
+  members  OrganizationMember[]
+  actions  Action[]
   comments OrganizationComment[]
 }
 
@@ -157,13 +160,13 @@ model Action {
   creator_id      BigInt
   organization_id BigInt?
 
-  min_participants Int  @default(3)
+  min_participants Int          @default(3)
   max_participants Int?
   location         Float[]
   status           ActionStatus @default(PENDING)
   category         Category
-  images_before    String[] @default([])
-  images_after     String[] @default([])
+  images_before    String[]     @default([])
+  images_after     String[]     @default([])
 
   validated_by_user_id BigInt?
   validated_at         DateTime?
@@ -191,25 +194,25 @@ model Action {
 
 model ActionComment {
   // Text locked at 1024 characters, to avoid spam
-  comment_id BigInt @id @default(autoincrement())
-  content    String @db.VarChar(1024)
+  comment_id BigInt   @id @default(autoincrement())
+  content    String   @db.VarChar(1024)
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
   // 2. Champs de relation Prisma
-  user_id    BigInt
-  action_id  BigInt
+  user_id   BigInt
+  action_id BigInt
 
-  user       User @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
-  action     Action @relation(fields: [action_id], references: [action_id], onDelete: Cascade)
+  user   User   @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+  action Action @relation(fields: [action_id], references: [action_id], onDelete: Cascade)
 
   @@map("action_comments")
 }
 
 model OrganizationComment {
   // Text locked at 1024 characters, to avoid spam
-  comment_id BigInt @id @default(autoincrement())
-  content    String @db.VarChar(1024)
+  comment_id BigInt   @id @default(autoincrement())
+  content    String   @db.VarChar(1024)
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
@@ -217,8 +220,8 @@ model OrganizationComment {
   user_id         BigInt
   organization_id BigInt
 
-  user           User @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
-  organization   Organization @relation(fields: [organization_id], references: [organization_id], onDelete: Cascade)
+  user         User         @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+  organization Organization @relation(fields: [organization_id], references: [organization_id], onDelete: Cascade)
 
   @@map("organization_comments")
 }
@@ -293,6 +296,36 @@ model PointTransaction {
 
   // 2. Champs de relation Prisma
   user User @relation(fields: [user_id], references: [user_id])
+}
+
+// --------------------------------------------------
+// NOTIFICATIONS
+// --------------------------------------------------
+
+model Notification {
+  notification_id BigInt           @id @default(autoincrement())
+  user_id         BigInt
+  type            NotificationType
+  title           String
+  message         String
+  link            String?
+  read            Boolean          @default(false)
+  created_at      DateTime         @default(now())
+
+  user User @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+
+  @@index([user_id, read])
+  @@index([created_at])
+}
+
+model NotificationPreference {
+  user_id BigInt
+  type    NotificationType
+  enabled Boolean          @default(true)
+
+  user User @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+
+  @@id([user_id, type])
 }
 
 // --------------------------------------------------
@@ -395,4 +428,16 @@ enum ProfileVisibility {
   PUBLIC
   PRIVATE
   FRIENDS_ONLY
+}
+
+enum NotificationType {
+  ACTION_MIN_REACHED
+  ACTION_MAX_REACHED
+  ACTION_COMMENT
+  FRIEND_REQUEST
+  ORGANIZATION_JOIN_REQUEST
+  ORGANIZATION_COMMENT
+  ACTION_APPROVED
+  ACTION_STATUS_CHANGED
+  NEW_MESSAGE
 }

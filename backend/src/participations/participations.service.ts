@@ -1,10 +1,14 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { AccountStatus, ActionStatus, Prisma } from '../../generated/prisma/client';
+import { AccountStatus, ActionStatus, Prisma, NotificationType } from '../../generated/prisma/client';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class ParticipationsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+  private prisma: PrismaService,
+  private notificationsService: NotificationsService,
+) {}
 
 //participer a une action
   async participate(currentUserId: string, actionId: string) {
@@ -13,8 +17,7 @@ export class ParticipationsService {
 
     for (let attempt = 0; attempt < 3; attempt++) {
       try {
-        const participation = await this.prisma.$transaction(
-          async (tx) => {
+            const result = await this.prisma.$transaction(          async (tx) => {
             const user = await tx.user.findUnique({
               where: {
                 user_id: userId,
@@ -58,32 +61,41 @@ export class ParticipationsService {
                   },
                 },
               });
-
+            
             if (existingParticipation) {
-              throw new BadRequestException('User already participates to this action');
+              throw new BadRequestException(
+                'User already participates to this action',
+              );
+            }  
+
+            const beforeCount = await tx.participation.count({
+              where: {
+                action_id: actionIdBigInt,
+              },
+            });
+
+            if (
+              action.max_participants !== null &&
+              beforeCount >= action.max_participants
+            ) {
+              throw new BadRequestException(
+                'Maximum number of participants reached',
+              );
             }
 
-            if (action.max_participants !== null) {
-              const currentParticipants =
-                await tx.participation.count({
-                  where: {
-                    action_id: actionIdBigInt,
-                  },
-                });
-
-              if (
-                currentParticipants >= action.max_participants
-              ) {
-                throw new BadRequestException('Maximum number of participants reached');
-              }
-            }
-
-            return tx.participation.create({
+            const participation = await tx.participation.create({
               data: {
                 action_id: actionIdBigInt,
                 user_id: userId,
               },
             });
+
+            return {
+              participation,
+              action,
+              beforeCount,
+              afterCount: beforeCount + 1,
+            };
           },
           {
             isolationLevel:
@@ -91,6 +103,39 @@ export class ParticipationsService {
           },
         );
 
+        const {
+          participation,
+          action,
+          beforeCount,
+          afterCount,
+        } = result;
+
+        if (
+          beforeCount < action.min_participants &&
+          afterCount >= action.min_participants
+        ) {
+          await this.notificationsService.notifyUser({
+            userId: action.creator_id,
+            type: NotificationType.ACTION_MIN_REACHED,
+            title: 'Minimum participants reached',
+            message: `Your action "${action.title}" has reached its minimum number of participants.`,
+            link: `/actions/${action.action_id.toString()}`,
+          });
+        }
+
+        if (
+          action.max_participants !== null &&
+          beforeCount < action.max_participants &&
+          afterCount >= action.max_participants
+        ) {
+          await this.notificationsService.notifyUser({
+            userId: action.creator_id,
+            type: NotificationType.ACTION_MAX_REACHED,
+            title: 'Maximum participants reached',
+            message: `Your action "${action.title}" has reached its maximum number of participants.`,
+            link: `/actions/${action.action_id.toString()}`,
+          });
+        }
         return {
           ...participation,
           action_id: participation.action_id.toString(),
