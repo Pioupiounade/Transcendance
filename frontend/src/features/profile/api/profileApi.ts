@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { http } from '@/shared/api';
+import type { PublicProfile, InterestCategory, ProfileActivity, ProfileOrganization, ProfileParticipation, ProfileVisibility, UserProfile, FriendshipStatus } from '../types';
 import type { FriendshipStatus, PublicProfile, InterestCategory, ProfileActivity, ProfileOrganization, ProfileParticipation, ProfileVisibility, UserProfile } from '../types';
 
 // Mock store of the friendship helpers below, empty until they are wired to the real friend routes.
@@ -165,76 +166,72 @@ export async function updateProfile(profile: UserProfile, avatar?: File | null):
   return getProfile();
 }
 
-export async function getAllProfiles(): Promise<UserProfile[]> {
-  await new Promise((resolve) => setTimeout(resolve, 200));
-  return [...MOCK_USER_PROFILES];
-}
-
-export async function sendFriendRequest(targetUserId: string): Promise<FriendshipStatus> {
-  await new Promise((resolve) => setTimeout(resolve, 250));
-  const user = MOCK_USER_PROFILES.find((p) => p.id === targetUserId);
-  if (user) {
-    user.friendshipStatus = 'PENDING_SENT';
-  }
+export async function sendFriendRequest(
+  targetUserId: string,
+): Promise<FriendshipStatus> {
+  void targetUserId;
   return 'PENDING_SENT';
 }
 
-export async function acceptFriendRequest(targetUserId: string): Promise<FriendshipStatus> {
-  await new Promise((resolve) => setTimeout(resolve, 250));
-  const user = MOCK_USER_PROFILES.find((p) => p.id === targetUserId);
-  if (user) {
-    user.friendshipStatus = 'ACCEPTED';
-  }
+export async function acceptFriendRequest(
+  targetUserId: string,
+): Promise<FriendshipStatus> {
+  void targetUserId;
   return 'ACCEPTED';
 }
 
-export async function declineFriendRequest(targetUserId: string): Promise<FriendshipStatus> {
-  await new Promise((resolve) => setTimeout(resolve, 250));
-  const user = MOCK_USER_PROFILES.find((p) => p.id === targetUserId);
-  if (user) {
-    user.friendshipStatus = 'NONE';
-  }
+export async function declineFriendRequest(
+  targetUserId: string,
+): Promise<FriendshipStatus> {
+  void targetUserId;
   return 'NONE';
 }
 
-export async function cancelOrRemoveFriend(targetUserId: string): Promise<FriendshipStatus> {
-  await new Promise((resolve) => setTimeout(resolve, 250));
-  const user = MOCK_USER_PROFILES.find((p) => p.id === targetUserId);
-  if (user) {
-    user.friendshipStatus = 'NONE';
-  }
+export async function cancelOrRemoveFriend(
+  targetUserId: string,
+): Promise<FriendshipStatus> {
+  void targetUserId;
   return 'NONE';
 }
 
-export async function unblockUser(targetUserId: string): Promise<FriendshipStatus> {
-  await new Promise((resolve) => setTimeout(resolve, 250));
-  const user = MOCK_USER_PROFILES.find((p) => p.id === targetUserId);
-  if (user) {
-    user.friendshipStatus = 'NONE';
-  }
+export async function unblockUser(
+  targetUserId: string,
+): Promise<FriendshipStatus> {
+  void targetUserId;
   return 'NONE';
 }
 
-export function useProfile(identifier?: string) {
+export function useProfile(userId?: string) {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
     let isMounted = true;
+
     setIsLoading(true);
     setError(null);
 
-    Promise.resolve().then(() => {
-      if (isMounted) {
-        setIsLoading(true);
-        setError(null);
-      }
-    });
+    const request = userId
+      ? getPublicProfile(userId)
+      : getProfile();
 
-    getProfile()
+    request
       .then((data) => {
-        if (isMounted) setProfile(data);
+        if (!isMounted) return;
+
+        if (userId) {
+          setProfile({
+            username: data.username,
+            commune: data.commune,
+            description: data.description ?? undefined,
+            profilePicture: data.profilePicture ?? undefined,
+            visibility: 'PUBLIC',
+            location: null,
+          });
+        } else {
+          setProfile(data as UserProfile);
+        }
       })
       .catch((err) => {
         if (isMounted) {
@@ -249,7 +246,7 @@ export function useProfile(identifier?: string) {
     return () => {
       isMounted = false;
     };
-  }, [identifier]);
+  }, [userId]);
 
   return { profile, isLoading, error, setProfile };
 }

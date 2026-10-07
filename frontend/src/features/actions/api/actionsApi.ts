@@ -36,3 +36,7 @@ export const updateAction = (id: string, input: UpdateActionInput) =>
 
 /** Annule une action `PENDING`/`APPROVED` (seule « suppression » offerte par l'API). */
 export const cancelAction = (id: string) => http.patch<ActionRecord>(`/actions/${id}/cancel`);
+
+export const approveAction = (id: string) => http.patch<ActionRecord>(`/actions/${id}/approve`);
+
+export const completeAction = (id: string) =>  http.patch<ActionRecord>(`/actions/${id}/complete`);

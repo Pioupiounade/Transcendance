@@ -34,7 +34,7 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <HomePage /> },
       { path: ROUTES.actions, element: <ActionsListPage /> },
-      { path: ROUTES.map, element: <MapPage createPath={ROUTES.createAction} editPath={editActionPath} /> },
+      { path: ROUTES.map, element: <MapPage editPath={editActionPath} /> },
       { path: ROUTES.organizations, element: <OrganizationsPage organizationPath={organizationPath} /> },
       {
         path: ROUTES.organization,
@@ -50,7 +50,7 @@ const router = createBrowserRouter([
       { path: ROUTES.register, element: <RegisterPage termsPath={ROUTES.terms} privacyPath={ROUTES.privacy} /> },
       { path: ROUTES.terms, element: <LegalPage title={APP_LABELS.pages.terms.title} /> },
       { path: ROUTES.privacy, element: <LegalPage title={APP_LABELS.pages.privacy.title} /> },
-      { path: ROUTES.actionDetail, element: <ActionDetailPage /> },
+      { path: ROUTES.actionDetail, element: <ActionDetailPage editPath={editActionPath} /> },
       { path: ROUTES.profileDetail, element: <ProfilePage /> },
       { path: ROUTES.publicProfile, element: <PublicProfilePage /> },
       {

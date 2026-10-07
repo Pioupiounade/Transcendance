@@ -22,6 +22,34 @@ export const fetchOrganization = (id: string, signal?: AbortSignal) =>
 export const fetchOrganizationMembers = (id: string, signal?: AbortSignal) =>
   http.list<OrganizationMember>(`/organization-members/organization/${id}/members`, { signal });
 
+export async function fetchManageableOrganizations(
+  userId: string,
+  signal?: AbortSignal,
+): Promise<Organization[]> {
+  const organizations = await fetchOrganizations(signal);
+
+  const manageable: Organization[] = [];
+
+  for (const organization of organizations) {
+    const members = await fetchOrganizationMembers(
+      organization.organization_id,
+      signal,
+    );
+
+    const membership = members.find(
+      (member) => member.user_id === userId,
+    );
+
+    if (
+      membership?.status === 'ACTIVE' &&
+      (membership.role === 'OWNER' || membership.role === 'MANAGER')
+    ) {
+      manageable.push(organization);
+    }
+  }
+
+  return manageable;
+}
 /**
  * Demande d'adhésion (JWT) : crée une adhésion `PENDING`, à valider par un gestionnaire. 409 = demande déjà en
  * attente, déjà membre ou demande déjà refusée ; 403 = banni ; 400 = organisation inactive (§13).

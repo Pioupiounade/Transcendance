@@ -7,8 +7,8 @@ import type { ProfileActivity, UserProfile, InterestCategory, FriendshipStatus }
 import { isApiError } from '@/shared/api';
 
 export const ProfilePage: React.FC = () => {
-  const { username } = useParams<{ username?: string }>();
-  const { profile, isLoading, error, setProfile } = useProfile(username);
+  const { userId } = useParams<{ userId?: string }>();
+  const { profile, isLoading, error, setProfile } = useProfile(userId);
   const [isEditing, setIsEditing] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
@@ -123,7 +123,7 @@ export const ProfilePage: React.FC = () => {
     }
   }
 
-  const isOwnProfile = !username; // || username === CURRENT_USERNAME;
+  const isOwnProfile = !userId;
 
   if (isOwnProfile && isApiError(error) && error.status === 404 && !profile) {
     return (

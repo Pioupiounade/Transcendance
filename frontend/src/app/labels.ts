@@ -14,7 +14,7 @@ export const APP_LABELS = {
   admin: 'Admin',
   nav: {
     home: 'Home',
-    actions: 'Actions',
+    actions: 'My Actions',
     map: 'Map',
     organizations: 'Organizations',
     friends: 'Friends',
@@ -85,6 +85,7 @@ export const APP_LABELS = {
       greeting: (name: string) => `Hello ${name}`,
       lead: 'Everything happening around you, in one place.',
       exploring: 'Exploring',
+      openMap: 'Open map',
       homeArea: 'Your neighborhood',
       defaultArea: 'Close to you',
       privacy: 'Private area',
