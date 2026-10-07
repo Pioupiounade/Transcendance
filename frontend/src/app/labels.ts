@@ -13,7 +13,7 @@ export const APP_LABELS = {
   myProfile: 'My profile',
   nav: {
     home: 'Home',
-    actions: 'Actions',
+    actions: 'My Actions',
     map: 'Map',
     organizations: 'Organizations',
     friends: 'Friends',
