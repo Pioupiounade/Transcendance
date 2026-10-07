@@ -2,6 +2,7 @@ const dateFormat = new Intl.DateTimeFormat('en-GB', { weekday: 'short', day: 'nu
 const timeFormat = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit' });
 const dayFormat = new Intl.DateTimeFormat('en-GB', { day: 'numeric' });
 const monthFormat = new Intl.DateTimeFormat('en-GB', { month: 'short' });
+const fullDateFormat = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 
 const parse = (iso: string): Date | null => {
   const date = new Date(iso);
@@ -24,4 +25,10 @@ export const formatTime = (iso: string): string => {
 export const formatDayMonth = (iso: string): { day: string; month: string } | null => {
   const date = parse(iso);
   return date ? { day: dayFormat.format(date), month: monthFormat.format(date) } : null;
+};
+
+/** « 12 Sept 2026 » ; chaîne vide si invalide. */
+export const formatFullDate = (iso: string): string => {
+  const date = parse(iso);
+  return date ? fullDateFormat.format(date) : '';
 };

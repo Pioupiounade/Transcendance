@@ -31,6 +31,7 @@ export const ACTIONS_LABELS = {
     filters: 'Filter by category',
     filterAll: 'All',
     mapLabel: 'Map of nearby actions',
+    placeLabel: (name: string) => `Map: where to find ${name}`,
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
     nearby: (count: number) => (count === 1 ? '1 action nearby' : `${count} actions nearby`),
     recenter: 'Recenter the map on the actions',

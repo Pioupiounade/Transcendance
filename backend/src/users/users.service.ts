@@ -4,7 +4,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
 import * as argon2 from 'argon2';
-import { AccountStatus, RoleApp } from '../../generated/prisma/client';
+import { AccountStatus, Prisma, RoleApp } from '../../generated/prisma/client';
 import { PointtransactionService } from '../pointtransaction/pointtransaction.service';
 
 @Injectable()
@@ -219,50 +219,70 @@ export class UsersService {
       throw new ForbiddenException('Only an admin can suspend a user');
     }
 
-    const targetUser = await this.prisma.user.findUnique({
-      where: {
-        user_id: BigInt(targetUserId),
-      },
-    });
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      try {
+        const updatedUser = await this.prisma.$transaction(
+          async (tx) => {
+            const targetUser = await tx.user.findUnique({
+              where: {
+                user_id: BigInt(targetUserId),
+              },
+            });
 
-    if (!targetUser) {
-      throw new NotFoundException('User to suspend not found');
-    }
+            if (!targetUser) {
+              throw new NotFoundException('User to suspend not found');
+            }
 
-    if (targetUser.account_status === AccountStatus.SUSPENDED) {
-      throw new BadRequestException('User is already suspended');
-    }
+            if (targetUser.account_status === AccountStatus.SUSPENDED) {
+              throw new BadRequestException('User is already suspended');
+            }
 
-    const updatedUser = await this.prisma.$transaction(
-      async (tx) => {
-        const suspendedUser = await tx.user.update({
-          where: {
-            user_id: BigInt(targetUserId),
+            if (targetUser.account_status !== AccountStatus.ACTIVE) {
+              throw new BadRequestException('Deactivated users cannot be suspended');
+            }
+
+            const suspendedUser = await tx.user.update({
+              where: {
+                user_id: BigInt(targetUserId),
+              },
+              data: {
+                account_status: AccountStatus.SUSPENDED,
+              },
+            });
+
+            await this.pointtransactionService.penalizeSuspendedUser(
+              BigInt(targetUserId),
+              tx,
+            );
+
+            return suspendedUser;
           },
-          data: {
-            account_status: AccountStatus.SUSPENDED,
-          },
-        });
-
-        await this.pointtransactionService.penalizeSuspendedUser(
-          BigInt(targetUserId),
-          tx,
+          { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
         );
 
-        return suspendedUser;
-      },
-    );
+        const {
+          password_hash: _,
+          refresh_token: __,
+          ...safeUser
+        } = updatedUser;
 
-    const {
-      password_hash: _,
-      refresh_token: __,
-      ...safeUser
-    } = updatedUser;
+        return {
+          ...safeUser,
+          user_id: safeUser.user_id.toString(),
+        };
+      } catch (error) {
+        if (
+          error instanceof Prisma.PrismaClientKnownRequestError &&
+          error.code === 'P2034' &&
+          attempt < 2
+        ) {
+          continue;
+        }
+        throw error;
+      }
+    }
 
-    return {
-      ...safeUser,
-      user_id: safeUser.user_id.toString(),
-    };
+    throw new BadRequestException('User suspension conflicted with another update');
 }
 
 //8. Reactiver un utilisateur

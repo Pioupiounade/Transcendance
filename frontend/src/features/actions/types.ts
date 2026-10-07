@@ -29,7 +29,9 @@ export type Action = {
   location: LatLng;
   status: ActionStatus;
   category: Category;
-  imagesList: string[];
+  /** Photos avant / après l'action : URLs `/static/actions/<uuid>.webp`, 3 max chacune (upload dédié, api_contract §15). */
+  images_before: string[];
+  images_after: string[];
   validated_by_user_id: string | null;
   validated_at: string | null;
   scheduled_at: string;

@@ -1,0 +1,123 @@
+.panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px;
+  padding: 24px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-panel);
+  background: var(--ground);
+}
+.panel h2 {
+  font-size: 19px;
+  letter-spacing: -0.5px;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.count {
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: var(--trust-soft);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.muted {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.group {
+  display: grid;
+  gap: 8px;
+}
+
+.groupTitle {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.9px;
+  text-transform: uppercase;
+}
+
+.list {
+  display: grid;
+  gap: 8px;
+}
+
+/* Une ligne : étiquette de catégorie, titre, date. */
+.item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-field);
+  color: var(--ink);
+  text-decoration: none;
+}
+.link {
+  transition:
+    border-color var(--t-base),
+    background-color var(--t-base);
+}
+.link:hover {
+  border-color: var(--brand);
+  background: var(--card-selected-bg);
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: var(--r-tag);
+  background: var(--tag-environment-bg);
+  color: var(--tag-environment-ink);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+}
+.social {
+  background: var(--tag-social-bg);
+  color: var(--tag-social-ink);
+}
+.cultural {
+  background: var(--tag-culture-bg);
+  color: var(--tag-culture-ink);
+}
+
+.title {
+  font-size: 15px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.date {
+  color: var(--muted);
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+@media (max-width: 760px) {
+  .panel {
+    padding: 18px 16px;
+  }
+  .item {
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: start;
+    gap: 6px;
+  }
+  .title {
+    white-space: normal;
+  }
+}

@@ -27,7 +27,7 @@ export function NearbyActions({ items, selectedId, onSelect, loading, error, onR
           <p className={styles.lead}>{text.lead}</p>
         </div>
         <ButtonLink to={ROUTES.map} variant="secondary">
-          {APP_LABELS.pages.dashboard.openMap}
+          {text.openMap}
         </ButtonLink>
       </div>
 

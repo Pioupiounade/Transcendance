@@ -2,7 +2,7 @@
 
 État au 2026-09-24, branche `feature/map-create-action` (= `main` + `fix/main-build` + `feature/50-auth-ui` + Epic 7).
 Sources de vérité, dans l'ordre : `backend/prisma/schema.prisma` (la base) → `docs/api_contract.md` (ce que l'API
-fait réellement, régénéré et vérifié par sondes le 24/09) → `features/<x>/types.ts` (ce que le front en voit).
+fait réellement, régénéré et vérifié par sondes le 24/09, resondé le 01/10) → `features/<x>/types.ts` (ce que le front en voit).
 Ce document ne duplique pas le contrat : il dit **où vit chaque donnée côté front, par quel module deep elle passe,
 et ce qu'un appelant doit savoir**. Les termes Module / Interface / Deep / Seam sont ceux de `CLAUDE.md`.
 
@@ -45,13 +45,14 @@ dans `features/<x>/api/*` sans toucher aux composants.
 | Entité Prisma | Clé, champs qui comptent | Exposée par | Feature front propriétaire → type | État front |
 |---|---|---|---|---|
 | **User** | `user_id`, `email` (unique), `role` RoleApp, `account_status`, `points`, dates. `password_hash` et `refresh_token` jamais renvoyés | `/auth/*` (5), `/users/*` (9) | `features/auth` → `AuthUser` (= `User` du contrat) | ✅ session, login, register, `/auth/me` |
-| **Profile** | `user_id` (PK = FK User, 1:1), `username` (unique), `description?`, `profile_picture?` (URL), `location` (seulement sur `GET /profiles/me`), `visibility` | `/profiles/*` (6) | `features/profile` → `UserProfile` **(mock, forme ≠ contrat)** | 🟡 page mock, aucun appel API |
+| **Profile** | `user_id` (PK = FK User, 1:1), `username` (unique), `description?`, `profile_picture?` (URL), `location` (seulement sur `GET /profiles/me`), `commune?` (déduite de `location`, 01/10), `visibility` | `/profiles/*` (7, dont l'avatar) | `features/profile` → `UserProfile` **(mock, forme ≠ contrat)** | 🟡 page mock, aucun appel API |
 | **UserInterest** | (`user_id`, `interest` InterestCategory), 9 valeurs | `/interests/*` (3) | `features/profile` (prévu) | ❌ |
-| **Action** | `action_id`, `title`, `description`, `creator_id`, `organization_id?`, `min_participants` (défaut 3), `max_participants?`, `location`, `status`, `category`, `imagesList`, `validated_by_user_id?`, `validated_at?`, `scheduled_at`. **L'API ajoute `participant_count` et `remaining_seats`** (liste et détail, depuis #45) | `/actions/*` (7 + 2 commentaires) | `features/actions` → `Action` (§4.7) | ✅ liste, carte, création (`Action` enrichie, `ActionRecord` pour les mutations) · 🟡 détail (mock `ActionDetailData`) |
+| **Action** | `action_id`, `title`, `description`, `creator_id`, `organization_id?`, `min_participants` (défaut 3), `max_participants?`, `location`, `status`, `category`, `images_before`, `images_after` (ex-`imagesList`, 01/10), `validated_by_user_id?`, `validated_at?`, `scheduled_at`. **L'API ajoute `participant_count` et `remaining_seats`** (liste et détail, depuis #45) | `/actions/*` (7 + 2 commentaires) | `features/actions` → `Action` (§4.7) | ✅ liste, carte, création (`Action` enrichie, `ActionRecord` pour les mutations) · 🟡 détail (mock `ActionDetailData`) |
 | **ActionComment** | `comment_id`, `content` (≤ 1024), `user_id`, `action_id`, dates ; renvoyé avec `user: { user_id, profile: { username, profile_picture } \| null }` | `POST/GET /actions/:id/comments` | `features/actions` → `ActionComment` | ✅ lecture + envoi sur la page d'action (#70, id numérique seulement tant que la fiche est un mock) |
 | **Participation** | (`action_id`, `user_id`), `created_at` | `/participations/*` (4) | `features/participations` (prévu) | ❌ |
-| **Organization** | `organization_id`, `title`, `description`, `organization_status`, `address`, `location`, `creator_id` | `/organizations/*` (8) | `features/organizations` → `Organization` | 🟡 liste + recherche + fiche publique (#61) ; création/édition ❌ |
+| **Organization** | `organization_id`, `title`, `description`, `organization_status`, `address`, `location`, `creator_id` | `/organizations/*` (8) | `features/organizations` → `Organization` | 🟡 annuaire (#61, #63) + fiche publique (#64) + édition par les gestionnaires (#62) ; création ❌ |
 | **OrganizationMember** | (`organization_id`, `user_id`), `status` MemberStatus, `role` RoleOrg, `validated_by_org_man`, `validated_at?` | `/organization-members/*` (14) | `features/organizations` → `OrganizationMember` | 🟡 membres actifs affichés sur la fiche (#61) ; adhésion/gestion ❌ |
+| **OrganizationComment** | `comment_id`, `content` (≤ 1024), `user_id`, `organization_id`, dates ; renvoyé avec `user: { user_id, profile \| null }` | `POST/GET /organizations/:id/comments`, `DELETE /organizations/comments/:commentId` | `features/organizations` → `OrganizationComment` | ✅ lecture, envoi, suppression (auteur ou créateur de l'organisation) sur la fiche (#71) |
 | **FriendRequest** | `friend_request_id`, `requester_id`, `addressee_id`, `status`, `responded_at?` | `/friend-requests/*` (5) | `features/friends` (prévu) | ❌ (`/friends` = placeholder) |
 | **Friendship** | (`user1_id`, `user2_id`), `status` ACTIVE/BLOCKED, `blocked_by_user_id?` | `/friendships/*` (5) | `features/friends` (prévu) | ❌ |
 | **PointTransaction** | `point_transaction_id`, `user_id`, `points`, `reason`, `event_key` (unique, idempotence) | 1 route admin, **aucune lecture** : le solde est `User.points` | `features/auth` (`user.points`) | 🟡 solde disponible, jamais affiché |
@@ -92,8 +93,8 @@ Règle : un enum est possédé par une feature, traduit dans son `labels.ts`, ja
 |---|---|---|---|
 | `Category` | `ENVIRONMENT`, `SOCIAL`, `CULTURAL` | `features/actions` (`CATEGORY`) | Environment · Mutual aid · Culture & sharing ; icônes leaf · heart · sun ; pins forêt · terracotta · ocre |
 | `ActionStatus` | `PENDING`, `APPROVED`, `REJECTED`, `CANCELLED`, `COMPLETED` | `features/actions` (`ACTION_STATUS`, `OPEN_STATUSES` = PENDING + APPROVED) | Upcoming · Confirmed · Rejected · Cancelled · Completed |
-| `RoleApp` | `USER`, `ADMIN`, `MODERATOR` | `features/auth` (`ROLE_APP`) | — (pas encore affiché) |
-| `AccountStatus` | `ACTIVE`, `SUSPENDED`, `DEACTIVATED` | `features/auth` (`ACCOUNT_STATUS`) | — |
+| `RoleApp` | `USER`, `ADMIN`, `MODERATOR` | `features/auth` (`ROLE_APP`) | User · Admin · Moderator (`features/admin/labels.ts`, espace admin seulement) |
+| `AccountStatus` | `ACTIVE`, `SUSPENDED`, `DEACTIVATED` | `features/auth` (`ACCOUNT_STATUS`) | Active · Blocked · Deactivated (`features/admin/labels.ts`) ; icônes check · lock · close |
 | `ProfileVisibility` | `PUBLIC`, `PRIVATE`, `FRIENDS_ONLY` | `features/profile` (type union seulement) | select du mock : à revoir avec le contrat (`FRIENDS_ONLY` traité comme privé par l'API) |
 | `InterestCategory` | 9 valeurs `ENV_*`, `SOCIAL_*`, `CULTURAL_*` | à créer dans `features/profile` | ❌ |
 | `OrganizationStatus`, `MemberStatus`, `RoleOrg` | voir contrat §2 | `features/organizations/types.ts` (#61) | ✅ |
@@ -105,8 +106,8 @@ Règle : un enum est possédé par une feature, traduit dans son `labels.ts`, ja
 - **Action** : `PENDING` (création, inscriptions ouvertes) → `APPROVED` (`approve` : ADMIN, **le créateur lui-même**,
   MANAGER/OWNER de l'orga, **et au moins 3 participants hors créateur**) → `COMPLETED` (`complete`, même règle, distribue les
   points) ; `PENDING`/`APPROVED` → `CANCELLED` (`cancel`). `REJECTED` est **inatteignable** (pas de route). Pas de suppression.
-  Une action ne se modifie plus une fois `CANCELLED`/`COMPLETED`/`REJECTED`. **`PATCH /actions/:id` est cassé** (500 sans
-  `organization_id` dans le body, mise à jour partiellement appliquée) : pas d'édition avant le correctif backend.
+  Une action ne se modifie plus une fois `CANCELLED`/`COMPLETED`/`REJECTED`. `PATCH /actions/:id` ne renvoie plus 500 (corrigé,
+  vérifié le 01/10) mais **remet `images_before` / `images_after` à `[]`** quand le body ne les contient pas.
 - **Participation** : possible **uniquement sur `PENDING`** (join et leave), plafond `max_participants`, le créateur ne
   peut pas s'inscrire. Cohérent avec `approve` (≥ 3 participants) : `PENDING` = ouverte, `APPROVED` = confirmée et close.
   La contradiction est avec `Docs/user_stories.md` (modération avant publication) : à trancher en équipe.
@@ -139,7 +140,7 @@ Règle : un enum est possédé par une feature, traduit dans son `labels.ts`, ja
   +5 au créateur par participant ; membres d'orga ±5 à l'`OWNER` ; ban −15 ; suspension −50. Un bénéficiaire non `ACTIVE`
   fait **échouer la route appelante** (à afficher explicitement sur `complete`).
 - **Non couvert par l'API aujourd'hui** (ne pas contourner, ticket backend) : édition d'action fiable (bug `PATCH`), rejet d'action, suppression d'action ou de compte,
-  upload de fichiers (🔜 branche `19-epic-5-photo-upload…` : `PATCH /profiles/me/avatar` + images d'action), notifications,
+  service des fichiers uploadés (les routes d'upload existent depuis le 01/10, mais `/static/...` n'est servi par rien), notifications,
   messagerie, lecture des points, annulation d'une demande d'amitié ou d'adhésion, recherche par texte/date/rayon d'actions.
 
 ---
@@ -223,6 +224,7 @@ import { AuthProvider, useAuth, RequireAuth, LoginPage, RegisterPage, AUTH_ROUTE
 useAuth() → { status: 'loading' | 'anonymous' | 'authenticated', user: AuthUser | null,
               signIn({ email, password }), signUp({ email, password }), signOut() }   // signIn/signUp rejettent l'ApiError
 <RequireAuth />            // route parente sans path : loading → message, anonyme → /login avec state.from, sinon <Outlet/>
+<RequireRole role denied /> // sous RequireAuth : rôle exact → <Outlet/>, sinon `denied` (la page 404) ; confort d'UI, le backend revérifie
 AUTH_ROUTES                // { login: '/login', register: '/register' } : app/routes.ts les compose
 <RegisterPage termsPath privacyPath />   // une feature n'importe pas app/ : les chemins légaux arrivent en props
 type AuthUser = { user_id, email, role, account_status, points, created_at, updated_at }   // = User du contrat
@@ -245,7 +247,7 @@ import { MapPage, ActionDetailPage, ActionDetailsView,
 type LatLng = [latitude: number, longitude: number];
 type Action = { action_id, title, description, creator_id, organization_id: string | null,
                 min_participants: number | null, max_participants: number | null, location: LatLng,
-                status: ActionStatus, category: Category, imagesList: string[],
+                status: ActionStatus, category: Category, images_before: string[], images_after: string[],
                 validated_by_user_id: string | null, validated_at: string | null,
                 scheduled_at, created_at, updated_at,
                 participant_count: number, remaining_seats: number | null }   // calculés par GET /actions(/:id)
@@ -275,6 +277,21 @@ Modules internes et leurs interfaces (un appelant lit ceci, pas l'implémentatio
 
 Le type de transition `ActionDetailData` (camelCase, `locationName`, `organizer`, `currentParticipants`) est celui du
 mock #46 : **il ne correspond à aucune réponse de l'API** et disparaîtra à l'alignement (§7).
+
+### 4.7 bis `features/admin` — espace d'administration (Epic 8, #22)
+
+```ts
+import { AdminLayout, AdminUsersPage } from '@/features/admin';
+
+<AdminLayout />      // route parente de `/admin/*` : thème sombre sur <html> (`data-theme="admin"`), puis <Outlet/>
+<AdminUsersPage />   // `/admin/users` : comptes, recherche, filtre, bloquer / débloquer
+```
+
+Caché : `api/adminUsersApi` (`fetchUsers` = `GET /users`, `blockUser` = `suspend` puis relecture du compte,
+`unblockUser` = `reactivate`), `UsersTable` (tableau → cartes sous 760 px), `AccountActionDialog` (confirmation, erreurs
+traduites par `errors.ts`), `labels.ts` (libellés des rôles et statuts de compte). Le type des comptes est `AuthUser`
+(feature auth) : `GET /users` renvoie la même forme. La page garde en mémoire les comptes modifiés (réponse du backend)
+au lieu de recharger la liste.
 
 ### 4.8 `features/profile` — profil (code coéquipier #38/#48, mock)
 
@@ -335,7 +352,7 @@ Backend = `main` au 24/09 (#40 auth/users/profiles/interests/orgs/membres/points
 | Créer un compte | ✅ `POST /auth/register` (e-mail + mot de passe ≥ 8) | 🔜 `RegisterPage` (#50, PR) |
 | Se connecter / se déconnecter | ✅ `login`, `logout`, `refresh`, `me` | 🔜 `LoginPage`, `signOut` en en-tête (#50) ; session persistée ✅ (fix `http.ts` sur cette branche) |
 | Créer son profil (particulier / asso / commerce) | ✅ `POST /profiles` (username, location, visibilité) ; pas de « type » de profil : une asso = une `Organization` | 🟡 `ProfileForm` mock, pas d'appel |
-| Modifier son profil | ✅ `PATCH /profiles/me` ; avatar 🔜 (branche upload) | 🟡 mock |
+| Modifier son profil | ✅ `PATCH /profiles/me` ; avatar ✅ `PATCH /profiles/me/avatar` (01/10, image non servie) | 🟡 mock |
 | Supprimer son compte | ❌ (seulement `PATCH /users/me/deactivate`, irréversible) | 🟡 bouton + `alert()` |
 | Consulter un profil | ✅ `GET /profiles/:userId` (public + actif), `GET /profiles/search?q=` | ❌ |
 | Centres d'intérêt | ✅ `/interests/me` (select/remove/list) | ❌ |
@@ -348,7 +365,7 @@ Backend = `main` au 24/09 (#40 auth/users/profiles/interests/orgs/membres/points
 |---|---|---|
 | Signaler une action possible (suggestion) | pas de modèle : = `Action` `PENDING` | ✅ via la carte (Epic 7) |
 | Créer une action | ✅ `POST /actions` (JWT, actif, orga facultative, `max_participants` ≥ 3) | ✅ `ActionForm` depuis la carte + page `/actions/new` (#33, `?at=` pré-place le pin) |
-| Modifier une action | 🟡 `PATCH /actions/:id` **cassé** : 500 sans `organization_id`, mise à jour partielle (ticket backend) | 🟡 page `/actions/:id/edit` branchée (#33, créateur/ADMIN, PENDING/APPROVED) ; l'enregistrement affiche une erreur tant que le backend répond 500, bien que les champs soient persistés |
+| Modifier une action | ✅ `PATCH /actions/:id` (500 corrigé, vérifié le 01/10) ; 🟡 efface les photos absentes du body (ticket backend) | ✅ page `/actions/:id/edit` branchée (#33, créateur/ADMIN, PENDING/APPROVED) ; le formulaire ne renvoie pas encore `images_before` / `images_after` |
 | Supprimer une action | ❌ (`cancel` seulement) | ✅ « Cancel this action » + confirmation depuis la page de modification (#33) = `PATCH /cancel` ; pas de vraie suppression |
 | Découvrir des actions | ✅ `GET /actions` (+ un filtre : organisation, catégorie, créateur, statut) ; pas de rayon/texte/date | ✅ carte + filtre catégorie (#12) ; ❌ page liste `/actions` (placeholder) |
 | Consulter une action | ✅ `GET /actions/:id` (+ `participant_count`, `remaining_seats`) | 🟡 `/actions/:id` sur mock #46 ; la carte n'y mène pas encore |
@@ -376,8 +393,8 @@ Backend = `main` au 24/09 (#40 auth/users/profiles/interests/orgs/membres/points
 
 | Feature | Backend | Frontend |
 |---|---|---|
-| Photo de profil | 🔜 branche `19-epic-5-photo-upload…` : `PATCH /profiles/me/avatar` ; aujourd'hui `profile_picture` = URL libre | 🟡 input fichier local dans le mock, rien n'est envoyé |
-| Photos d'action (suggestion, avant, après) | 🔜 même branche (`imagesList` persistée depuis #44, upload non mergé) | ❌ (`imagesList` transporté mais jamais affiché ni saisi) |
+| Photo de profil | 🟡 `PATCH /profiles/me/avatar` (multipart `file`, 5 Mo, WebP) depuis le 01/10 ; l'URL `/static/avatars/…` n'est servie par aucune route | 🟡 input fichier local dans le mock, rien n'est envoyé |
+| Photos d'action (suggestion, avant, après) | 🟡 `POST /actions/:id/photo-before` (créateur) et `photo-after` (créateur ou participant), 3 max chacune, depuis le 01/10 ; URLs `/static/actions/…` non servies | ❌ (`images_before` / `images_after` typés dans `Action`, jamais affichés ni saisis) |
 
 ### Epic 6 — Notifications
 
@@ -399,8 +416,8 @@ Backend = `main` au 24/09 (#40 auth/users/profiles/interests/orgs/membres/points
 
 | Feature | Backend | Frontend |
 |---|---|---|
-| Statut des comptes (actif / suspendu / désactivé) | ✅ `PATCH /users/:id/suspend|reactivate` (ADMIN, −50 points), `GET /users` | ❌ |
-| Bloquer / débloquer un compte | = suspend/reactivate | ❌ |
+| Statut des comptes (actif / suspendu / désactivé) | ✅ `PATCH /users/:id/suspend|reactivate` (ADMIN, −50 points), `GET /users` (sans garde, sans nom d'utilisateur) | ✅ `/admin/users` (#22) : liste, recherche par e-mail, filtre par statut |
+| Bloquer / débloquer un compte | = suspend/reactivate ; la réponse de `suspend` porte les points d'avant la pénalité | ✅ #22 : confirmation, compte relu après blocage ; rien sur son propre compte ni sur un `DEACTIVATED` |
 | Gérer les organisations (validation, suspension, fermeture) | ✅ `suspend` (ADMIN), `deactivate`, `reactivate` ; pas de « validation » (créée `ACTIVE`) | ❌ |
 | Gérer les catégories d'action | ❌ (enum figé) | ❌ |
 | Attribuer / retirer un rôle | ❌ (`role` en base uniquement) | ❌ |
@@ -420,9 +437,9 @@ Backend = `main` au 24/09 (#40 auth/users/profiles/interests/orgs/membres/points
 
 | Feature | Backend | Frontend |
 |---|---|---|
-| Créer / consulter / chercher / modifier une organisation | ✅ 8 routes, rayon sur `GET /organizations` | ❌ |
-| Membres : rejoindre, approuver, refuser, retirer, bannir, quitter, rôles, transfert | ✅ 14 routes, mais **aucun `OWNER` créé à la création** → gestion cassée tant que le backend ne le corrige pas | ❌ |
-| Actions portées par une organisation | ✅ `organization_id` à la création (MANAGER/OWNER) | ❌ (champ non proposé) |
+| Créer / consulter / chercher / modifier une organisation | ✅ 8 routes, rayon sur `GET /organizations` | 🟡 annuaire (#61, #63 : recherche, tri, « All / Mine », fermées masquées, pagination, le tout côté client sur `GET /organizations`) et fiche publique (#64 : « About », lieu sur mini-carte, actions, membres, discussion #71) ; ❌ créer / modifier |
+| Membres : rejoindre, approuver, refuser, retirer, bannir, quitter, rôles, transfert | ✅ 14 routes, mais **aucun `OWNER` créé à la création** → gestion cassée tant que le backend ne le corrige pas ; un demandeur ne peut **pas lire** sa demande | ✅ #64 : « Join » sur la fiche (anonyme → `/login`), badge de mon rôle ; l'état d'une demande n'apparaît qu'en recliquant (409 traduit). ✅ #62 : `/organizations/:id/manage` (demandes, membres, rôles, transfert, réglages, fermer / rouvrir) ; ❌ quitter, ajouter directement, débannir (pas de route) |
+| Actions portées par une organisation | ✅ `organization_id` à la création (MANAGER/OWNER) ; `GET /actions?organization_id=` (404 si vide) | 🟡 #64 : à venir + terminées sur la fiche, filtrées côté client sur `GET /actions` (pas de 404 en console) ; ❌ champ non proposé à la création |
 
 ### Transverse (sujet ft_transcendence)
 
@@ -439,8 +456,8 @@ Backend = `main` au 24/09 (#40 auth/users/profiles/interests/orgs/membres/points
 
 ## 7. Écarts et dettes de données, dans l'ordre conseillé
 
-1. **`PATCH /actions/:id` cassé côté backend** (500 sans `organization_id`, mise à jour partielle) : ticket, et aucune
-   édition d'action côté front avant le correctif. `Action` et le contrat sont à jour depuis le 24/09.
+1. **`PATCH /actions/:id` efface les photos** absentes du body (le 500 est corrigé) : ticket backend, ou renvoyer
+   `images_before` / `images_after` depuis le formulaire d'édition. `Action` et le contrat sont à jour au 01/10.
 2. **Page détail sur l'API réelle** : `GET /actions/:id` + `GET /participations/action/:id` + `GET /actions/:id/comments`
    (+ `GET /profiles/:userId` pour l'organisateur) ; supprimer `ActionDetailData` et le mock ; lier la carte (`ActionCard`/popup) à `/actions/:id`.
    Pas de `locationName` côté API : afficher une mini-carte ou les coordonnées.
@@ -450,7 +467,8 @@ Backend = `main` au 24/09 (#40 auth/users/profiles/interests/orgs/membres/points
    `PENDING` seulement » vs flux de modération.
 5. **Amis** (`features/friends`), **commentaires** sur le détail, puis **organisations** (après le correctif `OWNER` backend).
 6. **TanStack Query** : remplacer l'intérieur de `useActions`, `useCreateAction`, `useProfile` ; les composants ne bougent pas.
-7. **Backend à demander par ticket** : rejet d'action, suppression (action, compte), upload (en cours), recherche d'actions par
+7. **Backend à demander par ticket** : rejet d'action, suppression (action, compte), **service des fichiers uploadés** (`/static`), `OptionalJwtAuthGuard` sur
+   `GET /profiles/:userId` (profils `FRIENDS_ONLY` / `PRIVATE` invisibles pour tous), dépendances `sharp` / `uuid` dans `package.json`, recherche d'actions par
    rayon/texte/date, lecture des points, membre `OWNER` à la création d'une organisation, CORS ou Nginx, `.env` versionnés.
 8. **Contradictions doc/code à trancher** (audit du 20/09) : qui valide une action (modérateur vs créateur), inscription sur
    action approuvée, blocage de n'importe qui vs d'un ami, réactivation d'un compte désactivé.

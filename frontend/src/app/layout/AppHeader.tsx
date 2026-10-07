@@ -1,5 +1,5 @@
-import { Link, NavLink } from 'react-router';
-import { useAuth } from '@/features/auth';
+import { Link, NavLink, useLocation } from 'react-router';
+import { ROLE_APP, useAuth } from '@/features/auth';
 import { Avatar, Button, ButtonLink, Icon } from '@/shared/ui';
 import { APP_LABELS } from '../labels';
 import { ROUTES } from '../routes';
@@ -9,6 +9,7 @@ import styles from './AppHeader.module.css';
 
 export function AppHeader() {
   const { status, user, signOut } = useAuth();
+  const location = useLocation();
   const links = NAV_ITEMS.filter((item) => item.to !== ROUTES.profile);
 
   return (
@@ -28,6 +29,12 @@ export function AppHeader() {
       </nav>
 
       <div className={styles.actions}>
+        {user?.role === ROLE_APP.ADMIN && (
+          <NavLink to={ROUTES.admin} className={styles.adminLink}>
+            <Icon name="shield" size={18} />
+            <span className={styles.adminLabel}>{APP_LABELS.admin}</span>
+          </NavLink>
+        )}
         {status === 'authenticated' && user && (
           <Link to={ROUTES.profile} className={styles.profileLink} aria-label={APP_LABELS.myProfile}>
             <Avatar name={user.email} />
@@ -39,7 +46,7 @@ export function AppHeader() {
           </Button>
         )}
         {status === 'anonymous' && (
-          <ButtonLink to={ROUTES.login} variant="secondary">
+          <ButtonLink to={ROUTES.login} state={{ from: location }} variant="secondary">
             {APP_LABELS.signIn}
           </ButtonLink>
         )}

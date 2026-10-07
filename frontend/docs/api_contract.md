@@ -6,7 +6,29 @@ Généré le 2026-09-24 par lecture de `backend/src/**/*.controller.ts`, `backen
 (flux complet création → participations → `approve` → commentaires → `complete` → points ; amis ; organisation).
 Ce fichier décrit ce que le code **fait**, pas ce que `Docs/prisma_rules.md` prévoit. À régénérer à chaque changement du backend.
 
-**Changements depuis la version du 2026-09-23** (commit `c22b7785`) — PR #43 amis, #44 actions, #45 participations, #49 commentaires :
+**Relu et resondé le 2026-10-01** pour tous les modules modifiés depuis (backend `39bc86e3`, PR #75 profils, #86 seed,
+#88 photos, #89 commentaires d'organisation) : `actions`, `profiles`, `organizations`, `organization-members`, `main.ts`,
+`schema.prisma`. Les autres modules (auth, users, interests, friend-requests, friendships, participations, points) n'ont
+pas changé depuis le 24/09.
+
+**Changements depuis la version du 2026-09-24** (tous vérifiés par sondes) :
+- **Photos d'action** : `imagesList` disparaît (400 si envoyé), remplacé par **`images_before`** et **`images_after`** (§3, §15).
+  Nouvelles routes d'upload `POST /actions/:id/photo-before` et `photo-after` (multipart, champ `file`, 3 photos max chacune).
+- **Avatar** : `PATCH /profiles/me/avatar` (multipart, champ `file`, 5 Mo) (§7).
+- **Les fichiers uploadés ne sont servis nulle part** : l'API renvoie des URLs `/static/actions/<uuid>.webp` et
+  `/static/avatars/<uuid>.webp`, mais ni `main.ts` ni `app.module.ts` ne montent de dossier statique → 404 (§1, §16).
+- **`PATCH /actions/:id` ne renvoie plus 500** : `title` seul ou `max_participants` seul → 200. Nouveau bug : les deux
+  listes de photos absentes du body sont **remises à `[]`** (§15).
+- **Profils** : champ `commune` (déduit de `location` par `geo.api.gouv.fr`, `null` hors France ou en cas d'échec) ;
+  `GET /profiles/:userId` renvoie en plus `interests` et répond 404 (au lieu de 500) sur un id non numérique ; un profil
+  `FRIENDS_ONLY` ou `PRIVATE` reste **404 pour tout le monde**, amis et propriétaire compris (§7).
+- **Commentaires d'organisation** : `POST` / `GET /organizations/:id/comments`, `DELETE /organizations/comments/:commentId` (§12).
+- Dev : `make seed` (comptes `demo.seed.<prénom>@example.test` / `DemoPass123!`, détail dans `tests/Seed_Details.md`),
+  `make db-reset` (**efface la base**). #88 importe `sharp`, `uuid` et `@types/multer` absents de `backend/package.json` :
+  tant que ce n'est pas corrigé, `npm install --no-save sharp uuid @types/multer` dans le conteneur backend, puis `make db-update`.
+
+
+Historique — version du 2026-09-24, changements depuis le 2026-09-23 (commit `c22b7785`) — PR #43 amis, #44 actions, #45 participations, #49 commentaires :
 - `GET /actions` et `GET /actions/:id` renvoient en plus **`participant_count`** et **`remaining_seats`** (§3, §15). Les mutations
   (`POST`, `PATCH`, `approve`, `cancel`, `complete`) renvoient l'action **sans** ces deux champs (`ActionRecord`).
 - `POST /actions` accepte `max_participants` (entier **≥ 3**, sinon 400) ; `imagesList` est de nouveau persisté ; l'organisation
@@ -34,6 +56,7 @@ modules `/organization-members` (14 routes) et `/point-transactions` (1 route ad
   Aucun préfixe `/api`, aucun versionnement, pas de Swagger.
 - **CORS** : toujours **non activé** dans `backend/src/main.ts`. Proxy Vite obligatoire en dev (`frontend/CLAUDE.md`).
 - **Format** : JSON en entrée (`Content-Type: application/json`) et en sortie. Dates en chaînes ISO 8601.
+  Exception : les trois routes d'upload attendent du `multipart/form-data` avec un champ **`file`** (§7, §15).
 - **Validation** : `ValidationPipe` global avec `whitelist`, `forbidNonWhitelisted`, `transform`.
   Tout champ absent du DTO → **400**. Les query params et path params ne sont **pas** validés (reçus en `string`),
   sauf dans `/organization-members` où un id non numérique → **400** « `<champ>` must be a valid integer ».
@@ -42,7 +65,8 @@ modules `/organization-members` (14 routes) et `/point-transactions` (1 route ad
   l'objet Prisma brut : `POST /actions`, `/organization-members/*`, `/point-transactions/*`).
   En **entrée** : dans un body, un id est un **entier** (`organization_id: 12`) ; dans l'URL, une string.
   Hors `/organization-members` et `/actions/:id/comments` (400 « Validation failed (numeric string is expected) »),
-  un id non numérique dans l'URL (`BigInt("abc")`) provoque un **500**.
+  un id non numérique dans l'URL (`BigInt("abc")`) provoque un **500** (y compris les commentaires d'organisation) ;
+  `GET /profiles/:userId` répond 404.
 - **Localisation** : `location` = tableau `[latitude, longitude]` de 2 nombres (pas de PostGIS).
   Les recherches par rayon se font en mémoire (haversine, rayon en km).
 - **Erreurs** : format NestJS `{ "statusCode": 400, "message": "Email is already used", "error": "Bad Request" }`.
@@ -58,7 +82,12 @@ modules `/organization-members` (14 routes) et `/point-transactions` (1 route ad
   (sinon **400**, parfois **403** dans `/organization-members`). Un compte `DEACTIVATED` garde un JWT valide mais
   se fait refuser presque partout.
 - **Guards existants** : `JwtAuthGuard` (stratégie `jwt`, header Bearer) et `JwtRefreshGuard` (stratégie `jwt-refresh`,
-  body `refresh_token`). Aucun guard de rôle : `RolesGuard` n'existe pas.
+  body `refresh_token`). Aucun guard de rôle : `RolesGuard` n'existe pas. `OptionalJwtAuthGuard` existe
+  (`auth/guards/optional-jwt-auth-guard.ts`) mais **n'est branché sur aucune route**.
+- **Fichiers** : upload par `multer` vers `backend/uploads/{avatars,actions}` (dossier ignoré par git), extension du nom
+  de fichier `jpg`/`jpeg`/`png`/`webp` exigée, conversion en WebP par `sharp`, nom `<uuid>.webp`. L'URL enregistrée est
+  `/static/<dossier>/<uuid>.webp`, **mais aucune route ne sert `/static`** (404 côté backend ; via le serveur Vite, la
+  page `index.html`). Un upload refusé après conversion (403, 404, quota) laisse le fichier `.webp` orphelin sur le disque.
 - **Concurrence** : `participate`, `cancelParticipation`, `sendFriendRequest` et `PATCH /actions/:id` tournent dans une
   transaction `Serializable` rejouée 3 fois ; au-delà → 400 « … please try again » (à proposer de réessayer).
 
@@ -90,10 +119,11 @@ type User = {
 };
 type Tokens = { access_token: string; refresh_token: string };
 
-// Profile : location retirée partout sauf sur GET /profiles/me.
+// Profile : location retirée partout sauf sur GET /profiles/me ; interests seulement sur GET /profiles/:userId.
 type Profile = {
   user_id: string; username: string; description: string | null; profile_picture: string | null;
-  visibility: ProfileVisibility; location?: [number, number];
+  commune: string | null;            // déduite de location à la création / modification, null hors France
+  visibility: ProfileVisibility; location?: [number, number]; interests?: InterestCategory[];
 };
 type UserInterest = { user_id: string; interest: InterestCategory };
 // username et profile_picture valent null quand l'utilisateur n'a pas encore de profil (cas normal après register).
@@ -116,12 +146,13 @@ type MemberUser = {
 type MemberWithUser = OrganizationMember & { user: MemberUser };
 type MembershipWithOrganization = OrganizationMember & { organization: Organization };
 
-// Action « brute » : réponse de POST /actions, PATCH /actions/:id, approve, cancel, complete.
+// Action « brute » : réponse de POST /actions, PATCH /actions/:id, approve, cancel, complete, photo-before, photo-after.
 type ActionRecord = {
   action_id: string; title: string; description: string; creator_id: string; organization_id: string | null;
   min_participants: number;          // 3 (défaut base), jamais saisi via l'API
   max_participants: number | null;   // null = pas de plafond
-  location: [number, number]; status: ActionStatus; category: Category; imagesList: string[];
+  location: [number, number]; status: ActionStatus; category: Category;
+  images_before: string[]; images_after: string[];   // URLs `/static/actions/<uuid>.webp`, 3 max par upload (§15)
   validated_by_user_id: string | null;
   validated_at: string | null;       // null jusqu'à approve
   scheduled_at: string; created_at: string; updated_at: string;
@@ -135,6 +166,12 @@ type Action = ActionRecord & {
 // Commentaire : objet Prisma brut + auteur (profile null si l'auteur n'a pas de profil).
 type ActionComment = {
   comment_id: string; content: string; created_at: string; updated_at: string; user_id: string; action_id: string;
+  user: { user_id: string; profile: { username: string; profile_picture: string | null } | null };
+};
+
+// Commentaire d'organisation (01/10) : même forme que `ActionComment`, `organization_id` à la place de `action_id`.
+type OrganizationComment = {
+  comment_id: string; content: string; created_at: string; updated_at: string; user_id: string; organization_id: string;
   user: { user_id: string; profile: { username: string; profile_picture: string | null } | null };
 };
 
@@ -186,14 +223,14 @@ Script de test manuel : `tests/test_auth.sh` (curl + jq).
 
 | Route | Guard | Entrée | Réponse | Erreurs / règles |
 |---|---|---|---|---|
-| `GET /users` | aucun | — | `User[]` (tous statuts) | — |
+| `GET /users` | aucun | — | `User[]` (tous statuts, ordre non garanti) | **aucune garde** : e-mails, rôles et statuts de tous les comptes lisibles sans connexion (à signaler). Utilisée par `/admin/users` (#22) |
 | `GET /users/me` | JWT | — | `User` | 404 « User not found ». Équivalent de `GET /auth/me` |
 | `GET /users/:id` | aucun | — | `User` | 404 « User not found » |
 | `POST /users` | aucun | body `CreateUserDto` (`email`, `password` ≥ 8) | 201 `User` | 400 « Email is already used ». Doublon de `/auth/register` sans tokens |
 | `PATCH /users/me/email` | JWT | body `UpdateUserDto` : `email?` (format e-mail) | `User` | 400 « Email is already used » ; body vide = aucune modification |
 | `PATCH /users/me/password` | JWT | body `UpdatePasswordDto` : `password` (≥ 8) | `User` | aucune vérification de l'ancien mot de passe |
 | `PATCH /users/me/deactivate` | JWT | — | `User` (`DEACTIVATED`) | irréversible via l'API (voir `reactivate`) ; le JWT reste valide jusqu'à expiration |
-| `PATCH /users/:id/suspend` | JWT, **ADMIN** | — | `User` (`SUSPENDED`) ; crée une transaction **−50** points (`USER_SUSPENDED`) | 404 « User not found » (appelant), « User to suspend not found » ; 403 « Only an admin can suspend a user » ; 400 « User is already suspended » |
+| `PATCH /users/:id/suspend` | JWT, **ADMIN** | — | `User` (`SUSPENDED`) ; crée une transaction **−50** points (`USER_SUSPENDED`) ; **`points` de la réponse = solde d'avant la pénalité** (vérifié le 02/10/2026 : relire `GET /users/:id`) | 404 « User not found » (appelant), « User to suspend not found » ; 403 « Only an admin can suspend a user » ; 400 « User is already suspended » |
 | `PATCH /users/:id/reactivate` | JWT, **ADMIN** | — | `User` (`ACTIVE`) | 404 ; 403 « Only an admin can reactivate a user » ; 400 « Only a suspended account can be reactivated » (un compte `DEACTIVATED` n'est **pas** réactivable) |
 
 Pas de route de suppression de compte.
@@ -202,12 +239,13 @@ Pas de route de suppression de compte.
 
 | Route | Guard | Entrée | Réponse | Erreurs / règles |
 |---|---|---|---|---|
-| `GET /profiles` | aucun | — | `Profile[]` (visibilité `PUBLIC` et compte `ACTIVE` uniquement, sans `location`) | — |
+| `GET /profiles` | aucun | — | `Profile[]` (visibilité `PUBLIC` et compte `ACTIVE` uniquement, sans `location`, avec `commune`) | — |
 | `GET /profiles/search?q=` | aucun | query `q` (sous-chaîne du `username`, insensible à la casse) | `Profile[]` (max 15, publics + actifs, sans `location`) | `q` absent → renvoie les 15 premiers profils publics |
 | `GET /profiles/me` | JWT | — | `Profile` **avec** `location` (quelle que soit la visibilité) | 404 « Profile not found » (compte sans profil : cas normal juste après `register`) |
-| `GET /profiles/:userId` | aucun | — | `Profile` sans `location` | 404 si inexistant, si visibilité ≠ `PUBLIC` ou si compte non `ACTIVE` (`FRIENDS_ONLY` non géré : traité comme privé) |
-| `POST /profiles` | JWT | body `CreateProfileDto` : `username` (string), `description?`, `profile_picture?` (string, URL/chemin), `location` (`[number, number]`), `visibility?` (`ProfileVisibility`) | 201 `Profile` sans `location` | 404 « User not found » ; 400 « Only an active user can create a profile », « User already has a profile », « Username is already taken » |
-| `PATCH /profiles/me` | JWT | body `UpdateProfileDto` : mêmes champs, tous optionnels | `Profile` sans `location` | 404 « User not found », « Profile does not exist » ; 400 non actif / username pris |
+| `GET /profiles/:userId` | aucun | — | `Profile` sans `location`, **avec `interests`** (`InterestCategory[]`) | 404 « Profile not found » si inexistant, id non numérique, compte non `ACTIVE` ou visibilité ≠ `PUBLIC`. Le service sait ouvrir un profil `FRIENDS_ONLY` à un ami et un profil `PRIVATE` à son propriétaire (`viewerId`), **mais le contrôleur ne lui passe pas l'appelant** : vérifié le 01/10, 404 pour l'ami et pour le propriétaire, avec ou sans token |
+| `POST /profiles` | JWT | body `CreateProfileDto` : `username` (string), `description?`, `profile_picture?` (string, URL/chemin), `location` (`[number, number]`), `visibility?` (`ProfileVisibility`) | 201 `Profile` sans `location` ; `commune` calculée (appel `geo.api.gouv.fr`, 3 s max, `null` si échec) | 404 « User not found » ; 400 « Only an active user can create a profile », « User already has a profile », « Username is already taken » |
+| `PATCH /profiles/me` | JWT | body `UpdateProfileDto` : mêmes champs, tous optionnels | `Profile` sans `location` ; `commune` recalculée si `location` est envoyée | 404 « User not found », « Profile does not exist » ; 400 non actif / username pris |
+| `PATCH /profiles/me/avatar` | JWT | `multipart/form-data`, champ **`file`** (extension jpg/jpeg/png/webp, 5 Mo max) | 200 `Profile` sans `location`, `profile_picture` = `/static/avatars/<uuid>.webp` | 401 ; 400 « File is required », « Only jpg, jpeg, png, and webp files are allowed », « Failed to process and compress image », « Unexpected field - x » ; 404 « Profile does not exist » (compte sans profil). L'ancien fichier n'est pas supprimé |
 
 ## 8. Interests — `/interests` (`interests.controller.ts`)
 
@@ -264,6 +302,9 @@ Script : `tests/test-participations-autonome.sh`.
 | `PATCH /organizations/:id/suspend` | JWT, **ADMIN** | — | `Organization` (`SUSPENDED`) | 404 ; 403 « Only an admin can suspend an organization » ; 400 « Only an active organization can be suspended » |
 | `PATCH /organizations/:id/deactivate` | JWT | — | `Organization` (`CLOSED`) | 404 ; 403 « You are not allowed to close this organization » (mêmes rôles que `update`) ; 400 « Organization is not active » |
 | `PATCH /organizations/:id/reactivate` | JWT | — | `Organization` (`ACTIVE`) | 404 ; `SUSPENDED` → 403 « Only an admin can reactivate a suspended organization » ; `CLOSED` → 403 « You are not allowed to reactivate this organization » (mêmes rôles que `update`) ; 400 « Organization is already active » |
+| `POST /organizations/:id/comments` | JWT | body `OrganizationCommentDto` : **`comment`** (string non vide, ≤ 1024 ; ≠ `content` des actions) | 201 `OrganizationComment` (champ `content`, avec `user`) | 401 « Invalid token » ; 400 « comment should not be empty », « Comment must not exceed 1024 characters », « property content should not exist » ; 404 « Organization not found » ; id non numérique → 500. **Accepte des espaces seuls** et une organisation `SUSPENDED` (aucune vérification de statut) |
+| `GET /organizations/:id/comments` | aucun | — | `OrganizationComment[]` (plus récent en premier, `[]` si vide) | 404 « Organization not found » ; id non numérique → 500 |
+| `DELETE /organizations/comments/:commentId` | JWT | — | 200 `{ message: "Comment deleted successfully" }` | 404 « Comment not found » ; 403 « You are not allowed to delete this comment » (sauf **l'auteur** ou **le créateur de l'organisation** `creator_id` ; ni `ADMIN` ni `OWNER`/`MANAGER`) ; id non numérique → 500 |
 
 ## 13. Organization members — `/organization-members` (`organizationmembers.controller.ts`) — **nouveau**
 
@@ -334,16 +375,18 @@ renvoient un `ActionRecord` (sans ces champs). Un id non numérique → 500, sau
 |---|---|---|---|---|
 | `GET /actions` | aucun | query optionnelle, **un seul filtre appliqué**, priorité : `organization_id` > `category` > `creator_id` > `status` | `Action[]` (tous statuts, ordre non garanti) | filtre sans résultat → **404** (« No actions found for this organization / category / user / status ») ; sans filtre → `[]` possible ; `category` ou `status` hors enum → 500. Pas de filtre rayon (`findByRadius` existe dans le service, sans route) |
 | `GET /actions/:id` | aucun | — | `Action` | 404 « Action not found » |
-| `POST /actions` | JWT | body `CreateActionDto` : `title`, `description` (strings), `location` (`[number, number]`), `category` (`Category`), `scheduled_at` (date ISO), `organization_id?` (entier), `max_participants?` (entier), `imagesList?` (`string[]`, persisté). **Plus de `creator_id`** (400 si envoyé) ; `min_participants` refusé | 201 `ActionRecord` (`PENDING`, `creator_id` = moi, `min_participants: 3`, `validated_at: null`) | 404 « Creator not found », « Organization not found » ; 400 « Only an active user can create an action », « Only an active organization can create an action », « Maximum participants cannot be lower than minimum participants » (`max_participants` < 3) ; 403 « You are not allowed to create an action for this organization » (sauf `ADMIN` ou membre `ACTIVE` `MANAGER`/`OWNER` ; **le créateur de l'organisation n'a pas ce droit sans membership**, voir §16) |
-| `PATCH /actions/:id` | JWT | body `UpdateActionDto` : `title?`, `description?`, `organization_id?`, `location?`, `category?`, `imagesList?`, `max_participants?`, `scheduled_at?` | 200 `ActionRecord` **uniquement si `organization_id` est dans le body** | 404 « Action not found », « User not found », « Organization not found » ; 400 « This action can no longer be modified » (`CANCELLED`, `COMPLETED`, `REJECTED`) ; 403 « You are not allowed to update this action » (sauf `ADMIN`, créateur, `MANAGER`/`OWNER` de l'organisation liée), « You are not allowed to assign this action to this organization » ; 400 « Only an active organization can be assigned to an action », « Maximum participants cannot be lower than minimum participants », « Maximum participants cannot be lower than current participants count », « Action capacity was modified concurrently, please try again ». **Bug (bloc dupliqué après merge, vérifié) : sans `organization_id` dans le body → 500 « Internal server error » alors que `title`, `description`, `location`, `category`, `imagesList`, `scheduled_at` ont déjà été enregistrés ; `max_participants` seul n'est pas appliqué.** Ticket backend à ouvrir ; ne pas brancher l'édition d'ici là |
+| `POST /actions` | JWT | body `CreateActionDto` : `title`, `description` (strings), `location` (`[number, number]`), `category` (`Category`), `scheduled_at` (date ISO), `organization_id?` (entier), `max_participants?` (entier), `images_before?`, `images_after?` (`string[]`, persistés tels quels ; `imagesList` → 400 « property imagesList should not exist »). **Plus de `creator_id`** (400 si envoyé) ; `min_participants` refusé | 201 `ActionRecord` (`PENDING`, `creator_id` = moi, `min_participants: 3`, `validated_at: null`) | 404 « Creator not found », « Organization not found » ; 400 « Only an active user can create an action », « Only an active organization can create an action », « Maximum participants cannot be lower than minimum participants » (`max_participants` < 3) ; 403 « You are not allowed to create an action for this organization » (sauf `ADMIN` ou membre `ACTIVE` `MANAGER`/`OWNER` ; **le créateur de l'organisation n'a pas ce droit sans membership**, voir §16) |
+| `PATCH /actions/:id` | JWT | body `UpdateActionDto` : `title?`, `description?`, `organization_id?` (entier, ou `null` pour détacher l'organisation), `location?`, `category?`, `images_before?`, `images_after?`, `max_participants?`, `scheduled_at?` | 200 `ActionRecord` | 404 « Action not found », « User not found », « Organization not found » ; 400 « This action can no longer be modified » (`CANCELLED`, `COMPLETED`, `REJECTED`) ; 403 « You are not allowed to update this action » (sauf `ADMIN`, créateur, `MANAGER`/`OWNER` de l'organisation liée), « You are not allowed to assign this action to this organization » ; 400 « Only an active organization can be assigned to an action », « Maximum participants cannot be lower than minimum participants », « Maximum participants cannot be lower than current participants count », « Action capacity was modified concurrently, please try again ». Le 500 du 24/09 est corrigé (vérifié le 01/10 : `title` seul → 200, `max_participants` seul → appliqué). **Bug (vérifié) : `images_before` et `images_after` absents du body sont remis à `[]`** : toute modification efface les photos, sauf à les renvoyer dans le body |
 | `PATCH /actions/:id/approve` | JWT | — | 200 `ActionRecord` (`APPROVED`, `validated_by_user_id` = moi, `validated_at`) | 404 « Action not found », « User not found », « Organization not found » ; 400 « This action can no longer be approved » (non `PENDING`), « Only an active organization can approve an action », **« An action needs at least 3 participants to be approved »** (participants hors créateur < `min_participants`) ; 403 « You are not allowed to approve this action » (sauf `ADMIN`, **le créateur lui-même**, `MANAGER`/`OWNER`). Le rôle `MODERATOR` n'est pas vérifié |
 | `PATCH /actions/:id/cancel` | JWT | — | 200 `ActionRecord` (`CANCELLED`) | 404 ; 400 « This action can no longer be cancelled » (ni `PENDING` ni `APPROVED`) ; 403 « You are not allowed to cancel this action » (mêmes rôles), « Only an admin can cancel an action from an inactive organization » |
 | `PATCH /actions/:id/complete` | JWT | — | 200 `ActionRecord` (`COMPLETED`) ; distribue les points (§14) dans la même transaction | 404 ; 400 « This action cannot be completed » (non `APPROVED`), « An action needs at least 3 participants to be completed » ; 403 « You are not allowed to complete this action », « Only an admin can complete an action from an inactive organization » ; 400 « Only active users can receive points » ou « Organization is not active » (récompense refusée → **rien n'est appliqué**, l'action reste `APPROVED`) |
+| `POST /actions/:id/photo-before` | JWT | `multipart/form-data`, champ **`file`** (extension jpg/jpeg/png/webp, 10 Mo max) | 201 `ActionRecord`, URL `/static/actions/<uuid>.webp` ajoutée à `images_before` (image convertie en WebP) | 401 ; 400 « File is required », « Only jpg, jpeg, png, and webp files are allowed » (extension du nom de fichier), « Failed to process and compress image » (contenu illisible), « Unexpected field - x » (champ ≠ `file`), « You can only upload up to 3 photos before the action » ; 403 « You are not allowed to upload photos for this action » (**créateur seulement**, pas d'`ADMIN`) ; 404 « Action not found ». Aucune vérification du statut de l'action ; pas de route pour retirer une photo |
+| `POST /actions/:id/photo-after` | JWT | idem | 201 `ActionRecord`, URL ajoutée à `images_after` | mêmes erreurs ; 403 sauf **créateur ou participant** ; 400 « You can only upload up to 3 photos after the action ». Possible sur une action `PENDING` (aucune vérification de statut) |
 | `POST /actions/:id/comments` | JWT | body `CreateCommentDto` : `content` (string non vide, ≤ 1024) | 201 `ActionComment` (avec `user`) | 400 « content should not be empty », « Comment must not exceed 1024 characters », « property x should not exist », « Validation failed (numeric string is expected) » (id non numérique) ; 404 « Action not found ». Aucune vérification du statut du compte ni de l'action (on peut commenter une action `CANCELLED`) |
 | `GET /actions/:id/comments` | aucun | — | `ActionComment[]` (plus récent en premier) | 400 id non numérique ; 404 « Action not found » |
 
-Pas de route de **rejet** (`REJECTED` est inatteignable via l'API), pas de suppression, pas de recherche par rayon,
-par date ni par mot-clé. Vérifié par sonde le 24/09 : `complete` avec 3 participants → créateur +35 (20 + 3 × 5),
+Pas de route de **rejet** (`REJECTED` est inatteignable via l'API), pas de suppression d'action ni de photo, pas de
+recherche par rayon, par date ni par mot-clé. Vérifié par sonde le 24/09 : `complete` avec 3 participants → créateur +35 (20 + 3 × 5),
 chaque participant +10. Scripts : `tests/test_action_management.sh`, `tests/test_comments.sh`.
 
 ## 16. Points d'attention pour le frontend
@@ -354,28 +397,39 @@ chaque participant +10. Scripts : `tests/test_action_management.sh`, `tests/test
   (points). `CANCELLED` depuis `PENDING` ou `APPROVED`. `REJECTED` inatteignable. Conséquences UI : bouton « Join » sur
   `PENDING` seulement, libellés « Upcoming » / « Confirmed », pas d'écran de modération à prévoir tant que le backend ne
   vérifie pas `MODERATOR`. Cela contredit `Docs/user_stories.md` (validation par un modérateur avant publication) : à trancher en équipe.
-- **`PATCH /actions/:id`** : 500 sans `organization_id` dans le body, mise à jour partiellement appliquée (§15). Ne pas
-  brancher l'édition d'action avant le correctif backend.
+- **`PATCH /actions/:id`** : le 500 est corrigé, l'édition est branchée (#33). Mais il **efface les photos** quand le body ne
+  les contient pas (§15) : tant que le backend n'est pas corrigé, un formulaire d'édition doit renvoyer `images_before` et
+  `images_after` tels qu'il les a reçus.
+- **Photos et avatars non affichables** : les URLs `/static/...` renvoyées par les uploads ne sont servies par aucune
+  route (§1). Ne pas afficher ces images tant qu'un `ServeStaticModule` (ou Nginx) n'existe pas : ticket backend.
+- **Profils non publics** : `GET /profiles/:userId` renvoie 404 pour un profil `FRIENDS_ONLY` ou `PRIVATE`, même à un ami
+  ou à son propriétaire (§7) ; pour soi-même, utiliser `GET /profiles/me`.
 - **Organisations orphelines** : `POST /organizations` ne crée pas de membership `OWNER` et aucune route n'en crée une
   (`transfer-ownership` exige un `OWNER` existant). Le créateur peut modifier/fermer son organisation mais **ne peut ni
   gérer ni voir ses membres, ni créer d'action pour elle** (403 vérifié) ; un `ADMIN` peut `add`/`approve`, mais la
   récompense `OWNER` échoue (404 « Organization owner not found ») et **annule l'opération** ; `leave`/`remove`/`ban`
   échouent de même. Seuls `join` (→ `PENDING`) et `deny` fonctionnent. Ticket backend : créer le membre `OWNER` à la création.
 - Une liste filtrée vide renvoie **404** (`GET /actions?…`, `GET /organizations?creator_id=`) : à traduire en liste vide.
-  Les listes de `/organization-members`, `/participations`, `/friend-requests`, `/friendships` et `/actions/:id/comments` renvoient `[]`.
+  Les listes de `/organization-members`, `/participations`, `/friend-requests`, `/friendships`, `/actions/:id/comments`
+  et `/organizations/:id/comments` renvoient `[]`.
 - `username` et `profile_picture` sont `null` (`UserCard`, `ActionComment.user.profile` null) pour un compte sans profil :
   prévoir un libellé de repli (« Neighbour ») et les initiales de l'e-mail seulement pour soi-même.
 - `complete` peut échouer à cause d'un participant désactivé : message d'erreur explicite plutôt qu'un échec muet.
 - `remaining_seats` est calculé par l'API (`null` = sans plafond) ; ne pas le recalculer côté front. `max_participants` se fixe
   à la création (≥ 3) ; l'API n'expose pas `min_participants` en écriture.
-- Fonctionnalités sans route aujourd'hui : suppression de compte, rejet d'action, suppression d'action, upload de fichiers
-  (branche `19-epic-5-photo-upload…` en cours : `PATCH /profiles/me/avatar` + images d'action), notifications, messagerie,
-  lecture/historique des points, débannissement, annulation d'une demande d'adhésion ou d'amitié, recherche d'actions par
-  rayon/date/texte, édition ou suppression d'un commentaire.
+- Fonctionnalités sans route aujourd'hui : suppression de compte, rejet d'action, suppression d'action, retrait d'une photo,
+  service des fichiers uploadés, notifications, messagerie, lecture/historique des points, débannissement, annulation d'une
+  demande d'adhésion ou d'amitié, recherche d'actions par rayon/date/texte, édition d'un commentaire, suppression d'un
+  commentaire d'action (elle existe pour les commentaires d'organisation, §12).
+- **Commentaires** : deux DTO différents, `{ content }` pour une action et `{ comment }` pour une organisation ; le backend
+  accepte un commentaire d'organisation fait d'espaces, le front doit le refuser.
 - Deux conventions d'erreur pour « compte non actif » : 400 dans les modules historiques, 403 dans `/organization-members`.
 - Ordre de déclaration : `/profiles/search` et `/profiles/me` précèdent `/profiles/:userId` (idem `/organizations/search`),
   donc pas de collision de routes.
 - Rôle `ADMIN` : aucun moyen de le donner via l'API (colonne `role` en base uniquement). Les écrans admin
   (`suspend`, `reactivate`, points) supposent un compte promu à la main.
-- Environnement de dev : `make db-update` après chaque `git pull` du backend (migrations `validated_at`, `min_participants`,
-  `action_comments` du 22-23/09) ; le serveur NestJS redémarre seul après `prisma generate`.
+- Environnement de dev : `make db-update` après chaque `git pull` du backend (dernières migrations : `add_profile_commune`,
+  `split_action_images`, `add_organization_comments`) ; si le backend ne compile plus après un pull, lire
+  `docker compose logs backend` (dépendance manquante, voir l'en-tête) puis redémarrer le conteneur. `make seed` ajoute
+  les données de démo sans rien effacer ; `make db-reset` et `make clean` effacent la base. Un seul refresh token par
+  compte : se connecter ailleurs avec le même compte déconnecte la première session au prochain rafraîchissement.

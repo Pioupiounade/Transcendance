@@ -4,6 +4,7 @@ export { MapPage } from './pages/MapPage';
 export { CreateActionPage } from './pages/CreateActionPage';
 export { EditActionPage } from './pages/EditActionPage';
 export { NeighborhoodMap } from './components/NeighborhoodMap';
+export { PlaceMap } from './components/PlaceMap';
 export { ActionCard } from './components/ActionCard';
 export { useActions } from './api/useActions';
 export { canManageAction } from './permissions';

@@ -7,6 +7,8 @@ export type MyProfile = {
   username: string;
   description: string | null;
   profile_picture: string | null;
+  /** Commune déduite de `location` par le backend ; `null` hors France ou si la recherche a échoué. */
+  commune: string | null;
   location?: [number, number];
 };
 

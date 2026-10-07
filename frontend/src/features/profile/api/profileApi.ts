@@ -1,6 +1,10 @@
 import { useEffect, useState } from 'react';
 import { http } from '@/shared/api';
 import type { PublicProfile, InterestCategory, ProfileActivity, ProfileOrganization, ProfileParticipation, ProfileVisibility, UserProfile, FriendshipStatus } from '../types';
+import type { FriendshipStatus, PublicProfile, InterestCategory, ProfileActivity, ProfileOrganization, ProfileParticipation, ProfileVisibility, UserProfile } from '../types';
+
+// Mock store of the friendship helpers below, empty until they are wired to the real friend routes.
+const MOCK_USER_PROFILES: (UserProfile & { id: string })[] = [];
 
 type ApiProfile = {
   user_id: string;
@@ -50,7 +54,7 @@ export async function removeInterest(interest: InterestCategory): Promise<void> 
 export async function uploadAvatar(file: File): Promise<void> {
   const body = new FormData();
   body.append('file', file);
-  await http.patch('/users/me/avatar', body);
+  await http.patch('/profiles/me/avatar', body);
 }
 
 type ApiPublicProfile = {
