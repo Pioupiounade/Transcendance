@@ -10,7 +10,6 @@ import { NotFoundPage } from './pages/NotFoundPage';
 import { ActionsListPage } from '@/features/actions';
 import { ROUTES, editActionPath, mapFocusPath, organizationManagePath, organizationPath } from './routes';
 import { ProfilePage, PublicProfilePage } from '../features/profile';
-import { PlaceholderPage } from './pages/PlaceholderPage';
 
 
 // Routes en données. Une page = une ligne ; les pages de feature sont chargées
@@ -47,7 +46,6 @@ const router = createBrowserRouter([
           />
         ),
       },
-      { path: ROUTES.friends, element: <PlaceholderPage title={APP_LABELS.nav.friends} /> },
       { path: ROUTES.login, element: <LoginPage /> },
       { path: ROUTES.register, element: <RegisterPage termsPath={ROUTES.terms} privacyPath={ROUTES.privacy} /> },
       { path: ROUTES.terms, element: <LegalPage title={APP_LABELS.pages.terms.title} /> },
