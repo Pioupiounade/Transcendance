@@ -1,36 +1,86 @@
-import { useMemo, useState, type ChangeEvent } from 'react';
+import { useEffect, useMemo, useState, type ChangeEvent } from 'react';
 import { useNavigate } from 'react-router';
+import { useAuth } from '@/features/auth';
 import { Button } from '@/shared/ui/Button/Button';
 import { useActions } from '../api/useActions';
 import { ActionCard } from '../components/ActionCard';
 import { CategoryFilter } from '../components/CategoryFilter';
-import { CreateActionDialog } from '../components/CreateActionDialog';
 import type { Category } from '../types';
 import styles from './ActionsListPage.module.css';
+import { getCurrentUserSummary, getProfileParticipations } from '@/features/profile/api/profileApi';
 
 const PAGE_SIZE = 6;
 
 export function ActionsListPage() {
   const navigate = useNavigate();
+  const { status: authStatus } = useAuth();
   const { actions, loading, error, reload } = useActions();
 
   const [category, setCategory] = useState<Category | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(1);
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
+
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+
+  const [participatedActionIds, setParticipatedActionIds] = useState<Set<string>>(
+    new Set(),
+  );
+
+  const [status, setStatus] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (authStatus !== 'authenticated') return;
+
+    const loadMyActionContext = async () => {
+      try {
+        const [{ userId }, participations] = await Promise.all([
+          getCurrentUserSummary(),
+          getProfileParticipations(),
+        ]);
+
+        setCurrentUserId(userId);
+        setParticipatedActionIds(
+          new Set(
+            participations.map((participation) => participation.actionId),
+          ),
+        );
+      } catch {
+        setCurrentUserId(null);
+        setParticipatedActionIds(new Set());
+      }
+    };
+
+    loadMyActionContext();
+  }, [authStatus]);
 
   const filteredActions = useMemo(() => {
     return actions.filter((action) => {
-      const isVisibleStatus = action.status === 'APPROVED' || action.status === 'COMPLETED';
-      const matchesCategory = category === null || action.category === category;
+      const isMine =
+        action.creator_id === currentUserId ||
+        participatedActionIds.has(action.action_id);
+
+      const matchesCategory =
+        category === null || action.category === category;
+
       const query = searchQuery.trim().toLowerCase();
+
       const matchesQuery =
         query === '' ||
         action.title.toLowerCase().includes(query) ||
         action.description.toLowerCase().includes(query);
-      return isVisibleStatus && matchesCategory && matchesQuery;
+
+      const matchesStatus = status === null || action.status === status;
+      
+      return isMine && matchesCategory && matchesStatus && matchesQuery;
     });
-  }, [actions, category, searchQuery]);
+  }, [
+    actions,
+    category,
+    status,
+    searchQuery,
+    currentUserId,
+    participatedActionIds,
+  ]);
 
   const totalPages = Math.max(1, Math.ceil(filteredActions.length / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages);
@@ -59,9 +109,9 @@ export function ActionsListPage() {
       <header className={styles.header}>
         <div className={styles.headerRow}>
           <h1 className={styles.title}>Citizen Actions</h1>
-          <Button onClick={() => setIsCreateOpen(true)}>
-             New Action
-          </Button>
+            <Button onClick={() => navigate('/actions/new')}>
+              New Action
+            </Button>
         </div>
       </header>
 
@@ -77,7 +127,20 @@ export function ActionsListPage() {
         </div>
 
         <CategoryFilter value={category} onChange={handleCategoryChange} />
-      </section>
+          <select
+            value={status ?? ''}
+            onChange={(event) => {
+              setStatus(event.target.value || null);
+              setPage(1);
+            }}
+          >
+            <option value="">All statuses</option>
+            <option value="PENDING">Pending</option>
+            <option value="APPROVED">Approved</option>
+            <option value="COMPLETED">Completed</option>
+            <option value="CANCELLED">Cancelled</option>
+          </select>
+       </section>
 
       {loading && <div className={styles.statusMessage}>Loading actions...</div>}
 
@@ -127,14 +190,6 @@ export function ActionsListPage() {
             </footer>
           )}
         </>
-      )}
-
-      {isCreateOpen && (
-        <CreateActionDialog
-          location={null}
-          onClose={() => setIsCreateOpen(false)}
-          onCreated={() => setIsCreateOpen(false)}
-        />
       )}
     </div>
   );

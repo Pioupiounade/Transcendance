@@ -1,3 +1,4 @@
+import type { DirectorySort } from './directory';
 import type { OrganizationStatus, RoleOrg } from './types';
 
 export const ORGANIZATION_STATUS_LABELS: Record<OrganizationStatus, string> = {
@@ -7,6 +8,12 @@ export const ORGANIZATION_STATUS_LABELS: Record<OrganizationStatus, string> = {
 };
 
 export const ROLE_ORG_LABELS: Record<RoleOrg, string> = { OWNER: 'Owner', MANAGER: 'Manager', MEMBER: 'Member' };
+
+export const DIRECTORY_SORT_LABELS: Record<DirectorySort, string> = {
+  nearest: 'Nearest',
+  name: 'Name (A–Z)',
+  newest: 'Newest',
+};
 
 export const ORGANIZATIONS_LABELS = {
   list: {
@@ -19,8 +26,15 @@ export const ORGANIZATIONS_LABELS = {
     error: 'The organizations could not be loaded.',
     retry: 'Try again',
     empty: 'No organization yet.',
+    emptyMine: 'You are not a member of any organization yet.',
     noMatch: (query: string) => `Nothing matches “${query}”.`,
+    noneShown: 'No active organization here. Closed and suspended ones are hidden.',
     all: 'All organizations',
+    mine: 'My organizations',
+    scope: { label: 'Which organizations', all: 'All', mine: 'Mine' },
+    sort: 'Sort by',
+    showClosed: (count: number) => `Show closed or suspended (${count})`,
+    more: (count: number) => `Show ${count} more`,
   },
   constellation: {
     you: 'You',
@@ -54,6 +68,125 @@ export const ORGANIZATIONS_LABELS = {
     banned: 'You cannot join this organization.',
     alreadyMember: 'You are already a member of this organization.',
   },
+  manage: {
+    link: 'Manage',
+    eyebrow: 'Manage',
+    back: (title: string) => `Back to ${title}`,
+    backFallback: 'Back to the organization',
+    loading: 'Loading the dashboard…',
+    notFound: 'This organization does not exist or has been removed.',
+    forbidden: 'Only the managers and the owner of this organization can manage it.',
+    error: 'The dashboard could not be loaded.',
+    retry: 'Try again',
+    tabsLabel: 'Organization dashboard',
+    tabs: { requests: 'Requests', members: 'Members', settings: 'Settings' },
+    inactive: 'This organization is not active: requests and members cannot be changed until it is reopened.',
+    anonymous: (id: string) => `Neighbour #${id}`,
+    you: 'You',
+    cancel: 'Cancel',
+    close: 'Close',
+    requests: {
+      pending: 'Pending requests',
+      empty: 'No pending request.',
+      asked: (date: string) => `Asked on ${date}`,
+      approve: 'Approve',
+      approving: 'Approving…',
+      approveOf: (name: string) => `Approve ${name}`,
+      decline: 'Decline',
+      declineOf: (name: string) => `Decline ${name}`,
+      approved: (name: string) => `${name} is now a member.`,
+      declined: (name: string) => `The request of ${name} was declined.`,
+      declinedTitle: 'Declined',
+      declinedLead: 'These requests were declined. This cannot be undone.',
+      declineConfirm: {
+        title: 'Decline this request?',
+        body: (name: string) => `${name} will not join the organization.`,
+        effects: ['This cannot be undone: a declined neighbour cannot ask again.'],
+        confirm: 'Decline request',
+        confirming: 'Declining…',
+      },
+    },
+    members: {
+      active: 'Active members',
+      empty: 'No active member.',
+      manage: 'Manage',
+      manageOf: (name: string) => `Manage ${name}`,
+      bannedTitle: 'Banned',
+      bannedLead: 'Banned neighbours cannot join again. There is no way to lift a ban yet.',
+      dialogTitle: (name: string) => `Manage ${name}`,
+      choices: {
+        promote: { label: 'Promote to manager', hint: 'Can review requests, remove and ban members.' },
+        demote: { label: 'Back to member', hint: 'Loses the manager rights.' },
+        transfer: { label: 'Make owner', hint: 'Gives the organization away. The current owner becomes a manager.' },
+        remove: { label: 'Remove from the organization', hint: 'The neighbour can ask to join again.' },
+        ban: { label: 'Ban', hint: 'Removes the neighbour for good and costs them 15 points.' },
+      },
+      promoted: (name: string) => `${name} is now a manager.`,
+      demoted: (name: string) => `${name} is a member again.`,
+      transferred: (name: string) => `${name} now owns the organization.`,
+      removed: (name: string) => `${name} was removed from the organization.`,
+      banned: (name: string) => `${name} is banned from the organization.`,
+      promoteConfirm: {
+        title: 'Promote to manager?',
+        body: (name: string) => `${name} will be able to review requests, remove and ban members.`,
+        confirm: 'Promote',
+        confirming: 'Promoting…',
+      },
+      demoteConfirm: {
+        title: 'Back to member?',
+        body: (name: string) => `${name} will lose the manager rights.`,
+        confirm: 'Demote',
+        confirming: 'Demoting…',
+      },
+      transferConfirm: {
+        title: 'Give the organization away?',
+        body: (name: string) => `${name} will become the owner.`,
+        effects: ['The current owner becomes a manager.', 'Only the new owner can give it back.'],
+        confirm: 'Make owner',
+        confirming: 'Transferring…',
+      },
+      removeConfirm: {
+        title: 'Remove this member?',
+        body: (name: string) => `${name} will no longer be a member.`,
+        effects: ['The owner loses 5 points.', 'The neighbour can ask to join again.'],
+        confirm: 'Remove member',
+        confirming: 'Removing…',
+      },
+      banConfirm: {
+        title: 'Ban this member?',
+        body: (name: string) => `${name} will be removed and can never join again.`,
+        effects: ['The banned neighbour loses 15 points, the owner 5.', 'This cannot be undone: there is no way to lift a ban yet.'],
+        confirm: 'Ban member',
+        confirming: 'Banning…',
+      },
+    },
+    settings: {
+      details: 'Details',
+      title: 'Name',
+      description: 'Description',
+      address: 'Address',
+      save: 'Save changes',
+      saving: 'Saving…',
+      saved: 'The organization was updated.',
+      status: 'Status',
+      activeLead: 'The organization is active.',
+      closedLead: 'The organization is closed: nobody can join and members cannot be managed.',
+      suspendedLead: 'The organization was suspended by an administrator.',
+      suspendedAdminLead: 'The organization is suspended. As an administrator you can reactivate it.',
+      closeButton: 'Close the organization',
+      reopen: 'Reopen the organization',
+      reopening: 'Reopening…',
+      closed: 'The organization is now closed.',
+      reopened: 'The organization is active again.',
+      closeConfirm: {
+        title: 'Close this organization?',
+        body: (title: string) => `${title} will be marked as closed.`,
+        effects: ['Nobody can join and members cannot be managed while it is closed.', 'You can reopen it later from this page.'],
+        confirm: 'Close organization',
+        confirming: 'Closing…',
+      },
+    },
+  },
   actions: {
     title: 'Actions',
     upcoming: 'Coming up',
@@ -85,6 +218,7 @@ export const ORGANIZATIONS_LABELS = {
   },
   validation: {
     commentRequired: 'Write something first.',
+    required: 'This field is required.',
     tooLong: (max: number) => `Keep it under ${max} characters.`,
   },
   errors: {
@@ -94,6 +228,7 @@ export const ORGANIZATIONS_LABELS = {
     tooManyRequests: 'Please wait 15 seconds before posting another comment.',
     rejected: (reason: string) => `Your comment was not accepted: ${reason}`,
     joinRejected: (reason: string) => `Your request was not accepted: ${reason}`,
+    manageRejected: (reason: string) => `The server refused: ${reason}`,
     network: 'We could not reach the server. Check your connection and try again.',
     unknown: 'Something went wrong on our side. Please try again.',
   },

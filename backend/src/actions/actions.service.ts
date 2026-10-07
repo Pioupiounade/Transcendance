@@ -834,6 +834,26 @@ export class ActionsService {
     }
 
     const comment = await this.prisma.actionComment.create({
+    const isCreator = action.creator_id === userId;
+
+    const participation = await this.prisma.participation.findUnique({
+      where: {
+        action_id_user_id: {
+          action_id: actionId,
+          user_id: userId,
+        },
+      },
+    });
+
+    const isParticipant = participation !== null;
+
+    if (!isCreator && !isParticipant) {
+      throw new ForbiddenException(
+        'Only the creator or a participant can comment on this action',
+      );
+    }
+
+    return this.prisma.actionComment.create({
       data: {
         action_id: actionId,
         user_id: userId,

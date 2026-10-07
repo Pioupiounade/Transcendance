@@ -180,7 +180,7 @@ export class OrganizationmembersService {
             throw new BadRequestException('User is not active');
         }
 
-        return this.prisma.organizationMember.findMany({
+        const memberships = await this.prisma.organizationMember.findMany({
             where: {
                 user_id: userId,
                 status: MemberStatus.ACTIVE,
@@ -189,6 +189,17 @@ export class OrganizationmembersService {
                 organization: true,
             },
         });
+
+        return memberships.map((membership) => ({
+            ...membership,
+            organization_id: membership.organization_id.toString(),
+            user_id: membership.user_id.toString(),
+            organization: {
+                ...membership.organization,
+                organization_id: membership.organization.organization_id.toString(),
+                creator_id: membership.organization.creator_id.toString(),
+            },
+        }));
     }
 
     private async getManagementContext(requesterId: bigint, organizationId: bigint) {

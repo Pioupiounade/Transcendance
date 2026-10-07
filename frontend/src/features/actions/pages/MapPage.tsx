@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Link, useLocation, useSearchParams } from 'react-router';
+import { Link, useLocation, useSearchParams, useNavigate } from 'react-router';
 import { AUTH_ROUTES, useAuth } from '@/features/auth';
 import { pageTitle } from '@/shared/lib/pageTitle';
 import { prefersReducedMotion } from '@/shared/lib/prefersReducedMotion';
-import { Button, ButtonLink, Icon } from '@/shared/ui';
+import { Button, Icon } from '@/shared/ui';
 import { useActions } from '../api/useActions';
 import { ActionCard } from '../components/ActionCard';
 import { CategoryFilter } from '../components/CategoryFilter';
@@ -13,19 +13,19 @@ import { DRAFT_PARAM, formatDraft, parseDraft } from '../draftParam';
 import { ACTIONS_LABELS } from '../labels';
 import { FOCUS_PARAM } from '../mapConfig';
 import { canManageAction } from '../permissions';
-import { OPEN_STATUSES, type ActionRecord, type Category, type LatLng } from '../types';
 import styles from './MapPage.module.css';
+import { getCurrentUserSummary, getProfileParticipations } from '@/features/profile/api/profileApi';
+import type { ActionRecord, Category, LatLng } from '../types';
 
 const text = ACTIONS_LABELS.map;
 const create = ACTIONS_LABELS.create;
 
 type MapPageProps = {
   /** Chemins des pages créer / modifier : `app/` les connaît, la feature non. */
-  createPath: string;
   editPath: (id: string) => string;
 };
 
-export function MapPage({ createPath, editPath }: MapPageProps) {
+export function MapPage({ editPath }: MapPageProps) {
   const { actions, loading, error, reload } = useActions();
   const { status, user } = useAuth();
   const location = useLocation();
@@ -39,6 +39,40 @@ export function MapPage({ createPath, editPath }: MapPageProps) {
   );
   const listRef = useRef<HTMLUListElement>(null);
 
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+
+  const [participatedActionIds, setParticipatedActionIds] = useState<Set<string>>(
+    new Set(),
+  );
+
+  useEffect(() => {
+    if (status !== 'authenticated') {
+      setCurrentUserId(null);
+      setParticipatedActionIds(new Set());
+      return;
+    }
+
+    const loadMapContext = async () => {
+      try {
+        const [{ userId }, participations] = await Promise.all([
+          getCurrentUserSummary(),
+          getProfileParticipations(),
+        ]);
+
+        setCurrentUserId(userId);
+        setParticipatedActionIds(
+          new Set(
+            participations.map((participation) => participation.actionId),
+          ),
+        );
+      } catch {
+        setCurrentUserId(null);
+        setParticipatedActionIds(new Set());
+      }
+    };
+
+    loadMapContext();
+  }, [status]);
   // Le brouillon vit dans l'URL (`?at=lat,lng`) : il survit à un passage par /login et au rechargement.
   const draftParam = searchParams.get(DRAFT_PARAM);
   const draft = useMemo(() => parseDraft(draftParam), [draftParam]);
@@ -60,10 +94,28 @@ export function MapPage({ createPath, editPath }: MapPageProps) {
   // Mémoïsé : la carte se recadre quand cette liste change.
   const visible = useMemo(
     () =>
-      actions.filter(
-        (action) => OPEN_STATUSES.includes(action.status) && (category === null || action.category === category),
-      ),
-    [actions, category],
+      actions.filter((action) => {
+        const isCreatedByMe = action.creator_id === currentUserId;
+
+        const alreadyParticipating =
+          participatedActionIds.has(action.action_id);
+
+        const matchesCategory =
+          category === null || action.category === category;
+
+        return (
+          action.status === 'PENDING' &&
+          !isCreatedByMe &&
+          !alreadyParticipating &&
+          matchesCategory
+        );
+      }),
+    [
+      actions,
+      category,
+      currentUserId,
+      participatedActionIds,
+    ],
   );
 
   // Dérivé pendant le rendu : une sélection qui sort du filtre disparaît sans effet.
@@ -86,6 +138,12 @@ export function MapPage({ createPath, editPath }: MapPageProps) {
 
   const showEmpty = !loading && !error && visible.length === 0;
 
+  const navigate = useNavigate();
+
+  const handleOpenAction = (id: string) => {
+    navigate(`/actions/${id}`);
+  };
+
   return (
     <section className={styles.page}>
       <title>{pageTitle(text.title)}</title>
@@ -93,10 +151,6 @@ export function MapPage({ createPath, editPath }: MapPageProps) {
         <p className={styles.eyebrow}>{text.eyebrow}</p>
         <h1>{text.title}</h1>
         <p className={styles.lead}>{text.lead}</p>
-        <ButtonLink to={createPath} className={styles.cta}>
-          <Icon name="plus" size={16} strokeWidth={2.4} />
-          {create.cta}
-        </ButtonLink>
       </header>
 
       <CategoryFilter value={category} onChange={setCategory} />
@@ -156,7 +210,7 @@ export function MapPage({ createPath, editPath }: MapPageProps) {
                 <ActionCard
                   action={action}
                   selected={action.action_id === selected}
-                  onSelect={setSelectedId}
+                  onSelect={handleOpenAction}
                   editTo={canManageAction(action, user) ? editPath(action.action_id) : undefined}
                 />
               </li>

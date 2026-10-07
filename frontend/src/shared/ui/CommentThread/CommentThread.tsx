@@ -2,11 +2,13 @@ import { useId } from 'react';
 import { formatDateTime } from '@/shared/lib/formatDate';
 import { Avatar } from '../Avatar/Avatar';
 import styles from './CommentThread.module.css';
+import { Link } from 'react-router';
 
 export type ThreadComment = {
   id: string;
   /** Nom affiché de l'auteur (initiales de l'avatar). */
   author: string;
+  authorId?: string;
   avatar?: string | null;
   /** Date ISO. */
   createdAt: string;
@@ -38,7 +40,17 @@ export function CommentThread({ comments, mineLabel, deletion }: CommentThreadPr
             <Avatar name={comment.author} src={comment.avatar} size={36} />
             <div className={styles.body}>
               <p className={styles.meta}>
-                <span className={styles.author}>{comment.author}</span>
+                {comment.authorId ? (
+                  <Link
+                    to={`/profiles/${comment.authorId}`}
+                    className={styles.author}
+                    style={{ textDecoration: 'none', color: 'inherit' }}
+                  >
+                    {comment.author}
+                  </Link>
+                ) : (
+                  <span className={styles.author}>{comment.author}</span>
+                )}
                 {comment.mine && <span className={styles.mineTag}>{mineLabel}</span>}
                 <time dateTime={comment.createdAt} className={styles.date}>
                   {formatDateTime(comment.createdAt)}

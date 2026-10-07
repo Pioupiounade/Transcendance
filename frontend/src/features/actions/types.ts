@@ -82,7 +82,7 @@ export type ActionDetailData = {
   locationName: string;
   scheduledAt: string;
   minParticipants: number;
-  maxParticipants: number;
+    maxParticipants: number | null,
   currentParticipants: number;
   /** URLs des photos (5 max). */
   images: string[];
