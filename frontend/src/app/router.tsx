@@ -10,7 +10,6 @@ import { NotFoundPage } from './pages/NotFoundPage';
 import { ActionsListPage } from '@/features/actions';
 import { ROUTES, editActionPath, mapFocusPath, organizationManagePath, organizationPath } from './routes';
 import { ProfilePage, PublicProfilePage } from '../features/profile';
-import { PlaceholderPage } from './pages/PlaceholderPage';
 
 
 // Routes en données. Une page = une ligne ; les pages de feature sont chargées
