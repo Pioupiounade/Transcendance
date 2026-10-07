@@ -6,10 +6,11 @@ import { PageShell } from './layout/PageShell';
 import { HomePage } from './pages/home/HomePage';
 import { LegalPage } from './pages/LegalPage';
 import { NotFoundPage } from './pages/NotFoundPage';
-import { PlaceholderPage } from './pages/PlaceholderPage';
+
 import { ActionsListPage } from '@/features/actions';
 import { ROUTES, editActionPath, mapFocusPath, organizationManagePath, organizationPath } from './routes';
 import { ProfilePage, PublicProfilePage } from '../features/profile';
+
 
 // Routes en données. Une page = une ligne ; les pages de feature sont chargées
 // paresseusement (un chunk par feature), `PageShell` fournit le Suspense.
@@ -24,6 +25,8 @@ const OrganizationManagePage = lazyPage(() =>
 );
 const AdminLayout = lazyPage(() => import('@/features/admin').then((m) => m.AdminLayout));
 const AdminUsersPage = lazyPage(() => import('@/features/admin').then((m) => m.AdminUsersPage));
+const FriendsPage = lazyPage(() => import('@/features/friends').then((m) => m.FriendsPage));
+
 const router = createBrowserRouter([
   {
     path: ROUTES.home,
@@ -55,6 +58,7 @@ const router = createBrowserRouter([
         element: <RequireAuth />,
         children: [
           { path: ROUTES.profile, element: <ProfilePage /> },
+          { path: ROUTES.friends, element: <FriendsPage /> },
           { path: ROUTES.createAction, element: <CreateActionPage mapPath={ROUTES.map} /> },
           { path: ROUTES.editAction, element: <EditActionPage mapPath={ROUTES.map} /> },
           {
