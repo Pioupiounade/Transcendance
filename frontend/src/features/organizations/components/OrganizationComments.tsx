@@ -1,4 +1,4 @@
-import { useId, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
 import { Link, useLocation } from 'react-router';
 import { AUTH_ROUTES, useAuth } from '@/features/auth';
 import { Button, CommentComposer, CommentThread, type ThreadComment } from '@/shared/ui';
@@ -18,6 +18,15 @@ type OrganizationCommentsProps = {
 };
 
 const text = ORGANIZATIONS_LABELS.comments;
+const COMMENT_COOLDOWN_MS = 15_000;
+
+const cooldownKey = (organizationId: string) => `organization-comment-cooldown:${organizationId}`;
+
+const readCooldownUntil = (organizationId: string): number => {
+  const stored = window.sessionStorage.getItem(cooldownKey(organizationId));
+  const until = stored === null ? 0 : Number(stored);
+  return Number.isFinite(until) && until > Date.now() ? until : 0;
+};
 
 /**
  * Discussion publique d'une organisation (Epic 4, #71) : lecture pour tous, écriture connecté (lien de connexion
@@ -29,7 +38,21 @@ export function OrganizationComments({ organizationId, creatorId }: Organization
   const location = useLocation();
   const { comments, loading, error, reload, prepend, remove } = useOrganizationComments(organizationId);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [isCoolingDown, setIsCoolingDown] = useState(false);
+  const [cooldownUntil, setCooldownUntil] = useState(() => readCooldownUntil(organizationId));
+  const isCoolingDown = cooldownUntil !== 0;
+
+  useEffect(() => {
+    if (cooldownUntil === 0) return;
+
+    const remaining = cooldownUntil - Date.now();
+    if (remaining <= 0) {
+      setCooldownUntil(0);
+      return;
+    }
+
+    const timeout = window.setTimeout(() => setCooldownUntil(0), remaining);
+    return () => window.clearTimeout(timeout);
+  }, [cooldownUntil]);
 
   const myUserId = user?.user_id ?? null;
   const toThreadComment = (comment: OrganizationComment): ThreadComment => ({
@@ -47,9 +70,10 @@ export function OrganizationComments({ organizationId, creatorId }: Organization
   const submit = async (content: string) => {
     const comment = await postOrganizationComment(organizationId, content);
     prepend(comment);
-    
-    setIsCoolingDown(true);
-    setTimeout(() => setIsCoolingDown(false), 15000); // 15 second delay
+
+    const until = Date.now() + COMMENT_COOLDOWN_MS;
+    window.sessionStorage.setItem(cooldownKey(organizationId), String(until));
+    setCooldownUntil(until);
   };
 
   return (
