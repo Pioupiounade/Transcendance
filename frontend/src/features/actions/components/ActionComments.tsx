@@ -104,6 +104,7 @@ export function ActionComments({ actionId, canComment }: ActionCommentsProps) {
           validate={validateComment}
           onSubmit={submit}
           describeError={toCommentErrorMessage}
+          disabled={isCoolingDown}
         />
       )}
       {status === 'anonymous' && (
