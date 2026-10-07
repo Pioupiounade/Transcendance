@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { http } from '@/shared/api';
-import type { PublicProfile, InterestCategory, ProfileActivity, ProfileOrganization, ProfileParticipation, ProfileVisibility, UserProfile } from '../types';
+import type { PublicProfile, InterestCategory, ProfileActivity, ProfileOrganization, ProfileParticipation, ProfileVisibility, UserProfile, FriendshipStatus } from '../types';
 
 type ApiProfile = {
   user_id: string;
@@ -162,53 +162,38 @@ export async function updateProfile(profile: UserProfile, avatar?: File | null):
   return getProfile();
 }
 
-export async function getAllProfiles(): Promise<UserProfile[]> {
-  await new Promise((resolve) => setTimeout(resolve, 200));
-  return [...MOCK_USER_PROFILES];
-}
-
-export async function sendFriendRequest(targetUserId: string): Promise<FriendshipStatus> {
-  await new Promise((resolve) => setTimeout(resolve, 250));
-  const user = MOCK_USER_PROFILES.find((p) => p.id === targetUserId);
-  if (user) {
-    user.friendshipStatus = 'PENDING_SENT';
-  }
+export async function sendFriendRequest(
+  targetUserId: string,
+): Promise<FriendshipStatus> {
+  void targetUserId;
   return 'PENDING_SENT';
 }
 
-export async function acceptFriendRequest(targetUserId: string): Promise<FriendshipStatus> {
-  await new Promise((resolve) => setTimeout(resolve, 250));
-  const user = MOCK_USER_PROFILES.find((p) => p.id === targetUserId);
-  if (user) {
-    user.friendshipStatus = 'ACCEPTED';
-  }
+export async function acceptFriendRequest(
+  targetUserId: string,
+): Promise<FriendshipStatus> {
+  void targetUserId;
   return 'ACCEPTED';
 }
 
-export async function declineFriendRequest(targetUserId: string): Promise<FriendshipStatus> {
-  await new Promise((resolve) => setTimeout(resolve, 250));
-  const user = MOCK_USER_PROFILES.find((p) => p.id === targetUserId);
-  if (user) {
-    user.friendshipStatus = 'NONE';
-  }
+export async function declineFriendRequest(
+  targetUserId: string,
+): Promise<FriendshipStatus> {
+  void targetUserId;
   return 'NONE';
 }
 
-export async function cancelOrRemoveFriend(targetUserId: string): Promise<FriendshipStatus> {
-  await new Promise((resolve) => setTimeout(resolve, 250));
-  const user = MOCK_USER_PROFILES.find((p) => p.id === targetUserId);
-  if (user) {
-    user.friendshipStatus = 'NONE';
-  }
+export async function cancelOrRemoveFriend(
+  targetUserId: string,
+): Promise<FriendshipStatus> {
+  void targetUserId;
   return 'NONE';
 }
 
-export async function unblockUser(targetUserId: string): Promise<FriendshipStatus> {
-  await new Promise((resolve) => setTimeout(resolve, 250));
-  const user = MOCK_USER_PROFILES.find((p) => p.id === targetUserId);
-  if (user) {
-    user.friendshipStatus = 'NONE';
-  }
+export async function unblockUser(
+  targetUserId: string,
+): Promise<FriendshipStatus> {
+  void targetUserId;
   return 'NONE';
 }
 

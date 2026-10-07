@@ -73,8 +73,12 @@ export const ActionDetailsView: React.FC<ActionDetailsViewProps> = ({
     minute: '2-digit',
   }).format(new Date(scheduledAt));
 
-  const availableSpots = Math.max(0, maxParticipants - participantsCount);
+  const hasParticipantLimit = maxParticipants !== null;
 
+  const availableSpots = hasParticipantLimit
+    ? Math.max(0, maxParticipants - participantsCount)
+    : null;  
+  
   const isPending = status === 'pending';
 
   const isCreator =
@@ -83,10 +87,14 @@ export const ActionDetailsView: React.FC<ActionDetailsViewProps> = ({
     currentUserId === organizer.userId;
 
   const canJoin =
+    currentUserId !== null &&
     isPending &&
     !isCreator &&
     !isJoined &&
-    availableSpots > 0;
+    (
+      !hasParticipantLimit ||
+      (availableSpots !== null && availableSpots > 0)
+    );
 
   const canLeave =
     isPending &&
@@ -241,7 +249,7 @@ export const ActionDetailsView: React.FC<ActionDetailsViewProps> = ({
             <strong>Date:</strong> {formattedDate}
           </div>
           <div>
-            <strong>Participants:</strong> {participantsCount} / {maxParticipants} (min {minParticipants})
+            <strong>Participants:</strong> {participantsCount} / {maxParticipants ?? 'Unlimited'} (min {minParticipants})
           </div>
         </div>
 
@@ -253,7 +261,9 @@ export const ActionDetailsView: React.FC<ActionDetailsViewProps> = ({
           <div className="participation-spots">
             <strong>Available spots:</strong>{' '}
             <span className={availableSpots === 0 ? 'text-danger' : ''}>
-              {availableSpots} remaining
+              {availableSpots === null
+                ? 'Unlimited'
+                : `${availableSpots} remaining`}
             </span>
           </div>
 

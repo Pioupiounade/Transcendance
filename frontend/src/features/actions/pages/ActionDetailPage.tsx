@@ -9,7 +9,7 @@ import type { PublicProfile } from '@/features/profile';
 import { fetchOrganization } from '@/features/organizations/api/organizationsApi';
 import type { Organization } from '@/features/organizations/types';
 import { fetchActionParticipants, joinAction, leaveAction } from '@/features/participations/api/participationsApi';
-import { getCurrentUserSummary } from '@/features/profile/api/profileApi';
+import { useAuth } from '@/features/auth';
 
 const toActionDetailData = (
 action: Action,
@@ -32,8 +32,7 @@ currentUserId: string | null): ActionDetailData => ({
   scheduledAt: action.scheduled_at,
 
   minParticipants: action.min_participants ?? 0,
-  maxParticipants: action.max_participants ?? action.participant_count,
-
+  maxParticipants: action.max_participants,
   currentParticipants: action.participant_count,
 
   images: action.imagesList ?? [],
@@ -69,7 +68,9 @@ export const ActionDetailPage: React.FC<ActionDetailPageProps> = ({ editPath }) 
 
   const [participants, setParticipants] = useState<ActionParticipant[]>([]);
 
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const { status, user } = useAuth();
+
+  const currentUserId = status === 'authenticated' ? user?.user_id ?? null : null;
 
   const navigate = useNavigate();
 
@@ -89,9 +90,7 @@ export const ActionDetailPage: React.FC<ActionDetailPageProps> = ({ editPath }) 
 
     const loadAction = async () => {
       try {
-        const currentUser = await getCurrentUserSummary();
-        setCurrentUserId(currentUser.userId);
-
+       
         const actionData = await fetchAction(id, controller.signal);
         setAction(actionData);
 
