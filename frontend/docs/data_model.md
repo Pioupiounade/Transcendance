@@ -50,7 +50,7 @@ dans `features/<x>/api/*` sans toucher aux composants.
 | **Action** | `action_id`, `title`, `description`, `creator_id`, `organization_id?`, `min_participants` (défaut 3), `max_participants?`, `location`, `status`, `category`, `images_before`, `images_after` (ex-`imagesList`, 01/10), `validated_by_user_id?`, `validated_at?`, `scheduled_at`. **L'API ajoute `participant_count` et `remaining_seats`** (liste et détail, depuis #45) | `/actions/*` (7 + 2 commentaires) | `features/actions` → `Action` (§4.7) | ✅ liste, carte, création (`Action` enrichie, `ActionRecord` pour les mutations) · 🟡 détail (mock `ActionDetailData`) |
 | **ActionComment** | `comment_id`, `content` (≤ 1024), `user_id`, `action_id`, dates ; renvoyé avec `user: { user_id, profile: { username, profile_picture } \| null }` | `POST/GET /actions/:id/comments` | `features/actions` → `ActionComment` | ✅ lecture + envoi sur la page d'action (#70, id numérique seulement tant que la fiche est un mock) |
 | **Participation** | (`action_id`, `user_id`), `created_at` | `/participations/*` (4) | `features/participations` (prévu) | ❌ |
-| **Organization** | `organization_id`, `title`, `description`, `organization_status`, `address`, `location`, `creator_id` | `/organizations/*` (8) | `features/organizations` → `Organization` | 🟡 liste + recherche + fiche publique (#61) ; création/édition ❌ |
+| **Organization** | `organization_id`, `title`, `description`, `organization_status`, `address`, `location`, `creator_id` | `/organizations/*` (8) | `features/organizations` → `Organization` | 🟡 annuaire (#61, #63) + fiche publique (#64) + édition par les gestionnaires (#62) ; création ❌ |
 | **OrganizationMember** | (`organization_id`, `user_id`), `status` MemberStatus, `role` RoleOrg, `validated_by_org_man`, `validated_at?` | `/organization-members/*` (14) | `features/organizations` → `OrganizationMember` | 🟡 membres actifs affichés sur la fiche (#61) ; adhésion/gestion ❌ |
 | **OrganizationComment** | `comment_id`, `content` (≤ 1024), `user_id`, `organization_id`, dates ; renvoyé avec `user: { user_id, profile \| null }` | `POST/GET /organizations/:id/comments`, `DELETE /organizations/comments/:commentId` | `features/organizations` → `OrganizationComment` | ✅ lecture, envoi, suppression (auteur ou créateur de l'organisation) sur la fiche (#71) |
 | **FriendRequest** | `friend_request_id`, `requester_id`, `addressee_id`, `status`, `responded_at?` | `/friend-requests/*` (5) | `features/friends` (prévu) | ❌ (`/friends` = placeholder) |
@@ -437,9 +437,9 @@ Backend = `main` au 24/09 (#40 auth/users/profiles/interests/orgs/membres/points
 
 | Feature | Backend | Frontend |
 |---|---|---|
-| Créer / consulter / chercher / modifier une organisation | ✅ 8 routes, rayon sur `GET /organizations` | ❌ |
-| Membres : rejoindre, approuver, refuser, retirer, bannir, quitter, rôles, transfert | ✅ 14 routes, mais **aucun `OWNER` créé à la création** → gestion cassée tant que le backend ne le corrige pas | ❌ |
-| Actions portées par une organisation | ✅ `organization_id` à la création (MANAGER/OWNER) | ❌ (champ non proposé) |
+| Créer / consulter / chercher / modifier une organisation | ✅ 8 routes, rayon sur `GET /organizations` | 🟡 annuaire (#61, #63 : recherche, tri, « All / Mine », fermées masquées, pagination, le tout côté client sur `GET /organizations`) et fiche publique (#64 : « About », lieu sur mini-carte, actions, membres, discussion #71) ; ❌ créer / modifier |
+| Membres : rejoindre, approuver, refuser, retirer, bannir, quitter, rôles, transfert | ✅ 14 routes, mais **aucun `OWNER` créé à la création** → gestion cassée tant que le backend ne le corrige pas ; un demandeur ne peut **pas lire** sa demande | ✅ #64 : « Join » sur la fiche (anonyme → `/login`), badge de mon rôle ; l'état d'une demande n'apparaît qu'en recliquant (409 traduit). ✅ #62 : `/organizations/:id/manage` (demandes, membres, rôles, transfert, réglages, fermer / rouvrir) ; ❌ quitter, ajouter directement, débannir (pas de route) |
+| Actions portées par une organisation | ✅ `organization_id` à la création (MANAGER/OWNER) ; `GET /actions?organization_id=` (404 si vide) | 🟡 #64 : à venir + terminées sur la fiche, filtrées côté client sur `GET /actions` (pas de 404 en console) ; ❌ champ non proposé à la création |
 
 ### Transverse (sujet ft_transcendence)
 

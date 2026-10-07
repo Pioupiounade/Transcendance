@@ -4,6 +4,8 @@
   margin: 0 auto;
   padding: 30px 38px 28px;
   display: grid;
+  /* `minmax(0, …)` : un texte sans espace (titre, description) ne peut pas élargir la page. */
+  grid-template-columns: minmax(0, 1fr);
   gap: 22px;
 }
 
@@ -50,8 +52,12 @@
 
 .headText {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 6px;
   min-width: 0;
+}
+.headText h1 {
+  overflow-wrap: anywhere;
 }
 
 .eyebrow {
@@ -75,27 +81,52 @@
 }
 
 .address {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   gap: 6px;
   color: var(--muted);
   font-size: 14px;
+  overflow-wrap: anywhere;
+}
+.address > svg {
+  flex: none;
 }
 
-/* À gauche « About » puis la discussion, à droite les membres sur toute la hauteur. La 2e rangée en `1fr`
-   absorbe la hauteur des membres : « About » garde sa hauteur propre, sans vide avant la discussion. */
+/* Ma relation à l'organisation (rôle ou « Join »), poussée à droite de l'en-tête. */
+.membership {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-left: auto;
+}
+
+/* À gauche « About », les actions puis la discussion ; à droite le lieu puis les membres. La dernière rangée en
+   `1fr` absorbe la hauteur des membres : les panneaux de gauche gardent leur hauteur propre. */
 .body {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 340px;
-  grid-template-rows: auto 1fr;
+  grid-template-rows: auto auto 1fr;
   grid-template-areas:
-    'about members'
+    'about location'
+    'actions members'
     'discussion members';
   gap: 22px;
   align-items: start;
 }
 .about {
   grid-area: about;
+  /* Même hauteur que le panneau du lieu, son voisin de rangée. */
+  align-self: stretch;
+  align-content: start;
+}
+.location {
+  grid-area: location;
+}
+.actions {
+  grid-area: actions;
+  min-width: 0;
 }
 .membersPanel {
   grid-area: members;
@@ -105,9 +136,18 @@
   min-width: 0;
 }
 
+/* Mini-carte : la hauteur de `PlaceMap` se règle par ces variables (comme la grande carte). */
+.placeMap {
+  --map-min-height: 190px;
+  --map-min-height-large: 190px;
+  --map-min-height-mobile: 190px;
+}
+
 .panel {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 12px;
+  min-width: 0;
   padding: 24px;
   border: 1px solid var(--line);
   border-radius: var(--r-panel);
@@ -136,6 +176,8 @@
   font-size: 15px;
   line-height: 1.6;
   white-space: pre-line;
+  /* Un mot plus long que le panneau (texte sans espace, URL) est coupé au lieu de sortir du cadre. */
+  overflow-wrap: anywhere;
 }
 
 .since,
@@ -169,6 +211,18 @@
   white-space: nowrap;
 }
 
+.you {
+  margin-left: 8px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--trust-soft);
+  color: var(--brand);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
 .role {
   font-size: 12px;
   color: var(--muted);
@@ -186,7 +240,15 @@
     gap: 18px;
   }
   .head {
+    flex-wrap: wrap;
     gap: 14px;
+  }
+  .headText {
+    flex: 1;
+  }
+  .membership {
+    flex-basis: 100%;
+    margin-left: 0;
   }
   .icon {
     width: 56px;
@@ -194,10 +256,12 @@
     border-radius: 18px;
   }
   .body {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     grid-template-rows: none;
     grid-template-areas:
       'about'
+      'location'
+      'actions'
       'members'
       'discussion';
   }

@@ -202,15 +202,48 @@ features/       1 domaine métier = 1 module ; interface = index.ts
   profile/      coéquipier (#38 en cours, mock) ; ajout #65 : api/myProfile.ts (`GET /profiles/me`, 404 → null,
                 useMyProfile), seul fichier à nous dans ce dossier.
   participations/ (existant : useMyParticipations, type MyParticipation)
-  organizations/  #61 : OrganizationsPage `/organizations` (liste + recherche `GET /organizations/search`, debounce
-                300 ms) et OrganizationPage `/organizations/:id` (fiche publique + membres actifs) ; enums
-                OrganizationStatus / RoleOrg / MemberStatus et libellés ; chemins reçus en props (`organizationPath`,
-                `listPath`). Adhésion, création, gestion des membres : tickets suivants.
+  organizations/  #61 : OrganizationsPage `/organizations` (liste) et OrganizationPage `/organizations/:id` (fiche
+                publique + membres actifs) ; enums OrganizationStatus / RoleOrg / MemberStatus et libellés ; chemins
+                reçus en props (`organizationPath`, `listPath`).
+                Annuaire (#63) : `GET /organizations` renvoie tout, le reste est côté client (directory.ts, pur) :
+                recherche sans accents ni casse sur titre + adresse + description (chaque mot doit s'y trouver ;
+                `GET /organizations/search`, 15 max et titre seul, n'est plus appelée), tri Nearest (défaut, depuis
+                `profiles/me.location` sinon DEFAULT_CENTER) / Name / Newest, « All / Mine » pour un connecté
+                (api/useMyMemberships = `GET /organization-members/user/:id/organizations`, mon rôle par
+                organisation), fermées et suspendues masquées sauf case « Show closed or suspended (n) », 12 cartes
+                puis « Show n more ». La vue vit dans l'URL (`?q=&sort=&scope=&closed=1`, défauts omis, `replace`) :
+                le retour du navigateur depuis une fiche retrouve la liste. DirectoryToolbar = barre sans état ;
+                OrganizationCard porte la distance et mon rôle ; la constellation reçoit la liste filtrée.
                 Constellation (25/09/2026) : OrganizationConstellation (SVG, `aria-hidden`, la liste reste l'accès
                 clavier) = graphe orienté par la force, utilisateur au centre (`profiles/me` si connecté, sinon nœud
                 générique et DEFAULT_CENTER), fils dont la longueur suit le rang de distance, fils secondaires entre
                 voisines < 1,5 km, clic = fiche, glisser = épingler. forceSimulation.ts (pur, sans d3),
                 hooks/useForceLayout (rAF, drag par pointer capture, reduced-motion = disposition immédiate).
+                Discussion (#71, Epic 4) : OrganizationComments `{ organizationId, creatorId }` sur la fiche, sous
+                « About » (`GET`/`POST /organizations/:id/comments`, body `{ comment }` ; `DELETE
+                /organizations/comments/:id` par l'auteur ou le créateur, confirmé par DeleteCommentDialog) ;
+                api/useOrganizationComments (`prepend`, `remove`), validation.ts, errors.ts.
+                Fiche complète (#64) : en-tête avec MembershipStatus (mon rôle si je suis dans la liste publique des
+                membres actifs, sinon « Join » = `POST /organization-members/organization/:id/join` ; anonyme →
+                `/login` avec `state.from` ; pas de « Join » sur une organisation inactive). Le backend ne laisse pas
+                un demandeur lire sa demande : après rechargement le bouton revient, et `toJoinFailure` traduit le
+                409 / 403 du second clic (en attente, refusée, déjà membre, banni). OrganizationActions = actions à
+                venir (lien vers la carte, `upcomingActionPath` fourni par `app/`) puis terminées (sans lien tant
+                que la fiche d'action est un mock, #60), filtrées côté client sur `useActions` : la route filtrée
+                répond 404 quand elle est vide, donc une erreur console. Panneau « Where » = `PlaceMap` de la
+                feature actions (mini-carte à un pin, hauteur par `--map-min-height*`). Pas de « Leave » (décision
+                du 02/10/2026).
+                Gestion (#62) : OrganizationManagePage `/organizations/:id/manage` (sous `RequireAuth`), ouverte par
+                le bouton « Manage » de la fiche pour les MANAGER, OWNER et ADMIN. Le droit d'entrer se lit dans la
+                liste publique des membres avant d'appeler `GET …/memberships` (403 = erreur console). Onglets
+                (ManageTabs, motif ARIA, `?tab=`) : Requests (approuver, refuser avec confirmation ; refusées en
+                lecture seule), Members (MemberActionDialog = choix d'une action, puis ConfirmDialog : promouvoir,
+                rétrograder, céder la propriété, retirer, bannir ; bannis en lecture seule), Settings (nom,
+                description, adresse ; fermer / rouvrir). permissions.ts = miroir des règles du backend (jamais
+                sur soi ni sur le owner, un manager n'agit que sur des MEMBER, rôles réservés au owner / ADMIN).
+                Les réponses du backend sont rejouées localement (pas de rechargement de liste). Organisation
+                inactive : demandes et membres en lecture seule. Manques backend : pas de débannissement, pas
+                d'OWNER à la création d'une organisation, pas d'« ajouter un membre » côté UI (non demandé).
   admin/          Epic 8, réservé au rôle ADMIN. #22 : AdminLayout (route parente `/admin/*`, pose le thème sombre
                 `data-theme="admin"` sur <html> le temps de la visite) et AdminUsersPage `/admin/users` (tous les
                 comptes via `GET /users`, recherche par e-mail et filtre par statut côté client, 20 par 20,

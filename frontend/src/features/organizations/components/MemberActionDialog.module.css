@@ -1,0 +1,41 @@
+.choices {
+  display: grid;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.choice {
+  display: grid;
+  gap: 2px;
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-field);
+  background: var(--ground);
+  text-align: left;
+  transition:
+    border-color var(--t-fast),
+    background-color var(--t-fast);
+}
+.choice:hover {
+  border-color: var(--brand);
+  background: var(--card-selected-bg);
+}
+
+.label {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.hint {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.danger .label {
+  color: var(--danger);
+}
+.danger:hover {
+  border-color: var(--danger);
+  background: var(--danger-soft);
+}

@@ -20,6 +20,9 @@ const EditActionPage = lazyPage(() => import('@/features/actions').then((m) => m
 const ActionDetailPage = lazyPage(() => import('@/features/actions').then((m) => m.ActionDetailPage));
 const OrganizationsPage = lazyPage(() => import('@/features/organizations').then((m) => m.OrganizationsPage));
 const OrganizationPage = lazyPage(() => import('@/features/organizations').then((m) => m.OrganizationPage));
+const OrganizationManagePage = lazyPage(() =>
+  import('@/features/organizations').then((m) => m.OrganizationManagePage),
+);
 const AdminLayout = lazyPage(() => import('@/features/admin').then((m) => m.AdminLayout));
 const AdminUsersPage = lazyPage(() => import('@/features/admin').then((m) => m.AdminUsersPage));
 const FriendsPage = lazyPage(() => import('@/features/friends').then((m) => m.FriendsPage));
@@ -43,6 +46,7 @@ const router = createBrowserRouter([
           />
         ),
       },
+      { path: ROUTES.friends, element: <PlaceholderPage title={APP_LABELS.nav.friends} /> },
       { path: ROUTES.login, element: <LoginPage /> },
       { path: ROUTES.register, element: <RegisterPage termsPath={ROUTES.terms} privacyPath={ROUTES.privacy} /> },
       { path: ROUTES.terms, element: <LegalPage title={APP_LABELS.pages.terms.title} /> },
@@ -57,6 +61,10 @@ const router = createBrowserRouter([
           { path: ROUTES.friends, element: <FriendsPage /> },
           { path: ROUTES.createAction, element: <CreateActionPage mapPath={ROUTES.map} /> },
           { path: ROUTES.editAction, element: <EditActionPage mapPath={ROUTES.map} /> },
+          {
+            path: ROUTES.organizationManage,
+            element: <OrganizationManagePage organizationPath={organizationPath} />,
+          },
           {
             // Espace d'administration : un non-admin voit la page 404, l'espace n'est pas annoncé.
             element: <RequireRole role={ROLE_APP.ADMIN} denied={<NotFoundPage />} />,

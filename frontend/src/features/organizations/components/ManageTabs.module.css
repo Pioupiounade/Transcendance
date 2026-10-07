@@ -1,0 +1,44 @@
+.tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--line);
+  overflow-x: auto;
+}
+
+.tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px 11px;
+  border-bottom: 3px solid transparent;
+  color: var(--muted);
+  font-size: 15px;
+  font-weight: 700;
+  white-space: nowrap;
+  transition:
+    color var(--t-fast),
+    border-color var(--t-fast);
+}
+.tab:hover {
+  color: var(--brand);
+}
+.tab[aria-selected='true'] {
+  color: var(--brand);
+  border-color: var(--brand);
+}
+.tab:focus-visible {
+  outline-offset: -3px;
+}
+
+/* Compteur : demandes en attente à traiter. */
+.count {
+  min-width: 22px;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: var(--terra);
+  color: var(--on-brand);
+  font-size: 12px;
+  line-height: 20px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}

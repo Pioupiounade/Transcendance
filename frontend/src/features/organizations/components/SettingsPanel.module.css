@@ -1,0 +1,34 @@
+.form {
+  display: grid;
+  gap: 14px;
+  max-width: 640px;
+}
+
+.submit {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.statusRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 24px;
+}
+
+/* Fermer : bouton secondaire dont le texte et le survol annoncent le danger. */
+.danger {
+  color: var(--danger);
+}
+.danger:hover {
+  border-color: var(--danger);
+  background: var(--danger-soft);
+}
+
+@media (max-width: 760px) {
+  .submit > *,
+  .statusRow > button {
+    width: 100%;
+  }
+}
