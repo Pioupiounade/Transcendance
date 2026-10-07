@@ -40,6 +40,7 @@ export function SettingsPanel({ organization, isAdmin, onChanged, onConfirm }: S
   const [statusError, setStatusError] = useState<string | null>(null);
 
   const status = organization.organization_status;
+  const inactive = status !== ORGANIZATION_STATUS.ACTIVE;
   const suspended = status === ORGANIZATION_STATUS.SUSPENDED;
 
   const close = () =>
@@ -75,6 +76,7 @@ export function SettingsPanel({ organization, isAdmin, onChanged, onConfirm }: S
             type="text"
             label={text.title}
             autoComplete="off"
+            disabled={inactive}
             value={form.values.title}
             onChange={(event) => form.setValue('title', event.target.value)}
             onBlur={() => form.touch('title')}
@@ -85,6 +87,7 @@ export function SettingsPanel({ organization, isAdmin, onChanged, onConfirm }: S
             label={text.description}
             rows={4}
             maxLength={DESCRIPTION_MAX_LENGTH}
+            disabled={inactive}
             help={`${form.values.description.length}/${DESCRIPTION_MAX_LENGTH}`}
             value={form.values.description}
             onChange={(event) => form.setValue('description', event.target.value)}
@@ -96,6 +99,7 @@ export function SettingsPanel({ organization, isAdmin, onChanged, onConfirm }: S
             type="text"
             label={text.address}
             autoComplete="off"
+            disabled={inactive}
             value={form.values.address}
             onChange={(event) => form.setValue('address', event.target.value)}
             onBlur={() => form.touch('address')}
@@ -107,7 +111,7 @@ export function SettingsPanel({ organization, isAdmin, onChanged, onConfirm }: S
             </p>
           )}
           <div className={own.submit}>
-            <Button type="submit" loading={form.submitting} loadingLabel={text.saving}>
+            <Button type="submit" disabled={inactive} loading={form.submitting} loadingLabel={text.saving}>
               {text.save}
             </Button>
           </div>
