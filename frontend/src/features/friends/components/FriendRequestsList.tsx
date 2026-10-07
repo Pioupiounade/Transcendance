@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router';
 import { Avatar } from '@/shared/ui/Avatar/Avatar';
-import type { FriendRequestItem } from '../types';
+import type { FriendRequestItem, FriendRequestUser } from '../types';
 
 interface FriendRequestsListProps {
   receivedRequests: FriendRequestItem[];
@@ -10,25 +10,11 @@ interface FriendRequestsListProps {
   onReject: (requestId: string) => void;
 }
 
-function resolveUser(req: any, type: 'received' | 'sent') {
+function resolveUser(req: FriendRequestItem, type: 'received' | 'sent') {
   // En recibidas el otro usuario es requester; en enviadas es addressee
-  const target = type === 'received' 
-    ? (req.requester || req.sender || req.user || req)
-    : (req.addressee || req.recipient || req.user || req);
-
-  const profile = target.profile || target;
-
-  const username =
-    profile.username ||
-    target.username ||
-    req.username ||
-    (type === 'received' ? `user_${req.requester_id}` : `user_${req.addressee_id}`);
-
-  const avatar =
-    profile.profile_picture ||
-    profile.profilePicture ||
-    target.profile_picture ||
-    undefined;
+  const target: FriendRequestUser | undefined = type === 'received' ? req.requester : req.addressee;
+  const username = target?.username ?? `user_${target?.user_id ?? 'unknown'}`;
+  const avatar = target?.profile_picture ?? undefined;
 
   return { username, avatar };
 }
@@ -50,9 +36,9 @@ export const FriendRequestsList: React.FC<FriendRequestsListProps> = ({
           <p style={{ color: 'var(--muted, #64748b)' }}>No incoming friend requests.</p>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {receivedRequests.map((req: any) => {
+            {receivedRequests.map((req) => {
               const { username, avatar } = resolveUser(req, 'received');
-              const reqId = String(req.friend_request_id || req.id);
+              const reqId = req.friend_request_id;
 
               return (
                 <div
@@ -78,7 +64,7 @@ export const FriendRequestsList: React.FC<FriendRequestsListProps> = ({
                         @{username}
                       </Link>
                       <span style={{ fontSize: '0.8rem', color: 'var(--muted, #64748b)' }}>
-                        Received {new Date(req.created_at || Date.now()).toLocaleDateString()}
+                        Received {req.created_at ? new Date(req.created_at).toLocaleDateString() : 'Date unavailable'}
                       </span>
                     </div>
                   </div>
@@ -130,9 +116,9 @@ export const FriendRequestsList: React.FC<FriendRequestsListProps> = ({
           <p style={{ color: 'var(--muted, #64748b)' }}>No pending sent requests.</p>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {sentRequests.map((req: any) => {
+            {sentRequests.map((req) => {
               const { username, avatar } = resolveUser(req, 'sent');
-              const reqId = String(req.friend_request_id || req.id);
+              const reqId = req.friend_request_id;
 
               return (
                 <div
@@ -158,7 +144,7 @@ export const FriendRequestsList: React.FC<FriendRequestsListProps> = ({
                         @{username}
                       </Link>
                       <span style={{ fontSize: '0.8rem', color: 'var(--muted, #64748b)' }}>
-                        Sent {new Date(req.created_at || Date.now()).toLocaleDateString()}
+                        Sent {req.created_at ? new Date(req.created_at).toLocaleDateString() : 'Date unavailable'}
                       </span>
                     </div>
                   </div>

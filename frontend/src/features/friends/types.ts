@@ -6,15 +6,16 @@ export interface FriendUserSummary {
   created_at: string;
 }
 
+export interface FriendRequestUser {
+  user_id: string;
+  username: string | null;
+  profile_picture: string | null;
+}
+
 export interface FriendRequestItem {
   friend_request_id: string;
-  requester_id: string;
-  addressee_id: string;
   status: 'PENDING' | 'ACCEPTED' | 'REJECTED';
   created_at: string;
-  user: {
-    user_id: string;
-    username: string | null;
-    profile_picture: string | null;
-  };
+  requester?: FriendRequestUser;
+  addressee?: FriendRequestUser;
 }
