@@ -23,6 +23,58 @@ export const fetchOrganizationMembers = (id: string, signal?: AbortSignal) =>
 export const joinOrganization = (id: string) =>
   http.post<Membership>(`/organization-members/organization/${id}/join`);
 
+// --- Gestion (#62). Routes réservées aux gestionnaires (membre actif MANAGER ou OWNER) et aux ADMIN ; celles de
+// rôles (promote, demote, transfer) au OWNER et aux ADMIN. Toutes refusent une organisation inactive (400).
+
+const memberPath = (organizationId: string, userId: string) =>
+  `/organization-members/organization/${organizationId}/member/${userId}`;
+
+/** Toutes les adhésions, tous statuts (JWT, gestionnaire ou ADMIN ; 403 sinon). */
+export const fetchMemberships = (organizationId: string, signal?: AbortSignal) =>
+  http.get<OrganizationMember[]>(`/organization-members/organization/${organizationId}/memberships`, { signal });
+
+/** Accepte une demande `PENDING` : le membre devient `ACTIVE` (+5 points au owner). */
+export const approveMembership = (organizationId: string, userId: string) =>
+  http.patch<Membership>(`${memberPath(organizationId, userId)}/approve`);
+
+/** Refuse une demande `PENDING` (`REJECTED`) : définitif, le demandeur ne peut pas redemander. */
+export const denyMembership = (organizationId: string, userId: string) =>
+  http.patch<Membership>(`${memberPath(organizationId, userId)}/deny`);
+
+/** Retire un membre actif (adhésion supprimée, −5 points au owner). Un manager ne retire que des `MEMBER`. */
+export const removeMember = (organizationId: string, userId: string) =>
+  http.delete<Membership>(`${memberPath(organizationId, userId)}/remove`);
+
+/** Bannit un membre actif (`BANNED`, −15 points pour lui, −5 pour le owner). Aucune route pour débannir. */
+export const banMember = (organizationId: string, userId: string) =>
+  http.patch<Membership>(`${memberPath(organizationId, userId)}/ban`);
+
+/** `MEMBER` → `MANAGER`. */
+export const promoteMember = (organizationId: string, userId: string) =>
+  http.patch<Membership>(`${memberPath(organizationId, userId)}/promote`);
+
+/** `MANAGER` → `MEMBER`. */
+export const demoteMember = (organizationId: string, userId: string) =>
+  http.patch<Membership>(`${memberPath(organizationId, userId)}/demote`);
+
+/** Cède la propriété : renvoie l'ancien owner (devenu `MANAGER`) et le nouveau. */
+export const transferOwnership = (organizationId: string, newOwnerId: string) =>
+  http.patch<[Membership, Membership]>(
+    `/organization-members/organization/${organizationId}/transfer-ownership/${newOwnerId}`,
+  );
+
+/** Champs modifiables d'une organisation (`UpdateOrganizationDto`, tous facultatifs). */
+export type UpdateOrganizationInput = { title?: string; description?: string; address?: string };
+
+export const updateOrganization = (id: string, input: UpdateOrganizationInput) =>
+  http.patch<Organization>(`/organizations/${id}`, input);
+
+/** Ferme une organisation active (`CLOSED`). */
+export const closeOrganization = (id: string) => http.patch<Organization>(`/organizations/${id}/deactivate`);
+
+/** Rouvre une organisation `CLOSED` ; une organisation `SUSPENDED` ne peut l'être que par un ADMIN. */
+export const reopenOrganization = (id: string) => http.patch<Organization>(`/organizations/${id}/reactivate`);
+
 /** Commentaires d'une organisation, du plus récent au plus ancien (route publique). 404 → organisation inconnue. */
 export const fetchOrganizationComments = (organizationId: string, signal?: AbortSignal) =>
   http.get<OrganizationComment[]>(`/organizations/${organizationId}/comments`, { signal });

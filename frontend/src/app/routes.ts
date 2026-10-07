@@ -17,6 +17,7 @@ export const ROUTES = {
   editAction: '/actions/:id/edit',
   organizations: '/organizations',
   organization: '/organizations/:id',
+  organizationManage: '/organizations/:id/manage',
   admin: '/admin',
   adminUsers: '/admin/users',
   ...AUTH_ROUTES,
@@ -25,6 +26,8 @@ export const ROUTES = {
 export const editActionPath = (id: string): string => ROUTES.editAction.replace(':id', id);
 
 export const organizationPath = (id: string): string => ROUTES.organization.replace(':id', id);
+
+export const organizationManagePath = (id: string): string => ROUTES.organizationManage.replace(':id', id);
 
 /** La carte, centrée sur une action ouverte (`MapPage` lit `?focus=`). */
 export const mapFocusPath = (actionId: string): string => `${ROUTES.map}?${FOCUS_PARAM}=${actionId}`;

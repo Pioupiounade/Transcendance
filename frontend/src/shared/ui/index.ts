@@ -8,6 +8,8 @@ export { CommentComposer } from './CommentThread/CommentComposer';
 export type { ThreadComment } from './CommentThread/CommentThread';
 export { Chip } from './Chip/Chip';
 export { Dialog } from './Dialog/Dialog';
+export { ConfirmDialog } from './ConfirmDialog/ConfirmDialog';
+export type { Confirmation } from './ConfirmDialog/ConfirmDialog';
 export { FloatingField } from './FloatingField/FloatingField';
 export { FloatingTextarea } from './FloatingField/FloatingTextarea';
 export { Icon } from './Icon/Icon';

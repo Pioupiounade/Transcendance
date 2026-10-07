@@ -3,6 +3,7 @@
   margin: 0 auto;
   padding: 30px 38px 28px;
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 20px;
 }
 
@@ -73,6 +74,9 @@
   grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
   gap: 14px;
 }
+.grid > li {
+  min-width: 0;
+}
 
 @media (max-width: 1100px) {
   .page {
@@ -93,6 +97,6 @@
     width: 100%;
   }
   .grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 }
