@@ -36,7 +36,8 @@
   display: grid;
   /* `minmax(0, …)` : un titre ou une description sans espace ne peut pas élargir la carte. */
   grid-template-columns: minmax(0, 1fr);
-  align-content: start;
+  /* La description prend la hauteur libre : le pied reste en bas quand les cartes d'une rangée diffèrent. */
+  grid-template-rows: auto auto 1fr auto;
   gap: 5px;
   min-width: 0;
 }
@@ -88,4 +89,35 @@
   font-size: 13px;
   color: var(--muted);
   overflow-wrap: anywhere;
+  align-self: start;
+}
+
+/* Pied : distance à gauche, mon rôle à droite. */
+.foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 10px;
+  margin-top: 5px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.distance {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.role {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: var(--r-tag);
+  background: var(--trust-soft);
+  color: var(--trust);
 }

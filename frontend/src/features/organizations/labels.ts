@@ -1,3 +1,4 @@
+import type { DirectorySort } from './directory';
 import type { OrganizationStatus, RoleOrg } from './types';
 
 export const ORGANIZATION_STATUS_LABELS: Record<OrganizationStatus, string> = {
@@ -7,6 +8,12 @@ export const ORGANIZATION_STATUS_LABELS: Record<OrganizationStatus, string> = {
 };
 
 export const ROLE_ORG_LABELS: Record<RoleOrg, string> = { OWNER: 'Owner', MANAGER: 'Manager', MEMBER: 'Member' };
+
+export const DIRECTORY_SORT_LABELS: Record<DirectorySort, string> = {
+  nearest: 'Nearest',
+  name: 'Name (A–Z)',
+  newest: 'Newest',
+};
 
 export const ORGANIZATIONS_LABELS = {
   list: {
@@ -19,8 +26,15 @@ export const ORGANIZATIONS_LABELS = {
     error: 'The organizations could not be loaded.',
     retry: 'Try again',
     empty: 'No organization yet.',
+    emptyMine: 'You are not a member of any organization yet.',
     noMatch: (query: string) => `Nothing matches “${query}”.`,
+    noneShown: 'No active organization here. Closed and suspended ones are hidden.',
     all: 'All organizations',
+    mine: 'My organizations',
+    scope: { label: 'Which organizations', all: 'All', mine: 'Mine' },
+    sort: 'Sort by',
+    showClosed: (count: number) => `Show closed or suspended (${count})`,
+    more: (count: number) => `Show ${count} more`,
   },
   constellation: {
     you: 'You',
