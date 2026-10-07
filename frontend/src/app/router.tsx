@@ -47,7 +47,6 @@ const router = createBrowserRouter([
           />
         ),
       },
-      { path: ROUTES.friends, element: <PlaceholderPage title={APP_LABELS.nav.friends} /> },
       { path: ROUTES.login, element: <LoginPage /> },
       { path: ROUTES.register, element: <RegisterPage termsPath={ROUTES.terms} privacyPath={ROUTES.privacy} /> },
       { path: ROUTES.terms, element: <LegalPage title={APP_LABELS.pages.terms.title} /> },
