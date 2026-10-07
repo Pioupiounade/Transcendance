@@ -677,6 +677,8 @@ export class ActionsService {
       },
     });
 
+    await this.notifyActionStatus(updatedAction, 'cancelled');
+
     return {
       ...updatedAction,
       action_id: updatedAction.action_id.toString(),
@@ -808,6 +810,8 @@ export class ActionsService {
         return completedAction;
       },
     );
+
+    await this.notifyActionStatus(updatedAction, 'completed');
 
     return {
       ...updatedAction,
@@ -976,6 +980,31 @@ export class ActionsService {
       },
     });
     return this.serializeAction(updatedAction);
+  }
+
+  private async notifyActionStatus(
+    action: { action_id: bigint; creator_id: bigint; title: string },
+    status: string,
+  ) {
+    try {
+      const participations = await this.prisma.participation.findMany({
+        where: { action_id: action.action_id },
+        select: { user_id: true },
+      });
+      const recipientIds = new Set<bigint>([action.creator_id, ...participations.map((item) => item.user_id)]);
+
+      for (const recipientId of recipientIds) {
+        await this.notificationsService.notifyUser({
+          userId: recipientId,
+          type: NotificationType.ACTION_STATUS_CHANGED,
+          title: 'Action status changed',
+          message: `The action "${action.title}" is now ${status}.`,
+          link: `/actions/${action.action_id.toString()}`,
+        });
+      }
+    } catch {
+      return;
+    }
   }
 
   // Helper pour sérialiser les BigInt en string (pour éviter l'erreur 500 JSON)

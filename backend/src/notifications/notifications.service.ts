@@ -7,7 +7,7 @@ export class NotificationsService {
   constructor(private prisma: PrismaService) {}
 
   async findMine(userId: string) {
-    return this.prisma.notification.findMany({
+    const notifications = await this.prisma.notification.findMany({
       where: {
         user_id: BigInt(userId),
       },
@@ -15,6 +15,7 @@ export class NotificationsService {
         created_at: 'desc',
       },
     });
+    return notifications.map((notification) => this.serializeNotification(notification));
   }
 
   async markAsRead(notificationId: string, userId: string) {
@@ -29,7 +30,7 @@ export class NotificationsService {
       throw new NotFoundException('Notification not found');
     }
 
-    return this.prisma.notification.update({
+    const updated = await this.prisma.notification.update({
       where: {
         notification_id: BigInt(notificationId),
       },
@@ -37,6 +38,7 @@ export class NotificationsService {
         read: true,
       },
     });
+    return this.serializeNotification(updated);
   }
 
   async markAllAsRead(userId: string) {
@@ -58,20 +60,21 @@ export class NotificationsService {
   message: string;
   link?: string;
 }) {
-  const preference = await this.prisma.notificationPreference.findUnique({
-    where: {
-      user_id_type: {
-        user_id: params.userId,
-        type: params.type,
+  try {
+    const preference = await this.prisma.notificationPreference.findUnique({
+      where: {
+        user_id_type: {
+          user_id: params.userId,
+          type: params.type,
+        },
       },
-    },
-  });
+    });
 
-  if (preference && !preference.enabled) {
-    return null;
-  }
+    if (preference && !preference.enabled) {
+      return null;
+    }
 
-  return this.prisma.notification.create({
+    const notification = await this.prisma.notification.create({
     data: {
       user_id: params.userId,
       type: params.type,
@@ -79,7 +82,11 @@ export class NotificationsService {
       message: params.message,
       link: params.link,
     },
-  });
+    });
+    return this.serializeNotification(notification);
+  } catch {
+    return null;
+  }
 }
     async getPreferences(userId: string) {
   const preferences =
@@ -89,7 +96,10 @@ export class NotificationsService {
       },
     });
 
-  return preferences;
+  return preferences.map((preference) => ({
+    ...preference,
+    user_id: preference.user_id.toString(),
+  }));
 }
 
 async updatePreference(
@@ -97,7 +107,7 @@ async updatePreference(
   type: NotificationType,
   enabled: boolean,
 ) {
-  return this.prisma.notificationPreference.upsert({
+  const preference = await this.prisma.notificationPreference.upsert({
     where: {
       user_id_type: {
         user_id: BigInt(userId),
@@ -113,6 +123,27 @@ async updatePreference(
       enabled,
     },
   });
+  return {
+    ...preference,
+    user_id: preference.user_id.toString(),
+  };
 }
+
+  private serializeNotification(notification: {
+    notification_id: bigint;
+    user_id: bigint;
+    type: NotificationType;
+    title: string;
+    message: string;
+    link: string | null;
+    read: boolean;
+    created_at: Date;
+  }) {
+    return {
+      ...notification,
+      notification_id: notification.notification_id.toString(),
+      user_id: notification.user_id.toString(),
+    };
+  }
 
 }
