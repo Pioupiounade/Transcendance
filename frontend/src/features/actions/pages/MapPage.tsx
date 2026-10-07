@@ -46,23 +46,33 @@ export function MapPage({ editPath }: MapPageProps) {
   );
 
   useEffect(() => {
-  const loadMapContext = async () => {
-    const [{ userId }, participations] = await Promise.all([
-      getCurrentUserSummary(),
-      getProfileParticipations(),
-    ]);
+    if (status !== 'authenticated') {
+      setCurrentUserId(null);
+      setParticipatedActionIds(new Set());
+      return;
+    }
 
-    setCurrentUserId(userId);
+    const loadMapContext = async () => {
+      try {
+        const [{ userId }, participations] = await Promise.all([
+          getCurrentUserSummary(),
+          getProfileParticipations(),
+        ]);
 
-    setParticipatedActionIds(
-      new Set(
-        participations.map((participation) => participation.actionId),
-      ),
-    );
-  };
+        setCurrentUserId(userId);
+        setParticipatedActionIds(
+          new Set(
+            participations.map((participation) => participation.actionId),
+          ),
+        );
+      } catch {
+        setCurrentUserId(null);
+        setParticipatedActionIds(new Set());
+      }
+    };
 
-  loadMapContext();
-}, []);
+    loadMapContext();
+  }, [status]);
   // Le brouillon vit dans l'URL (`?at=lat,lng`) : il survit à un passage par /login et au rechargement.
   const draftParam = searchParams.get(DRAFT_PARAM);
   const draft = useMemo(() => parseDraft(draftParam), [draftParam]);

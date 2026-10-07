@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, type ChangeEvent } from 'react';
 import { useNavigate } from 'react-router';
+import { useAuth } from '@/features/auth';
 import { Button } from '@/shared/ui/Button/Button';
 import { useActions } from '../api/useActions';
 import { ActionCard } from '../components/ActionCard';
@@ -12,6 +13,7 @@ const PAGE_SIZE = 6;
 
 export function ActionsListPage() {
   const navigate = useNavigate();
+  const { status: authStatus } = useAuth();
   const { actions, loading, error, reload } = useActions();
 
   const [category, setCategory] = useState<Category | null>(null);
@@ -27,23 +29,29 @@ export function ActionsListPage() {
   const [status, setStatus] = useState<string | null>(null);
 
   useEffect(() => {
+    if (authStatus !== 'authenticated') return;
+
     const loadMyActionContext = async () => {
-      const [{ userId }, participations] = await Promise.all([
-        getCurrentUserSummary(),
-        getProfileParticipations(),
-      ]);
+      try {
+        const [{ userId }, participations] = await Promise.all([
+          getCurrentUserSummary(),
+          getProfileParticipations(),
+        ]);
 
-      setCurrentUserId(userId);
-
-      setParticipatedActionIds(
-        new Set(
-          participations.map((participation) => participation.actionId),
-        ),
-      );
+        setCurrentUserId(userId);
+        setParticipatedActionIds(
+          new Set(
+            participations.map((participation) => participation.actionId),
+          ),
+        );
+      } catch {
+        setCurrentUserId(null);
+        setParticipatedActionIds(new Set());
+      }
     };
 
     loadMyActionContext();
-  }, []);
+  }, [authStatus]);
 
   const filteredActions = useMemo(() => {
     return actions.filter((action) => {
