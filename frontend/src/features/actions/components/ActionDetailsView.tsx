@@ -163,7 +163,7 @@ export const ActionDetailsView: React.FC<ActionDetailsViewProps> = ({
           </div>
         </div>
         <h2>{title}</h2>
-        <div className="organizer">
+        <div className="organizer" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <Link
             to={`/profiles/${organizer.userId}`}
             style={{
@@ -179,24 +179,23 @@ export const ActionDetailsView: React.FC<ActionDetailsViewProps> = ({
               name={organizer.name}
               size={42}
             />
-
-            <div className="organizer-info">
-              <span className="organizer-name">
-                @{organizer.name}
-              </span>
-
-              {organizer.organizationTitle && organizer.organizationId && (
-                <Link
-                  to={`/organizations/${organizer.organizationId}`}
-                  className="text-muted"
-                  style={{ textDecoration: 'none' }}
-                >
-                  {organizer.organizationTitle}
-                </Link>
-              )}
-            </div>
+            <span className="organizer-label">
+              @{organizer.name}
+            </span>
           </Link>
-        </div>
+
+          {organizer.organizationTitle && organizer.organizationId && (
+            <div className="organizer-info" style={{ marginLeft: 'auto' }}>
+              <Link
+                to={`/organizations/${organizer.organizationId}`}
+                className="text-muted"
+                style={{ textDecoration: 'none' }}
+              >
+                {organizer.organizationTitle}
+              </Link>
+            </div>
+          )}
+          </div>
         {totalImages > 0 && (
           <div className="carousel">
             <div className="carousel-main">
