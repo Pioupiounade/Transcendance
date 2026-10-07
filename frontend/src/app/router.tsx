@@ -8,8 +8,9 @@ import { LegalPage } from './pages/LegalPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 
 import { ActionsListPage } from '@/features/actions';
-import { ROUTES, editActionPath, organizationPath } from './routes';
+import { ROUTES, editActionPath, mapFocusPath, organizationManagePath, organizationPath } from './routes';
 import { ProfilePage, PublicProfilePage } from '../features/profile';
+
 
 // Routes en données. Une page = une ligne ; les pages de feature sont chargées
 // paresseusement (un chunk par feature), `PageShell` fournit le Suspense.
@@ -32,7 +33,16 @@ const router = createBrowserRouter([
       { path: ROUTES.actions, element: <ActionsListPage /> },
       { path: ROUTES.map, element: <MapPage createPath={ROUTES.createAction} editPath={editActionPath} /> },
       { path: ROUTES.organizations, element: <OrganizationsPage organizationPath={organizationPath} /> },
-      { path: ROUTES.organization, element: <OrganizationPage listPath={ROUTES.organizations} /> },
+      {
+        path: ROUTES.organization,
+        element: (
+          <OrganizationPage
+            listPath={ROUTES.organizations}
+            upcomingActionPath={mapFocusPath}
+            managePath={organizationManagePath}
+          />
+        ),
+      },
       { path: ROUTES.login, element: <LoginPage /> },
       { path: ROUTES.register, element: <RegisterPage termsPath={ROUTES.terms} privacyPath={ROUTES.privacy} /> },
       { path: ROUTES.terms, element: <LegalPage title={APP_LABELS.pages.terms.title} /> },
