@@ -2,12 +2,16 @@ import { Injectable, NotFoundException, BadRequestException, ForbiddenException,
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateOrganizationDto } from './dto/create-organization.dto';
 import { UpdateOrganizationDto } from './dto/update-organization.dto';
-import { AccountStatus, RoleApp, RoleOrg, MemberStatus, OrganizationStatus, Prisma } from '../../generated/prisma/client';
+import { AccountStatus, RoleApp, RoleOrg, MemberStatus, OrganizationStatus, Prisma, NotificationType } from '../../generated/prisma/client';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class OrganizationsService {
 
-  constructor(private prisma: PrismaService) { }
+  constructor(
+    private prisma: PrismaService,
+    private notificationsService: NotificationsService,
+  ) { }
 
   //1. recuperer toutes les organisations
   async findAll() {
@@ -436,7 +440,7 @@ export class OrganizationsService {
 
     for (let attempt = 0; attempt < 3; attempt += 1) {
       try {
-        return await this.prisma.$transaction(
+        const createdComment = await this.prisma.$transaction(
           async (tx) => {
             const lastComment = await tx.organizationComment.findFirst({
               where: { user_id: userId },
@@ -444,7 +448,9 @@ export class OrganizationsService {
             });
 
             if (lastComment) {
-              const diffTime = (Date.now() - lastComment.created_at.getTime()) / 1000;
+              const diffTime =
+                (Date.now() - lastComment.created_at.getTime()) / 1000;
+
               if (diffTime < 15) {
                 throw new HttpException(
                   'You can only post a comment every 15 seconds',
@@ -476,6 +482,37 @@ export class OrganizationsService {
           },
           { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
         );
+
+        const managers = await this.prisma.organizationMember.findMany({
+          where: {
+            organization_id: organizationId,
+            status: MemberStatus.ACTIVE,
+            role: {
+              in: [RoleOrg.OWNER, RoleOrg.MANAGER],
+            },
+            user_id: {
+              not: userId,
+            },
+            user: {
+              account_status: AccountStatus.ACTIVE,
+            },
+          },
+          select: {
+            user_id: true,
+          },
+        });
+
+        for (const manager of managers) {
+          await this.notificationsService.notifyUser({
+            userId: manager.user_id,
+            type: NotificationType.ORGANIZATION_COMMENT,
+            title: 'New organization comment',
+            message: `A new comment was posted on "${org.title}".`,
+            link: `/organizations/${org.organization_id.toString()}`,
+          });
+        }
+
+        return createdComment;
       } catch (error) {
         if (
           error instanceof Prisma.PrismaClientKnownRequestError &&
@@ -484,11 +521,14 @@ export class OrganizationsService {
         ) {
           continue;
         }
+
         throw error;
       }
     }
 
-    throw new BadRequestException('Comment could not be posted, please try again');
+    throw new BadRequestException(
+      'Comment could not be posted, please try again',
+    );
   }
 
   async getComments(organizationId: bigint) {

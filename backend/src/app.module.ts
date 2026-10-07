@@ -16,6 +16,7 @@ import { OrganizationmembersModule } from './organizationmembers/organizationmem
 import { PointtransactionModule } from './pointtransaction/pointtransaction.module';
 import { AuthModule } from "./auth/auth.module";
 import { ServeStaticModule } from '@nestjs/serve-static';
+import { NotificationsModule } from './notifications/notifications.module';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { ServeStaticModule } from '@nestjs/serve-static';
     OrganizationmembersModule,
     PointtransactionModule,
     AuthModule,
+    NotificationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
