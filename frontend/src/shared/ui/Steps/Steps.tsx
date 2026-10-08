@@ -6,15 +6,13 @@ export type Step = { icon: IconName; title: string; body: string };
 
 type StepsProps = {
   steps: readonly Step[];
-  /** `grid` : une carte par colonne (landing « How it works ») ; `list` : cartes empilées, icône à gauche. */
-  layout?: 'grid' | 'list';
   className?: string;
 };
 
 /** Étapes numérotées sur cartes teintées (maquette « How it works ») : la promesse en trois temps. */
-export function Steps({ steps, layout = 'grid', className }: StepsProps) {
+export function Steps({ steps, className }: StepsProps) {
   return (
-    <ol className={[styles.steps, styles[layout], className].filter(Boolean).join(' ')}>
+    <ol className={[styles.steps, className].filter(Boolean).join(' ')}>
       {steps.map((step, index) => (
         <li key={step.title} className={styles.step}>
           <span className={styles.icon}>

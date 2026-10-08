@@ -1,13 +1,8 @@
 /* Cartes teintées terracotta (demande du 25/09/2026) : chaleur sous le titre, texte encre lisible. */
 .steps {
   display: grid;
-  gap: 16px;
-}
-.grid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-.list {
-  grid-template-columns: 1fr;
+  gap: 16px;
 }
 
 .step {
@@ -49,35 +44,17 @@
   letter-spacing: 1px;
 }
 
-/* Liste : l'icône tient la hauteur de la carte, titre et texte à sa droite. */
-.list .step {
-  grid-template-columns: auto minmax(0, 1fr);
-  column-gap: 16px;
-  padding: 18px 20px;
-}
-.list .icon {
-  grid-row: 1 / span 2;
-  margin: 0;
-}
-.list .title,
-.list .body {
-  grid-column: 2;
-}
-.list .number {
-  top: 16px;
-  right: 18px;
-}
 
-/* Mobile : la grille s'empile, étapes centrées, le numéro sous l'icône plutôt que dans le coin. */
+/* Mobile : les cartes s'empilent, centrées, le numéro sous l'icône plutôt que dans le coin. */
 @media (max-width: 760px) {
-  .grid {
+  .steps {
     grid-template-columns: 1fr;
   }
-  .grid .step {
+  .step {
     justify-items: center;
     text-align: center;
   }
-  .grid .number {
+  .number {
     position: static;
     margin-top: -4px;
   }

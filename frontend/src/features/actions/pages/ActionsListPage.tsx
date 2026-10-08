@@ -94,13 +94,7 @@ export function ActionsListPage() {
 
   // Visiteur (#107) : la page n'a rien à montrer sans session ; elle accueille et connecte sur place, puis le
   // changement de statut affiche la liste. Pendant la restauration de session, pas de liste vide trompeuse.
-  if (authStatus === 'anonymous') {
-    return (
-      <div className={styles.container}>
-        <MyActionsSignIn />
-      </div>
-    );
-  }
+  if (authStatus === 'anonymous') return <MyActionsSignIn />;
   if (authStatus === 'loading') {
     return (
       <div className={styles.container}>
