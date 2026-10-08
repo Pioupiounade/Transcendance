@@ -150,6 +150,9 @@ Ce fichier est chargé automatiquement quand la session démarre dans `frontend/
   (`:root[data-theme='admin']`, accent inversé terracotta / sauge, contrastes vérifiés). Un composant ne code jamais
   une couleur en dur : il lit un token (`--on-brand`, `--ground-hover`, `--field-bg`, `--disabled-*`…), sinon il casse
   dans le thème sombre.
+- Texte : `overflow-wrap: anywhere` est posé sur `body` (`global.css`, hérité) pour qu'un mot sans espace (URL,
+  description collée) se coupe au lieu d'élargir la page ; les composants gardent leurs `line-clamp`. Ne pas le
+  redéclarer localement.
 - Zéro erreur ni warning dans la console navigateur (exigence du sujet). Cible : dernière version stable de Chrome,
   responsive du mobile au desktop.
 
@@ -184,7 +187,8 @@ features/       1 domaine métier = 1 module ; interface = index.ts
                 Depuis le 25/09/2026 (écart assumé avec la maquette) : carte pleine largeur, cartes en grille
                 dessous ; ActionCard a un fond très léger par catégorie (`--card-*-bg` dans tokens.css).
                 « My Actions » `/actions` pour un visiteur (#107, décision d'équipe : onboarding + connexion sur place) :
-                MyActionsSignIn = trois pas + LoginForm, la liste apparaît au changement de statut sans navigation ;
+                MyActionsSignIn = accroche + `Steps` en liste (cartes teintées de la home) + gages de confiance, carte
+                LoginForm collante à droite ; la liste apparaît au changement de statut sans navigation ;
                 pendant la restauration de session, message d'attente au lieu d'une liste vide.
                 Création depuis la carte (Epic 7) : NeighborhoodMap accepte `draft` / `onDraftChange` / `draftContent`
                 (pin brouillon déplaçable, popup ; sans `draftContent` = simple sélecteur de lieu), MapPage garde le
@@ -274,6 +278,8 @@ shared/         zéro connaissance métier, réutilisable ailleurs
                 datetime-local), FloatingTextarea (même habillage, privé : FieldShell + fieldA11y), Checkbox (libellé
                 riche), Dialog (`<dialog>` natif : `{ open, onClose, title, closeLabel }`, enfants montés si ouvert),
                 StreetScene (illustration de rue de la maquette, décorative ; l'hôte fixe la hauteur : auth, landing),
+                Steps (étapes numérotées sur cartes teintées `{ steps: Step[], layout?: 'grid' | 'list' }` : « How it
+                works » de la landing, encart My Actions),
                 CommentThread (fil à plat `{ comments: ThreadComment[], mineLabel, deletion? }` : bouton de
                 suppression sur les commentaires `canDelete`, la confirmation reste chez l'appelant) et CommentComposer (zone de texte +
                 compteur + bouton : `{ label, maxLength, submitLabel, submittingLabel, validate, onSubmit, describeError }`)
