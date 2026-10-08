@@ -7,6 +7,7 @@ export { NeighborhoodMap } from './components/NeighborhoodMap';
 export { PlaceMap } from './components/PlaceMap';
 export { ActionCard } from './components/ActionCard';
 export { useActions } from './api/useActions';
+export { approveAction, cancelAction } from './api/actionsApi';
 export { canManageAction } from './permissions';
 export { distanceMeters, formatDistance } from './geo';
 export { DEFAULT_CENTER, FOCUS_PARAM } from './mapConfig';
