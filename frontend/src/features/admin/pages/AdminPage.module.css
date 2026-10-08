@@ -1,3 +1,4 @@
+/* Mise en page commune aux trois sections : en-tête, barre outils (recherche + puces), avis, états, tableau. */
 .page {
   max-width: 1400px;
   margin: 0 auto;
@@ -9,17 +10,6 @@
 .intro {
   display: grid;
   gap: 7px;
-}
-
-.eyebrow {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  color: var(--terra);
-  font-size: 12px;
-  font-weight: 800;
-  letter-spacing: 1.8px;
-  text-transform: uppercase;
 }
 
 .lead {

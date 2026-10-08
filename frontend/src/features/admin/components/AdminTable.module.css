@@ -1,0 +1,235 @@
+/* Tableau de l'espace admin, partagé par les trois sections : un panneau, des lignes séparées par un filet ;
+   sous 760 px, une carte par ligne. Les colonnes propres à une section restent dans le module de son tableau. */
+.table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--r-panel);
+  background: var(--ground);
+  font-size: 14px;
+  overflow: hidden;
+}
+
+.caption {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.table th,
+.table td {
+  padding: 12px 18px;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.table thead th {
+  padding-top: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.9px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.row th,
+.row td {
+  border-bottom: 1px solid var(--line);
+  font-weight: 400;
+  transition: background-color var(--t-fast);
+}
+.row:last-child th,
+.row:last-child td {
+  border-bottom: 0;
+}
+.row:hover th,
+.row:hover td {
+  background: var(--ground-hover);
+}
+
+/* Première colonne : un nom (ou un lien vers la fiche publique) puis une ligne d'informations en petit. */
+.identity {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.name {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+a.name {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: var(--line);
+  text-underline-offset: 3px;
+  transition: color var(--t-fast);
+}
+a.name:hover {
+  color: var(--brand);
+  text-decoration-color: currentColor;
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 12px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.meta > * {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Le statut combine toujours une icône, un libellé et une couleur (DESIGN.md §1). */
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px 4px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.statusGood {
+  background: var(--trust-soft);
+  color: var(--trust);
+}
+.statusBad {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+.statusWait {
+  background: var(--pending-soft);
+  color: var(--pending);
+}
+.statusMuted {
+  background: var(--ground-press);
+  color: var(--muted);
+}
+
+.table .number {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.table .actionHead,
+.table .action {
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* Gestes en bout de ligne : boutons côte à côte, ou un texte quand il n'y a rien à faire. */
+.buttons {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+/* Geste de sanction : bouton secondaire dont le texte et le survol annoncent le danger. */
+.danger {
+  color: var(--danger);
+}
+.danger:hover {
+  border-color: var(--danger);
+  background: var(--danger-soft);
+}
+
+.none {
+  color: var(--muted);
+  font-size: 13px;
+  white-space: normal;
+}
+
+@media (max-width: 1100px) {
+  .table th,
+  .table td {
+    padding: 12px;
+  }
+}
+
+@media (max-width: 760px) {
+  .table,
+  .table tbody,
+  .table tr,
+  .table th,
+  .table td {
+    display: block;
+  }
+  .table {
+    border: 0;
+    border-radius: 0;
+    background: none;
+    overflow: visible;
+  }
+  /* L'en-tête de colonnes reste lu par les lecteurs d'écran ; chaque cellule affiche son libellé. */
+  .table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+  .table tbody {
+    display: grid;
+    gap: 12px;
+  }
+  .row {
+    padding: 6px 16px 14px;
+    border: 1px solid var(--line);
+    border-radius: var(--r-action);
+    background: var(--ground);
+  }
+  .row th,
+  .row td,
+  .row:hover th,
+  .row:hover td {
+    padding: 8px 0;
+    border-bottom: 0;
+    background: none;
+  }
+  .row th,
+  .row:hover th {
+    padding: 10px 0 12px;
+    border-bottom: 1px solid var(--line);
+  }
+  .row td[data-label] {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    text-align: right;
+  }
+  .row td[data-label]::before {
+    content: attr(data-label);
+    color: var(--muted);
+    font-size: 13px;
+    text-align: left;
+  }
+  .table .action {
+    padding-top: 12px;
+    text-align: left;
+    white-space: normal;
+  }
+  .buttons {
+    display: grid;
+    grid-template-columns: 1fr;
+    width: 100%;
+    gap: 8px;
+  }
+}
