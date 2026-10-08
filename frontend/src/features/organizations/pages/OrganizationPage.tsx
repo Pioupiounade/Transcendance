@@ -149,13 +149,29 @@ export function OrganizationPage({ listPath, upcomingActionPath, managePath }: O
                 <ul className={styles.members}>
                   {members.members.map((member) => {
                     const name = member.user.profile?.username ?? text.anonymousMember;
+                    const profilePath =
+                      user && String(user.user_id) === String(member.user_id)
+                        ? '/profile'
+                        : `/profiles/${member.user_id}`;
+
                     return (
                       <li key={member.user_id} className={styles.member}>
-                        <Avatar name={name} src={member.user.profile?.profile_picture ?? undefined} size={36} />
-                        <span className={styles.memberName}>
-                          {name}
-                          {member.user_id === user?.user_id && <span className={styles.you}>{text.you}</span>}
-                        </span>
+                        <Link
+                          to={profilePath}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '10px',
+                            textDecoration: 'none',
+                            color: 'inherit',
+                          }}
+                        >
+                          <Avatar name={name} src={member.user.profile?.profile_picture ?? undefined} size={36} />
+                          <span className={styles.memberName}>
+                            {name}
+                            {member.user_id === user?.user_id && <span className={styles.you}>{text.you}</span>}
+                          </span>
+                        </Link>
                         <span className={styles.role}>{ROLE_ORG_LABELS[member.role]}</span>
                       </li>
                     );
