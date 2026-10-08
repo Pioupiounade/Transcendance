@@ -97,52 +97,7 @@
   font-size: 15px;
 }
 
-/* Étapes : trois cartes numérotées. */
-.steps {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 16px;
-  counter-reset: step;
-}
-/* Cartes teintées terracotta (demande du 25/09/2026) : chaleur sous le titre, texte encre lisible. */
-.step {
-  position: relative;
-  display: grid;
-  gap: 8px;
-  padding: 24px;
-  border: 1px solid #efcfc2;
-  border-radius: var(--r-panel);
-  background: #f9e6dc;
-}
-.step h3 {
-  font-size: 18px;
-  letter-spacing: -0.3px;
-}
-.step p {
-  color: var(--muted);
-  font-size: 14px;
-  line-height: 1.55;
-}
-.stepIcon {
-  display: grid;
-  place-items: center;
-  width: 46px;
-  height: 46px;
-  margin-bottom: 6px;
-  border-radius: 14px;
-  background: #fffefa;
-  color: var(--terra);
-}
-.stepNumber {
-  position: absolute;
-  top: 20px;
-  right: 22px;
-  font-size: 13px;
-  font-weight: 800;
-  color: var(--terra);
-  opacity: 0.55;
-  letter-spacing: 1px;
-}
+/* Étapes : `Steps` (shared/ui). */
 
 /* Carte vivante : la carte de la feature + les trois prochaines actions. */
 .live {
@@ -312,19 +267,9 @@
   .sectionHead h2 {
     font-size: 26px;
   }
-  .steps,
   .categories,
   .liveLayout {
     grid-template-columns: 1fr;
-  }
-  /* Mobile : les étapes centrées, le numéro sous l'icône plutôt que dans le coin. */
-  .step {
-    justify-items: center;
-    text-align: center;
-  }
-  .stepNumber {
-    position: static;
-    margin-top: -4px;
   }
   .centered {
     text-align: center;
