@@ -12,6 +12,7 @@ import styles from './ActionsListPage.module.css';
 import { getCurrentUserSummary, getProfileParticipations } from '@/features/profile/api/profileApi';
 
 const PAGE_SIZE = 6;
+const text = ACTIONS_LABELS.myActions;
 
 export function ActionsListPage() {
   const navigate = useNavigate();
@@ -23,36 +24,43 @@ export function ActionsListPage() {
   const [page, setPage] = useState(1);
 
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-
-  const [participatedActionIds, setParticipatedActionIds] = useState<Set<string>>(
-    new Set(),
-  );
-
+  const [participatedActionIds, setParticipatedActionIds] = useState<Set<string>>(new Set());
+  const [isContextLoading, setIsContextLoading] = useState(true);
   const [status, setStatus] = useState<string | null>(null);
 
   useEffect(() => {
-    if (authStatus !== 'authenticated') return;
+    if (authStatus !== 'authenticated') {
+      setIsContextLoading(false);
+      return;
+    }
 
+    let isMounted = true;
     const loadMyActionContext = async () => {
+      setIsContextLoading(true);
       try {
         const [{ userId }, participations] = await Promise.all([
           getCurrentUserSummary(),
           getProfileParticipations(),
         ]);
 
+        if (!isMounted) return;
         setCurrentUserId(userId);
         setParticipatedActionIds(
-          new Set(
-            participations.map((participation) => participation.actionId),
-          ),
+          new Set(participations.map((participation) => participation.actionId)),
         );
       } catch {
+        if (!isMounted) return;
         setCurrentUserId(null);
         setParticipatedActionIds(new Set());
+      } finally {
+        if (isMounted) setIsContextLoading(false);
       }
     };
 
     loadMyActionContext();
+    return () => {
+      isMounted = false;
+    };
   }, [authStatus]);
 
   const filteredActions = useMemo(() => {
@@ -61,18 +69,15 @@ export function ActionsListPage() {
         action.creator_id === currentUserId ||
         participatedActionIds.has(action.action_id);
 
-      const matchesCategory =
-        category === null || action.category === category;
-
+      const matchesCategory = category === null || action.category === category;
       const query = searchQuery.trim().toLowerCase();
-
       const matchesQuery =
         query === '' ||
         action.title.toLowerCase().includes(query) ||
         action.description.toLowerCase().includes(query);
 
       const matchesStatus = status === null || action.status === status;
-      
+
       return isMine && matchesCategory && matchesStatus && matchesQuery;
     });
   }, [
@@ -92,14 +97,12 @@ export function ActionsListPage() {
     return filteredActions.slice(start, start + PAGE_SIZE);
   }, [filteredActions, currentPage]);
 
-  // Visiteur (#107) : la page n'a rien à montrer sans session ; elle accueille et connecte sur place, puis le
-  // changement de statut affiche la liste. Pendant la restauration de session, pas de liste vide trompeuse.
   if (authStatus === 'anonymous') return <MyActionsSignIn />;
-  if (authStatus === 'loading') {
+  if (authStatus === 'loading' || isContextLoading) {
     return (
       <div className={styles.container}>
         <div className={styles.statusMessage} role="status">
-          {ACTIONS_LABELS.myActions.loading}
+          {text.loading}
         </div>
       </div>
     );
@@ -123,10 +126,10 @@ export function ActionsListPage() {
     <div className={styles.container}>
       <header className={styles.header}>
         <div className={styles.headerRow}>
-          <h1 className={styles.title}>Citizen Actions</h1>
-            <Button onClick={() => navigate('/actions/new')}>
-              New Action
-            </Button>
+          <h1 className={styles.title}>{text.title}</h1>
+          <Button onClick={() => navigate('/actions/new')}>
+            {text.newAction}
+          </Button>
         </div>
       </header>
 
@@ -135,39 +138,40 @@ export function ActionsListPage() {
           <input
             type="search"
             className={styles.searchInput}
-            placeholder="Search by title or keyword..."
+            placeholder={text.searchPlaceholder}
             value={searchQuery}
             onChange={handleSearchChange}
           />
         </div>
 
         <CategoryFilter value={category} onChange={handleCategoryChange} />
-          <select
-            value={status ?? ''}
-            onChange={(event) => {
-              setStatus(event.target.value || null);
-              setPage(1);
-            }}
-          >
-            <option value="">All statuses</option>
-            <option value="PENDING">Pending</option>
-            <option value="APPROVED">Approved</option>
-            <option value="COMPLETED">Completed</option>
-            <option value="CANCELLED">Cancelled</option>
-          </select>
-       </section>
+        <select
+          value={status ?? ''}
+          aria-label="Filter by status"
+          onChange={(event) => {
+            setStatus(event.target.value || null);
+            setPage(1);
+          }}
+        >
+          <option value="">{text.allStatuses}</option>
+          <option value="PENDING">Pending</option>
+          <option value="APPROVED">Approved</option>
+          <option value="COMPLETED">Completed</option>
+          <option value="CANCELLED">Cancelled</option>
+        </select>
+      </section>
 
-      {loading && <div className={styles.statusMessage}>Loading actions...</div>}
+      {loading && <div className={styles.statusMessage}>{text.loading}</div>}
 
       {!loading && error && (
         <div className={styles.statusMessage}>
-          <span>An error occurred while fetching actions.</span>
-          <Button onClick={reload}>Retry</Button>
+          <span>{ACTIONS_LABELS.map.error}</span>
+          <Button onClick={reload}>{ACTIONS_LABELS.map.retry}</Button>
         </div>
       )}
 
       {!loading && !error && filteredActions.length === 0 && (
-        <div className={styles.statusMessage}>No actions match your criteria.</div>
+        <div className={styles.statusMessage}>{text.emptyFiltered}</div>
       )}
 
       {!loading && !error && filteredActions.length > 0 && (
@@ -190,17 +194,17 @@ export function ActionsListPage() {
                 disabled={currentPage <= 1}
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
               >
-                Previous
+                {text.previous}
               </Button>
               <span className={styles.pageInfo}>
-                Page {currentPage} of {totalPages}
+                {text.pageInfo(currentPage, totalPages)}
               </span>
               <Button
                 variant="secondary"
                 disabled={currentPage >= totalPages}
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               >
-                Next
+                {text.next}
               </Button>
             </footer>
           )}
