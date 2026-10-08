@@ -244,14 +244,24 @@ features/       1 domaine métier = 1 module ; interface = index.ts
                 Les réponses du backend sont rejouées localement (pas de rechargement de liste). Organisation
                 inactive : demandes et membres en lecture seule. Manques backend : pas de débannissement, pas
                 d'OWNER à la création d'une organisation, pas d'« ajouter un membre » côté UI (non demandé).
-  admin/          Epic 8, réservé au rôle ADMIN. #22 : AdminLayout (route parente `/admin/*`, pose le thème sombre
-                `data-theme="admin"` sur <html> le temps de la visite) et AdminUsersPage `/admin/users` (tous les
-                comptes via `GET /users`, recherche par e-mail et filtre par statut côté client, 20 par 20,
-                bloquer / débloquer = `suspend` / `reactivate` avec AccountActionDialog ; pas d'action sur son
-                propre compte ni sur un compte `DEACTIVATED`). `blockUser` relit le compte : la réponse de `suspend`
-                porte les points d'avant la pénalité de 50. Accès : `RequireAuth` > `RequireRole` (feature auth),
-                un non-admin voit la page 404 ; entrée « Admin » dans l'en-tête pour les seuls admins (icône seule
-                sur mobile, la barre basse garde cinq entrées). Modération (#23) et catégories / rôles (#24) :
+  admin/          Epic 8, réservé au rôle ADMIN. AdminLayout (route parente `/admin/*`) pose le thème sombre
+                `data-theme="admin"` sur <html> le temps de la visite et porte la barre d'onglets Accounts / Actions /
+                Organizations : des NavLink (une URL par section, `aria-current`), chemins reçus en props. Trois pages
+                sœurs sur le même squelette : AdminPage.module.css, hooks/useAdminList (lignes remplacées par la
+                réponse du backend sans rechargement, recherche, filtre par statut avec compteurs, 20 par 20),
+                tableaux sur AdminTable.module.css (cartes sous 760 px, statut = icône + libellé + couleur, dont
+                `--pending`), confirmation par ConfirmDialog de shared/ui, erreurs traduites par errors.ts.
+                #22 AdminUsersPage `/admin/users` : tous les comptes via `GET /users`, bloquer / débloquer =
+                `suspend` / `reactivate` (jamais sur soi ni sur un `DEACTIVATED` ; `blockUser` relit le compte, la
+                réponse de `suspend` porte les points d'avant la pénalité de 50). #23 AdminActionsPage
+                `/admin/actions` : toutes les actions (`useActions`), « Approve » = `approve`, proposé seulement dès
+                `min_participants` inscrits (sinon le texte « n of 3 needed to approve » : le backend refuserait),
+                « Hide » = `cancel` (l'API n'a ni rejet ni suppression, irréversible) ; AdminOrganizationsPage
+                `/admin/organizations` : « Suspend » (ADMIN seulement), « Close », « Reactivate » / « Reopen » =
+                `reactivate`. Les titres mènent aux fiches publiques : pas de fiche admin. Accès : `RequireAuth` >
+                `RequireRole` (feature auth), un non-admin voit la page 404 ; entrée « Admin » dans l'en-tête pour
+                les seuls admins (icône seule sur mobile, la barre basse garde cinq entrées). Catégories / rôles
+                (#24), rejet d'action, suppression de commentaire ou de photo par un admin :
                 pages sœurs à venir, backend incomplet.
   friends/        (friend-requests + friendships)
   <feature>/

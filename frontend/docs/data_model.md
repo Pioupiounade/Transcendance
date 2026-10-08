@@ -281,17 +281,23 @@ mock #46 : **il ne correspond à aucune réponse de l'API** et disparaîtra à l
 ### 4.7 bis `features/admin` — espace d'administration (Epic 8, #22)
 
 ```ts
-import { AdminLayout, AdminUsersPage } from '@/features/admin';
+import { AdminLayout, AdminUsersPage, AdminActionsPage, AdminOrganizationsPage } from '@/features/admin';
 
-<AdminLayout />      // route parente de `/admin/*` : thème sombre sur <html> (`data-theme="admin"`), puis <Outlet/>
-<AdminUsersPage />   // `/admin/users` : comptes, recherche, filtre, bloquer / débloquer
+<AdminLayout usersPath actionsPath organizationsPath />  // route parente de `/admin/*` : thème sombre sur <html>
+                                                         // (`data-theme="admin"`), barre d'onglets (NavLink), <Outlet/>
+<AdminUsersPage />                                       // `/admin/users` : comptes, bloquer / débloquer (#22)
+<AdminActionsPage actionPath />                          // `/admin/actions` : approuver / masquer (#23)
+<AdminOrganizationsPage organizationPath />              // `/admin/organizations` : suspendre / fermer / réactiver (#23)
 ```
 
-Caché : `api/adminUsersApi` (`fetchUsers` = `GET /users`, `blockUser` = `suspend` puis relecture du compte,
-`unblockUser` = `reactivate`), `UsersTable` (tableau → cartes sous 760 px), `AccountActionDialog` (confirmation, erreurs
-traduites par `errors.ts`), `labels.ts` (libellés des rôles et statuts de compte). Le type des comptes est `AuthUser`
-(feature auth) : `GET /users` renvoie la même forme. La page garde en mémoire les comptes modifiés (réponse du backend)
-au lieu de recharger la liste.
+Caché, commun aux trois pages : `hooks/useAdminList` (lignes remplacées par la réponse du backend au lieu de
+recharger, recherche, filtre par statut avec compteurs, 20 par 20), `AdminTable.module.css` (tableau → cartes sous
+760 px), `ConfirmDialog` de `shared/ui` (confirmation, erreurs traduites par `errors.ts`), `labels.ts`.
+Par page : `api/adminUsersApi` (`fetchUsers` = `GET /users`, `blockUser` = `suspend` puis relecture du compte,
+`unblockUser` = `reactivate` ; le type des comptes est `AuthUser`, `GET /users` renvoie la même forme) et `UsersTable` ;
+`ActionsTable` sur `useActions`, `approveAction`, `cancelAction` de `features/actions` (« Approve » n'est proposé que
+dès `min_participants` inscrits, « Hide » = `cancel`) ; `OrganizationsTable` sur `useOrganizations`,
+`suspendOrganization`, `closeOrganization`, `reopenOrganization` de `features/organizations`.
 
 ### 4.8 `features/profile` — profil (code coéquipier #38/#48, mock)
 
@@ -418,7 +424,7 @@ Backend = `main` au 24/09 (#40 auth/users/profiles/interests/orgs/membres/points
 |---|---|---|
 | Statut des comptes (actif / suspendu / désactivé) | ✅ `PATCH /users/:id/suspend|reactivate` (ADMIN, −50 points), `GET /users` (sans garde, sans nom d'utilisateur) | ✅ `/admin/users` (#22) : liste, recherche par e-mail, filtre par statut |
 | Bloquer / débloquer un compte | = suspend/reactivate ; la réponse de `suspend` porte les points d'avant la pénalité | ✅ #22 : confirmation, compte relu après blocage ; rien sur son propre compte ni sur un `DEACTIVATED` |
-| Gérer les organisations (validation, suspension, fermeture) | ✅ `suspend` (ADMIN), `deactivate`, `reactivate` ; pas de « validation » (créée `ACTIVE`) | ❌ |
+| Gérer les organisations (validation, suspension, fermeture) | ✅ `suspend` (ADMIN), `deactivate`, `reactivate` ; pas de « validation » (créée `ACTIVE`) | ✅ `/admin/organizations` (#23) : suspendre, fermer, réactiver / rouvrir, avec confirmation |
 | Gérer les catégories d'action | ❌ (enum figé) | ❌ |
 | Attribuer / retirer un rôle | ❌ (`role` en base uniquement) | ❌ |
 | Envoyer un message aux utilisateurs · tableau de bord | ❌ | ❌ |
@@ -428,9 +434,9 @@ Backend = `main` au 24/09 (#40 auth/users/profiles/interests/orgs/membres/points
 
 | Feature | Backend | Frontend |
 |---|---|---|
-| File d'attente des actions soumises | ✅ `GET /actions?status=PENDING` | ❌ |
-| Valider / rejeter une action | ✅ `approve` (ADMIN, **créateur**, MANAGER/OWNER, ≥ 3 participants ; `MODERATOR` non vérifié) ; ❌ **rejet** (`REJECTED` inatteignable) | ❌ |
-| Masquer une activité / suggestion | ≈ `cancel` | ❌ |
+| File d'attente des actions soumises | ✅ `GET /actions?status=PENDING` | ✅ `/admin/actions` (#23) : toutes les actions (`GET /actions`), filtre par statut et recherche côté client |
+| Valider / rejeter une action | ✅ `approve` (ADMIN, **créateur**, MANAGER/OWNER, ≥ 3 participants ; `MODERATOR` non vérifié) ; ❌ **rejet** (`REJECTED` inatteignable) | 🟡 #23 : « Approve » proposé dès `min_participants` inscrits (sinon « n of 3 needed ») ; rejet ❌ (ticket backend) |
+| Masquer une activité / suggestion | ≈ `cancel` | ✅ #23 : « Hide » = `cancel`, confirmé, irréversible (l'action passe `CANCELLED`) |
 | Modérer commentaires, photos, signalements | ❌ | ❌ |
 
 ### Organisations (module « Organization System »)
