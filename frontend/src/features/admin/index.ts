@@ -2,3 +2,4 @@
 export { AdminLayout } from './components/AdminLayout';
 export { AdminUsersPage } from './pages/AdminUsersPage';
 export { AdminActionsPage } from './pages/AdminActionsPage';
+export { AdminOrganizationsPage } from './pages/AdminOrganizationsPage';

@@ -106,6 +106,9 @@ export const updateOrganization = (id: string, input: UpdateOrganizationInput) =
 /** Ferme une organisation active (`CLOSED`). */
 export const closeOrganization = (id: string) => http.patch<Organization>(`/organizations/${id}/deactivate`);
 
+/** Suspend une organisation active (`SUSPENDED`) : ADMIN seulement, 403 sinon ; 400 si elle n'est pas active. */
+export const suspendOrganization = (id: string) => http.patch<Organization>(`/organizations/${id}/suspend`);
+
 /** Rouvre une organisation `CLOSED` ; une organisation `SUSPENDED` ne peut l'être que par un ADMIN. */
 export const reopenOrganization = (id: string) => http.patch<Organization>(`/organizations/${id}/reactivate`);
 
