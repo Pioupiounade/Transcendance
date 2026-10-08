@@ -5,6 +5,8 @@ import { Button } from '@/shared/ui/Button/Button';
 import { useActions } from '../api/useActions';
 import { ActionCard } from '../components/ActionCard';
 import { CategoryFilter } from '../components/CategoryFilter';
+import { MyActionsSignIn } from '../components/MyActionsSignIn';
+import { ACTIONS_LABELS } from '../labels';
 import type { Category } from '../types';
 import styles from './ActionsListPage.module.css';
 import { getCurrentUserSummary, getProfileParticipations } from '@/features/profile/api/profileApi';
@@ -89,6 +91,25 @@ export function ActionsListPage() {
     const start = (currentPage - 1) * PAGE_SIZE;
     return filteredActions.slice(start, start + PAGE_SIZE);
   }, [filteredActions, currentPage]);
+
+  // Visiteur (#107) : la page n'a rien à montrer sans session ; elle accueille et connecte sur place, puis le
+  // changement de statut affiche la liste. Pendant la restauration de session, pas de liste vide trompeuse.
+  if (authStatus === 'anonymous') {
+    return (
+      <div className={styles.container}>
+        <MyActionsSignIn />
+      </div>
+    );
+  }
+  if (authStatus === 'loading') {
+    return (
+      <div className={styles.container}>
+        <div className={styles.statusMessage} role="status">
+          {ACTIONS_LABELS.myActions.loading}
+        </div>
+      </div>
+    );
+  }
 
   const handleSelect = (id: string) => {
     navigate(`/actions/${id}`);
