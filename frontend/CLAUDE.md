@@ -201,7 +201,8 @@ features/       1 domaine métier = 1 module ; interface = index.ts
                 n'a que `cancel`), api/useAction, useUpdateAction, useCancelAction. Les pages reçoivent les chemins
                 (`mapPath`, `createPath`, `editPath`) en props : la feature n'importe pas `app/`. Retour sur la carte
                 par `/map?focus=<id>` (mapConfig.ts) + `state.notice`. L'index exporte aussi les briques du tableau
-                de bord : NeighborhoodMap (hauteur surchargeable par `--map-min-height*`), ActionCard (pied :
+                de bord : NeighborhoodMap (hauteur surchargeable par `--map-min-height*`, et suit la taille de son conteneur :
+                ResizeObserver → `invalidateSize`, la rangée de la landing lui donne la hauteur des cartes voisines), ActionCard (pied :
                 voisins inscrits, places ; `distance` remplace le statut), useActions, geo.ts (distanceMeters,
                 formatDistance), DEFAULT_CENTER, FOCUS_PARAM.
                 Discussion (#70, Epic 4) : ActionComments `{ actionId }` sous la fiche (`GET`/`POST /actions/:id/comments`,
