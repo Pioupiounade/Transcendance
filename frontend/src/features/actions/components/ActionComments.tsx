@@ -1,6 +1,7 @@
 import { useId, useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router';
 import { AUTH_ROUTES, useAuth } from '@/features/auth';
+import { isApiError } from '@/shared/api';
 import { Button, CommentComposer, CommentThread, type ThreadComment } from '@/shared/ui';
 import { useActionComments } from '../api/useActionComments';
 import { usePostComment } from '../api/usePostComment';
@@ -51,16 +52,10 @@ export function ActionComments({ actionId, canComment }: ActionCommentsProps) {
   const [cooldownUntil, setCooldownUntil] = useState(() => readCooldownUntil(actionId));
   const isCoolingDown = cooldownUntil !== 0;
 
+  // Fin du délai par minuteur (0 ms s'il est déjà écoulé) : jamais de setState synchrone dans l'effet.
   useEffect(() => {
     if (cooldownUntil === 0) return;
-
-    const remaining = cooldownUntil - Date.now();
-    if (remaining <= 0) {
-      setCooldownUntil(0);
-      return;
-    }
-
-    const timeout = window.setTimeout(() => setCooldownUntil(0), remaining);
+    const timeout = window.setTimeout(() => setCooldownUntil(0), Math.max(0, cooldownUntil - Date.now()));
     return () => window.clearTimeout(timeout);
   }, [cooldownUntil]);
 
@@ -74,8 +69,9 @@ export function ActionComments({ actionId, canComment }: ActionCommentsProps) {
       const until = Date.now() + COMMENT_COOLDOWN_MS;
       window.sessionStorage.setItem(cooldownKey(actionId), String(until));
       setCooldownUntil(until);
-    } catch (error: any) {
-      if (error?.response?.status === 429 || error?.status === 429) {
+    } catch (error: unknown) {
+      // 429 : le backend impose lui aussi 15 s entre deux commentaires d'un même compte (api_contract §15).
+      if (isApiError(error) && error.status === 429) {
         const until = Date.now() + COMMENT_COOLDOWN_MS;
         window.sessionStorage.setItem(cooldownKey(actionId), String(until));
         setCooldownUntil(until);
