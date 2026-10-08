@@ -175,13 +175,17 @@ app/            composition root : seul endroit qui connaît tout
                 ouvertes par date, NearbyActions = actions ouvertes des autres triées par distance depuis
                 `profiles/me.location` sinon Saint-Cyprien). app compose les features par leurs index.
 features/       1 domaine métier = 1 module ; interface = index.ts
-  auth/         session, RequireAuth, LoginPage, RegisterPage (#50) ; validation.ts miroir des DTO, errors.ts
+  auth/         session, RequireAuth, LoginPage, RegisterPage (#50), LoginForm (le formulaire seul, `{ onSignedIn? }`,
+                réutilisé là où un visiteur doit se connecter sur place : « My Actions » #107) ; validation.ts miroir des DTO, errors.ts
                 traduit les ApiError en messages ; les formulaires utilisent shared/hooks/useForm
   profile/      users + profiles + interests (api_contract §6-8)
   actions/      actions + carte + filtres ; owner des enums Category/ActionStatus et de leurs libellés.
                 Existant (#12) : MapPage, NeighborhoodMap, ActionCard, CategoryFilter, useActions, mapConfig.ts.
                 Depuis le 25/09/2026 (écart assumé avec la maquette) : carte pleine largeur, cartes en grille
                 dessous ; ActionCard a un fond très léger par catégorie (`--card-*-bg` dans tokens.css).
+                « My Actions » `/actions` pour un visiteur (#107, décision d'équipe : onboarding + connexion sur place) :
+                MyActionsSignIn = trois pas + LoginForm, la liste apparaît au changement de statut sans navigation ;
+                pendant la restauration de session, message d'attente au lieu d'une liste vide.
                 Création depuis la carte (Epic 7) : NeighborhoodMap accepte `draft` / `onDraftChange` / `draftContent`
                 (pin brouillon déplaçable, popup ; sans `draftContent` = simple sélecteur de lieu), MapPage garde le
                 lieu dans l'URL (`?at=lat,lng`, draftParam.ts), CreateActionDialog = Dialog + ActionForm, validation.ts,

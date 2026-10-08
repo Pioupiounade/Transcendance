@@ -218,7 +218,7 @@ Caché : CSS Modules sur les tokens de `styles/tokens.css`, états focus/disable
 ### 4.6 `features/auth` — session et écrans de connexion
 
 ```ts
-import { AuthProvider, useAuth, RequireAuth, LoginPage, RegisterPage, AUTH_ROUTES,
+import { AuthProvider, useAuth, RequireAuth, LoginPage, LoginForm, RegisterPage, AUTH_ROUTES,
          ROLE_APP, ACCOUNT_STATUS, type AuthUser, type AuthStatus } from '@/features/auth';
 
 useAuth() → { status: 'loading' | 'anonymous' | 'authenticated', user: AuthUser | null,
@@ -350,7 +350,7 @@ Backend = `main` au 24/09 (#40 auth/users/profiles/interests/orgs/membres/points
 | Feature | Backend | Frontend |
 |---|---|---|
 | Créer un compte | ✅ `POST /auth/register` (e-mail + mot de passe ≥ 8) | 🔜 `RegisterPage` (#50, PR) |
-| Se connecter / se déconnecter | ✅ `login`, `logout`, `refresh`, `me` | 🔜 `LoginPage`, `signOut` en en-tête (#50) ; session persistée ✅ (fix `http.ts` sur cette branche) |
+| Se connecter / se déconnecter | ✅ `login`, `logout`, `refresh`, `me` | ✅ `LoginPage` (#50) et `LoginForm` seul, posé sur « My Actions » pour un visiteur (#107) ; `signOut` en en-tête ; session persistée |
 | Créer son profil (particulier / asso / commerce) | ✅ `POST /profiles` (username, location, visibilité) ; pas de « type » de profil : une asso = une `Organization` | 🟡 `ProfileForm` mock, pas d'appel |
 | Modifier son profil | ✅ `PATCH /profiles/me` ; avatar ✅ `PATCH /profiles/me/avatar` (01/10, image non servie) | 🟡 mock |
 | Supprimer son compte | ❌ (seulement `PATCH /users/me/deactivate`, irréversible) | 🟡 bouton + `alert()` |
