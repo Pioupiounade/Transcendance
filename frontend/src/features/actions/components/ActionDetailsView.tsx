@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router';
 import type { ActionDetailData, ActionParticipant } from '../types';
 import './ActionDetailsView.css';
@@ -17,7 +17,6 @@ interface ActionDetailsViewProps {
 
 export const ActionDetailsView: React.FC<ActionDetailsViewProps> = ({
   action,
-  currentUser,
   currentUserId,
   onJoin,
   onLeave,
@@ -48,12 +47,9 @@ export const ActionDetailsView: React.FC<ActionDetailsViewProps> = ({
   const [participantsCount, setParticipantsCount] = useState<number>(
     action.currentParticipants
   );
-  const [participantsList, setParticipantsList] = useState<ActionParticipant[]>(participants);
-  
-  useEffect(() => {
-    setParticipantsList(participants);
-  }, [participants]);
-  
+  // La liste vient du parent, qui la relit après chaque rejoindre / quitter : pas d'état miroir.
+  const participantsList = participants;
+
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const prevImage = () => {
@@ -100,7 +96,6 @@ export const ActionDetailsView: React.FC<ActionDetailsViewProps> = ({
     isPending &&
     !isCreator &&
     isJoined;
-  const activeUserId = currentUser?.userId ?? 'current-user';
 
   const handleToggleJoin = async () => {
     if (isSubmitting) return;
@@ -111,14 +106,10 @@ export const ActionDetailsView: React.FC<ActionDetailsViewProps> = ({
         if (onLeave) await onLeave();
         setIsJoined(false);
         setParticipantsCount((prev) => Math.max(0, prev - 1));
-        setParticipantsList((prev) => prev.filter((p) => p.userId !== activeUserId));
       } else {
         if (onJoin) await onJoin();
         setIsJoined(true);
         setParticipantsCount((prev) => prev + 1);
-        if (currentUser) {
-          setParticipantsList((prev) => [...prev, currentUser]);
-        }
       }
     } finally {
       setIsSubmitting(false);

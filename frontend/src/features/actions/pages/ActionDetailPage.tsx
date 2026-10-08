@@ -1,15 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
-import { completeAction, approveAction, fetchAction } from '../api/actionsApi';
-import type { Action, ActionDetailData, ActionParticipant } from '../types';
+import { useAuth } from '@/features/auth';
+import type { Organization } from '@/features/organizations';
+import { fetchActionParticipants, joinAction, leaveAction, type ActionParticipantApi } from '@/features/participations';
+import { getPublicProfile, type PublicProfile } from '@/features/profile';
+import { fetchActionOrganization } from '../api/actionOrganizations';
+import { approveAction, completeAction, fetchAction } from '../api/actionsApi';
 import { ActionComments } from '../components/ActionComments';
 import { ActionDetailsView } from '../components/ActionDetailsView';
-import { getPublicProfile } from '@/features/profile';
-import type { PublicProfile } from '@/features/profile';
-import { fetchOrganization } from '@/features/organizations/api/organizationsApi';
-import type { Organization } from '@/features/organizations/types';
-import { fetchActionParticipants, joinAction, leaveAction } from '@/features/participations/api/participationsApi';
-import { useAuth } from '@/features/auth';
+import type { Action, ActionDetailData, ActionParticipant } from '../types';
 
 const toActionDetailData = (
 action: Action,
@@ -35,7 +34,7 @@ currentUserId: string | null): ActionDetailData => ({
   maxParticipants: action.max_participants,
   currentParticipants: action.participant_count,
 
-  images: action.imagesList ?? [],
+  images: [...action.images_before, ...action.images_after],
 
   organizer: {
     userId: action.creator_id,
@@ -52,152 +51,94 @@ currentUserId: string | null): ActionDetailData => ({
     participants,
   });
 
-  type ActionDetailPageProps = { editPath: (id: string) => string; };
+type ActionDetailPageProps = { editPath: (id: string) => string; };
+
+type Detail = {
+  action: Action;
+  participants: ActionParticipant[];
+  creatorProfile: PublicProfile | null;
+  organization: Organization | null;
+};
+
+/** Dernier chargement, étiqueté par l'id de la route : un autre id = en chargement, sans remise à zéro manuelle. */
+type Loaded = { id: string; detail: Detail | null };
+
+const toParticipants = (rows: ActionParticipantApi[]): ActionParticipant[] =>
+  rows.map((participant) => ({
+    userId: participant.user_id,
+    name: participant.username ?? `user-${participant.user_id}`,
+    avatarUrl: participant.profile_picture ?? undefined,
+  }));
+
+// Tout ce que la fiche affiche. Le profil du créateur (404 s'il est privé) et l'organisation sont facultatifs :
+// leur échec ne cache pas l'action.
+const loadDetail = async (id: string, signal: AbortSignal): Promise<Detail> => {
+  const action = await fetchAction(id, signal);
+  const [participantRows, creatorProfile, organization] = await Promise.all([
+    fetchActionParticipants(id, signal),
+    getPublicProfile(action.creator_id).catch(() => null),
+    action.organization_id === null ? null : fetchActionOrganization(action.organization_id, signal).catch(() => null),
+  ]);
+  return { action, participants: toParticipants(participantRows), creatorProfile, organization };
+};
 
 export const ActionDetailPage: React.FC<ActionDetailPageProps> = ({ editPath }) => {
-  
   const { id } = useParams<{ id: string }>();
 
-  const [action, setAction] = useState<Action | null>(null);
-  const [creatorProfile, setCreatorProfile] = useState<PublicProfile | null>(null);
-
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<unknown>(null);
-
-  const [organization, setOrganization] = useState<Organization | null>(null);
-
-  const [participants, setParticipants] = useState<ActionParticipant[]>([]);
-
   const { status, user } = useAuth();
-
-  const currentUserId = status === 'authenticated' ? user?.user_id ?? null : null;
-
+  const currentUserId = status === 'authenticated' ? (user?.user_id ?? null) : null;
   const navigate = useNavigate();
+  const [loaded, setLoaded] = useState<Loaded | null>(null);
 
   useEffect(() => {
-    if (!id) {
-      setIsLoading(false);
-      return;
-    }
-
-    setParticipants([]);
-    setOrganization(null);
-    setCreatorProfile(null);
-    setError(null);
-    setIsLoading(true);
-
+    if (!id) return;
     const controller = new AbortController();
-
-    const loadAction = async () => {
-      try {
-       
-        const actionData = await fetchAction(id, controller.signal);
-        setAction(actionData);
-
-        const participantRows = await fetchActionParticipants(
-          id,
-          controller.signal,
-        );
-
-        setParticipants(
-          participantRows.map((participant) => ({
-            userId: participant.user_id,
-            name: participant.username ?? `user-${participant.user_id}`,
-            avatarUrl: participant.profile_picture ?? undefined,
-          })),
-        );
-
-        const profile = await getPublicProfile(
-          String(actionData.creator_id),
-        );
-
-        setCreatorProfile(profile);
-
-        if (actionData.organization_id) {
-          try {
-            const organizationData = await fetchOrganization(
-              String(actionData.organization_id),
-              controller.signal,
-            );
-
-            setOrganization(organizationData);
-          } catch (organizationError) {
-            console.error(
-              'Unable to load organization:',
-              organizationError,
-            );
-          }
-        }
-      } catch (err) {
-        if (!controller.signal.aborted) {
-          setError(err);
-        }
-      } finally {
-        if (!controller.signal.aborted) {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    loadAction();
-
+    loadDetail(id, controller.signal)
+      .then((detail) => setLoaded({ id, detail }))
+      .catch(() => {
+        if (!controller.signal.aborted) setLoaded({ id, detail: null });
+      });
     return () => controller.abort();
   }, [id]);
 
+  const current = loaded !== null && loaded.id === id ? loaded : null;
+  const isLoading = id !== undefined && current === null;
+  const detail = current?.detail ?? null;
+
+  // Après rejoindre / quitter / approuver / terminer : relit l'action (statut, compteurs) et, s'il a changé, le
+  // groupe des participants ; le reste de la fiche ne bouge pas.
+  const refresh = async (actionId: string, withParticipants: boolean) => {
+    const action = await fetchAction(actionId);
+    const participants = withParticipants ? toParticipants(await fetchActionParticipants(actionId)) : null;
+    setLoaded((previous) =>
+      previous?.detail && previous.id === actionId
+        ? { id: actionId, detail: { ...previous.detail, action, participants: participants ?? previous.detail.participants } }
+        : previous,
+    );
+  };
+
   const handleJoin = async () => {
     if (!id) return;
-
     await joinAction(id);
-
-    const participantRows = await fetchActionParticipants(id);
-
-    setParticipants(
-      participantRows.map((participant) => ({
-        userId: participant.user_id,
-        name: participant.username ?? `user-${participant.user_id}`,
-        avatarUrl: participant.profile_picture ?? undefined,
-      })),
-    );
-
-    const updatedAction = await fetchAction(id);
-    setAction(updatedAction);
+    await refresh(id, true);
   };
 
   const handleLeave = async () => {
     if (!id) return;
-
     await leaveAction(id);
-
-    const participantRows = await fetchActionParticipants(id);
-
-    setParticipants(
-      participantRows.map((participant) => ({
-        userId: participant.user_id,
-        name: participant.username ?? `user-${participant.user_id}`,
-        avatarUrl: participant.profile_picture ?? undefined,
-      })),
-    );
-
-    const updatedAction = await fetchAction(id);
-    setAction(updatedAction);
+    await refresh(id, true);
   };
 
   const handleApprove = async () => {
     if (!id) return;
-
     await approveAction(id);
-
-    const updatedAction = await fetchAction(id);
-    setAction(updatedAction);
+    await refresh(id, false);
   };
 
   const handleComplete = async () => {
     if (!id) return;
-
     await completeAction(id);
-
-    const updatedAction = await fetchAction(id);
-    setAction(updatedAction);
+    await refresh(id, false);
   };
 
   if (isLoading) {
@@ -208,7 +149,7 @@ export const ActionDetailPage: React.FC<ActionDetailPageProps> = ({ editPath }) 
     );
   }
 
-  if (error || !action) {
+  if (!detail) {
     return (
       <div style={{ textAlign: 'center', padding: 'var(--s4)' }}>
         <h2>Action not found</h2>
@@ -216,6 +157,8 @@ export const ActionDetailPage: React.FC<ActionDetailPageProps> = ({ editPath }) 
       </div>
     );
   }
+
+  const { action, creatorProfile, organization, participants } = detail;
 
   const isCreator = currentUserId !== null && action.creator_id === currentUserId;
 

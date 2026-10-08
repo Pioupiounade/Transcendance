@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useSearchParams, useNavigate } from 'react-router';
 import { AUTH_ROUTES, useAuth } from '@/features/auth';
+import { useMyParticipations } from '@/features/participations';
 import { pageTitle } from '@/shared/lib/pageTitle';
 import { prefersReducedMotion } from '@/shared/lib/prefersReducedMotion';
 import { Button, Icon } from '@/shared/ui';
@@ -14,7 +15,6 @@ import { ACTIONS_LABELS } from '../labels';
 import { FOCUS_PARAM } from '../mapConfig';
 import { canManageAction } from '../permissions';
 import styles from './MapPage.module.css';
-import { getCurrentUserSummary, getProfileParticipations } from '@/features/profile/api/profileApi';
 import type { ActionRecord, Category, LatLng } from '../types';
 
 const text = ACTIONS_LABELS.map;
@@ -39,40 +39,13 @@ export function MapPage({ editPath }: MapPageProps) {
   );
   const listRef = useRef<HTMLUListElement>(null);
 
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-
-  const [participatedActionIds, setParticipatedActionIds] = useState<Set<string>>(
-    new Set(),
+  // La carte cache mes actions et celles déjà rejointes (visiteur : rien à cacher, aucun appel).
+  const currentUserId = status === 'authenticated' ? (user?.user_id ?? null) : null;
+  const { participations } = useMyParticipations();
+  const participatedActionIds = useMemo(
+    () => new Set(participations.map((participation) => participation.action_id)),
+    [participations],
   );
-
-  useEffect(() => {
-    if (status !== 'authenticated') {
-      setCurrentUserId(null);
-      setParticipatedActionIds(new Set());
-      return;
-    }
-
-    const loadMapContext = async () => {
-      try {
-        const [{ userId }, participations] = await Promise.all([
-          getCurrentUserSummary(),
-          getProfileParticipations(),
-        ]);
-
-        setCurrentUserId(userId);
-        setParticipatedActionIds(
-          new Set(
-            participations.map((participation) => participation.actionId),
-          ),
-        );
-      } catch {
-        setCurrentUserId(null);
-        setParticipatedActionIds(new Set());
-      }
-    };
-
-    loadMapContext();
-  }, [status]);
   // Le brouillon vit dans l'URL (`?at=lat,lng`) : il survit à un passage par /login et au rechargement.
   const draftParam = searchParams.get(DRAFT_PARAM);
   const draft = useMemo(() => parseDraft(draftParam), [draftParam]);
