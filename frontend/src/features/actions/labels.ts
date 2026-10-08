@@ -112,13 +112,16 @@ export const ACTIONS_LABELS = {
   myActions: {
     eyebrow: 'My Actions',
     title: 'Your actions, in one place.',
-    lead: 'The actions you suggest and the ones you join, with their next dates. Sign in to find them.',
+    lead: 'The actions you suggest and the ones you join, with their dates, places and discussions. Sign in to find them.',
     steps: [
       { title: 'Suggest', body: 'Drop a pin on the map and describe what you would like to do together.' },
       { title: 'Join', body: 'Confirm your place in a neighbour\'s action in one click.' },
-      { title: 'Follow', body: 'Dates, places and discussions of your actions stay here.' },
+      { title: 'Follow', body: 'Dates, places and discussions of your actions stay here, ready for the day.' },
     ],
+    trust: ['Local actions', 'Nearby neighbours', 'Verified organizers'],
     signInTitle: 'Sign in',
+    signInLead: 'Welcome back. Pick up where you left off.',
+    reassure: 'You choose what is visible on your profile.',
     noAccount: 'No account yet?',
     register: 'Create my account',
     loading: 'Loading your actions…',
