@@ -1,21 +1,29 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router';
-import { getPublicProfile } from '../api/profileApi';
-import type { PublicProfile } from '../types';
-import { INTEREST_LABELS } from '../interestLabels';
-import '../components/ProfileForm.css';
+import { useParams, Navigate } from 'react-router';
+import { getPublicProfile, getCurrentUserSummary } from '../api/profileApi';
+import { ProfileView } from '../components/ProfileView';
+import type { FriendshipStatus, InterestCategory, UserProfile } from '../types';
 
 export function PublicProfilePage() {
   const { userId } = useParams<{ userId: string }>();
-  const [profile, setProfile] = useState<PublicProfile | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [userInterests, setUserInterests] = useState<InterestCategory[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(false);
+
+  useEffect(() => {
+    getCurrentUserSummary()
+      .then((account) => setCurrentUserId(String(account.userId)))
+      .catch(() => setCurrentUserId(null));
+  }, []);
 
   useEffect(() => {
     let active = true;
     setIsLoading(true);
     setError(false);
-    setProfile(null);
+    setUserProfile(null);
+    setUserInterests([]);
 
     if (!userId) {
       setError(true);
@@ -25,7 +33,18 @@ export function PublicProfilePage() {
 
     getPublicProfile(userId)
       .then((data) => {
-        if (active) setProfile(data);
+        if (!active) return;
+        setUserProfile({
+          id: data.userId,
+          username: data.username,
+          description: data.description ?? undefined,
+          profilePicture: data.profilePicture ?? undefined,
+          commune: data.commune ?? null,
+          visibility: 'PUBLIC',
+          location: null,
+          friendshipStatus: 'NONE',
+        });
+        setUserInterests(data.interests ?? []);
       })
       .catch(() => {
         if (active) setError(true);
@@ -39,45 +58,43 @@ export function PublicProfilePage() {
     };
   }, [userId]);
 
-  if (isLoading) return <p role="status">Loading profile...</p>;
-  if (error || !profile) return <p role="alert">Public profile unavailable.</p>;
+  if (currentUserId && userId && String(currentUserId) === String(userId)) {
+    return <Navigate to="/profile" replace />;
+  }
 
+  if (isLoading) {
     return (
-    <section className="profile-page">
-        <div className="card panel">
-        <div className="header-actions" style={{ gap: '16px' }}>
-            <div className="profile-avatar avatar">
-            {profile.profilePicture ? (
-                <img src={profile.profilePicture} alt={`${profile.username}'s avatar`} />
-            ) : (
-                <span>{profile.username.slice(0, 2).toUpperCase()}</span>
-            )}
-            </div>
-
-            <div>
-            <h1>@{profile.username}</h1>
-            {profile.commune && <p className="help">{profile.commune}</p>}
-            </div>
-        </div>
-
-        <section aria-labelledby="public-profile-about">
-            <h2 id="public-profile-about">About</h2>
-            <p>{profile.description || 'No description provided yet.'}</p>
-        </section>
-
-        <section aria-labelledby="public-profile-interests">
-            <h2 id="public-profile-interests">Interests</h2>
-            {profile.interests.length === 0 ? (
-            <p>No interests selected yet.</p>
-            ) : (
-            <ul>
-                {profile.interests.map((interest) => (
-                <li key={interest}>{INTEREST_LABELS[interest]}</li>
-                ))}
-            </ul>
-            )}
-        </section>
-        </div>
-    </section>
+      <div style={{ textAlign: 'center', padding: '4rem 1rem' }}>
+        <p className="help" style={{ justifyContent: 'center' }}>Loading profile...</p>
+      </div>
     );
+  }
+
+  if (error || !userProfile) {
+    return (
+      <div style={{ textAlign: 'center', padding: '4rem 1rem' }}>
+        <h2>Profile not found</h2>
+        <p className="help help--error" style={{ justifyContent: 'center' }}>
+          Public profile unavailable.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <ProfileView
+      profile={userProfile}
+      isOwnProfile={false}
+      onEdit={() => {}}
+      onFriendshipChange={(newStatus: FriendshipStatus) => {
+        setUserProfile((prev) => (prev ? { ...prev, friendshipStatus: newStatus } : null));
+      }}
+      interests={userInterests}
+      interestsLoading={false}
+      interestsError={null}
+      activity={null}
+      activityLoading={false}
+      activityError={null}
+    />
+  );
 }

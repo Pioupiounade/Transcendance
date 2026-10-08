@@ -24,7 +24,6 @@ export const ActionDetailsView: React.FC<ActionDetailsViewProps> = ({
   onEdit,
   onApprove,
   onComplete,
-  
 }) => {
   const {
     title,
@@ -49,11 +48,11 @@ export const ActionDetailsView: React.FC<ActionDetailsViewProps> = ({
     action.currentParticipants
   );
   const [participantsList, setParticipantsList] = useState<ActionParticipant[]>(participants);
-  
+
   useEffect(() => {
     setParticipantsList(participants);
   }, [participants]);
-  
+
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const prevImage = () => {
@@ -77,29 +76,23 @@ export const ActionDetailsView: React.FC<ActionDetailsViewProps> = ({
 
   const availableSpots = hasParticipantLimit
     ? Math.max(0, maxParticipants - participantsCount)
-    : null;  
-  
+    : null;
+
   const isPending = status === 'pending';
 
   const isCreator =
     currentUserId !== null &&
     currentUserId !== undefined &&
-    currentUserId === organizer.userId;
+    String(currentUserId) === String(organizer.userId);
 
   const canJoin =
     currentUserId !== null &&
     isPending &&
     !isCreator &&
     !isJoined &&
-    (
-      !hasParticipantLimit ||
-      (availableSpots !== null && availableSpots > 0)
-    );
+    (!hasParticipantLimit || (availableSpots !== null && availableSpots > 0));
 
-  const canLeave =
-    isPending &&
-    !isCreator &&
-    isJoined;
+  const canLeave = isPending && !isCreator && isJoined;
   const activeUserId = currentUser?.userId ?? 'current-user';
 
   const handleToggleJoin = async () => {
@@ -128,7 +121,8 @@ export const ActionDetailsView: React.FC<ActionDetailsViewProps> = ({
   return (
     <div className="dashboard">
       <div className="card">
-        <div className="header"
+        <div
+          className="header"
           style={{
             display: 'flex',
             justifyContent: 'space-between',
@@ -145,27 +139,19 @@ export const ActionDetailsView: React.FC<ActionDetailsViewProps> = ({
             )}
           </div>
           <div style={{ display: 'flex', gap: '8px' }}>
-            {onApprove && (
-              <Button onClick={onApprove}>
-                Approve Action
-              </Button>
-            )}
-            {onComplete && (
-              <Button onClick={onComplete}>
-                Complete Action
-              </Button>
-            )}
-            {onEdit && (
-              <Button onClick={onEdit}>
-                Edit Action
-              </Button>
-            )}
+            {onApprove && <Button onClick={onApprove}>Approve Action</Button>}
+            {onComplete && <Button onClick={onComplete}>Complete Action</Button>}
+            {onEdit && <Button onClick={onEdit}>Edit Action</Button>}
           </div>
         </div>
         <h2>{title}</h2>
         <div className="organizer" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <Link
-            to={`/profiles/${organizer.userId}`}
+            to={
+              currentUserId && String(currentUserId) === String(organizer.userId)
+                ? '/profile'
+                : `/profiles/${organizer.userId}`
+            }
             style={{
               textDecoration: 'none',
               color: 'inherit',
@@ -174,14 +160,8 @@ export const ActionDetailsView: React.FC<ActionDetailsViewProps> = ({
               gap: '12px',
             }}
           >
-            <Avatar
-              src={organizer.avatarUrl}
-              name={organizer.name}
-              size={42}
-            />
-            <span className="organizer-label">
-              @{organizer.name}
-            </span>
+            <Avatar src={organizer.avatarUrl} name={organizer.name} size={42} />
+            <span className="organizer-label">@{organizer.name}</span>
           </Link>
 
           {organizer.organizationTitle && organizer.organizationId && (
@@ -195,7 +175,7 @@ export const ActionDetailsView: React.FC<ActionDetailsViewProps> = ({
               </Link>
             </div>
           )}
-          </div>
+        </div>
         {totalImages > 0 && (
           <div className="carousel">
             <div className="carousel-main">
@@ -248,7 +228,8 @@ export const ActionDetailsView: React.FC<ActionDetailsViewProps> = ({
             <strong>Date:</strong> {formattedDate}
           </div>
           <div>
-            <strong>Participants:</strong> {participantsCount} / {maxParticipants ?? 'Unlimited'} (min {minParticipants})
+            <strong>Participants:</strong> {participantsCount} / {maxParticipants ?? 'Unlimited'} (min{' '}
+            {minParticipants})
           </div>
         </div>
 
@@ -260,28 +241,19 @@ export const ActionDetailsView: React.FC<ActionDetailsViewProps> = ({
           <div className="participation-spots">
             <strong>Available spots:</strong>{' '}
             <span className={availableSpots === 0 ? 'text-danger' : ''}>
-              {availableSpots === null
-                ? 'Unlimited'
-                : `${availableSpots} remaining`}
+              {availableSpots === null ? 'Unlimited' : `${availableSpots} remaining`}
             </span>
           </div>
 
           <div className="participation-actions">
             {canLeave && (
-              <Button
-                variant="secondary"
-                disabled={isSubmitting}
-                onClick={handleToggleJoin}
-              >
+              <Button variant="secondary" disabled={isSubmitting} onClick={handleToggleJoin}>
                 {isSubmitting ? 'Updating...' : 'Leave Action'}
               </Button>
             )}
 
             {canJoin && (
-              <Button
-                disabled={isSubmitting}
-                onClick={handleToggleJoin}
-              >
+              <Button disabled={isSubmitting} onClick={handleToggleJoin}>
                 {isSubmitting ? 'Joining...' : 'Join Action'}
               </Button>
             )}
@@ -304,15 +276,15 @@ export const ActionDetailsView: React.FC<ActionDetailsViewProps> = ({
               {participantsList.map((participant) => (
                 <Link
                   key={participant.userId}
-                  to={`/profiles/${participant.userId}`}
+                  to={
+                    currentUserId && String(currentUserId) === String(participant.userId)
+                      ? '/profile'
+                      : `/profiles/${participant.userId}`
+                  }
                   title={participant.name}
                   style={{ textDecoration: 'none' }}
                 >
-                  <Avatar
-                    src={participant.avatarUrl}
-                    name={participant.name}
-                    size={36}
-                  />
+                  <Avatar src={participant.avatarUrl} name={participant.name} size={36} />
                 </Link>
               ))}
             </div>
