@@ -104,17 +104,19 @@
   max-width: 1800px;
   padding: 0 38px;
 }
+/* La carte prend toute la hauteur de la rangée (celle des trois prochaines actions) ; `--map-min-height` reste un plancher. */
 .liveLayout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 340px;
   gap: 22px;
-  align-items: start;
 }
 .liveMap {
+  display: grid;
   min-width: 0;
 }
 .upcoming {
   display: grid;
+  align-content: start;
   gap: 11px;
 }
 .upcomingTitle {
@@ -238,12 +240,9 @@
     height: 230px;
     margin-top: 28px;
   }
+  /* Mobile : même centrage qu'au-dessus de 760 px, boutons empilés pleine largeur. */
   .heroCopy {
-    max-width: none;
-    margin: 0;
     padding: 40px 16px 0;
-    text-align: left;
-    justify-items: start;
   }
   .heroTitle {
     font-size: 34px;
@@ -252,9 +251,8 @@
   .heroLead {
     font-size: 15px;
   }
-  .heroActions,
-  .trust {
-    justify-content: flex-start;
+  .heroActions {
+    width: 100%;
   }
   .heroActions > * {
     flex: 1 1 100%;
