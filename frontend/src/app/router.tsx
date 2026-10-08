@@ -70,7 +70,13 @@ const router = createBrowserRouter([
             children: [
               {
                 path: ROUTES.admin,
-                element: <AdminLayout />,
+                element: (
+                  <AdminLayout
+                    usersPath={ROUTES.adminUsers}
+                    actionsPath={ROUTES.adminActions}
+                    organizationsPath={ROUTES.adminOrganizations}
+                  />
+                ),
                 children: [
                   { index: true, element: <Navigate to={ROUTES.adminUsers} replace /> },
                   { path: ROUTES.adminUsers, element: <AdminUsersPage /> },

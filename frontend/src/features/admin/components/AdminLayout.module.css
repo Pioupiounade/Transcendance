@@ -1,0 +1,88 @@
+/* Barre d'onglets de l'espace admin : pleine largeur, contenu aligné sur le conteneur des pages (1400 px). */
+.bar {
+  border-bottom: 1px solid var(--line);
+  background: var(--ground);
+}
+
+.inner {
+  display: flex;
+  align-items: stretch;
+  gap: 28px;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 38px;
+}
+
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--terra);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1.8px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* Onglets : des liens qui ressemblent à des onglets ; la barre défile sous 760 px au lieu de replier. */
+.tabs {
+  display: flex;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow-x: auto;
+}
+
+.tab {
+  display: inline-flex;
+  align-items: center;
+  padding: 15px 16px 12px;
+  border-bottom: 3px solid transparent;
+  color: var(--muted);
+  font-size: 15px;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+  transition:
+    color var(--t-fast),
+    border-color var(--t-fast);
+}
+.tab:hover {
+  color: var(--brand);
+}
+.tab[aria-current='page'] {
+  color: var(--brand);
+  border-color: var(--brand);
+}
+.tab:focus-visible {
+  outline-offset: -3px;
+}
+
+@media (max-width: 1100px) {
+  .inner {
+    padding: 0 24px;
+  }
+}
+
+@media (max-width: 760px) {
+  .inner {
+    gap: 12px;
+    padding: 0 16px;
+  }
+  /* L'icône suffit : la place va aux onglets. */
+  .eyebrowLabel {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+  .tab {
+    padding: 13px 12px 10px;
+    font-size: 14px;
+  }
+}

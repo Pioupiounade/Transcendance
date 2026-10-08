@@ -20,8 +20,12 @@ export const ROUTES = {
   organizationManage: '/organizations/:id/manage',
   admin: '/admin',
   adminUsers: '/admin/users',
+  adminActions: '/admin/actions',
+  adminOrganizations: '/admin/organizations',
   ...AUTH_ROUTES,
 } as const;
+
+export const actionDetailPath = (id: string): string => ROUTES.actionDetail.replace(':id', id);
 
 export const editActionPath = (id: string): string => ROUTES.editAction.replace(':id', id);
 
