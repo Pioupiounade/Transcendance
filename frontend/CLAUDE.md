@@ -168,7 +168,7 @@ Inspirée de bulletproof-react et feature-sliced, réduite à ce que le projet j
 app/            composition root : seul endroit qui connaît tout
   main.tsx, App.tsx, router.tsx (AppRouter), routes.ts (ROUTES), labels.ts, lazyPage.ts
   layout/       PageShell (Suspense des pages paresseuses), AppHeader, BottomNav (mobile), AppFooter, navItems.ts
-                (en-tête : Home, Actions, Map, Organizations, Friends ; barre mobile : 5 entrées, Friends
+                (en-tête : Home, My Actions (libellé #60), Map, Organizations, Friends ; barre mobile : 5 entrées, Friends
                 `desktopOnly` et Profile à la place ; décision du 25/09/2026)
   pages/        pages sans domaine : Legal (CGU, confidentialité), NotFound, Placeholder ;
                 home/ (#65) : HomePage bascule selon la session → Landing (visiteur : hero StreetScene + promesse,
@@ -207,10 +207,18 @@ features/       1 domaine métier = 1 module ; interface = index.ts
                 formatDistance), DEFAULT_CENTER, FOCUS_PARAM.
                 Discussion (#70, Epic 4) : ActionComments `{ actionId }` sous la fiche (`GET`/`POST /actions/:id/comments`,
                 api/useActionComments + usePostComment, validateComment ≤ 1024, toCommentErrorMessage) ; monté par
-                ActionDetailPage pour un id numérique seulement tant que la fiche est un mock (#34, à brancher par #60).
+                ActionDetailPage pour le créateur et les participants seulement (`canComment` : le backend répond 403 aux autres
+                et 429 sous 15 s ; délai local en sessionStorage, #114).
+                Fiche réelle (#60, coéquipiers, 07/10/2026) : ActionDetailPage `{ editPath }` charge action + participants
+                (`features/participations`) + profil du créateur + organisation, rejoindre / quitter / approuver / terminer ;
+                ActionDetailsView = code coéquipier (React.FC, CSS global). `api/actionOrganizations.ts` porte les deux lectures
+                d'organisation de la feature (fiche, choix d'organisation dans ActionForm) : `features/organizations` importe déjà
+                `features/actions`, un import dans l'autre sens ferait un cycle ; seuls ses types viennent de son index. Carte (#60) :
+                seules les actions `PENDING` des autres non rejointes, clic sur un pin → fiche, plus de CTA « créer » (la dialog reste).
   profile/      coéquipier (#38 en cours, mock) ; ajout #65 : api/myProfile.ts (`GET /profiles/me`, 404 → null,
                 useMyProfile), seul fichier à nous dans ce dossier.
-  participations/ (existant : useMyParticipations, type MyParticipation)
+  participations/ useMyParticipations (sur useResource ; visiteur : liste vide sans appel), fetchActionParticipants /
+                joinAction / leaveAction (#60), type MyParticipation
   organizations/  #61 : OrganizationsPage `/organizations` (liste) et OrganizationPage `/organizations/:id` (fiche
                 publique + membres actifs) ; enums OrganizationStatus / RoleOrg / MemberStatus et libellés ; chemins
                 reçus en props (`organizationPath`, `listPath`).
@@ -262,7 +270,7 @@ features/       1 domaine métier = 1 module ; interface = index.ts
                 un non-admin voit la page 404 ; entrée « Admin » dans l'en-tête pour les seuls admins (icône seule
                 sur mobile, la barre basse garde cinq entrées). Modération (#23) et catégories / rôles (#24) :
                 pages sœurs à venir, backend incomplet.
-  friends/        (friend-requests + friendships)
+  friends/        coéquipier (LeNy, #66 / #68, PR #104) : FriendsPage `/friends` (protégée), api/friendsApi, useSocialManagement
   <feature>/
     api/        fonctions fetch typées + hooks useX : seuls appelants de shared/api
     components/ privés au domaine

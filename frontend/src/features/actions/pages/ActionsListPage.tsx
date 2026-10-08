@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState, type ChangeEvent } from 'react';
+import { useMemo, useState, type ChangeEvent } from 'react';
 import { useNavigate } from 'react-router';
 import { useAuth } from '@/features/auth';
+import { useMyParticipations } from '@/features/participations';
 import { Button } from '@/shared/ui/Button/Button';
 import { useActions } from '../api/useActions';
 import { ActionCard } from '../components/ActionCard';
@@ -9,59 +10,28 @@ import { MyActionsSignIn } from '../components/MyActionsSignIn';
 import { ACTIONS_LABELS } from '../labels';
 import type { Category } from '../types';
 import styles from './ActionsListPage.module.css';
-import { getCurrentUserSummary, getProfileParticipations } from '@/features/profile/api/profileApi';
 
 const PAGE_SIZE = 6;
 const text = ACTIONS_LABELS.myActions;
 
 export function ActionsListPage() {
   const navigate = useNavigate();
-  const { status: authStatus } = useAuth();
+  const { status: authStatus, user } = useAuth();
   const { actions, loading, error, reload } = useActions();
 
   const [category, setCategory] = useState<Category | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(1);
 
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-  const [participatedActionIds, setParticipatedActionIds] = useState<Set<string>>(new Set());
-  const [isContextLoading, setIsContextLoading] = useState(true);
   const [status, setStatus] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (authStatus !== 'authenticated') {
-      setIsContextLoading(false);
-      return;
-    }
-
-    let isMounted = true;
-    const loadMyActionContext = async () => {
-      setIsContextLoading(true);
-      try {
-        const [{ userId }, participations] = await Promise.all([
-          getCurrentUserSummary(),
-          getProfileParticipations(),
-        ]);
-
-        if (!isMounted) return;
-        setCurrentUserId(userId);
-        setParticipatedActionIds(
-          new Set(participations.map((participation) => participation.actionId)),
-        );
-      } catch {
-        if (!isMounted) return;
-        setCurrentUserId(null);
-        setParticipatedActionIds(new Set());
-      } finally {
-        if (isMounted) setIsContextLoading(false);
-      }
-    };
-
-    loadMyActionContext();
-    return () => {
-      isMounted = false;
-    };
-  }, [authStatus]);
+  // « Mes actions » = créées par moi ou rejointes (visiteur : aucune, aucun appel).
+  const currentUserId = authStatus === 'authenticated' ? (user?.user_id ?? null) : null;
+  const { participations } = useMyParticipations();
+  const participatedActionIds = useMemo(
+    () => new Set(participations.map((participation) => participation.action_id)),
+    [participations],
+  );
 
   const filteredActions = useMemo(() => {
     return actions.filter((action) => {

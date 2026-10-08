@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router';
 import type { ActionDetailData, ActionParticipant } from '../types';
 import './ActionDetailsView.css';
 import { Avatar, Button } from '../../../shared/ui';
+import { toActionErrorMessage } from '../errors';
 
 interface ActionDetailsViewProps {
   action: ActionDetailData;
@@ -17,7 +18,6 @@ interface ActionDetailsViewProps {
 
 export const ActionDetailsView: React.FC<ActionDetailsViewProps> = ({
   action,
-  currentUser,
   currentUserId,
   onJoin,
   onLeave,
@@ -48,13 +48,12 @@ export const ActionDetailsView: React.FC<ActionDetailsViewProps> = ({
   const [participantsCount, setParticipantsCount] = useState<number>(
     action.currentParticipants
   );
-  const [participantsList, setParticipantsList] = useState<ActionParticipant[]>(participants);
-  
-  useEffect(() => {
-    setParticipantsList(participants);
-  }, [participants]);
-  
+  // La liste vient du parent, qui la relit après chaque rejoindre / quitter : pas d'état miroir.
+  const participantsList = participants;
+
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [statusSubmitting, setStatusSubmitting] = useState(false);
 
   const prevImage = () => {
     setCurrentIndex((prev) => (prev === 0 ? totalImages - 1 : prev - 1));
@@ -100,28 +99,39 @@ export const ActionDetailsView: React.FC<ActionDetailsViewProps> = ({
     isPending &&
     !isCreator &&
     isJoined;
-  const activeUserId = currentUser?.userId ?? 'current-user';
 
   const handleToggleJoin = async () => {
     if (isSubmitting) return;
     setIsSubmitting(true);
+    setActionError(null);
 
     try {
       if (isJoined) {
         if (onLeave) await onLeave();
         setIsJoined(false);
         setParticipantsCount((prev) => Math.max(0, prev - 1));
-        setParticipantsList((prev) => prev.filter((p) => p.userId !== activeUserId));
       } else {
         if (onJoin) await onJoin();
         setIsJoined(true);
         setParticipantsCount((prev) => prev + 1);
-        if (currentUser) {
-          setParticipantsList((prev) => [...prev, currentUser]);
-        }
       }
+    } catch (error) {
+      setActionError(toActionErrorMessage(error));
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleStatusAction = async (actionHandler: (() => Promise<void> | void) | undefined) => {
+    if (!actionHandler || statusSubmitting) return;
+    setStatusSubmitting(true);
+    setActionError(null);
+    try {
+      await actionHandler();
+    } catch (error) {
+      setActionError(toActionErrorMessage(error));
+    } finally {
+      setStatusSubmitting(false);
     }
   };
 
@@ -146,12 +156,12 @@ export const ActionDetailsView: React.FC<ActionDetailsViewProps> = ({
           </div>
           <div style={{ display: 'flex', gap: '8px' }}>
             {onApprove && (
-              <Button onClick={onApprove}>
+              <Button disabled={statusSubmitting} loading={statusSubmitting} onClick={() => handleStatusAction(onApprove)}>
                 Approve Action
               </Button>
             )}
             {onComplete && (
-              <Button onClick={onComplete}>
+              <Button disabled={statusSubmitting} loading={statusSubmitting} onClick={() => handleStatusAction(onComplete)}>
                 Complete Action
               </Button>
             )}
@@ -162,6 +172,11 @@ export const ActionDetailsView: React.FC<ActionDetailsViewProps> = ({
             )}
           </div>
         </div>
+        {actionError && (
+          <p role="alert" style={{ color: 'var(--danger, #b93832)' }}>
+            {actionError}
+          </p>
+        )}
         <h2>{title}</h2>
         <div className="organizer" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <Link
