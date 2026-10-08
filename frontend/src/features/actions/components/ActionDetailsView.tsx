@@ -3,6 +3,7 @@ import { Link } from 'react-router';
 import type { ActionDetailData, ActionParticipant } from '../types';
 import './ActionDetailsView.css';
 import { Avatar, Button } from '../../../shared/ui';
+import { toActionErrorMessage } from '../errors';
 
 interface ActionDetailsViewProps {
   action: ActionDetailData;
@@ -51,6 +52,8 @@ export const ActionDetailsView: React.FC<ActionDetailsViewProps> = ({
   const participantsList = participants;
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [statusSubmitting, setStatusSubmitting] = useState(false);
 
   const prevImage = () => {
     setCurrentIndex((prev) => (prev === 0 ? totalImages - 1 : prev - 1));
@@ -100,6 +103,7 @@ export const ActionDetailsView: React.FC<ActionDetailsViewProps> = ({
   const handleToggleJoin = async () => {
     if (isSubmitting) return;
     setIsSubmitting(true);
+    setActionError(null);
 
     try {
       if (isJoined) {
@@ -111,8 +115,23 @@ export const ActionDetailsView: React.FC<ActionDetailsViewProps> = ({
         setIsJoined(true);
         setParticipantsCount((prev) => prev + 1);
       }
+    } catch (error) {
+      setActionError(toActionErrorMessage(error));
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleStatusAction = async (actionHandler: (() => Promise<void> | void) | undefined) => {
+    if (!actionHandler || statusSubmitting) return;
+    setStatusSubmitting(true);
+    setActionError(null);
+    try {
+      await actionHandler();
+    } catch (error) {
+      setActionError(toActionErrorMessage(error));
+    } finally {
+      setStatusSubmitting(false);
     }
   };
 
@@ -137,12 +156,12 @@ export const ActionDetailsView: React.FC<ActionDetailsViewProps> = ({
           </div>
           <div style={{ display: 'flex', gap: '8px' }}>
             {onApprove && (
-              <Button onClick={onApprove}>
+              <Button disabled={statusSubmitting} loading={statusSubmitting} onClick={() => handleStatusAction(onApprove)}>
                 Approve Action
               </Button>
             )}
             {onComplete && (
-              <Button onClick={onComplete}>
+              <Button disabled={statusSubmitting} loading={statusSubmitting} onClick={() => handleStatusAction(onComplete)}>
                 Complete Action
               </Button>
             )}
@@ -153,6 +172,11 @@ export const ActionDetailsView: React.FC<ActionDetailsViewProps> = ({
             )}
           </div>
         </div>
+        {actionError && (
+          <p role="alert" style={{ color: 'var(--danger, #b93832)' }}>
+            {actionError}
+          </p>
+        )}
         <h2>{title}</h2>
         <div className="organizer" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <Link

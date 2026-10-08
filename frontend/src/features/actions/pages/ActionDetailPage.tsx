@@ -163,9 +163,10 @@ export const ActionDetailPage: React.FC<ActionDetailPageProps> = ({ editPath }) 
   const isCreator = currentUserId !== null && action.creator_id === currentUserId;
 
   const canEdit = isCreator && action.status === 'PENDING';
+  const approvableParticipantCount = participants.filter((participant) => participant.userId !== action.creator_id).length;
 
   const canApprove = isCreator && action.status === 'PENDING' &&
-  action.participant_count >= (action.min_participants ?? 0);
+  approvableParticipantCount >= (action.min_participants ?? 0);
   
   const canComplete = isCreator && action.status === 'APPROVED';
   
