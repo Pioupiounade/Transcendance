@@ -3,6 +3,7 @@ export { AuthProvider } from './components/AuthProvider';
 export { RequireAuth } from './components/RequireAuth';
 export { RequireRole } from './components/RequireRole';
 export { LoginPage } from './pages/LoginPage';
+export { LoginForm } from './components/LoginForm';
 export { RegisterPage } from './pages/RegisterPage';
 export { useAuth } from './hooks/useAuth';
 export { AUTH_ROUTES } from './routes';
