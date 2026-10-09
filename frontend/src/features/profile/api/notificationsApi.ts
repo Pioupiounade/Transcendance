@@ -18,7 +18,7 @@ export interface NotificationPreference {
 }
 
 export const NOTIFICATION_LABELS: Record<NotificationType, string> = {
-  NEW_MESSAGE: 'Direct messages',
+  NEW_MESSAGE: 'New messages',
   FRIEND_REQUEST: 'Friend requests',
   ACTION_COMMENT: 'Action comments',
   ORGANIZATION_COMMENT: 'Organization comments',

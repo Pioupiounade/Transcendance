@@ -160,7 +160,15 @@ export const ProfilePage: React.FC = () => {
 
   const handleDeactivate = async () => {
     await deactivateAccount();
-    await logout();
+    try {
+      await logout();
+    } catch {
+      // Ignorar fallo de sesión ya revocada en el backend
+    } finally {
+      localStorage.clear();
+      sessionStorage.clear();
+      window.location.href = '/';
+    }
   };
 
   if (isLoading) {
