@@ -31,7 +31,7 @@ export const FriendCard: React.FC<FriendCardProps> = ({ friend, onRemove, onBloc
         />
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
           <Link
-            to={`/profile/${friend.username}`}
+            to={`/profiles/${friend.user_id}`}
             style={{ fontWeight: 600, fontSize: '0.98rem', color: 'var(--ink, #1f2937)', textDecoration: 'none' }}
           >
             @{friend.username || 'unknown'}
@@ -43,13 +43,21 @@ export const FriendCard: React.FC<FriendCardProps> = ({ friend, onRemove, onBloc
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <Link
+        {/* <Link
           to={`/messages`}
           className="btn btn--secondary"
           style={{ textDecoration: 'none', padding: '6px 14px', fontSize: '0.85rem', borderRadius: '999px' }}
         >
           Message
-        </Link>
+        </Link> */}
+        <button
+          type="button"
+          disabled
+          className="btn btn--secondary"
+          style={{ padding: '6px 14px', fontSize: '0.85rem', borderRadius: '999px', cursor: 'pointer' }}
+          >
+          Message
+        </button>
         <button
           type="button"
           className="btn btn--secondary"

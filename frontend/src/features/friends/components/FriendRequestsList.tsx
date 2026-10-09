@@ -11,12 +11,12 @@ interface FriendRequestsListProps {
 }
 
 function resolveUser(req: FriendRequestItem, type: 'received' | 'sent') {
-  // En recibidas el otro usuario es requester; en enviadas es addressee
   const target: FriendRequestUser | undefined = type === 'received' ? req.requester : req.addressee;
-  const username = target?.username ?? `user_${target?.user_id ?? 'unknown'}`;
+  const userId = target?.user_id ?? (type === 'received' ? req.requester_id : req.addressee_id) ?? '';
+  const username = target?.username ?? `user_${userId || 'unknown'}`;
   const avatar = target?.profile_picture ?? undefined;
 
-  return { username, avatar };
+  return { userId, username, avatar };
 }
 
 export const FriendRequestsList: React.FC<FriendRequestsListProps> = ({
@@ -37,7 +37,7 @@ export const FriendRequestsList: React.FC<FriendRequestsListProps> = ({
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {receivedRequests.map((req) => {
-              const { username, avatar } = resolveUser(req, 'received');
+              const { userId, username, avatar } = resolveUser(req, 'received');
               const reqId = req.friend_request_id;
 
               return (
@@ -58,7 +58,7 @@ export const FriendRequestsList: React.FC<FriendRequestsListProps> = ({
                     <Avatar src={avatar} name={username} />
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                       <Link
-                        to={`/profile/${username}`}
+                        to={`/profiles/${userId}`}
                         style={{ fontWeight: 600, color: 'var(--ink, #1f2937)', textDecoration: 'none' }}
                       >
                         @{username}
@@ -117,7 +117,7 @@ export const FriendRequestsList: React.FC<FriendRequestsListProps> = ({
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {sentRequests.map((req) => {
-              const { username, avatar } = resolveUser(req, 'sent');
+              const { userId, username, avatar } = resolveUser(req, 'sent');
               const reqId = req.friend_request_id;
 
               return (
@@ -138,7 +138,7 @@ export const FriendRequestsList: React.FC<FriendRequestsListProps> = ({
                     <Avatar src={avatar} name={username} />
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                       <Link
-                        to={`/profile/${username}`}
+                        to={`/profiles/${userId}`}
                         style={{ fontWeight: 600, color: 'var(--ink, #1f2937)', textDecoration: 'none' }}
                       >
                         @{username}

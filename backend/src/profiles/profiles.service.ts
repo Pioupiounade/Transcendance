@@ -53,17 +53,30 @@ export class ProfilesService {
       throw new NotFoundException('Profile not found');
     }
 
-    if (profile.visibility === ProfileVisibility.PRIVATE && profile.user_id.toString() !== viewerId) {
-      throw new NotFoundException('Profile not found');
+    const isOwner = profile.user_id.toString() === viewerId;
+
+    if (profile.visibility === ProfileVisibility.PRIVATE && !isOwner) {
+      return {
+        user_id: profile.user_id.toString(),
+        username: profile.username,
+        profile_picture: profile.profile_picture ?? null,
+        visibility: ProfileVisibility.PRIVATE,
+        isPrivate: true,
+      };
     }
 
     if (profile.visibility === ProfileVisibility.FRIENDS_ONLY) {
       if (!viewerId) {
-        throw new NotFoundException('Profile not found');
+        return {
+          user_id: profile.user_id.toString(),
+          username: profile.username,
+          profile_picture: profile.profile_picture ?? null,
+          visibility: ProfileVisibility.FRIENDS_ONLY,
+          isPrivate: true,
+        };
       }
 
       const visitorId = BigInt(viewerId);
-
       if (visitorId === profile.user_id) {
 
       } else {

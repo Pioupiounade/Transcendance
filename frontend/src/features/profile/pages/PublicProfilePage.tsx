@@ -1,21 +1,28 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router';
+import { useParams, Navigate } from 'react-router';
+import { useAuth } from '@/features/auth';
 import { getPublicProfile } from '../api/profileApi';
-import type { PublicProfile } from '../types';
-import { INTEREST_LABELS } from '../interestLabels';
-import '../components/ProfileForm.css';
+import { ProfileView } from '../components/ProfileView';
+import type { FriendshipStatus, InterestCategory, UserProfile } from '../types';
 
 export function PublicProfilePage() {
   const { userId } = useParams<{ userId: string }>();
-  const [profile, setProfile] = useState<PublicProfile | null>(null);
+  const { user } = useAuth();
+  const currentUserId = user?.user_id ? String(user.user_id) : null;
+
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [userInterests, setUserInterests] = useState<InterestCategory[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isPrivate, setIsPrivate] = useState(false);
   const [error, setError] = useState(false);
 
   useEffect(() => {
     let active = true;
     setIsLoading(true);
     setError(false);
-    setProfile(null);
+    setIsPrivate(false);
+    setUserProfile(null);
+    setUserInterests([]);
 
     if (!userId) {
       setError(true);
@@ -24,11 +31,39 @@ export function PublicProfilePage() {
     }
 
     getPublicProfile(userId)
-      .then((data) => {
-        if (active) setProfile(data);
+      .then((data: any) => {
+        if (!active) return;
+
+        // Détection de la visibilité restreinte depuis le DTO backend
+        if (
+          data.isPrivate ||
+          data.visibility === 'PRIVATE' ||
+          data.visibility === 'FRIENDS_ONLY'
+        ) {
+          setIsPrivate(true);
+          return;
+        }
+
+        // Profil public complet
+        setUserProfile({
+          id: String(data.user_id ?? data.userId),
+          username: data.username,
+          description: data.description ?? undefined,
+          profilePicture: data.profile_picture ?? data.profilePicture ?? undefined,
+          commune: data.commune ?? null,
+          visibility: data.visibility ?? 'PUBLIC',
+          location: null,
+          friendshipStatus: 'NONE',
+        });
+        setUserInterests(data.interests ?? []);
       })
-      .catch(() => {
-        if (active) setError(true);
+      .catch((err) => {
+        if (!active) return;
+        if (err?.status === 403 || err?.status === 404) {
+          setIsPrivate(true);
+        } else {
+          setError(true);
+        }
       })
       .finally(() => {
         if (active) setIsLoading(false);
@@ -39,45 +74,55 @@ export function PublicProfilePage() {
     };
   }, [userId]);
 
-  if (isLoading) return <p role="status">Loading profile...</p>;
-  if (error || !profile) return <p role="alert">Public profile unavailable.</p>;
+  // Redirection synchrone immédiate si c'est son propre profil
+  if (currentUserId && userId && currentUserId === String(userId)) {
+    return <Navigate to="/profile" replace />;
+  }
 
+  if (isLoading) {
     return (
-    <section className="profile-page">
-        <div className="card panel">
-        <div className="header-actions" style={{ gap: '16px' }}>
-            <div className="profile-avatar avatar">
-            {profile.profilePicture ? (
-                <img src={profile.profilePicture} alt={`${profile.username}'s avatar`} />
-            ) : (
-                <span>{profile.username.slice(0, 2).toUpperCase()}</span>
-            )}
-            </div>
-
-            <div>
-            <h1>@{profile.username}</h1>
-            {profile.commune && <p className="help">{profile.commune}</p>}
-            </div>
-        </div>
-
-        <section aria-labelledby="public-profile-about">
-            <h2 id="public-profile-about">About</h2>
-            <p>{profile.description || 'No description provided yet.'}</p>
-        </section>
-
-        <section aria-labelledby="public-profile-interests">
-            <h2 id="public-profile-interests">Interests</h2>
-            {profile.interests.length === 0 ? (
-            <p>No interests selected yet.</p>
-            ) : (
-            <ul>
-                {profile.interests.map((interest) => (
-                <li key={interest}>{INTEREST_LABELS[interest]}</li>
-                ))}
-            </ul>
-            )}
-        </section>
-        </div>
-    </section>
+      <div style={{ textAlign: 'center', padding: '4rem 1rem' }}>
+        <p className="help" style={{ justifyContent: 'center' }}>Loading profile...</p>
+      </div>
     );
+  }
+
+  if (isPrivate) {
+    return (
+      <div style={{ textAlign: 'center', padding: '4rem 1rem' }}>
+        <h2>Private Profile</h2>
+        <p className="help" style={{ justifyContent: 'center' }}>
+          This user has set their profile to private.
+        </p>
+      </div>
+    );
+  }
+
+  if (error || !userProfile) {
+    return (
+      <div style={{ textAlign: 'center', padding: '4rem 1rem' }}>
+        <h2>Profile not found</h2>
+        <p className="help help--error" style={{ justifyContent: 'center' }}>
+          Public profile unavailable.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <ProfileView
+      profile={userProfile}
+      isOwnProfile={false}
+      onEdit={() => { }}
+      onFriendshipChange={(newStatus: FriendshipStatus) => {
+        setUserProfile((prev) => (prev ? { ...prev, friendshipStatus: newStatus } : null));
+      }}
+      interests={userInterests}
+      interestsLoading={false}
+      interestsError={null}
+      activity={null}
+      activityLoading={false}
+      activityError={null}
+    />
+  );
 }

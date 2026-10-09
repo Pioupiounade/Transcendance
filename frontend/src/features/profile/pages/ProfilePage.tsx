@@ -1,14 +1,20 @@
 import React, { useEffect, useState } from 'react';
-import { selectInterest, removeInterest, useProfile, createProfile, updateProfile, getProfileActivity, getMyInterests } from '../api/profileApi';
-import { useParams } from 'react-router';
+import {
+  selectInterest,
+  removeInterest,
+  useProfile,
+  createProfile,
+  updateProfile,
+  getProfileActivity,
+  getMyInterests,
+} from '../api/profileApi';
 import { ProfileView } from '../components/ProfileView';
 import { ProfileForm } from '../components/ProfileForm';
-import type { ProfileActivity, UserProfile, InterestCategory, FriendshipStatus } from '../types';
+import type { ProfileActivity, UserProfile, InterestCategory } from '../types';
 import { isApiError } from '@/shared/api';
 
 export const ProfilePage: React.FC = () => {
-  const { userId } = useParams<{ userId?: string }>();
-  const { profile, isLoading, error, setProfile } = useProfile(userId);
+  const { profile, isLoading, error, setProfile } = useProfile();
   const [isEditing, setIsEditing] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
@@ -99,33 +105,30 @@ export const ProfilePage: React.FC = () => {
       setIsSaving(false);
     }
   };
-    if (isLoading) {
-      return (
-        <div style={{ textAlign: 'center', padding: '4rem 1rem' }}>
-          <p className="help" style={{ justifyContent: 'center' }}>Loading profile...</p>
-        </div>
-      );
+
+  if (isLoading) {
+    return (
+      <div style={{ textAlign: 'center', padding: '4rem 1rem' }}>
+        <p className="help" style={{ justifyContent: 'center' }}>Loading profile...</p>
+      </div>
+    );
+  }
+
+  if (isCreating) {
+    return (
+      <>
+        {createError && <p role="alert">{createError}</p>}
+        <ProfileForm
+          onSave={handleCreate}
+          onCancel={() => setIsCreating(false)}
+          isSaving={isSaving}
+          initialInterests={interests}
+        />
+      </>
+    );
   }
 
   if (isApiError(error) && error.status === 404 && !profile) {
-    if (isCreating) {
-      return (
-        <>
-          {createError && <p role="alert">{createError}</p>}
-          <ProfileForm
-            onSave={handleCreate}
-            onCancel={() => setIsCreating(false)}
-            isSaving={isSaving}
-            initialInterests={interests}
-          />
-        </>
-      );
-    }
-  }
-
-  const isOwnProfile = !userId;
-
-  if (isOwnProfile && isApiError(error) && error.status === 404 && !profile) {
     return (
       <div style={{ textAlign: 'center', padding: '4rem 1rem' }}>
         <h2>No profile yet</h2>
@@ -206,11 +209,7 @@ export const ProfilePage: React.FC = () => {
     }
   };
 
-  const handleFriendshipChange = (newStatus: FriendshipStatus) => {
-    setProfile((prev) => (prev ? { ...prev, friendshipStatus: newStatus } : null));
-  };
-
-  if (isEditing && isOwnProfile) {
+  if (isEditing) {
     return (
       <>
         {updateError && <p role="alert">{updateError}</p>}
@@ -228,10 +227,9 @@ export const ProfilePage: React.FC = () => {
   return (
     <ProfileView
       profile={profile}
-      isOwnProfile={isOwnProfile}
+      isOwnProfile={true}
       onEdit={() => setIsEditing(true)}
-      //onDeleteAccount={handleDeleteAccount}
-      onFriendshipChange={handleFriendshipChange}
+      onFriendshipChange={() => {}}
       activity={activity}
       activityLoading={activityLoading}
       activityError={activityError}
