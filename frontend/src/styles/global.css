@@ -16,6 +16,8 @@ body {
   color: var(--ink);
   background: var(--surface);
   letter-spacing: var(--track);
+  /* Hérité partout : un mot sans espace (URL, description collée) se coupe au lieu d'élargir la page. */
+  overflow-wrap: anywhere;
 }
 
 h1,

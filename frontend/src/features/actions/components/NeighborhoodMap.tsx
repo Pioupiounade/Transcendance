@@ -121,6 +121,15 @@ export function NeighborhoodMap({
     fitToActions();
   }, [fitToActions]);
 
+  // Leaflet ne surveille que la fenêtre : quand l'hôte change la taille du conteneur (rangée qui grandit avec les
+  // cartes voisines, panneau replié), la carte recalcule la sienne, sinon des tuiles manquent sur la zone gagnée.
+  useEffect(() => {
+    if (!map) return;
+    const observer = new ResizeObserver(() => map.invalidateSize({ animate: false }));
+    observer.observe(map.getContainer());
+    return () => observer.disconnect();
+  }, [map]);
+
   // `actions` en dépendance : une sélection posée avant un rechargement de la liste (action tout juste
   // créée) s'ouvre quand son marqueur apparaît.
   useEffect(() => {

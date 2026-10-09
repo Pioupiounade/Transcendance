@@ -11,7 +11,7 @@ import {
   useActions,
 } from '@/features/actions';
 import { pageTitle } from '@/shared/lib/pageTitle';
-import { Button, ButtonLink, Icon, StreetScene, type IconName } from '@/shared/ui';
+import { Button, ButtonLink, Icon, Steps, StreetScene, type IconName } from '@/shared/ui';
 import { APP_LABELS } from '../../labels';
 import { ROUTES } from '../../routes';
 import styles from './Landing.module.css';
@@ -76,18 +76,7 @@ export function Landing() {
           <p className={styles.eyebrow}>{text.how.eyebrow}</p>
           <h2 id="how-title">{text.how.title}</h2>
         </header>
-        <ol className={styles.steps}>
-          {text.how.steps.map((step, index) => (
-            <li key={step.title} className={styles.step}>
-              <span className={styles.stepIcon}>
-                <Icon name={STEP_ICONS[index]} size={22} />
-              </span>
-              <span className={styles.stepNumber}>{index + 1}</span>
-              <h3>{step.title}</h3>
-              <p>{step.body}</p>
-            </li>
-          ))}
-        </ol>
+        <Steps steps={text.how.steps.map((step, index) => ({ ...step, icon: STEP_ICONS[index] }))} />
       </section>
 
       <section className={[styles.section, styles.live].join(' ')} aria-labelledby="live-title">

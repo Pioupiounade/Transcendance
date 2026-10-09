@@ -150,6 +150,9 @@ Ce fichier est chargé automatiquement quand la session démarre dans `frontend/
   (`:root[data-theme='admin']`, accent inversé terracotta / sauge, contrastes vérifiés). Un composant ne code jamais
   une couleur en dur : il lit un token (`--on-brand`, `--ground-hover`, `--field-bg`, `--disabled-*`…), sinon il casse
   dans le thème sombre.
+- Texte : `overflow-wrap: anywhere` est posé sur `body` (`global.css`, hérité) pour qu'un mot sans espace (URL,
+  description collée) se coupe au lieu d'élargir la page ; les composants gardent leurs `line-clamp`. Ne pas le
+  redéclarer localement.
 - Zéro erreur ni warning dans la console navigateur (exigence du sujet). Cible : dernière version stable de Chrome,
   responsive du mobile au desktop.
 
@@ -175,13 +178,18 @@ app/            composition root : seul endroit qui connaît tout
                 ouvertes par date, NearbyActions = actions ouvertes des autres triées par distance depuis
                 `profiles/me.location` sinon Saint-Cyprien). app compose les features par leurs index.
 features/       1 domaine métier = 1 module ; interface = index.ts
-  auth/         session, RequireAuth, LoginPage, RegisterPage (#50) ; validation.ts miroir des DTO, errors.ts
+  auth/         session, RequireAuth, LoginPage, RegisterPage (#50), LoginForm (le formulaire seul, `{ onSignedIn? }`,
+                réutilisé là où un visiteur doit se connecter sur place : « My Actions » #107) ; validation.ts miroir des DTO, errors.ts
                 traduit les ApiError en messages ; les formulaires utilisent shared/hooks/useForm
   profile/      users + profiles + interests (api_contract §6-8)
   actions/      actions + carte + filtres ; owner des enums Category/ActionStatus et de leurs libellés.
                 Existant (#12) : MapPage, NeighborhoodMap, ActionCard, CategoryFilter, useActions, mapConfig.ts.
                 Depuis le 25/09/2026 (écart assumé avec la maquette) : carte pleine largeur, cartes en grille
                 dessous ; ActionCard a un fond très léger par catégorie (`--card-*-bg` dans tokens.css).
+                « My Actions » `/actions` pour un visiteur (#107, décision d'équipe : onboarding + connexion sur place) :
+                MyActionsSignIn reprend la grammaire de l'accueil : hero (accroche, gages de confiance, StreetScene), « How it
+                works » sur `Steps`, puis la carte de connexion centrée (LoginForm) ; la liste apparaît au changement de statut ;
+                pendant la restauration de session, message d'attente au lieu d'une liste vide.
                 Création depuis la carte (Epic 7) : NeighborhoodMap accepte `draft` / `onDraftChange` / `draftContent`
                 (pin brouillon déplaçable, popup ; sans `draftContent` = simple sélecteur de lieu), MapPage garde le
                 lieu dans l'URL (`?at=lat,lng`, draftParam.ts), CreateActionDialog = Dialog + ActionForm, validation.ts,
@@ -193,7 +201,8 @@ features/       1 domaine métier = 1 module ; interface = index.ts
                 n'a que `cancel`), api/useAction, useUpdateAction, useCancelAction. Les pages reçoivent les chemins
                 (`mapPath`, `createPath`, `editPath`) en props : la feature n'importe pas `app/`. Retour sur la carte
                 par `/map?focus=<id>` (mapConfig.ts) + `state.notice`. L'index exporte aussi les briques du tableau
-                de bord : NeighborhoodMap (hauteur surchargeable par `--map-min-height*`), ActionCard (pied :
+                de bord : NeighborhoodMap (hauteur surchargeable par `--map-min-height*`, et suit la taille de son conteneur :
+                ResizeObserver → `invalidateSize`, la rangée de la landing lui donne la hauteur des cartes voisines), ActionCard (pied :
                 voisins inscrits, places ; `distance` remplace le statut), useActions, geo.ts (distanceMeters,
                 formatDistance), DEFAULT_CENTER, FOCUS_PARAM.
                 Discussion (#70, Epic 4) : ActionComments `{ actionId }` sous la fiche (`GET`/`POST /actions/:id/comments`,
@@ -278,6 +287,8 @@ shared/         zéro connaissance métier, réutilisable ailleurs
                 datetime-local), FloatingTextarea (même habillage, privé : FieldShell + fieldA11y), Checkbox (libellé
                 riche), Dialog (`<dialog>` natif : `{ open, onClose, title, closeLabel }`, enfants montés si ouvert),
                 StreetScene (illustration de rue de la maquette, décorative ; l'hôte fixe la hauteur : auth, landing),
+                Steps (trois étapes numérotées sur cartes teintées `{ steps: Step[] }` : « How it works » de la landing et de
+                la page My Actions visiteur),
                 CommentThread (fil à plat `{ comments: ThreadComment[], mineLabel, deletion? }` : bouton de
                 suppression sur les commentaires `canDelete`, la confirmation reste chez l'appelant) et CommentComposer (zone de texte +
                 compteur + bouton : `{ label, maxLength, submitLabel, submittingLabel, validate, onSubmit, describeError }`)
