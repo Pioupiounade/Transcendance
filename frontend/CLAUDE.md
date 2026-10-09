@@ -150,6 +150,9 @@ Ce fichier est chargé automatiquement quand la session démarre dans `frontend/
   (`:root[data-theme='admin']`, accent inversé terracotta / sauge, contrastes vérifiés). Un composant ne code jamais
   une couleur en dur : il lit un token (`--on-brand`, `--ground-hover`, `--field-bg`, `--disabled-*`…), sinon il casse
   dans le thème sombre.
+- Texte : `overflow-wrap: anywhere` est posé sur `body` (`global.css`, hérité) pour qu'un mot sans espace (URL,
+  description collée) se coupe au lieu d'élargir la page ; les composants gardent leurs `line-clamp`. Ne pas le
+  redéclarer localement.
 - Zéro erreur ni warning dans la console navigateur (exigence du sujet). Cible : dernière version stable de Chrome,
   responsive du mobile au desktop.
 
@@ -165,7 +168,7 @@ Inspirée de bulletproof-react et feature-sliced, réduite à ce que le projet j
 app/            composition root : seul endroit qui connaît tout
   main.tsx, App.tsx, router.tsx (AppRouter), routes.ts (ROUTES), labels.ts, lazyPage.ts
   layout/       PageShell (Suspense des pages paresseuses), AppHeader, BottomNav (mobile), AppFooter, navItems.ts
-                (en-tête : Home, Actions, Map, Organizations, Friends ; barre mobile : 5 entrées, Friends
+                (en-tête : Home, My Actions (libellé #60), Map, Organizations, Friends ; barre mobile : 5 entrées, Friends
                 `desktopOnly` et Profile à la place ; décision du 25/09/2026)
   pages/        pages sans domaine : Legal (CGU, confidentialité), NotFound, Placeholder ;
                 home/ (#65) : HomePage bascule selon la session → Landing (visiteur : hero StreetScene + promesse,
@@ -175,13 +178,18 @@ app/            composition root : seul endroit qui connaît tout
                 ouvertes par date, NearbyActions = actions ouvertes des autres triées par distance depuis
                 `profiles/me.location` sinon Saint-Cyprien). app compose les features par leurs index.
 features/       1 domaine métier = 1 module ; interface = index.ts
-  auth/         session, RequireAuth, LoginPage, RegisterPage (#50) ; validation.ts miroir des DTO, errors.ts
+  auth/         session, RequireAuth, LoginPage, RegisterPage (#50), LoginForm (le formulaire seul, `{ onSignedIn? }`,
+                réutilisé là où un visiteur doit se connecter sur place : « My Actions » #107) ; validation.ts miroir des DTO, errors.ts
                 traduit les ApiError en messages ; les formulaires utilisent shared/hooks/useForm
   profile/      users + profiles + interests (api_contract §6-8)
   actions/      actions + carte + filtres ; owner des enums Category/ActionStatus et de leurs libellés.
                 Existant (#12) : MapPage, NeighborhoodMap, ActionCard, CategoryFilter, useActions, mapConfig.ts.
                 Depuis le 25/09/2026 (écart assumé avec la maquette) : carte pleine largeur, cartes en grille
                 dessous ; ActionCard a un fond très léger par catégorie (`--card-*-bg` dans tokens.css).
+                « My Actions » `/actions` pour un visiteur (#107, décision d'équipe : onboarding + connexion sur place) :
+                MyActionsSignIn reprend la grammaire de l'accueil : hero (accroche, gages de confiance, StreetScene), « How it
+                works » sur `Steps`, puis la carte de connexion centrée (LoginForm) ; la liste apparaît au changement de statut ;
+                pendant la restauration de session, message d'attente au lieu d'une liste vide.
                 Création depuis la carte (Epic 7) : NeighborhoodMap accepte `draft` / `onDraftChange` / `draftContent`
                 (pin brouillon déplaçable, popup ; sans `draftContent` = simple sélecteur de lieu), MapPage garde le
                 lieu dans l'URL (`?at=lat,lng`, draftParam.ts), CreateActionDialog = Dialog + ActionForm, validation.ts,
@@ -193,15 +201,24 @@ features/       1 domaine métier = 1 module ; interface = index.ts
                 n'a que `cancel`), api/useAction, useUpdateAction, useCancelAction. Les pages reçoivent les chemins
                 (`mapPath`, `createPath`, `editPath`) en props : la feature n'importe pas `app/`. Retour sur la carte
                 par `/map?focus=<id>` (mapConfig.ts) + `state.notice`. L'index exporte aussi les briques du tableau
-                de bord : NeighborhoodMap (hauteur surchargeable par `--map-min-height*`), ActionCard (pied :
+                de bord : NeighborhoodMap (hauteur surchargeable par `--map-min-height*`, et suit la taille de son conteneur :
+                ResizeObserver → `invalidateSize`, la rangée de la landing lui donne la hauteur des cartes voisines), ActionCard (pied :
                 voisins inscrits, places ; `distance` remplace le statut), useActions, geo.ts (distanceMeters,
                 formatDistance), DEFAULT_CENTER, FOCUS_PARAM.
                 Discussion (#70, Epic 4) : ActionComments `{ actionId }` sous la fiche (`GET`/`POST /actions/:id/comments`,
                 api/useActionComments + usePostComment, validateComment ≤ 1024, toCommentErrorMessage) ; monté par
-                ActionDetailPage pour un id numérique seulement tant que la fiche est un mock (#34, à brancher par #60).
+                ActionDetailPage pour le créateur et les participants seulement (`canComment` : le backend répond 403 aux autres
+                et 429 sous 15 s ; délai local en sessionStorage, #114).
+                Fiche réelle (#60, coéquipiers, 07/10/2026) : ActionDetailPage `{ editPath }` charge action + participants
+                (`features/participations`) + profil du créateur + organisation, rejoindre / quitter / approuver / terminer ;
+                ActionDetailsView = code coéquipier (React.FC, CSS global). `api/actionOrganizations.ts` porte les deux lectures
+                d'organisation de la feature (fiche, choix d'organisation dans ActionForm) : `features/organizations` importe déjà
+                `features/actions`, un import dans l'autre sens ferait un cycle ; seuls ses types viennent de son index. Carte (#60) :
+                seules les actions `PENDING` des autres non rejointes, clic sur un pin → fiche, plus de CTA « créer » (la dialog reste).
   profile/      coéquipier (#38 en cours, mock) ; ajout #65 : api/myProfile.ts (`GET /profiles/me`, 404 → null,
                 useMyProfile), seul fichier à nous dans ce dossier.
-  participations/ (existant : useMyParticipations, type MyParticipation)
+  participations/ useMyParticipations (sur useResource ; visiteur : liste vide sans appel), fetchActionParticipants /
+                joinAction / leaveAction (#60), type MyParticipation
   organizations/  #61 : OrganizationsPage `/organizations` (liste) et OrganizationPage `/organizations/:id` (fiche
                 publique + membres actifs) ; enums OrganizationStatus / RoleOrg / MemberStatus et libellés ; chemins
                 reçus en props (`organizationPath`, `listPath`).
@@ -253,7 +270,7 @@ features/       1 domaine métier = 1 module ; interface = index.ts
                 un non-admin voit la page 404 ; entrée « Admin » dans l'en-tête pour les seuls admins (icône seule
                 sur mobile, la barre basse garde cinq entrées). Modération (#23) et catégories / rôles (#24) :
                 pages sœurs à venir, backend incomplet.
-  friends/        (friend-requests + friendships)
+  friends/        coéquipier (LeNy, #66 / #68, PR #104) : FriendsPage `/friends` (protégée), api/friendsApi, useSocialManagement
   <feature>/
     api/        fonctions fetch typées + hooks useX : seuls appelants de shared/api
     components/ privés au domaine
@@ -270,6 +287,8 @@ shared/         zéro connaissance métier, réutilisable ailleurs
                 datetime-local), FloatingTextarea (même habillage, privé : FieldShell + fieldA11y), Checkbox (libellé
                 riche), Dialog (`<dialog>` natif : `{ open, onClose, title, closeLabel }`, enfants montés si ouvert),
                 StreetScene (illustration de rue de la maquette, décorative ; l'hôte fixe la hauteur : auth, landing),
+                Steps (trois étapes numérotées sur cartes teintées `{ steps: Step[] }` : « How it works » de la landing et de
+                la page My Actions visiteur),
                 CommentThread (fil à plat `{ comments: ThreadComment[], mineLabel, deletion? }` : bouton de
                 suppression sur les commentaires `canDelete`, la confirmation reste chez l'appelant) et CommentComposer (zone de texte +
                 compteur + bouton : `{ label, maxLength, submitLabel, submittingLabel, validate, onSubmit, describeError }`)

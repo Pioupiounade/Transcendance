@@ -6,12 +6,30 @@ Généré le 2026-09-24 par lecture de `backend/src/**/*.controller.ts`, `backen
 (flux complet création → participations → `approve` → commentaires → `complete` → points ; amis ; organisation).
 Ce fichier décrit ce que le code **fait**, pas ce que `Docs/prisma_rules.md` prévoit. À régénérer à chaque changement du backend.
 
-**Relu et resondé le 2026-10-01** pour tous les modules modifiés depuis (backend `39bc86e3`, PR #75 profils, #86 seed,
+**Relu et resondé le 2026-10-08** (backend `cc7168e0` : PR #102 fiche d'action, #109 notifications, #114 anti-spam des
+commentaires) : modules `actions`, `participations`, `organizations`, `organization-members`, `friend-requests`, nouveau
+module `notifications`, `app.module.ts`, `schema.prisma`. Auth, users, profiles, interests, friendships et points n'ont pas changé.
+
+**Changements depuis la version du 2026-10-01** (vérifiés par sondes sauf mention) :
+- **Notifications** (§17) : nouveau module `/notifications` (5 routes JWT : mes notifications, lue / toutes lues, préférences
+  par type), tables `notifications` et `notification_preferences`, enum `NotificationType` (§2), forme `Notification` (§3).
+  Émises par `participate` (minimum / plafond atteint), `approve`, `cancel`, `complete`, les commentaires d'action et
+  d'organisation, les demandes d'adhésion et d'amitié. Pas de temps réel : le front interroge la liste.
+- **Commentaires d'action** (§15) : réservés au **créateur et aux participants** (403 sinon) ; **15 s minimum entre deux
+  commentaires d'un même compte**, toutes actions confondues (429) ; notification `ACTION_COMMENT` au créateur et aux participants.
+- **Fichiers uploadés enfin servis** : `ServeStaticModule` monte `backend/uploads` sur **`/static`** (`/static/actions/<uuid>.webp`,
+  `/static/avatars/<uuid>.webp`) ; 404 pour un fichier absent. Le défaut signalé le 01/10 est corrigé ; le proxy Vite relaie
+  déjà `/static` vers le backend (§16).
+- Dev : deux migrations (`add_notifications`, `add_action_status_notification`) → `make db-update` après le pull. Sans elles
+  aucune 500 : `notifyUser` avale ses erreurs et les notifications sont simplement perdues.
+
+
+Historique — **relu et resondé le 2026-10-01** pour tous les modules modifiés depuis (backend `39bc86e3`, PR #75 profils, #86 seed,
 #88 photos, #89 commentaires d'organisation) : `actions`, `profiles`, `organizations`, `organization-members`, `main.ts`,
 `schema.prisma`. Les autres modules (auth, users, interests, friend-requests, friendships, participations, points) n'ont
 pas changé depuis le 24/09.
 
-**Changements depuis la version du 2026-09-24** (tous vérifiés par sondes) :
+Changements de la version du 2026-10-01 par rapport au 2026-09-24 (tous vérifiés par sondes) :
 - **Photos d'action** : `imagesList` disparaît (400 si envoyé), remplacé par **`images_before`** et **`images_after`** (§3, §15).
   Nouvelles routes d'upload `POST /actions/:id/photo-before` et `photo-after` (multipart, champ `file`, 3 photos max chacune).
 - **Avatar** : `PATCH /profiles/me/avatar` (multipart, champ `file`, 5 Mo) (§7).
@@ -107,6 +125,7 @@ modules `/organization-members` (14 routes) et `/point-transactions` (1 route ad
 | FriendRequestStatus | `PENDING`, `ACCEPTED`, `REJECTED` |
 | FriendshipStatus | `ACTIVE`, `BLOCKED` |
 | PointReason | `ACTION_COMPLETED`, `ACTION_PARTICIPATED`, `ACTION_PARTICIPANTS`, `ORGANIZATION_MEMBER_JOINED`, `ORGANIZATION_MEMBER_LEFT`, `ORGANIZATION_MEMBER_REMOVED`, `ORGANIZATION_MEMBER_BANNED`, `USER_SUSPENDED`, `USER_BANNED_FROM_ORGANIZATION`, `ADMIN_ADJUSTMENT` |
+| NotificationType | `ACTION_MIN_REACHED`, `ACTION_MAX_REACHED`, `ACTION_COMMENT`, `FRIEND_REQUEST`, `ORGANIZATION_JOIN_REQUEST`, `ORGANIZATION_COMMENT`, `ACTION_APPROVED`, `ACTION_STATUS_CHANGED`, `NEW_MESSAGE` (déclaré, jamais émis : pas de messagerie) |
 | PiouPiouStatus | `PETIT_PIOUPIOU`, `GRAND_PIOUPIOU`, `PIOUPIOU_OR` (déclaré, utilisé par aucun modèle) |
 
 ## 3. Formes de réponse (types réutilisés ci-dessous)
@@ -197,6 +216,13 @@ type PointTransaction = {
   point_transaction_id: string; user_id: string; points: number; reason: PointReason;
   event_key: string; created_at: string;
 };
+
+// Notifications (§17). `link` est un chemin du front, ou null (demande d'ami).
+type Notification = {
+  notification_id: string; user_id: string; type: NotificationType; title: string; message: string;
+  link: string | null; read: boolean; created_at: string;
+};
+type NotificationPreference = { user_id: string; type: NotificationType; enabled: boolean }; // absente = activée
 ```
 
 Dans les tableaux ci-dessous, **JWT** = `JwtAuthGuard` (401 si token absent/invalide/expiré), **aucun** = route publique.
@@ -259,7 +285,7 @@ Pas de route de suppression de compte.
 
 | Route | Guard | Entrée | Réponse | Erreurs / règles |
 |---|---|---|---|---|
-| `PATCH /friend-requests/me/send` | JWT | body `SendFriendRequestDto` : `addressee_id` (**chaîne numérique** `"12"` ; un entier → 400 « addressee_id must be a number string ») | 200 `FriendRequest` (`PENDING`, `responded_at: null`) — un `PATCH` qui **crée** | 404 « User not found », « Receiver not found » ; 400 « User is not active », « Friend requests can only be sent to active users », « You can't send a request to yourself », « A pending friend request already exists between these users » (dans **les deux sens**), « Friendship already active », « Friendship blocked », « Friend request could not be created, please try again » (concurrence). Une demande `REJECTED` **n'empêche pas** d'en renvoyer une |
+| `PATCH /friend-requests/me/send` | JWT | body `SendFriendRequestDto` : `addressee_id` (**chaîne numérique** `"12"` ; un entier → 400 « addressee_id must be a number string ») | 200 `FriendRequest` (`PENDING`, `responded_at: null`) — un `PATCH` qui **crée** | 404 « User not found », « Receiver not found » ; 400 « User is not active », « Friend requests can only be sent to active users », « You can't send a request to yourself », « A pending friend request already exists between these users » (dans **les deux sens**), « Friendship already active », « Friendship blocked », « Friend request could not be created, please try again » (concurrence). Une demande `REJECTED` **n'empêche pas** d'en renvoyer une ; **notifie** le destinataire (`FRIEND_REQUEST`, sans `link`, §17) |
 | `PATCH /friend-requests/:requestId/accept` | JWT | — | 200 `FriendRequest` (`ACCEPTED`, `responded_at`) ; crée une `Friendship` `ACTIVE` (`user1_id` = le plus petit id) | 404 « Friend request not found », « Requester not found » ; 400 « This friend request can no longer be accepted » (non `PENDING`), « Friend request requester is no longer active », « Friendship already exists between these users » ; 403 « Only the receiver can accept this friend request » ; id non numérique → 500 |
 | `PATCH /friend-requests/:requestId/reject` | JWT | — | 200 `FriendRequest` (`REJECTED`, `responded_at`) | 404 « Friend request not found » ; 400 « This friend request can no longer be rejected » ; 403 « Only the receiver can reject this friend request » |
 | `GET /friend-requests/sentRequests` | JWT | — | `SentRequest[]` (`PENDING` seulement) | 404 « User not found » ; 400 « User is not active » |
@@ -282,7 +308,7 @@ Pas d'annulation d'une demande envoyée. Scripts : `tests/test_friend_management
 
 | Route | Guard | Entrée | Réponse | Erreurs / règles |
 |---|---|---|---|---|
-| `POST /participations/:actionId` | JWT | — | 201 `Participation` | 404 « User not found », « Action not found » ; 400 « Only an active user can participate to an action », « The action creator cannot participate in their own action », « You can only join a pending action » (**`PENDING` seulement**, pas `APPROVED`), « User already participates to this action », « Maximum number of participants reached » (si `max_participants` défini), « Participation could not be created, please try again » (concurrence) |
+| `POST /participations/:actionId` | JWT | — | 201 `Participation` | 404 « User not found », « Action not found » ; 400 « Only an active user can participate to an action », « The action creator cannot participate in their own action », « You can only join a pending action » (**`PENDING` seulement**, pas `APPROVED`), « User already participates to this action », « Maximum number of participants reached » (si `max_participants` défini), « Participation could not be created, please try again » (concurrence) ; **notifie le créateur** quand l'inscription fait atteindre `min_participants` (`ACTION_MIN_REACHED`) ou `max_participants` (`ACTION_MAX_REACHED`), `link` `/actions/:id` (§17) |
 | `DELETE /participations/:actionId` | JWT | — | 200 `Participation` supprimée | 404 « User not found », « Action not found », « Participation not found » ; 400 « Only an active user can cancel a participation », « Participation can only be cancelled while the action is pending », « Participation could not be cancelled, please try again » |
 | `GET /participations/action/:actionId` | aucun | — | `Participant[]` (y compris sur une action `COMPLETED`) | 404 « Action not found » ; 400 « Participants are not available for this action status » (`REJECTED`, `CANCELLED`) |
 | `GET /participations/me` | JWT | — | `MyParticipation[]` (actions `PENDING`/`APPROVED`/`COMPLETED`, sans tri) | 404 « User not found » ; 400 « Only an active user can see own participations » |
@@ -302,7 +328,7 @@ Script : `tests/test-participations-autonome.sh`.
 | `PATCH /organizations/:id/suspend` | JWT, **ADMIN** | — | `Organization` (`SUSPENDED`) | 404 ; 403 « Only an admin can suspend an organization » ; 400 « Only an active organization can be suspended » |
 | `PATCH /organizations/:id/deactivate` | JWT | — | `Organization` (`CLOSED`) | 404 ; 403 « You are not allowed to close this organization » (mêmes rôles que `update`) ; 400 « Organization is not active » |
 | `PATCH /organizations/:id/reactivate` | JWT | — | `Organization` (`ACTIVE`) | 404 ; `SUSPENDED` → 403 « Only an admin can reactivate a suspended organization » ; `CLOSED` → 403 « You are not allowed to reactivate this organization » (mêmes rôles que `update`) ; 400 « Organization is already active » |
-| `POST /organizations/:id/comments` | JWT | body `OrganizationCommentDto` : **`comment`** (string non vide, ≤ 1024 ; ≠ `content` des actions) | 201 `OrganizationComment` (champ `content`, avec `user`) | 401 « Invalid token » ; 400 « comment should not be empty », « Comment must not exceed 1024 characters », « property content should not exist » ; 404 « Organization not found » ; id non numérique → 500. **Accepte des espaces seuls** et une organisation `SUSPENDED` (aucune vérification de statut) |
+| `POST /organizations/:id/comments` | JWT | body `OrganizationCommentDto` : **`comment`** (string non vide, ≤ 1024 ; ≠ `content` des actions) | 201 `OrganizationComment` (champ `content`, avec `user`) | 401 « Invalid token » ; 400 « comment should not be empty », « Comment must not exceed 1024 characters », « property content should not exist » ; 404 « Organization not found » ; id non numérique → 500. **Accepte des espaces seuls** et une organisation `SUSPENDED` (aucune vérification de statut) ; **notifie** les `OWNER` / `MANAGER` actifs de l'organisation, sauf l'auteur (`ORGANIZATION_COMMENT`, §17) |
 | `GET /organizations/:id/comments` | aucun | — | `OrganizationComment[]` (plus récent en premier, `[]` si vide) | 404 « Organization not found » ; id non numérique → 500 |
 | `DELETE /organizations/comments/:commentId` | JWT | — | 200 `{ message: "Comment deleted successfully" }` | 404 « Comment not found » ; 403 « You are not allowed to delete this comment » (sauf **l'auteur** ou **le créateur de l'organisation** `creator_id` ; ni `ADMIN` ni `OWNER`/`MANAGER`) ; id non numérique → 500 |
 
@@ -327,7 +353,7 @@ puis sauf `ADMIN` : 403 « Requester is not an active member of the organization
 | `GET /organization-members/organization/O/members` | aucun | `MemberWithUser[]` (membres `ACTIVE` dont le compte est `ACTIVE`) | 404 « Organization not found » ; liste vide → `[]` |
 | `GET /organization-members/organization/O/memberships` | JWT | `MemberWithUser[]` (**tous** statuts : `PENDING`, `ACTIVE`, `REJECTED`, `BANNED`) | 404 « User not found » ; 400 « User is not active » ; sauf `ADMIN` : 403 « You are not a member of this organization », « Your membership is not active », « You do not have permission to view memberships » (`MEMBER`). Organisation inconnue → `[]` |
 | `GET /organization-members/user/:userId/organizations` | aucun | `MembershipWithOrganization[]` (memberships `ACTIVE` de cet utilisateur, avec l'`organization` complète) | 404 « User not found » ; 400 « User is not active » |
-| `POST /organization-members/organization/O/join` | JWT | 201 `OrganizationMember` (`PENDING`, `MEMBER`, `validated_at: null`) | 404 « User not found », « Organization not found » ; 403 « Only active users can join an organization », « You are banned from this organization » ; 400 « Organization is not active » ; **409** « A membership request is already pending », « You are already a member of this organization », « A previous membership request has already been rejected » (un refus est **définitif**) |
+| `POST /organization-members/organization/O/join` | JWT | 201 `OrganizationMember` (`PENDING`, `MEMBER`, `validated_at: null`) | 404 « User not found », « Organization not found » ; 403 « Only active users can join an organization », « You are banned from this organization » ; 400 « Organization is not active » ; **409** « A membership request is already pending », « You are already a member of this organization », « A previous membership request has already been rejected » (un refus est **définitif**) ; **notifie** les `OWNER` / `MANAGER` actifs (`ORGANIZATION_JOIN_REQUEST`, §17) |
 | `DELETE /organization-members/organization/O/leave` | JWT | `OrganizationMember` supprimé ; **−5** points à l'`OWNER` | 404 « User not found », « Organization not found », « You are not a member of this organization » ; 403 « Only active users can leave an organization », « The owner must transfer ownership before leaving the organization » ; 400 « Organization is not active », « Membership is not active » ; **404 « Organization owner not found » si aucun `OWNER`** (§15) |
 | `POST /organization-members/organization/O/member/T/add` | JWT, gestionnaire | 201 `OrganizationMember` (`ACTIVE`, `MEMBER`, validé) ; **+5** points à l'`OWNER` | 404 « User not found » ; 400 « User is not active » ; **409** « This user already has a pending membership request », « This user is already a member of the organization », « A membership request for this user has already been rejected » ; **404 « Organization owner not found » si aucun `OWNER`** (§15) |
 | `PATCH /organization-members/organization/O/member/T/approve` | JWT, gestionnaire | `OrganizationMember` (`ACTIVE`, `MEMBER`, `validated_by_org_man: true`) ; **+5** points à l'`OWNER` | 404 « Membership request not found » ; 400 « Membership request is not pending », « Target user is not active » ; **404 « Organization owner not found » si aucun `OWNER`** (§15) |
@@ -377,12 +403,12 @@ renvoient un `ActionRecord` (sans ces champs). Un id non numérique → 500, sau
 | `GET /actions/:id` | aucun | — | `Action` | 404 « Action not found » |
 | `POST /actions` | JWT | body `CreateActionDto` : `title`, `description` (strings), `location` (`[number, number]`), `category` (`Category`), `scheduled_at` (date ISO), `organization_id?` (entier), `max_participants?` (entier), `images_before?`, `images_after?` (`string[]`, persistés tels quels ; `imagesList` → 400 « property imagesList should not exist »). **Plus de `creator_id`** (400 si envoyé) ; `min_participants` refusé | 201 `ActionRecord` (`PENDING`, `creator_id` = moi, `min_participants: 3`, `validated_at: null`) | 404 « Creator not found », « Organization not found » ; 400 « Only an active user can create an action », « Only an active organization can create an action », « Maximum participants cannot be lower than minimum participants » (`max_participants` < 3) ; 403 « You are not allowed to create an action for this organization » (sauf `ADMIN` ou membre `ACTIVE` `MANAGER`/`OWNER` ; **le créateur de l'organisation n'a pas ce droit sans membership**, voir §16) |
 | `PATCH /actions/:id` | JWT | body `UpdateActionDto` : `title?`, `description?`, `organization_id?` (entier, ou `null` pour détacher l'organisation), `location?`, `category?`, `images_before?`, `images_after?`, `max_participants?`, `scheduled_at?` | 200 `ActionRecord` | 404 « Action not found », « User not found », « Organization not found » ; 400 « This action can no longer be modified » (`CANCELLED`, `COMPLETED`, `REJECTED`) ; 403 « You are not allowed to update this action » (sauf `ADMIN`, créateur, `MANAGER`/`OWNER` de l'organisation liée), « You are not allowed to assign this action to this organization » ; 400 « Only an active organization can be assigned to an action », « Maximum participants cannot be lower than minimum participants », « Maximum participants cannot be lower than current participants count », « Action capacity was modified concurrently, please try again ». Le 500 du 24/09 est corrigé (vérifié le 01/10 : `title` seul → 200, `max_participants` seul → appliqué). **Bug (vérifié) : `images_before` et `images_after` absents du body sont remis à `[]`** : toute modification efface les photos, sauf à les renvoyer dans le body |
-| `PATCH /actions/:id/approve` | JWT | — | 200 `ActionRecord` (`APPROVED`, `validated_by_user_id` = moi, `validated_at`) | 404 « Action not found », « User not found », « Organization not found » ; 400 « This action can no longer be approved » (non `PENDING`), « Only an active organization can approve an action », **« An action needs at least 3 participants to be approved »** (participants hors créateur < `min_participants`) ; 403 « You are not allowed to approve this action » (sauf `ADMIN`, **le créateur lui-même**, `MANAGER`/`OWNER`). Le rôle `MODERATOR` n'est pas vérifié |
-| `PATCH /actions/:id/cancel` | JWT | — | 200 `ActionRecord` (`CANCELLED`) | 404 ; 400 « This action can no longer be cancelled » (ni `PENDING` ni `APPROVED`) ; 403 « You are not allowed to cancel this action » (mêmes rôles), « Only an admin can cancel an action from an inactive organization » |
-| `PATCH /actions/:id/complete` | JWT | — | 200 `ActionRecord` (`COMPLETED`) ; distribue les points (§14) dans la même transaction | 404 ; 400 « This action cannot be completed » (non `APPROVED`), « An action needs at least 3 participants to be completed » ; 403 « You are not allowed to complete this action », « Only an admin can complete an action from an inactive organization » ; 400 « Only active users can receive points » ou « Organization is not active » (récompense refusée → **rien n'est appliqué**, l'action reste `APPROVED`) |
+| `PATCH /actions/:id/approve` | JWT | — | 200 `ActionRecord` (`APPROVED`, `validated_by_user_id` = moi, `validated_at`) | 404 « Action not found », « User not found », « Organization not found » ; 400 « This action can no longer be approved » (non `PENDING`), « Only an active organization can approve an action », **« An action needs at least 3 participants to be approved »** (participants hors créateur < `min_participants`) ; 403 « You are not allowed to approve this action » (sauf `ADMIN`, **le créateur lui-même**, `MANAGER`/`OWNER`). Le rôle `MODERATOR` n'est pas vérifié ; **notifie chaque participant** (`ACTION_APPROVED`, §17) |
+| `PATCH /actions/:id/cancel` | JWT | — | 200 `ActionRecord` (`CANCELLED`) | 404 ; 400 « This action can no longer be cancelled » (ni `PENDING` ni `APPROVED`) ; 403 « You are not allowed to cancel this action » (mêmes rôles), « Only an admin can cancel an action from an inactive organization » ; **notifie** créateur et participants (`ACTION_STATUS_CHANGED`, « is now cancelled », §17) |
+| `PATCH /actions/:id/complete` | JWT | — | 200 `ActionRecord` (`COMPLETED`) ; distribue les points (§14) dans la même transaction | 404 ; 400 « This action cannot be completed » (non `APPROVED`), « An action needs at least 3 participants to be completed » ; 403 « You are not allowed to complete this action », « Only an admin can complete an action from an inactive organization » ; 400 « Only active users can receive points » ou « Organization is not active » (récompense refusée → **rien n'est appliqué**, l'action reste `APPROVED`) ; **notifie** créateur et participants (`ACTION_STATUS_CHANGED`, « is now completed », §17) |
 | `POST /actions/:id/photo-before` | JWT | `multipart/form-data`, champ **`file`** (extension jpg/jpeg/png/webp, 10 Mo max) | 201 `ActionRecord`, URL `/static/actions/<uuid>.webp` ajoutée à `images_before` (image convertie en WebP) | 401 ; 400 « File is required », « Only jpg, jpeg, png, and webp files are allowed » (extension du nom de fichier), « Failed to process and compress image » (contenu illisible), « Unexpected field - x » (champ ≠ `file`), « You can only upload up to 3 photos before the action » ; 403 « You are not allowed to upload photos for this action » (**créateur seulement**, pas d'`ADMIN`) ; 404 « Action not found ». Aucune vérification du statut de l'action ; pas de route pour retirer une photo |
 | `POST /actions/:id/photo-after` | JWT | idem | 201 `ActionRecord`, URL ajoutée à `images_after` | mêmes erreurs ; 403 sauf **créateur ou participant** ; 400 « You can only upload up to 3 photos after the action ». Possible sur une action `PENDING` (aucune vérification de statut) |
-| `POST /actions/:id/comments` | JWT | body `CreateCommentDto` : `content` (string non vide, ≤ 1024) | 201 `ActionComment` (avec `user`) | 400 « content should not be empty », « Comment must not exceed 1024 characters », « property x should not exist », « Validation failed (numeric string is expected) » (id non numérique) ; 404 « Action not found ». Aucune vérification du statut du compte ni de l'action (on peut commenter une action `CANCELLED`) |
+| `POST /actions/:id/comments` | JWT | body `CreateCommentDto` : `content` (string non vide, ≤ 1024) | 201 `ActionComment` (avec `user`) | 400 « content should not be empty », « Comment must not exceed 1024 characters », « property x should not exist », « Validation failed (numeric string is expected) » (id non numérique) ; 404 « Action not found » ; **403 « Only the creator or participants of the action can comment »** (depuis le 07/10, vérifié) ; **429 « You can only post a comment every 15 seconds »** : compté depuis le **dernier commentaire d'action du compte, toutes actions confondues** (vérifié) ; **notifie** le créateur et les participants, sauf l'auteur (`ACTION_COMMENT`, §17). Toujours aucune vérification du statut du compte ni de l'action (un participant peut commenter une action `CANCELLED`) |
 | `GET /actions/:id/comments` | aucun | — | `ActionComment[]` (plus récent en premier) | 400 id non numérique ; 404 « Action not found » |
 
 Pas de route de **rejet** (`REJECTED` est inatteignable via l'API), pas de suppression d'action ni de photo, pas de
@@ -400,8 +426,9 @@ chaque participant +10. Scripts : `tests/test_action_management.sh`, `tests/test
 - **`PATCH /actions/:id`** : le 500 est corrigé, l'édition est branchée (#33). Mais il **efface les photos** quand le body ne
   les contient pas (§15) : tant que le backend n'est pas corrigé, un formulaire d'édition doit renvoyer `images_before` et
   `images_after` tels qu'il les a reçus.
-- **Photos et avatars non affichables** : les URLs `/static/...` renvoyées par les uploads ne sont servies par aucune
-  route (§1). Ne pas afficher ces images tant qu'un `ServeStaticModule` (ou Nginx) n'existe pas : ticket backend.
+- **Photos et avatars** : les URLs `/static/...` renvoyées par les uploads sont servies depuis le 07/10 (`ServeStaticModule`,
+  dossier `backend/uploads`, 404 si le fichier manque). Elles sont relatives à l'origine de l'API : en dev le proxy Vite
+  relaie `/static` vers le backend (`vite.config.ts`) ; en prod Nginx devra faire de même.
 - **Profils non publics** : `GET /profiles/:userId` renvoie 404 pour un profil `FRIENDS_ONLY` ou `PRIVATE`, même à un ami
   ou à son propriétaire (§7) ; pour soi-même, utiliser `GET /profiles/me`.
 - **Organisations orphelines** : `POST /organizations` ne crée pas de membership `OWNER` et aucune route n'en crée une
@@ -418,18 +445,60 @@ chaque participant +10. Scripts : `tests/test_action_management.sh`, `tests/test
 - `remaining_seats` est calculé par l'API (`null` = sans plafond) ; ne pas le recalculer côté front. `max_participants` se fixe
   à la création (≥ 3) ; l'API n'expose pas `min_participants` en écriture.
 - Fonctionnalités sans route aujourd'hui : suppression de compte, rejet d'action, suppression d'action, retrait d'une photo,
-  service des fichiers uploadés, notifications, messagerie, lecture/historique des points, débannissement, annulation d'une
+  messagerie (`NEW_MESSAGE` n'est jamais émis), lecture/historique des points, débannissement, annulation d'une
   demande d'adhésion ou d'amitié, recherche d'actions par rayon/date/texte, édition d'un commentaire, suppression d'un
   commentaire d'action (elle existe pour les commentaires d'organisation, §12).
 - **Commentaires** : deux DTO différents, `{ content }` pour une action et `{ comment }` pour une organisation ; le backend
   accepte un commentaire d'organisation fait d'espaces, le front doit le refuser.
+  Sur une action, seuls le créateur et les participants peuvent écrire (403) : n'afficher le composeur qu'à eux
+  (`canComment`, #60). Les deux routes imposent 15 s entre deux commentaires du même compte (429) : le composeur garde un
+  délai local et traduit le 429 (ActionComments, OrganizationComments).
+- **Notifications** (§17) : pas de WebSocket ni de SSE, donc une relecture périodique de `GET /notifications/me` (toutes
+  lues comprises : le compteur = `read: false`). `link` est un chemin du front (`/actions/:id`, `/organizations/:id`) ou
+  `null`. `PATCH /notifications/preferences` n'a pas de DTO : n'envoyer que des valeurs de l'enum (sinon 500) ; une
+  préférence absente vaut « activée ». `PATCH /notifications/:id/read` répond 404 pour la notification d'un autre compte
+  et 500 sur un id non numérique.
 - Deux conventions d'erreur pour « compte non actif » : 400 dans les modules historiques, 403 dans `/organization-members`.
 - Ordre de déclaration : `/profiles/search` et `/profiles/me` précèdent `/profiles/:userId` (idem `/organizations/search`),
   donc pas de collision de routes.
 - Rôle `ADMIN` : aucun moyen de le donner via l'API (colonne `role` en base uniquement). Les écrans admin
   (`suspend`, `reactivate`, points) supposent un compte promu à la main.
 - Environnement de dev : `make db-update` après chaque `git pull` du backend (dernières migrations : `add_profile_commune`,
-  `split_action_images`, `add_organization_comments`) ; si le backend ne compile plus après un pull, lire
+  `split_action_images`, `add_organization_comments`, puis `add_notifications` et
+  `add_action_status_notification` le 07/10) ; si le backend ne compile plus après un pull, lire
   `docker compose logs backend` (dépendance manquante, voir l'en-tête) puis redémarrer le conteneur. `make seed` ajoute
   les données de démo sans rien effacer ; `make db-reset` et `make clean` effacent la base. Un seul refresh token par
   compte : se connecter ailleurs avec le même compte déconnecte la première session au prochain rafraîchissement.
+
+## 17. Notifications — `/notifications` (`notifications.controller.ts`) — **nouveau (07/10/2026, PR #109)**
+
+Toutes les routes sont **JWT** (`@UseGuards` sur le contrôleur : 401 « Invalid token » sans jeton). Aucun DTO : le corps de
+`PATCH /preferences` n'est pas validé. Pas de temps réel (ni WebSocket ni SSE) : le front relit `GET /notifications/me`.
+
+| Route | Body | Réponse | Erreurs / remarques |
+|---|---|---|---|
+| `GET /notifications/me` | — | `Notification[]` (plus récente en premier, lues comprises ; `[]` si aucune) | — |
+| `PATCH /notifications/:id/read` | — | `Notification` (`read: true`) ; idempotent | 404 « Notification not found » (inconnue **ou à un autre compte**) ; id non numérique → **500** |
+| `PATCH /notifications/me/read-all` | — | `{ count: number }` (notifications passées à lu) | — |
+| `GET /notifications/preferences` | — | `NotificationPreference[]` : **seulement les types déjà réglés** (`[]` au départ) ; un type absent = activé | — |
+| `PATCH /notifications/preferences` | `{ type: NotificationType; enabled: boolean }` | `NotificationPreference` (upsert) | `type` hors enum, body vide ou champ manquant → **500** (aucune validation) |
+
+**Émission** (`NotificationsService.notifyUser`, appelé par les autres services après l'écriture ; une préférence
+`enabled: false` pour le type supprime l'envoi ; toute erreur est avalée : jamais de 500, mais une base sans la migration
+perd les notifications) :
+
+| Type | Déclencheur | Destinataires | `title` / `message` | `link` |
+|---|---|---|---|---|
+| `ACTION_MIN_REACHED` | `POST /participations/:actionId` quand le compte des participants atteint `min_participants` (3) | créateur de l'action | « Minimum participants reached » / « Your action "T" has reached its minimum number of participants. » | `/actions/:id` |
+| `ACTION_MAX_REACHED` | idem pour `max_participants` | créateur | « Maximum participants reached » / « Your action "T" has reached its maximum number of participants. » | `/actions/:id` |
+| `ACTION_APPROVED` | `PATCH /actions/:id/approve` | chaque participant | « Action approved » / « The action "T" has been approved. Visit the action page for the latest date, time and useful information. » | `/actions/:id` |
+| `ACTION_STATUS_CHANGED` | `PATCH /actions/:id/cancel`, `/complete` | créateur + participants | « Action status changed » / « The action "T" is now cancelled. » (ou `completed`) | `/actions/:id` |
+| `ACTION_COMMENT` | `POST /actions/:id/comments` | créateur + participants, sauf l'auteur | « New comment on an action » / « A new comment was posted on "T". » | `/actions/:id` |
+| `ORGANIZATION_COMMENT` | `POST /organizations/:id/comments` | `OWNER` / `MANAGER` actifs (comptes actifs), sauf l'auteur | « New organization comment » / « A new comment was posted on "O". » | `/organizations/:id` |
+| `ORGANIZATION_JOIN_REQUEST` | `POST /organization-members/organization/:id/join` | `OWNER` / `MANAGER` actifs | « New organization membership request » / « A user requested to join "O". » | `/organizations/:id` |
+| `FRIEND_REQUEST` | `PATCH /friend-requests/me/send` | destinataire | « New friend request » / « You received a new friend request. » | `null` |
+| `NEW_MESSAGE` | jamais (pas de messagerie) | — | — | — |
+
+Vérifié par sondes le 08/10/2026 : un commentaire du créateur crée une `ACTION_COMMENT` chez chaque participant (forme §3,
+`created_at` ISO), `read` passe à `true` et reste idempotent, 404 depuis un autre compte, préférences `[]` puis upsert,
+500 sur `type` invalide, body vide et id non numérique.

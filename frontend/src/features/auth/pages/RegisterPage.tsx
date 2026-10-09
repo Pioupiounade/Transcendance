@@ -8,7 +8,7 @@ import { toAuthErrorMessage } from '../errors';
 import { AUTH_LABELS } from '../labels';
 import { AUTH_ROUTES } from '../routes';
 import { PASSWORD_MIN_LENGTH, validateConsent, validateEmail, validateNewPassword } from '../validation';
-import styles from './AuthForm.module.css';
+import styles from '../components/AuthForm.module.css';
 
 type RegisterPageProps = {
   /** Pages légales du sujet, liées depuis la case de consentement ; `app/` connaît leurs chemins. */

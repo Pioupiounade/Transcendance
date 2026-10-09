@@ -24,7 +24,7 @@ Légende des états : ✅ fait et branché sur l'API · 🟡 fait en mock ou par
         │  appelé UNIQUEMENT par features/<x>/api/*
         │
    features/auth ───── AuthProvider · useAuth · RequireAuth · LoginPage · RegisterPage
-   features/actions ── MapPage · NeighborhoodMap · ActionForm · useActions · useCreateAction · (détail : mock)
+   features/actions ── MapPage · NeighborhoodMap · ActionForm · useActions · useCreateAction · ActionDetailPage (#60)
    features/profile ── ProfilePage (mock, à brancher sur /profiles)
         ▲
         │  composition : routes, layout, libellés de la coquille
@@ -47,14 +47,14 @@ dans `features/<x>/api/*` sans toucher aux composants.
 | **User** | `user_id`, `email` (unique), `role` RoleApp, `account_status`, `points`, dates. `password_hash` et `refresh_token` jamais renvoyés | `/auth/*` (5), `/users/*` (9) | `features/auth` → `AuthUser` (= `User` du contrat) | ✅ session, login, register, `/auth/me` |
 | **Profile** | `user_id` (PK = FK User, 1:1), `username` (unique), `description?`, `profile_picture?` (URL), `location` (seulement sur `GET /profiles/me`), `commune?` (déduite de `location`, 01/10), `visibility` | `/profiles/*` (7, dont l'avatar) | `features/profile` → `UserProfile` **(mock, forme ≠ contrat)** | 🟡 page mock, aucun appel API |
 | **UserInterest** | (`user_id`, `interest` InterestCategory), 9 valeurs | `/interests/*` (3) | `features/profile` (prévu) | ❌ |
-| **Action** | `action_id`, `title`, `description`, `creator_id`, `organization_id?`, `min_participants` (défaut 3), `max_participants?`, `location`, `status`, `category`, `images_before`, `images_after` (ex-`imagesList`, 01/10), `validated_by_user_id?`, `validated_at?`, `scheduled_at`. **L'API ajoute `participant_count` et `remaining_seats`** (liste et détail, depuis #45) | `/actions/*` (7 + 2 commentaires) | `features/actions` → `Action` (§4.7) | ✅ liste, carte, création (`Action` enrichie, `ActionRecord` pour les mutations) · 🟡 détail (mock `ActionDetailData`) |
-| **ActionComment** | `comment_id`, `content` (≤ 1024), `user_id`, `action_id`, dates ; renvoyé avec `user: { user_id, profile: { username, profile_picture } \| null }` | `POST/GET /actions/:id/comments` | `features/actions` → `ActionComment` | ✅ lecture + envoi sur la page d'action (#70, id numérique seulement tant que la fiche est un mock) |
-| **Participation** | (`action_id`, `user_id`), `created_at` | `/participations/*` (4) | `features/participations` (prévu) | ❌ |
+| **Action** | `action_id`, `title`, `description`, `creator_id`, `organization_id?`, `min_participants` (défaut 3), `max_participants?`, `location`, `status`, `category`, `images_before`, `images_after` (ex-`imagesList`, 01/10), `validated_by_user_id?`, `validated_at?`, `scheduled_at`. **L'API ajoute `participant_count` et `remaining_seats`** (liste et détail, depuis #45) | `/actions/*` (7 + 2 commentaires) | `features/actions` → `Action` (§4.7) | ✅ liste, carte, création (`Action` enrichie, `ActionRecord` pour les mutations) · ✅ détail branché (#60, 07/10 : `ActionDetailPage` charge action, participants, créateur, organisation ; `ActionDetailData` reste la forme d'affichage) |
+| **ActionComment** | `comment_id`, `content` (≤ 1024), `user_id`, `action_id`, dates ; renvoyé avec `user: { user_id, profile: { username, profile_picture } \| null }` | `POST/GET /actions/:id/comments` | `features/actions` → `ActionComment` | ✅ lecture + envoi sur la fiche (#70) ; depuis #60 / #114 le composeur n'est montré qu'au créateur et aux participants (403 sinon), 429 sous 15 s |
+| **Participation** | (`action_id`, `user_id`), `created_at` | `/participations/*` (4) | `features/participations` | ✅ `useMyParticipations` (tableau de bord, carte, « My Actions »), `fetchActionParticipants` / `joinAction` / `leaveAction` (fiche #60) |
 | **Organization** | `organization_id`, `title`, `description`, `organization_status`, `address`, `location`, `creator_id` | `/organizations/*` (8) | `features/organizations` → `Organization` | 🟡 annuaire (#61, #63) + fiche publique (#64) + édition par les gestionnaires (#62) ; création ❌ |
 | **OrganizationMember** | (`organization_id`, `user_id`), `status` MemberStatus, `role` RoleOrg, `validated_by_org_man`, `validated_at?` | `/organization-members/*` (14) | `features/organizations` → `OrganizationMember` | 🟡 membres actifs affichés sur la fiche (#61) ; adhésion/gestion ❌ |
 | **OrganizationComment** | `comment_id`, `content` (≤ 1024), `user_id`, `organization_id`, dates ; renvoyé avec `user: { user_id, profile \| null }` | `POST/GET /organizations/:id/comments`, `DELETE /organizations/comments/:commentId` | `features/organizations` → `OrganizationComment` | ✅ lecture, envoi, suppression (auteur ou créateur de l'organisation) sur la fiche (#71) |
-| **FriendRequest** | `friend_request_id`, `requester_id`, `addressee_id`, `status`, `responded_at?` | `/friend-requests/*` (5) | `features/friends` (prévu) | ❌ (`/friends` = placeholder) |
-| **Friendship** | (`user1_id`, `user2_id`), `status` ACTIVE/BLOCKED, `blocked_by_user_id?` | `/friendships/*` (5) | `features/friends` (prévu) | ❌ |
+| **FriendRequest** | `friend_request_id`, `requester_id`, `addressee_id`, `status`, `responded_at?` | `/friend-requests/*` (5) | `features/friends` (coéquipier, #104) | ✅ `/friends` (LeNy, 07/10) |
+| **Friendship** | (`user1_id`, `user2_id`), `status` ACTIVE/BLOCKED, `blocked_by_user_id?` | `/friendships/*` (5) | `features/friends` (coéquipier, #104) | ✅ (LeNy, 07/10) |
 | **PointTransaction** | `point_transaction_id`, `user_id`, `points`, `reason`, `event_key` (unique, idempotence) | 1 route admin, **aucune lecture** : le solde est `User.points` | `features/auth` (`user.points`) | 🟡 solde disponible, jamais affiché |
 
 `PiouPiouStatus` est déclaré dans le schéma mais utilisé par aucun modèle. Aucun modèle « Suggestion » : une
@@ -218,7 +218,7 @@ Caché : CSS Modules sur les tokens de `styles/tokens.css`, états focus/disable
 ### 4.6 `features/auth` — session et écrans de connexion
 
 ```ts
-import { AuthProvider, useAuth, RequireAuth, LoginPage, RegisterPage, AUTH_ROUTES,
+import { AuthProvider, useAuth, RequireAuth, LoginPage, LoginForm, RegisterPage, AUTH_ROUTES,
          ROLE_APP, ACCOUNT_STATUS, type AuthUser, type AuthStatus } from '@/features/auth';
 
 useAuth() → { status: 'loading' | 'anonymous' | 'authenticated', user: AuthUser | null,
@@ -277,6 +277,12 @@ Modules internes et leurs interfaces (un appelant lit ceci, pas l'implémentatio
 
 Le type de transition `ActionDetailData` (camelCase, `locationName`, `organizer`, `currentParticipants`) est celui du
 mock #46 : **il ne correspond à aucune réponse de l'API** et disparaîtra à l'alignement (§7).
+
+Depuis #60 (coéquipiers) la fiche `ActionDetailPage { editPath }` est réelle : elle charge l'action, ses participants
+(`features/participations`), le profil du créateur (`features/profile`) et son organisation. Les deux lectures
+d'organisation dont la feature a besoin (`fetchActionOrganization`, `fetchManageableOrganizations` pour le choix du
+formulaire) vivent dans `api/actionOrganizations.ts` : `features/organizations` importe déjà `features/actions`, un import
+dans l'autre sens ferait un cycle ; seuls les types viennent de son index.
 
 ### 4.7 bis `features/admin` — espace d'administration (Epic 8, #22)
 
@@ -350,7 +356,7 @@ Backend = `main` au 24/09 (#40 auth/users/profiles/interests/orgs/membres/points
 | Feature | Backend | Frontend |
 |---|---|---|
 | Créer un compte | ✅ `POST /auth/register` (e-mail + mot de passe ≥ 8) | 🔜 `RegisterPage` (#50, PR) |
-| Se connecter / se déconnecter | ✅ `login`, `logout`, `refresh`, `me` | 🔜 `LoginPage`, `signOut` en en-tête (#50) ; session persistée ✅ (fix `http.ts` sur cette branche) |
+| Se connecter / se déconnecter | ✅ `login`, `logout`, `refresh`, `me` | ✅ `LoginPage` (#50) et `LoginForm` seul, posé sur « My Actions » pour un visiteur (#107) ; `signOut` en en-tête ; session persistée |
 | Créer son profil (particulier / asso / commerce) | ✅ `POST /profiles` (username, location, visibilité) ; pas de « type » de profil : une asso = une `Organization` | 🟡 `ProfileForm` mock, pas d'appel |
 | Modifier son profil | ✅ `PATCH /profiles/me` ; avatar ✅ `PATCH /profiles/me/avatar` (01/10, image non servie) | 🟡 mock |
 | Supprimer son compte | ❌ (seulement `PATCH /users/me/deactivate`, irréversible) | 🟡 bouton + `alert()` |
@@ -386,8 +392,8 @@ Backend = `main` au 24/09 (#40 auth/users/profiles/interests/orgs/membres/points
 |---|---|---|
 | Messagerie privée 1-à-1 (temps réel) | ❌ | ❌ |
 | Message groupé aux participants | ❌ | ❌ |
-| Commentaires publics sur une action | ✅ `POST/GET /actions/:id/comments` (≤ 1024, tri décroissant, auteur avec username/photo) | ❌ |
-| Commentaires sur le profil d'une organisation | ❌ | ❌ |
+| Commentaires publics sur une action | ✅ `POST/GET /actions/:id/comments` (≤ 1024, tri décroissant, auteur avec username/photo) ; depuis le 07/10 réservés au créateur et aux participants (403), 15 s entre deux commentaires par compte (429), notification `ACTION_COMMENT` | ✅ #70 `ActionComments`, monté par la fiche #60 pour les ayants droit |
+| Commentaires sur le profil d'une organisation | ✅ `POST/GET /organizations/:id/comments`, `DELETE` par l'auteur ou le créateur ; notification `ORGANIZATION_COMMENT` aux gestionnaires | ✅ #71 `OrganizationComments` |
 
 ### Epic 5 — Photos
 
@@ -400,7 +406,7 @@ Backend = `main` au 24/09 (#40 auth/users/profiles/interests/orgs/membres/points
 
 | Feature | Backend | Frontend |
 |---|---|---|
-| Préférences et notifications (message, commentaire, activité, mise à jour) | ❌ (aucun modèle) | ❌ |
+| Préférences et notifications (message, commentaire, activité, mise à jour) | ✅ module `/notifications` (07/10, contrat §17) : liste, lue / toutes lues, préférences par type ; émis pour participations (minimum / plafond), approbation, annulation / fin, commentaires, demandes d'adhésion et d'amitié ; pas de temps réel, pas de messagerie | ❌ (ticket #20 : cloche, liste, préférences) |
 
 ### Epic 7 — Carte
 

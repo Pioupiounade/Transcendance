@@ -41,16 +41,10 @@ export function OrganizationComments({ organizationId, creatorId }: Organization
   const [cooldownUntil, setCooldownUntil] = useState(() => readCooldownUntil(organizationId));
   const isCoolingDown = cooldownUntil !== 0;
 
+  // Fin du délai par minuteur (0 ms s'il est déjà écoulé) : jamais de setState synchrone dans l'effet.
   useEffect(() => {
     if (cooldownUntil === 0) return;
-
-    const remaining = cooldownUntil - Date.now();
-    if (remaining <= 0) {
-      setCooldownUntil(0);
-      return;
-    }
-
-    const timeout = window.setTimeout(() => setCooldownUntil(0), remaining);
+    const timeout = window.setTimeout(() => setCooldownUntil(0), Math.max(0, cooldownUntil - Date.now()));
     return () => window.clearTimeout(timeout);
   }, [cooldownUntil]);
 

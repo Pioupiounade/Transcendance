@@ -1,0 +1,61 @@
+/* Cartes teintées terracotta (demande du 25/09/2026) : chaleur sous le titre, texte encre lisible. */
+.steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.step {
+  position: relative;
+  display: grid;
+  gap: 8px;
+  padding: 24px;
+  border: 1px solid #efcfc2;
+  border-radius: var(--r-panel);
+  background: #f9e6dc;
+}
+.title {
+  font-size: 18px;
+  letter-spacing: -0.3px;
+}
+.body {
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.55;
+}
+.icon {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  margin-bottom: 6px;
+  border-radius: 14px;
+  background: #fffefa;
+  color: var(--terra);
+}
+.number {
+  position: absolute;
+  top: 20px;
+  right: 22px;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--terra);
+  opacity: 0.55;
+  letter-spacing: 1px;
+}
+
+
+/* Mobile : les cartes s'empilent, centrées, le numéro sous l'icône plutôt que dans le coin. */
+@media (max-width: 760px) {
+  .steps {
+    grid-template-columns: 1fr;
+  }
+  .step {
+    justify-items: center;
+    text-align: center;
+  }
+  .number {
+    position: static;
+    margin-top: -4px;
+  }
+}
