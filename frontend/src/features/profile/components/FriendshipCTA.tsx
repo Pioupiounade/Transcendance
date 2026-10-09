@@ -33,6 +33,8 @@ export const FriendshipCTA: React.FC<FriendshipCTAProps> = ({
       const next = await sendFriendRequest(userId);
       setCurrentStatus(next);
       onStatusChange?.(next);
+    } catch (err) {
+      console.error('Failed to send friend request:', err);
     } finally {
       setIsMutating(false);
     }
@@ -44,6 +46,8 @@ export const FriendshipCTA: React.FC<FriendshipCTAProps> = ({
       const next = await acceptFriendRequest(userId);
       setCurrentStatus(next);
       onStatusChange?.(next);
+    } catch (err) {
+      console.error('Failed to accept friend request:', err);
     } finally {
       setIsMutating(false);
     }
@@ -55,17 +59,21 @@ export const FriendshipCTA: React.FC<FriendshipCTAProps> = ({
       const next = await declineFriendRequest(userId);
       setCurrentStatus(next);
       onStatusChange?.(next);
+    } catch (err) {
+      console.error('Failed to decline friend request:', err);
     } finally {
       setIsMutating(false);
     }
   };
 
-  const handleCancel = async () => {
+  const handleUnfriend = async () => {
     setIsMutating(true);
     try {
       const next = await cancelOrRemoveFriend(userId);
       setCurrentStatus(next);
       onStatusChange?.(next);
+    } catch (err) {
+      console.error('Failed to remove friend:', err);
     } finally {
       setIsMutating(false);
     }
@@ -77,6 +85,8 @@ export const FriendshipCTA: React.FC<FriendshipCTAProps> = ({
       const next = await unblockUser(userId);
       setCurrentStatus(next);
       onStatusChange?.(next);
+    } catch (err) {
+      console.error('Failed to unblock user:', err);
     } finally {
       setIsMutating(false);
     }
@@ -100,24 +110,18 @@ export const FriendshipCTA: React.FC<FriendshipCTAProps> = ({
     );
   }
 
+  // Solicitud pendiente enviada: Badge informativa, sin botón Cancel
   if (currentStatus === 'PENDING_SENT') {
     return (
       <div className="friendship-actions">
         <span className="friendship-badge friendship-badge--pending">
           Request Sent
         </span>
-        <button
-          type="button"
-          className="btn btn--secondary"
-          onClick={handleCancel}
-          disabled={isMutating}
-        >
-          Cancel
-        </button>
       </div>
     );
   }
 
+  // Solicitud recibida: Acciones de aceptar o rechazar
   if (currentStatus === 'PENDING_RECEIVED') {
     return (
       <div className="friendship-actions">
@@ -141,6 +145,7 @@ export const FriendshipCTA: React.FC<FriendshipCTAProps> = ({
     );
   }
 
+  // Amistad activa: Badge confirmada y opción para deshacer amistad
   if (currentStatus === 'ACCEPTED') {
     return (
       <div className="friendship-actions">
@@ -150,7 +155,7 @@ export const FriendshipCTA: React.FC<FriendshipCTAProps> = ({
         <button
           type="button"
           className="btn btn--secondary"
-          onClick={handleCancel}
+          onClick={handleUnfriend}
           disabled={isMutating}
         >
           Unfriend
@@ -159,6 +164,7 @@ export const FriendshipCTA: React.FC<FriendshipCTAProps> = ({
     );
   }
 
+  // Sin relación: Botón para mandar solicitud
   return (
     <div className="friendship-actions">
       <button
