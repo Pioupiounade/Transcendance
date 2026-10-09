@@ -171,18 +171,19 @@
   --card-social-bg: #ffd6dd;
   --card-culture-bg: #ffdfcd;
   --shadow: 0 8px 30px #5a3a0a1a;
-  /* Barres abricot pâle = mangue fondue à 32 % dans la page ananas (la mangue pure jurait avec la page) ; encre
-     dessus, lien courant et pastille en vert tropical profond (≥ 4.5:1). */
-  --bar-bg: #fed099;
-  --bar-hover: #fed8a2;
-  --bar-press: #fec48c;
+  /* Barres abricot pâle : l'équivalent opaque de #fed09994 (abricot à 58 %) posé sur la page ananas, demandé le
+     09/10/2026 ; opaque exprès, une barre translucide laisse voir le contenu sous l'en-tête collant. Encre dessus,
+     lien courant et pastille en vert tropical profond (≥ 4.5:1). */
+  --bar-bg: #fedfaa;
+  --bar-hover: #fee5b6;
+  --bar-press: #fed79d;
   --bar-ink: #2b2420;
   --bar-muted: #4a3024;
-  --bar-line: #ffb57c;
+  --bar-line: #fec48c;
   --bar-accent: #054e4e;
   --bar-accent-hover: #043f3f;
   --bar-on-accent: #fff;
-  --bar-soft: #fed8a2;
+  --bar-soft: #fee5b6;
   --mark-pin: #069494;
   --mark-flag: #ff8243;
   --mark-dot: #fce883;
