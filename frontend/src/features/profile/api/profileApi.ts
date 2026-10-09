@@ -272,3 +272,7 @@ function setUserProfileState(
     location: null,
   });
 }
+
+export async function deactivateAccount(): Promise<void> {
+  await http.patch('/users/me/deactivate');
+}
