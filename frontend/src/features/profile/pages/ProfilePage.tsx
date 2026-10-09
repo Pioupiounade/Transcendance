@@ -109,6 +109,55 @@ export const ProfilePage: React.FC = () => {
     }
   };
 
+  if (isLoading) {
+    return (
+      <div style={{ textAlign: 'center', padding: '4rem 1rem' }}>
+        <p className="help" style={{ justifyContent: 'center' }}>Loading profile...</p>
+      </div>
+    );
+  }
+
+  if (isCreating) {
+    return (
+      <>
+        {createError && <p role="alert">{createError}</p>}
+        <ProfileForm
+          onSave={handleCreate}
+          onCancel={() => setIsCreating(false)}
+          isSaving={isSaving}
+          initialInterests={interests}
+        />
+      </>
+    );
+  }
+
+  if (!error && !profile) {
+    return (
+      <div style={{ textAlign: 'center', padding: '4rem 1rem' }}>
+        <h2>No profile yet</h2>
+        <p>Your account does not have a profile yet.</p>
+        <button
+          type="button"
+          onClick={() => setIsCreating(true)}
+          disabled={interestsLoading}
+        >
+          Create profile
+        </button>
+      </div>
+    );
+  }
+
+  if (!profile) {
+    return (
+      <div style={{ textAlign: 'center', padding: '4rem 1rem' }}>
+        <h2>Profile not found</h2>
+        <p className="help help--error" style={{ justifyContent: 'center' }}>
+          Unable to load profile data.
+        </p>
+      </div>
+    );
+  }
+
   const handleSave = async (
     updated: UserProfile,
     selectedInterests: InterestCategory[],
