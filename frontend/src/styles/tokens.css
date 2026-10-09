@@ -389,13 +389,14 @@
   --card-social-bg: #eed3c7;
   --card-culture-bg: #e7daf4;
   --shadow: 0 8px 30px #2d2a331a;
-  /* Barres menthe rétro = Tiffany fondu à 50 % dans la page jaune (opaque) ; lien courant et pastille en violet. */
-  --bar-bg: #b8e4cf;
-  --bar-hover: #c2e9d8;
-  --bar-press: #abdec6;
+  /* Barres menthe rétro = Tiffany fondu à 28 % dans la page jaune (50 % tranchait trop avec la page, 09/10/2026) ;
+     opaque ; lien courant et pastille en violet. */
+  --bar-bg: #d0e9ce;
+  --bar-hover: #d9eed6;
+  --bar-press: #c4e5c9;
   --bar-ink: #2d2a33;
   --bar-muted: #45424c;
-  --bar-line: #9fd6c0;
+  --bar-line: #b0dcbc;
   --bar-accent: #5b2f99;
   --bar-accent-hover: #4c2683;
   --bar-on-accent: #fff;
