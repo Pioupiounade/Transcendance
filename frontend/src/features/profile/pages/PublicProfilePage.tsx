@@ -33,18 +33,15 @@ export function PublicProfilePage() {
 
     Promise.all([
       getPublicProfile(userId),
-      friendsApi.getMyFriends(),
       friendsApi.getSentRequests(),
       friendsApi.getReceivedRequests(),
+      friendsApi.getFriendshipStatus(userId),
     ])
-      .then(([data, friends, sentRequests, receivedRequests]: any[]) => {
-        if (!active) return;
-
+      .then(([data, sentRequests, receivedRequests, friendshipRelation]: any[]) => {
         // Détection de la visibilité restreinte depuis le DTO backend
         if (
           data.isPrivate ||
-          data.visibility === 'PRIVATE' ||
-          data.visibility === 'FRIENDS_ONLY'
+          data.visibility === 'PRIVATE'
         ) {
           setIsPrivate(true);
           return;
@@ -52,7 +49,11 @@ export function PublicProfilePage() {
 
         let friendshipStatus: FriendshipStatus = 'NONE';
 
-        if (friends.some((friend: any) => String(friend.user_id) === String(userId))) {
+        if (friendshipRelation.status === 'BLOCKED_BY_ME') {
+          friendshipStatus = 'BLOCKED';
+        } else if (friendshipRelation.status === 'BLOCKED_BY_OTHER') {
+          friendshipStatus = 'BLOCKED_BY_OTHER';
+        } else if (friendshipRelation.status === 'ACCEPTED') {
           friendshipStatus = 'ACCEPTED';
         } else if (
           sentRequests.some(

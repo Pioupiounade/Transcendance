@@ -82,6 +82,14 @@ export const FriendshipCTA: React.FC<FriendshipCTAProps> = ({
     }
   };
 
+  if (currentStatus === 'BLOCKED_BY_OTHER') {
+    return (
+      <span className="help">
+        Friendship unavailable
+      </span>
+    );
+  }
+
   if (currentStatus === 'BLOCKED') {
     return (
       <div className="friendship-actions">
