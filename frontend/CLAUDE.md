@@ -150,7 +150,7 @@ Ce fichier est chargé automatiquement quand la session démarre dans `frontend/
   (`:root[data-theme='admin']`, accent inversé terracotta / sauge, contrastes vérifiés). Un composant ne code jamais
   une couleur en dur : il lit un token (`--on-brand`, `--ground-hover`, `--field-bg`, `--disabled-*`…), sinon il casse
   dans le thème sombre.
-  Exploration DA (branche `explore/palettes`, 09/10/2026) : trois fiches de couleurs en blocs `:root[data-palette='tropical'|'spring'|'seaside']`
+  Exploration DA (branche `explore/palettes`, 09/10/2026) : quatre fiches de couleurs en blocs `:root[data-palette='tropical'|'spring'|'seaside'|'retro']`
   dans tokens.css, posées sur <html> par `app/palette.ts` (`?palette=`, localStorage) et la pastille `layout/PaletteSwitch` ;
   la scène de rue lit des tokens `--scene-*`. Une fois la palette choisie : replier le bloc gagnant dans `:root`, retirer le reste.
 - Texte : `overflow-wrap: anywhere` est posé sur `body` (`global.css`, hérité) pour qu'un mot sans espace (URL,

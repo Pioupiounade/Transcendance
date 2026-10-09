@@ -118,7 +118,7 @@
 }
 
 /* ------------------------------------------------------------------------------------------------------------
-   Exploration de direction artistique (branche explore/palettes, 09/10/2026) : trois fiches de combinaisons de
+   Exploration de direction artistique (branche explore/palettes, 09/10/2026) : quatre fiches de combinaisons de
    couleurs posées sur <html> par `data-palette` (app/palette.ts, bascule PaletteSwitch). Chaque bloc ne redéfinit
    que des couleurs ; sans attribut, la forêt + terracotta ci-dessus reste la palette. Une fiche donne 4 teintes,
    l'interface en demande ~40 : les teintes pures vivent là où le contraste n'est pas en jeu (fonds d'étiquettes et
@@ -341,6 +341,78 @@
   --scene-tree-3: #c9fdf2;
   --scene-pavement: #dcecee;
   --scene-curb: #bfd9dd;
+}
+
+/* Fiche 4 « Retro calm » : bleu Tiffany #81D8D0 · pêche chaud #D99E82 · jaune doux #D7D982 · lavande #AE82D9.
+   Page papier jaune doux (40 %), panneaux blanc cassé, barres bleu Tiffany fondu dans la page (menthe rétro),
+   bleu Tiffany assombri pour l'action et le texte, lavande assombrie pour l'accent (la touche créative), pêche pour
+   l'entraide, lavande pour la culture, Tiffany pour l'environnement. Le logo : pin Tiffany sombre, fanion lavande
+   pure, point jaune doux. */
+:root[data-palette='retro'] {
+  --brand: #1b6f69;
+  --brand-hover: #175f5a;
+  --brand-press: #134f4b;
+  --terra: #7347b8;
+  --surface: #eff0cd;
+  --ground: #fdfdf3;
+  --ground-hover: #f6f6dd;
+  --ground-press: #efefcc;
+  --field-bg: #fff;
+  --on-brand: #fff;
+  --trust: #1b6f69;
+  --trust-soft: #d3efec;
+  --ink: #2d2a33;
+  --muted: #5f5c66;
+  --line: #d9d9a6;
+  --danger: #b5362f;
+  --danger-soft: #fbe2de;
+  --pending: #7a5a12;
+  --pending-soft: #f3e39a;
+  --disabled-bg: #e1e1c8;
+  --disabled-ink: #6b6a5f;
+  --culture: #ae82d9;
+  --tag-culture-bg: #d7c1ef;
+  --tag-culture-ink: #5b2f99;
+  --tag-social-bg: #f0cdbb;
+  --tag-social-ink: #8a4a2c;
+  --tag-environment-bg: #b3e8e3;
+  --tag-environment-ink: #14605b;
+  --avatar-bg: #f0cdbb;
+  --avatar-ink: #7a3f22;
+  --map-ground: #e4efd9;
+  --map-line: #c2d6b8;
+  --note-bg: #f5e9dd;
+  --note-ink: #6b4a36;
+  --card-selected-bg: #dff3f0;
+  /* Cartes d'action : Tiffany 45 %, pêche 45 %, lavande 30 % (plus, le texte secondaire passerait sous 4.5:1). */
+  --card-environment-bg: #c6edea;
+  --card-social-bg: #eed3c7;
+  --card-culture-bg: #e7daf4;
+  --shadow: 0 8px 30px #2d2a331a;
+  /* Barres menthe rétro = Tiffany fondu à 50 % dans la page jaune (opaque) ; lien courant et pastille en violet. */
+  --bar-bg: #b8e4cf;
+  --bar-hover: #c2e9d8;
+  --bar-press: #abdec6;
+  --bar-ink: #2d2a33;
+  --bar-muted: #45424c;
+  --bar-line: #9fd6c0;
+  --bar-accent: #5b2f99;
+  --bar-accent-hover: #4c2683;
+  --bar-on-accent: #fff;
+  --bar-soft: #c2e9d8;
+  --mark-pin: #1b6f69;
+  --mark-flag: #ae82d9;
+  --mark-dot: #d7d982;
+  --scene-sky-top: #eff0cd;
+  --scene-sky-bottom: #81d8d0;
+  --scene-sun: #d99e82;
+  --scene-accent: #d99e82;
+  --scene-coat: #ae82d9;
+  --scene-tree-1: #9fd3b3;
+  --scene-tree-2: #6fb591;
+  --scene-tree-3: #c5e3a8;
+  --scene-pavement: #e6e6d2;
+  --scene-curb: #cfcfb4;
 }
 
 /* Thème de l'espace d'administration (#22) : nuit de forêt, accent inversé (la terracotta devient la couleur

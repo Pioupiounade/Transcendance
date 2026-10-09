@@ -55,6 +55,9 @@
 .swatch[data-palette='seaside'] {
   background: #85d1db;
 }
+.swatch[data-palette='retro'] {
+  background: #ae82d9;
+}
 
 @media (max-width: 760px) {
   /* Au-dessus de la barre basse ; pastilles seules, le nom reste pour les lecteurs d'écran. */
