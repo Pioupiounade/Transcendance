@@ -28,6 +28,18 @@ export class FriendshipsController {
     }
 
     @UseGuards(JwtAuthGuard)
+    @Get(':friendUserId/status')
+    getFriendshipStatus(
+    @Req() req: any,
+    @Param('friendUserId') friendUserId: string,
+    ) {
+    return this.friendshipsService.getFriendshipStatus(
+        req.user.id,
+        friendUserId,
+    );
+    }
+
+    @UseGuards(JwtAuthGuard)
     @Patch(':friendUserId/block')
     blockFriend(
     @Req() req: any,

@@ -7,6 +7,7 @@ import { INTEREST_LABELS } from '../interestLabels';
 
 interface ProfileViewProps {
   profile: UserProfile;
+  userId?: string;
   isOwnProfile?: boolean;
   onEdit: () => void;
   onFriendshipChange?: (newStatus: FriendshipStatus) => void;
@@ -21,6 +22,7 @@ interface ProfileViewProps {
 
 export const ProfileView: React.FC<ProfileViewProps> = ({
   profile,
+  userId,
   isOwnProfile = false,
   activity,
   activityLoading,
@@ -111,7 +113,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
             </button>
           ) : (
             <FriendshipCTA
-              userId={profile.username}
+              userId={userId ?? ''}
               status={profile.friendshipStatus ?? 'NONE'}
               onStatusChange={onFriendshipChange}
             />

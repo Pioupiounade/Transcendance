@@ -4,6 +4,7 @@ import { useAuth } from '@/features/auth';
 import { getPublicProfile } from '../api/profileApi';
 import { ProfileView } from '../components/ProfileView';
 import type { FriendshipStatus, InterestCategory, UserProfile } from '../types';
+import { friendsApi } from '@/features/friends/api/friendsApi';
 
 export function PublicProfilePage() {
   const { userId } = useParams<{ userId: string }>();
@@ -30,8 +31,13 @@ export function PublicProfilePage() {
       return;
     }
 
-    getPublicProfile(userId)
-      .then((data: any) => {
+    Promise.all([
+      getPublicProfile(userId),
+      friendsApi.getMyFriends(),
+      friendsApi.getSentRequests(),
+      friendsApi.getReceivedRequests(),
+    ])
+      .then(([data, friends, sentRequests, receivedRequests]: any[]) => {
         if (!active) return;
 
         // Détection de la visibilité restreinte depuis le DTO backend
@@ -44,16 +50,35 @@ export function PublicProfilePage() {
           return;
         }
 
+        let friendshipStatus: FriendshipStatus = 'NONE';
+
+        if (friends.some((friend: any) => String(friend.user_id) === String(userId))) {
+          friendshipStatus = 'ACCEPTED';
+        } else if (
+          sentRequests.some(
+            (request: any) =>
+              String(request.addressee?.user_id) === String(userId),
+          )
+        ) {
+          friendshipStatus = 'PENDING_SENT';
+        } else if (
+          receivedRequests.some(
+            (request: any) =>
+              String(request.requester?.user_id) === String(userId),
+          )
+        ) {
+          friendshipStatus = 'PENDING_RECEIVED';
+        }
+
         // Profil public complet
         setUserProfile({
-          id: String(data.user_id ?? data.userId),
           username: data.username,
           description: data.description ?? undefined,
           profilePicture: data.profile_picture ?? data.profilePicture ?? undefined,
           commune: data.commune ?? null,
           visibility: data.visibility ?? 'PUBLIC',
           location: null,
-          friendshipStatus: 'NONE',
+          friendshipStatus,
         });
         setUserInterests(data.interests ?? []);
       })
@@ -112,6 +137,7 @@ export function PublicProfilePage() {
   return (
     <ProfileView
       profile={userProfile}
+      userId={userId ?? ''}
       isOwnProfile={false}
       onEdit={() => { }}
       onFriendshipChange={(newStatus: FriendshipStatus) => {

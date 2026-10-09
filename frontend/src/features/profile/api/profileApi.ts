@@ -60,6 +60,8 @@ type ApiPublicProfile = {
   profile_picture: string | null;
   commune: string | null;
   interests: InterestCategory[];
+  visibility?: ProfileVisibility;
+  isPrivate?: boolean;
 };
 
 export async function getPublicProfile(userId: string): Promise<PublicProfile> {
@@ -167,7 +169,10 @@ export async function updateProfile(profile: UserProfile, avatar?: File | null):
 export async function sendFriendRequest(
   targetUserId: string,
 ): Promise<FriendshipStatus> {
-  void targetUserId;
+  await http.patch('/friend-requests/me/send', {
+    addressee_id: String(targetUserId),
+  });
+
   return 'PENDING_SENT';
 }
 
@@ -188,7 +193,25 @@ export async function declineFriendRequest(
 export async function cancelOrRemoveFriend(
   targetUserId: string,
 ): Promise<FriendshipStatus> {
-  void targetUserId;
+  const sentRequests = await http.get<any[]>(
+    '/friend-requests/sentRequests',
+  );
+
+  const pendingRequest = sentRequests.find(
+    (request) =>
+      String(request.addressee?.user_id) === String(targetUserId),
+  );
+
+  if (pendingRequest) {
+    await http.delete<void>(
+      `/friend-requests/${pendingRequest.friend_request_id}`,
+    );
+
+    return 'NONE';
+  }
+
+  await http.delete<void>(`/friendships/${targetUserId}`);
+
   return 'NONE';
 }
 
