@@ -30,6 +30,8 @@ export interface PublicProfile {
   profilePicture: string | null;
   commune: string | null;
   interests: InterestCategory[];
+  visibility?: 'PUBLIC' | 'PRIVATE' | 'FRIENDS_ONLY';
+  isPrivate?: boolean;
 }
 
 export interface ProfileOrganization {

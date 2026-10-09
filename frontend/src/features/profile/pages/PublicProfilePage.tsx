@@ -1,27 +1,26 @@
 import { useEffect, useState } from 'react';
 import { useParams, Navigate } from 'react-router';
-import { getPublicProfile, getCurrentUserSummary } from '../api/profileApi';
+import { useAuth } from '@/features/auth';
+import { getPublicProfile } from '../api/profileApi';
 import { ProfileView } from '../components/ProfileView';
 import type { FriendshipStatus, InterestCategory, UserProfile } from '../types';
 
 export function PublicProfilePage() {
   const { userId } = useParams<{ userId: string }>();
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const { user } = useAuth();
+  const currentUserId = user?.user_id ? String(user.user_id) : null;
+
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [userInterests, setUserInterests] = useState<InterestCategory[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isPrivate, setIsPrivate] = useState(false);
   const [error, setError] = useState(false);
-
-  useEffect(() => {
-    getCurrentUserSummary()
-      .then((account) => setCurrentUserId(String(account.userId)))
-      .catch(() => setCurrentUserId(null));
-  }, []);
 
   useEffect(() => {
     let active = true;
     setIsLoading(true);
     setError(false);
+    setIsPrivate(false);
     setUserProfile(null);
     setUserInterests([]);
 
@@ -32,22 +31,39 @@ export function PublicProfilePage() {
     }
 
     getPublicProfile(userId)
-      .then((data) => {
+      .then((data: any) => {
         if (!active) return;
+
+        // Détection de la visibilité restreinte depuis le DTO backend
+        if (
+          data.isPrivate ||
+          data.visibility === 'PRIVATE' ||
+          data.visibility === 'FRIENDS_ONLY'
+        ) {
+          setIsPrivate(true);
+          return;
+        }
+
+        // Profil public complet
         setUserProfile({
-          id: data.userId,
+          id: String(data.user_id ?? data.userId),
           username: data.username,
           description: data.description ?? undefined,
-          profilePicture: data.profilePicture ?? undefined,
+          profilePicture: data.profile_picture ?? data.profilePicture ?? undefined,
           commune: data.commune ?? null,
-          visibility: 'PUBLIC',
+          visibility: data.visibility ?? 'PUBLIC',
           location: null,
           friendshipStatus: 'NONE',
         });
         setUserInterests(data.interests ?? []);
       })
-      .catch(() => {
-        if (active) setError(true);
+      .catch((err) => {
+        if (!active) return;
+        if (err?.status === 403 || err?.status === 404) {
+          setIsPrivate(true);
+        } else {
+          setError(true);
+        }
       })
       .finally(() => {
         if (active) setIsLoading(false);
@@ -58,7 +74,8 @@ export function PublicProfilePage() {
     };
   }, [userId]);
 
-  if (currentUserId && userId && String(currentUserId) === String(userId)) {
+  // Redirection synchrone immédiate si c'est son propre profil
+  if (currentUserId && userId && currentUserId === String(userId)) {
     return <Navigate to="/profile" replace />;
   }
 
@@ -66,6 +83,17 @@ export function PublicProfilePage() {
     return (
       <div style={{ textAlign: 'center', padding: '4rem 1rem' }}>
         <p className="help" style={{ justifyContent: 'center' }}>Loading profile...</p>
+      </div>
+    );
+  }
+
+  if (isPrivate) {
+    return (
+      <div style={{ textAlign: 'center', padding: '4rem 1rem' }}>
+        <h2>Private Profile</h2>
+        <p className="help" style={{ justifyContent: 'center' }}>
+          This user has set their profile to private.
+        </p>
       </div>
     );
   }
@@ -85,7 +113,7 @@ export function PublicProfilePage() {
     <ProfileView
       profile={userProfile}
       isOwnProfile={false}
-      onEdit={() => {}}
+      onEdit={() => { }}
       onFriendshipChange={(newStatus: FriendshipStatus) => {
         setUserProfile((prev) => (prev ? { ...prev, friendshipStatus: newStatus } : null));
       }}

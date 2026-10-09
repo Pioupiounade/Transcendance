@@ -74,6 +74,8 @@ export async function getPublicProfile(userId: string): Promise<PublicProfile> {
     profilePicture: data.profile_picture,
     commune: data.commune,
     interests: data.interests,
+    visibility: data.visibility,
+    isPrivate: data.isPrivate,
   };
 }
 
