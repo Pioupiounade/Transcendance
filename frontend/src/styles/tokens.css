@@ -55,6 +55,10 @@
   --card-culture-bg: #fbf2dd;
   /* Carte d'organisation (features/organizations OrganizationCard) : panneau en forêt, une palette peut la teinter. */
   --card-organization-bg: var(--ground);
+  /* Constellation des organisations (SVG) : nœuds, fils et halos ; brand / trust-soft en forêt, une palette peut y
+     mettre une autre teinte (OrganizationConstellation redéfinit --brand et --trust-soft localement dessus). */
+  --constellation-accent: var(--brand);
+  --constellation-soft: var(--trust-soft);
   /* Textes secondaires et accent sur une carte teintée : en forêt les teintes sont pâles, les tokens usuels suffisent ;
      une palette aux cartes franches les remplace par de l'encre (contraste), voir ActionCard. */
   --card-ink-soft: var(--muted);
@@ -390,8 +394,10 @@
   --card-environment-bg: #c6edea;
   --card-social-bg: #eed3c7;
   --card-culture-bg: #e7daf4;
-  /* Cartes d'organisation : voile lavande (20 % sur le panneau), demande du 09/10/2026. */
-  --card-organization-bg: #ede4ee;
+  /* Cartes d'organisation : vert des barres ; constellation en violet (demandes du 09/10/2026). */
+  --card-organization-bg: #d0e9ce;
+  --constellation-accent: #7347b8;
+  --constellation-soft: #e4d6f3;
   --shadow: 0 8px 30px #2d2a331a;
   /* Barres menthe rétro = Tiffany fondu à 28 % dans la page jaune (50 % tranchait trop avec la page, 09/10/2026) ;
      opaque ; lien courant et pastille en violet. */
