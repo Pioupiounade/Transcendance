@@ -127,7 +127,8 @@
    que des couleurs ; sans attribut, la forêt + terracotta ci-dessus reste la palette. Une fiche donne 4 teintes,
    l'interface en demande ~40 : les teintes pures vivent là où le contraste n'est pas en jeu (fonds d'étiquettes et
    de cartes, carte, scène de rue), les textes et boutons reçoivent une version assombrie (≥ 4.5:1 vérifié).
-   Fond de page et panneaux changent avec la fiche (09/10/2026 : « inspire-toi vraiment de chaque direction »).
+   Fond de page et panneaux changent avec la fiche (09/10/2026 : « inspire-toi vraiment de chaque direction ») ;
+   les cartes d'action gardent les teintes de la forêt dans toutes les fiches (demande du 09/10/2026).
    Une fois la palette choisie : replier le bloc gagnant dans :root, supprimer les blocs et la bascule.
    ------------------------------------------------------------------------------------------------------------ */
 
@@ -170,10 +171,6 @@
   --note-bg: #ffe9d2;
   --note-ink: #7a4a26;
   --card-selected-bg: #e6f3f3;
-  /* Cartes d'action : teinte nette mais lisible (vert 27 %, papaye 65 %, mangue 28 %) sur la page ananas. */
-  --card-environment-bg: #b9e1e1;
-  --card-social-bg: #ffd6dd;
-  --card-culture-bg: #ffdfcd;
   --shadow: 0 8px 30px #5a3a0a1a;
   /* Barres abricot pâle : l'équivalent opaque de #fed09994 (abricot à 58 %) posé sur la page ananas, demandé le
      09/10/2026 ; opaque exprès, une barre translucide laisse voir le contenu sous l'en-tête collant. Encre dessus,
@@ -243,10 +240,6 @@
   --note-bg: #eaf1f8;
   --note-ink: #4f6176;
   --card-selected-bg: #e4edfb;
-  /* Cartes d'action : vert 45 %, bleuet 32 %, menthe 50 % sur la page bleu gris, panneaux blancs autour. */
-  --card-environment-bg: #c9e8d7;
-  --card-social-bg: #cedef9;
-  --card-culture-bg: #c2eee5;
   --shadow: 0 8px 30px #1f2d3d1a;
   /* Barres pervenche = bleuet fondu à 40 % dans la page bleu gris (le bleuet sombre jurait avec la page) ; encre
      dessus, lien courant et pastille en bleu nuit (≥ 4.5:1). */
@@ -316,10 +309,6 @@
   --note-bg: #dff8f3;
   --note-ink: #3f6a6f;
   --card-selected-bg: #d9f3f6;
-  /* Cartes d'action : vert clair 70 %, menthe 80 %, bleu pastel 55 % (plus foncé que la page pour s'en détacher). */
-  --card-environment-bg: #ccf6df;
-  --card-social-bg: #d4fdf5;
-  --card-culture-bg: #b5e4ea;
   --shadow: 0 8px 30px #0f3f4a1a;
   /* Barres bleu pastel fondu à 50 % dans la page (opaque : l'en-tête collant doit cacher le contenu). */
   --bar-bg: #a8e1e9;
@@ -388,10 +377,6 @@
   --note-bg: #f5e9dd;
   --note-ink: #6b4a36;
   --card-selected-bg: #dff3f0;
-  /* Cartes d'action : Tiffany 45 %, pêche 45 %, lavande 30 % (plus, le texte secondaire passerait sous 4.5:1). */
-  --card-environment-bg: #c6edea;
-  --card-social-bg: #eed3c7;
-  --card-culture-bg: #e7daf4;
   /* Cartes d'organisation et panneau « My agenda » : fond vert des barres ; icônes des cartes d'organisation en violet
      (seule touche lavande de la page, 09/10/2026). */
   --card-highlight-bg: #d0e9ce;
