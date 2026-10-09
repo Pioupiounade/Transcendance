@@ -53,6 +53,10 @@
   --card-environment-bg: #f1f6ea;
   --card-social-bg: #fbeee5;
   --card-culture-bg: #fbf2dd;
+  /* Textes secondaires et accent sur une carte teintée : en forêt les teintes sont pâles, les tokens usuels suffisent ;
+     une palette aux cartes franches les remplace par de l'encre (contraste), voir ActionCard. */
+  --card-ink-soft: var(--muted);
+  --card-accent: var(--brand);
 
   /* Scène de rue (shared/ui StreetScene) : ciel, soleil, auvents et manteau, arbres, trottoir. Suivent la palette. */
   --scene-sky-top: #fdf6f1;
@@ -141,9 +145,13 @@
   --note-bg: #fdeedd;
   --note-ink: #7a5a3c;
   --card-selected-bg: #fff3df;
-  --card-environment-bg: #e9f6f3;
-  --card-social-bg: #fff0f2;
-  --card-culture-bg: #fff8dc;
+  /* Cartes d'action franches (09/10/2026) : vert tropical à 50 %, papaye et ananas purs ; les textes secondaires
+     passent à l'encre (le gris et le teal brand tomberaient sous 4.5:1 sur ces fonds). */
+  --card-environment-bg: #82caca;
+  --card-social-bg: #ffc0cb;
+  --card-culture-bg: #fce883;
+  --card-ink-soft: color-mix(in srgb, var(--ink) 90%, var(--surface));
+  --card-accent: var(--ink);
   --shadow: 0 8px 30px #3a2a1a14;
   --scene-sky-top: #fff9e8;
   --scene-sky-bottom: #ffd0d8;
@@ -195,9 +203,13 @@
   --note-bg: #e9f0f7;
   --note-ink: #566a80;
   --card-selected-bg: #eaf1fb;
-  --card-environment-bg: #eef9f4;
-  --card-social-bg: #eef3fa;
-  --card-culture-bg: #eef1fc;
+  /* Cartes d'action franches (09/10/2026) : vert atténué et bleu gris purs, bleuet à 60 % (pur, l'encre tomberait
+     sous 5:1) ; textes secondaires à l'encre. */
+  --card-environment-bg: #88cfa8;
+  --card-social-bg: #90b8d6;
+  --card-culture-bg: #a1bff5;
+  --card-ink-soft: color-mix(in srgb, var(--ink) 90%, var(--surface));
+  --card-accent: var(--ink);
   --shadow: 0 8px 30px #1f2d3d14;
   --scene-sky-top: #f4f8fd;
   --scene-sky-bottom: #cfe0f4;

@@ -14,7 +14,15 @@
 .card:hover {
   border-color: var(--brand);
 }
-/* Teinte discrète par catégorie ; la sélection garde son propre fond et sa bordure forêt. */
+/* Teinte par catégorie (discrète en forêt, franche dans les palettes explorées) ; la sélection garde son propre fond et
+   sa bordure brand. Sur une carte teintée, les textes secondaires lisent `--card-ink-soft` et les places `--card-accent`
+   (= muted / brand en forêt, encre sur les fonds francs). */
+.environmentCard,
+.socialCard,
+.culturalCard {
+  --muted: var(--card-ink-soft);
+  --seats: var(--card-accent);
+}
 .environmentCard {
   background: var(--card-environment-bg);
 }
@@ -129,7 +137,7 @@
 }
 
 .seats {
-  color: var(--brand);
+  color: var(--seats, var(--brand));
   font-weight: 700;
 }
 .seatsFull {
