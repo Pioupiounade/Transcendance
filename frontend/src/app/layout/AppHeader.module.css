@@ -2,6 +2,19 @@
 /* Trois colonnes symétriques : la nav est centrée sur la page (alignée sur les titres centrés), pas entre le
    logo et le bouton, de largeurs différentes. */
 .topbar {
+  /* Barre teintée par la palette (tokens --bar-*, styles/tokens.css) : les enfants (liens, boutons, avatar, marque)
+     lisent les tokens redéfinis ici. En forêt, identique à la coquille. */
+  --ground: var(--bar-bg);
+  --ground-hover: var(--bar-hover);
+  --ground-press: var(--bar-press);
+  --ink: var(--bar-ink);
+  --muted: var(--bar-muted);
+  --line: var(--bar-line);
+  --brand: var(--bar-accent);
+  --brand-hover: var(--bar-accent-hover);
+  --brand-press: var(--bar-accent-hover);
+  --on-brand: var(--bar-on-accent);
+  --trust-soft: var(--bar-soft);
   position: sticky;
   top: 0;
   z-index: 10;
@@ -12,6 +25,7 @@
   gap: 30px;
   padding: 0 38px;
   background: var(--ground);
+  color: var(--ink);
   border-bottom: 1px solid var(--line);
 }
 

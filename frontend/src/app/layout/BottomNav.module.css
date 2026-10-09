@@ -1,5 +1,18 @@
 /* Barre de navigation inférieure, mobile uniquement (≤ 760 px). Cinq entrées (une colonne chacune), la centrale mise en avant. */
 .bar {
+  /* Barre teintée par la palette (tokens --bar-*, styles/tokens.css) : les enfants (liens, boutons, avatar, marque)
+     lisent les tokens redéfinis ici. En forêt, identique à la coquille. */
+  --ground: var(--bar-bg);
+  --ground-hover: var(--bar-hover);
+  --ground-press: var(--bar-press);
+  --ink: var(--bar-ink);
+  --muted: var(--bar-muted);
+  --line: var(--bar-line);
+  --brand: var(--bar-accent);
+  --brand-hover: var(--bar-accent-hover);
+  --brand-press: var(--bar-accent-hover);
+  --on-brand: var(--bar-on-accent);
+  --trust-soft: var(--bar-soft);
   display: none;
 }
 
@@ -14,6 +27,7 @@
     height: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom));
     padding-bottom: env(safe-area-inset-bottom);
     background: var(--ground);
+    color: var(--ink);
     border-top: 1px solid var(--line);
   }
 

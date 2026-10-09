@@ -58,6 +58,20 @@
   --card-ink-soft: var(--muted);
   --card-accent: var(--brand);
 
+  /* Barres (app/layout : en-tête, barre basse, pied de page) : chacune redéfinit localement --ground, --ink, --muted,
+     --line, --brand… à partir de ces tokens, pour que liens, boutons, avatar et marque suivent. En forêt, la barre
+     est crème comme les panneaux ; une palette explorée lui donne sa teinte signature. */
+  --bar-bg: var(--ground);
+  --bar-hover: var(--ground-hover);
+  --bar-press: var(--ground-press);
+  --bar-ink: var(--ink);
+  --bar-muted: var(--muted);
+  --bar-line: var(--line);
+  --bar-accent: var(--brand);
+  --bar-accent-hover: var(--brand-hover);
+  --bar-on-accent: var(--on-brand);
+  --bar-soft: var(--trust-soft);
+
   /* Marque (app/layout Brandmark) : pin, fanion, point. Décorative : une palette peut y mettre ses teintes pures. */
   --mark-pin: var(--brand);
   --mark-flag: var(--terra);
@@ -152,11 +166,22 @@
   --note-bg: #ffe9d2;
   --note-ink: #7a4a26;
   --card-selected-bg: #e6f3f3;
-  /* Cartes d'action : teinte nette mais lisible (vert 22 %, papaye 55 %, mangue 22 %) sur la page ananas. */
-  --card-environment-bg: #c8e7e7;
-  --card-social-bg: #ffdce2;
-  --card-culture-bg: #ffe4d6;
+  /* Cartes d'action : teinte nette mais lisible (vert 27 %, papaye 65 %, mangue 28 %) sur la page ananas. */
+  --card-environment-bg: #b9e1e1;
+  --card-social-bg: #ffd6dd;
+  --card-culture-bg: #ffdfcd;
   --shadow: 0 8px 30px #5a3a0a1a;
+  /* Barres mangue pure, encre dessus, lien courant et pastille en vert tropical profond (≥ 4.5:1 sur la mangue). */
+  --bar-bg: #ff8243;
+  --bar-hover: #ff9460;
+  --bar-press: #f27335;
+  --bar-ink: #2b2420;
+  --bar-muted: #45281c;
+  --bar-line: #e86f31;
+  --bar-accent: #053838;
+  --bar-accent-hover: #032626;
+  --bar-on-accent: #fff;
+  --bar-soft: #ffa070;
   --mark-pin: #069494;
   --mark-flag: #ff8243;
   --mark-dot: #fce883;
@@ -212,11 +237,22 @@
   --note-bg: #eaf1f8;
   --note-ink: #4f6176;
   --card-selected-bg: #e4edfb;
-  /* Cartes d'action : vert 35 %, bleuet 25 %, menthe 40 % sur la page bleu gris, panneaux blancs autour. */
-  --card-environment-bg: #d5eee1;
-  --card-social-bg: #d8e5fb;
-  --card-culture-bg: #cef2ea;
+  /* Cartes d'action : vert 45 %, bleuet 32 %, menthe 50 % sur la page bleu gris, panneaux blancs autour. */
+  --card-environment-bg: #c9e8d7;
+  --card-social-bg: #cedef9;
+  --card-culture-bg: #c2eee5;
   --shadow: 0 8px 30px #1f2d3d1a;
+  /* Barres bleuet sombre, texte blanc, lien courant et pastille en menthe claire (≥ 4.5:1 sur le bleu). */
+  --bar-bg: #2b57bd;
+  --bar-hover: #3563cc;
+  --bar-press: #244aa3;
+  --bar-ink: #fff;
+  --bar-muted: #e3ebfb;
+  --bar-line: #4a73d1;
+  --bar-accent: #d9f5e8;
+  --bar-accent-hover: #c4eedb;
+  --bar-on-accent: #1f2d3d;
+  --bar-soft: #3f6bcb;
   --mark-pin: #6395ee;
   --mark-flag: #88cfa8;
   --mark-dot: #fff;
@@ -267,6 +303,16 @@
   --mark-pin: var(--brand);
   --mark-flag: var(--terra);
   --mark-dot: var(--ground);
+  --bar-bg: var(--ground);
+  --bar-hover: var(--ground-hover);
+  --bar-press: var(--ground-press);
+  --bar-ink: var(--ink);
+  --bar-muted: var(--muted);
+  --bar-line: var(--line);
+  --bar-accent: var(--brand);
+  --bar-accent-hover: var(--brand-hover);
+  --bar-on-accent: var(--on-brand);
+  --bar-soft: var(--trust-soft);
 }
 
 @media (prefers-reduced-motion: reduce) {
