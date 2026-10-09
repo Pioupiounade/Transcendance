@@ -58,6 +58,11 @@
   --card-ink-soft: var(--muted);
   --card-accent: var(--brand);
 
+  /* Marque (app/layout Brandmark) : pin, fanion, point. Décorative : une palette peut y mettre ses teintes pures. */
+  --mark-pin: var(--brand);
+  --mark-flag: var(--terra);
+  --mark-dot: var(--ground);
+
   /* Scène de rue (shared/ui StreetScene) : ciel, soleil, auvents et manteau, arbres, trottoir. Suivent la palette. */
   --scene-sky-top: #fdf6f1;
   --scene-sky-bottom: #f7dccc;
@@ -104,123 +109,127 @@
    que des couleurs ; sans attribut, la forêt + terracotta ci-dessus reste la palette. Une fiche donne 4 teintes,
    l'interface en demande ~40 : les teintes pures vivent là où le contraste n'est pas en jeu (fonds d'étiquettes et
    de cartes, carte, scène de rue), les textes et boutons reçoivent une version assombrie (≥ 4.5:1 vérifié).
+   Fond de page et panneaux changent avec la fiche (09/10/2026 : « inspire-toi vraiment de chaque direction »).
    Une fois la palette choisie : replier le bloc gagnant dans :root, supprimer les deux blocs et la bascule.
    ------------------------------------------------------------------------------------------------------------ */
 
 /* Fiche 1 « Tropical punch » : mangue #FF8243 · rose papaye #FFC0CB · jaune ananas #FCE883 · vert tropical #069494.
-   Le vert tropical (assombri) porte l'action et la confiance, la mangue l'accent, l'ananas les fonds, la papaye
-   l'entraide. */
+   Page ananas (50 %), panneaux crème, vert tropical (assombri) pour l'action et le texte, mangue pour l'accent et
+   la culture, papaye pour l'entraide ; le logo, le ciel et le soleil portent les teintes pures. */
 :root[data-palette='tropical'] {
-  --brand: #0a7f7f;
-  --brand-hover: #086e6e;
-  --brand-press: #065c5c;
-  --terra: #c9470f;
-  --surface: #fff8e8;
-  --ground: #fffdf6;
-  --ground-hover: #fbf0d6;
-  --ground-press: #f6e8cc;
+  --brand: #076a6a;
+  --brand-hover: #065c5c;
+  --brand-press: #054e4e;
+  --terra: #b83f08;
+  --surface: #fef4c1;
+  --ground: #fffdf5;
+  --ground-hover: #fff5d9;
+  --ground-press: #ffefc4;
+  --field-bg: #fff;
   --on-brand: #fff;
-  --trust: #0a7f7f;
-  --trust-soft: #d9f1ef;
+  --trust: #076a6a;
+  --trust-soft: #c8e7e7;
   --ink: #2b2420;
-  --muted: #6b625a;
-  --line: #eedcc2;
+  --muted: #665a50;
+  --line: #f0e0a8;
   --danger: #c23a30;
-  --danger-soft: #fdebe7;
+  --danger-soft: #fde3de;
   --pending: #7d5a14;
-  --pending-soft: #fcf0c6;
-  --disabled-bg: #ece4d6;
-  --disabled-ink: #7a7066;
-  --culture: #d4b12a;
-  --tag-culture-bg: #fdf3c4;
-  --tag-culture-ink: #7a5a10;
-  --tag-social-bg: #ffe1e6;
+  --pending-soft: #f8e3a0;
+  --disabled-bg: #efe6c6;
+  --disabled-ink: #6f665a;
+  --culture: #e8652e;
+  --tag-culture-bg: #ffd3bd;
+  --tag-culture-ink: #8a3d12;
+  --tag-social-bg: #ffd0d8;
   --tag-social-ink: #a8364f;
-  --tag-environment-bg: #d9f1ef;
+  --tag-environment-bg: #c8e7e7;
   --tag-environment-ink: #0a6b6b;
-  --avatar-bg: #ffd9c4;
+  --avatar-bg: #ffd3bd;
   --avatar-ink: #7a3d1c;
-  --map-ground: #dff1ec;
-  --map-line: #bfe0d9;
-  --note-bg: #fdeedd;
-  --note-ink: #7a5a3c;
-  --card-selected-bg: #fff3df;
-  /* Cartes d'action franches (09/10/2026) : vert tropical à 50 %, papaye et ananas purs ; les textes secondaires
-     passent à l'encre (le gris et le teal brand tomberaient sous 4.5:1 sur ces fonds). */
-  --card-environment-bg: #82caca;
-  --card-social-bg: #ffc0cb;
-  --card-culture-bg: #fce883;
-  --card-ink-soft: color-mix(in srgb, var(--ink) 90%, var(--surface));
-  --card-accent: var(--ink);
-  --shadow: 0 8px 30px #3a2a1a14;
-  --scene-sky-top: #fff9e8;
-  --scene-sky-bottom: #ffd0d8;
+  --map-ground: #e6f0d8;
+  --map-line: #c5dcc0;
+  --note-bg: #ffe9d2;
+  --note-ink: #7a4a26;
+  --card-selected-bg: #e6f3f3;
+  /* Cartes d'action : teinte nette mais lisible (vert 22 %, papaye 55 %, mangue 22 %) sur la page ananas. */
+  --card-environment-bg: #c8e7e7;
+  --card-social-bg: #ffdce2;
+  --card-culture-bg: #ffe4d6;
+  --shadow: 0 8px 30px #5a3a0a1a;
+  --mark-pin: #069494;
+  --mark-flag: #ff8243;
+  --mark-dot: #fce883;
+  --scene-sky-top: #fef4c1;
+  --scene-sky-bottom: #ffc0cb;
   --scene-sun: #ff8243;
   --scene-accent: #ff8243;
   --scene-coat: #069494;
   --scene-tree-1: #4fb3a6;
   --scene-tree-2: #069494;
   --scene-tree-3: #8fd3c6;
-  --scene-pavement: #f1e9d8;
-  --scene-curb: #e2d6c2;
+  --scene-pavement: #efe2b0;
+  --scene-curb: #e0cf96;
 }
 
 /* Fiche 2 « Soft spring » : bleu bleuet #6395EE · bleu gris #90B8D6 · vert atténué #88CFA8 · vert menthe #85DECB.
-   Le bleuet (assombri) porte l'action, le vert atténué (assombri) l'accent et l'information, les verts clairs les
-   fonds et la carte ; pas de teinte chaude : l'ambre « en attente » reste sémantique. */
+   Page bleu gris (35 %), panneaux blancs, bleuet (assombri) pour l'action et le texte, vert atténué (assombri) pour
+   l'accent et l'information ; environnement = vert, entraide = bleuet, culture = menthe ; l'ambre « en attente »
+   reste sémantique ; le logo, le ciel et les arbres portent les teintes pures. */
 :root[data-palette='spring'] {
-  --brand: #3566d4;
-  --brand-hover: #2d5ac0;
-  --brand-press: #264ea8;
-  --terra: #257552;
-  --surface: #f3f6fa;
-  --ground: #fdfeff;
-  --ground-hover: #eaf0f7;
-  --ground-press: #e1e9f2;
+  --brand: #2b57bd;
+  --brand-hover: #244aa3;
+  --brand-press: #1e3f8c;
+  --terra: #1f6647;
+  --surface: #d8e6f1;
+  --ground: #fff;
+  --ground-hover: #eef4fa;
+  --ground-press: #e3ecf5;
+  --field-bg: #fff;
   --on-brand: #fff;
-  --trust: #257552;
-  --trust-soft: #ddf4ea;
+  --trust: #1f6647;
+  --trust-soft: #d2ecdf;
   --ink: #1f2d3d;
-  --muted: #5f7187;
-  --line: #d3dde8;
-  --danger: #c23c3c;
-  --danger-soft: #fbeaea;
+  --muted: #4f6176;
+  --line: #c3d3e2;
+  --danger: #b03232;
+  --danger-soft: #f9dddd;
   --pending: #7d5a14;
-  --pending-soft: #fbf0cc;
-  --disabled-bg: #e1e6ec;
-  --disabled-ink: #6f7c8a;
-  --culture: #6395ee;
-  --tag-culture-bg: #e4ecfc;
-  --tag-culture-ink: #2f55a8;
-  --tag-social-bg: #e3eef7;
-  --tag-social-ink: #2f5a7d;
-  --tag-environment-bg: #dcf5ee;
+  --pending-soft: #f7ecc3;
+  --disabled-bg: #cfdae6;
+  --disabled-ink: #5c6b7c;
+  --culture: #3aa58a;
+  --tag-culture-bg: #c2eee4;
+  --tag-culture-ink: #1c6a5e;
+  --tag-social-bg: #cfdffa;
+  --tag-social-ink: #2f55a8;
+  --tag-environment-bg: #c9ead8;
   --tag-environment-ink: #1f6b57;
-  --avatar-bg: #d9e6f7;
-  --avatar-ink: #2d4a73;
-  --map-ground: #e3f3ec;
-  --map-line: #bfdccd;
-  --note-bg: #e9f0f7;
-  --note-ink: #566a80;
-  --card-selected-bg: #eaf1fb;
-  /* Cartes d'action franches (09/10/2026) : vert atténué et bleu gris purs, bleuet à 60 % (pur, l'encre tomberait
-     sous 5:1) ; textes secondaires à l'encre. */
-  --card-environment-bg: #88cfa8;
-  --card-social-bg: #90b8d6;
-  --card-culture-bg: #a1bff5;
-  --card-ink-soft: color-mix(in srgb, var(--ink) 90%, var(--surface));
-  --card-accent: var(--ink);
-  --shadow: 0 8px 30px #1f2d3d14;
-  --scene-sky-top: #f4f8fd;
-  --scene-sky-bottom: #cfe0f4;
+  --avatar-bg: #c9dbf2;
+  --avatar-ink: #27467a;
+  --map-ground: #d9efe6;
+  --map-line: #a9cfbe;
+  --note-bg: #eaf1f8;
+  --note-ink: #4f6176;
+  --card-selected-bg: #e4edfb;
+  /* Cartes d'action : vert 35 %, bleuet 25 %, menthe 40 % sur la page bleu gris, panneaux blancs autour. */
+  --card-environment-bg: #d5eee1;
+  --card-social-bg: #d8e5fb;
+  --card-culture-bg: #cef2ea;
+  --shadow: 0 8px 30px #1f2d3d1a;
+  --mark-pin: #6395ee;
+  --mark-flag: #88cfa8;
+  --mark-dot: #fff;
+  --scene-sky-top: #d8e6f1;
+  --scene-sky-bottom: #a9c8ea;
   --scene-sun: #f5e9a6;
   --scene-accent: #6395ee;
-  --scene-coat: #3566d4;
+  --scene-coat: #2b57bd;
   --scene-tree-1: #88cfa8;
   --scene-tree-2: #5fb98a;
   --scene-tree-3: #85decb;
-  --scene-pavement: #e6ebf0;
-  --scene-curb: #d3dbe3;
+  --scene-pavement: #e3eaf1;
+  --scene-curb: #c9d6e3;
 }
 
 /* Thème de l'espace d'administration (#22) : nuit de forêt, accent inversé (la terracotta devient la couleur
@@ -255,6 +264,9 @@
   --note-ink: #b7c5b8;
   --card-selected-bg: #20332a;
   --shadow: 0 8px 30px #0000004d;
+  --mark-pin: var(--brand);
+  --mark-flag: var(--terra);
+  --mark-dot: var(--ground);
 }
 
 @media (prefers-reduced-motion: reduce) {
