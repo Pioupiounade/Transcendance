@@ -35,26 +35,25 @@ export function PublicProfilePage() {
       try {
         const targetId = String(userId);
 
-        const profilePromise = getPublicProfile(userId!);
-        const relationsPromise = currentUserId
-          ? Promise.all([
-              http.get<any[]>('/friendships/me').catch(() => []),
-              http.get<any[]>('/friend-requests/sentRequests').catch(() => []),
-              http.get<any[]>('/friend-requests/receivedRequests').catch(() => []),
-            ])
-          : Promise.resolve([[], [], []]);
-
-        const [data, [friends, sentRequests, receivedRequests]] = await Promise.all([
-          profilePromise,
-          relationsPromise,
-        ]);
-
+        const data = await getPublicProfile(targetId);
         if (!active) return;
+        if (data.visibility === 'PRIVATE') {
+          setIsPrivate(true);
+          return;
+        }
 
         let resolvedStatus: FriendshipStatus = 'NONE';
         let isFriend = false;
 
         if (currentUserId) {
+          const [friends, sentRequests, receivedRequests] = await Promise.all([
+            http.get<any[]>('/friendships/me').catch(() => []),
+            http.get<any[]>('/friend-requests/sentRequests').catch(() => []),
+            http.get<any[]>('/friend-requests/receivedRequests').catch(() => []),
+          ]);
+
+          if (!active) return;
+          
           isFriend = friends.some((f) => {
             const fid =
               f.friend?.user_id ??
@@ -80,7 +79,7 @@ export function PublicProfilePage() {
                 const rid = r.requester_id ?? r.requester?.user_id ?? r.requesterId;
                 return String(rid) === targetId;
               });
-
+              
               if (isReceived) {
                 resolvedStatus = 'PENDING_RECEIVED';
               }
@@ -88,16 +87,9 @@ export function PublicProfilePage() {
           }
         }
 
-        if (data.visibility === 'PRIVATE') {
+        if ((data.visibility === 'FRIENDS_ONLY' || (data as any).isPrivate) && !isFriend) {
           setIsPrivate(true);
           return;
-        }
-
-        if (data.visibility === 'FRIENDS_ONLY' || (data as any).isPrivate) {
-          if (!isFriend) {
-            setIsPrivate(true);
-            return;
-          }
         }
 
         setUserProfile({
