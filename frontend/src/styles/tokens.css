@@ -53,8 +53,9 @@
   --card-environment-bg: #f1f6ea;
   --card-social-bg: #fbeee5;
   --card-culture-bg: #fbf2dd;
-  /* Carte d'organisation (features/organizations OrganizationCard) : panneau en forêt, une palette peut la teinter. */
-  --card-organization-bg: var(--ground);
+  /* Cartes mises en avant (OrganizationCard, panneau « My agenda » du tableau de bord) : panneau en forêt, une palette
+     peut les teinter. */
+  --card-highlight-bg: var(--ground);
   /* `--card-organization-icon` (non défini ici) : couleur des icônes de la carte ; absent = couleur du texte. */
   /* Textes secondaires et accent sur une carte teintée : en forêt les teintes sont pâles, les tokens usuels suffisent ;
      une palette aux cartes franches les remplace par de l'encre (contraste), voir ActionCard. */
@@ -391,8 +392,9 @@
   --card-environment-bg: #c6edea;
   --card-social-bg: #eed3c7;
   --card-culture-bg: #e7daf4;
-  /* Cartes d'organisation : fond vert des barres, icônes violettes (seule touche lavande de la page, 09/10/2026). */
-  --card-organization-bg: #d0e9ce;
+  /* Cartes d'organisation et panneau « My agenda » : fond vert des barres ; icônes des cartes d'organisation en violet
+     (seule touche lavande de la page, 09/10/2026). */
+  --card-highlight-bg: #d0e9ce;
   --card-organization-icon: #7347b8;
   --shadow: 0 8px 30px #2d2a331a;
   /* Barres menthe rétro = Tiffany fondu à 28 % dans la page jaune (50 % tranchait trop avec la page, 09/10/2026) ;
