@@ -1,8 +1,5 @@
 /* Constellation : cadre arrondi sur fond « ciel » (surface → ground), poussière d'étoiles, halo autour du centre. */
 .constellation {
-  /* Nœuds, fils et halos lisent --brand / --trust-soft : une palette les teinte par --constellation-* (tokens.css). */
-  --brand: var(--constellation-accent);
-  --trust-soft: var(--constellation-soft);
   position: relative;
 }
 
