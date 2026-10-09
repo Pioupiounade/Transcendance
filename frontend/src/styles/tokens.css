@@ -171,17 +171,18 @@
   --card-social-bg: #ffd6dd;
   --card-culture-bg: #ffdfcd;
   --shadow: 0 8px 30px #5a3a0a1a;
-  /* Barres mangue pure, encre dessus, lien courant et pastille en vert tropical profond (≥ 4.5:1 sur la mangue). */
-  --bar-bg: #ff8243;
-  --bar-hover: #ff9460;
-  --bar-press: #f27335;
+  /* Barres abricot = mangue fondue à 45 % dans la page ananas (la mangue pure jurait avec la page) ; encre dessus,
+     lien courant et pastille en vert tropical profond (≥ 4.5:1). */
+  --bar-bg: #fec188;
+  --bar-hover: #fecc95;
+  --bar-press: #ffb57c;
   --bar-ink: #2b2420;
-  --bar-muted: #45281c;
-  --bar-line: #e86f31;
-  --bar-accent: #053838;
-  --bar-accent-hover: #032626;
+  --bar-muted: #4a3024;
+  --bar-line: #f9a865;
+  --bar-accent: #054e4e;
+  --bar-accent-hover: #043f3f;
   --bar-on-accent: #fff;
-  --bar-soft: #ffa070;
+  --bar-soft: #fecc95;
   --mark-pin: #069494;
   --mark-flag: #ff8243;
   --mark-dot: #fce883;
@@ -242,17 +243,18 @@
   --card-social-bg: #cedef9;
   --card-culture-bg: #c2eee5;
   --shadow: 0 8px 30px #1f2d3d1a;
-  /* Barres bleuet sombre, texte blanc, lien courant et pastille en menthe claire (≥ 4.5:1 sur le bleu). */
-  --bar-bg: #2b57bd;
-  --bar-hover: #3563cc;
-  --bar-press: #244aa3;
-  --bar-ink: #fff;
-  --bar-muted: #e3ebfb;
-  --bar-line: #4a73d1;
-  --bar-accent: #d9f5e8;
-  --bar-accent-hover: #c4eedb;
-  --bar-on-accent: #1f2d3d;
-  --bar-soft: #3f6bcb;
+  /* Barres pervenche = bleuet fondu à 40 % dans la page bleu gris (le bleuet sombre jurait avec la page) ; encre
+     dessus, lien courant et pastille en bleu nuit (≥ 4.5:1). */
+  --bar-bg: #a9c6f0;
+  --bar-hover: #b5cef2;
+  --bar-press: #98b9ef;
+  --bar-ink: #1f2d3d;
+  --bar-muted: #3a4b60;
+  --bar-line: #8db2ec;
+  --bar-accent: #1e3f8c;
+  --bar-accent-hover: #183373;
+  --bar-on-accent: #fff;
+  --bar-soft: #bdd3f4;
   --mark-pin: #6395ee;
   --mark-flag: #88cfa8;
   --mark-dot: #fff;
