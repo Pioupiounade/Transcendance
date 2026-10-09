@@ -1,0 +1,73 @@
+/* Bascule de palette (exploration DA, branche explore/palettes) : pastille fixe, un bouton par fiche. */
+.switch {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 15;
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-btn);
+  background: var(--ground);
+  box-shadow: var(--shadow);
+}
+
+.option {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 32px;
+  padding: 0 12px 0 8px;
+  border-radius: var(--r-btn);
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  transition:
+    background-color var(--t-fast),
+    color var(--t-fast);
+}
+.option:hover {
+  background: var(--ground-hover);
+  color: var(--ink);
+}
+.option[aria-pressed='true'] {
+  background: var(--brand);
+  color: var(--on-brand);
+}
+
+/* Chaque pastille montre sa propre fiche, pas la palette courante : couleurs en dur voulues. */
+.swatch {
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--ground);
+  border-radius: 50%;
+}
+.swatch[data-palette='forest'] {
+  background: #265c4b;
+}
+.swatch[data-palette='tropical'] {
+  background: #ff8243;
+}
+.swatch[data-palette='spring'] {
+  background: #6395ee;
+}
+
+@media (max-width: 760px) {
+  /* Au-dessus de la barre basse ; pastilles seules, le nom reste pour les lecteurs d'écran. */
+  .switch {
+    right: 12px;
+    bottom: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom) + 12px);
+  }
+  .option {
+    padding: 0 8px;
+  }
+  .name {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+}

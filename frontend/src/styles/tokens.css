@@ -54,6 +54,18 @@
   --card-social-bg: #fbeee5;
   --card-culture-bg: #fbf2dd;
 
+  /* Scène de rue (shared/ui StreetScene) : ciel, soleil, auvents et manteau, arbres, trottoir. Suivent la palette. */
+  --scene-sky-top: #fdf6f1;
+  --scene-sky-bottom: #f7dccc;
+  --scene-sun: #e4573d;
+  --scene-accent: #e4573d;
+  --scene-coat: #2e7d6b;
+  --scene-tree-1: #8db48e;
+  --scene-tree-2: #6f9f79;
+  --scene-tree-3: #a9c68a;
+  --scene-pavement: #e9e4dc;
+  --scene-curb: #d9d2c7;
+
   /* Espacements (DESIGN.md §3) */
   --s1: 4px;
   --s2: 8px;
@@ -80,6 +92,123 @@
 
   /* Breakpoints (documentaires : les media queries ne lisent pas les variables) */
   /* mobile ≤ 760px · tablette 761–1100px · desktop > 1100px · large > 1500px */
+}
+
+/* ------------------------------------------------------------------------------------------------------------
+   Exploration de direction artistique (branche explore/palettes, 09/10/2026) : deux fiches de combinaisons de
+   couleurs posées sur <html> par `data-palette` (app/palette.ts, bascule PaletteSwitch). Chaque bloc ne redéfinit
+   que des couleurs ; sans attribut, la forêt + terracotta ci-dessus reste la palette. Une fiche donne 4 teintes,
+   l'interface en demande ~40 : les teintes pures vivent là où le contraste n'est pas en jeu (fonds d'étiquettes et
+   de cartes, carte, scène de rue), les textes et boutons reçoivent une version assombrie (≥ 4.5:1 vérifié).
+   Une fois la palette choisie : replier le bloc gagnant dans :root, supprimer les deux blocs et la bascule.
+   ------------------------------------------------------------------------------------------------------------ */
+
+/* Fiche 1 « Tropical punch » : mangue #FF8243 · rose papaye #FFC0CB · jaune ananas #FCE883 · vert tropical #069494.
+   Le vert tropical (assombri) porte l'action et la confiance, la mangue l'accent, l'ananas les fonds, la papaye
+   l'entraide. */
+:root[data-palette='tropical'] {
+  --brand: #0a7f7f;
+  --brand-hover: #086e6e;
+  --brand-press: #065c5c;
+  --terra: #c9470f;
+  --surface: #fff8e8;
+  --ground: #fffdf6;
+  --ground-hover: #fbf0d6;
+  --ground-press: #f6e8cc;
+  --on-brand: #fff;
+  --trust: #0a7f7f;
+  --trust-soft: #d9f1ef;
+  --ink: #2b2420;
+  --muted: #6b625a;
+  --line: #eedcc2;
+  --danger: #c23a30;
+  --danger-soft: #fdebe7;
+  --pending: #7d5a14;
+  --pending-soft: #fcf0c6;
+  --disabled-bg: #ece4d6;
+  --disabled-ink: #7a7066;
+  --culture: #d4b12a;
+  --tag-culture-bg: #fdf3c4;
+  --tag-culture-ink: #7a5a10;
+  --tag-social-bg: #ffe1e6;
+  --tag-social-ink: #a8364f;
+  --tag-environment-bg: #d9f1ef;
+  --tag-environment-ink: #0a6b6b;
+  --avatar-bg: #ffd9c4;
+  --avatar-ink: #7a3d1c;
+  --map-ground: #dff1ec;
+  --map-line: #bfe0d9;
+  --note-bg: #fdeedd;
+  --note-ink: #7a5a3c;
+  --card-selected-bg: #fff3df;
+  --card-environment-bg: #e9f6f3;
+  --card-social-bg: #fff0f2;
+  --card-culture-bg: #fff8dc;
+  --shadow: 0 8px 30px #3a2a1a14;
+  --scene-sky-top: #fff9e8;
+  --scene-sky-bottom: #ffd0d8;
+  --scene-sun: #ff8243;
+  --scene-accent: #ff8243;
+  --scene-coat: #069494;
+  --scene-tree-1: #4fb3a6;
+  --scene-tree-2: #069494;
+  --scene-tree-3: #8fd3c6;
+  --scene-pavement: #f1e9d8;
+  --scene-curb: #e2d6c2;
+}
+
+/* Fiche 2 « Soft spring » : bleu bleuet #6395EE · bleu gris #90B8D6 · vert atténué #88CFA8 · vert menthe #85DECB.
+   Le bleuet (assombri) porte l'action, le vert atténué (assombri) l'accent et l'information, les verts clairs les
+   fonds et la carte ; pas de teinte chaude : l'ambre « en attente » reste sémantique. */
+:root[data-palette='spring'] {
+  --brand: #3566d4;
+  --brand-hover: #2d5ac0;
+  --brand-press: #264ea8;
+  --terra: #257552;
+  --surface: #f3f6fa;
+  --ground: #fdfeff;
+  --ground-hover: #eaf0f7;
+  --ground-press: #e1e9f2;
+  --on-brand: #fff;
+  --trust: #257552;
+  --trust-soft: #ddf4ea;
+  --ink: #1f2d3d;
+  --muted: #5f7187;
+  --line: #d3dde8;
+  --danger: #c23c3c;
+  --danger-soft: #fbeaea;
+  --pending: #7d5a14;
+  --pending-soft: #fbf0cc;
+  --disabled-bg: #e1e6ec;
+  --disabled-ink: #6f7c8a;
+  --culture: #6395ee;
+  --tag-culture-bg: #e4ecfc;
+  --tag-culture-ink: #2f55a8;
+  --tag-social-bg: #e3eef7;
+  --tag-social-ink: #2f5a7d;
+  --tag-environment-bg: #dcf5ee;
+  --tag-environment-ink: #1f6b57;
+  --avatar-bg: #d9e6f7;
+  --avatar-ink: #2d4a73;
+  --map-ground: #e3f3ec;
+  --map-line: #bfdccd;
+  --note-bg: #e9f0f7;
+  --note-ink: #566a80;
+  --card-selected-bg: #eaf1fb;
+  --card-environment-bg: #eef9f4;
+  --card-social-bg: #eef3fa;
+  --card-culture-bg: #eef1fc;
+  --shadow: 0 8px 30px #1f2d3d14;
+  --scene-sky-top: #f4f8fd;
+  --scene-sky-bottom: #cfe0f4;
+  --scene-sun: #f5e9a6;
+  --scene-accent: #6395ee;
+  --scene-coat: #3566d4;
+  --scene-tree-1: #88cfa8;
+  --scene-tree-2: #5fb98a;
+  --scene-tree-3: #85decb;
+  --scene-pavement: #e6ebf0;
+  --scene-curb: #d3dbe3;
 }
 
 /* Thème de l'espace d'administration (#22) : nuit de forêt, accent inversé (la terracotta devient la couleur

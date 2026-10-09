@@ -4,6 +4,7 @@ import { APP_LABELS } from '../labels';
 import { AppFooter } from './AppFooter';
 import { AppHeader } from './AppHeader';
 import { BottomNav } from './BottomNav';
+import { PaletteSwitch } from './PaletteSwitch';
 import styles from './PageShell.module.css';
 
 /** Coquille commune : en-tête, contenu routé, pied de page, barre mobile. */
@@ -28,6 +29,7 @@ export function PageShell() {
       </main>
       <AppFooter />
       <BottomNav />
+      <PaletteSwitch />
     </div>
   );
 }
