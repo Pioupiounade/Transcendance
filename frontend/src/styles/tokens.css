@@ -118,13 +118,13 @@
 }
 
 /* ------------------------------------------------------------------------------------------------------------
-   Exploration de direction artistique (branche explore/palettes, 09/10/2026) : deux fiches de combinaisons de
+   Exploration de direction artistique (branche explore/palettes, 09/10/2026) : trois fiches de combinaisons de
    couleurs posées sur <html> par `data-palette` (app/palette.ts, bascule PaletteSwitch). Chaque bloc ne redéfinit
    que des couleurs ; sans attribut, la forêt + terracotta ci-dessus reste la palette. Une fiche donne 4 teintes,
    l'interface en demande ~40 : les teintes pures vivent là où le contraste n'est pas en jeu (fonds d'étiquettes et
    de cartes, carte, scène de rue), les textes et boutons reçoivent une version assombrie (≥ 4.5:1 vérifié).
    Fond de page et panneaux changent avec la fiche (09/10/2026 : « inspire-toi vraiment de chaque direction »).
-   Une fois la palette choisie : replier le bloc gagnant dans :root, supprimer les deux blocs et la bascule.
+   Une fois la palette choisie : replier le bloc gagnant dans :root, supprimer les blocs et la bascule.
    ------------------------------------------------------------------------------------------------------------ */
 
 /* Fiche 1 « Tropical punch » : mangue #FF8243 · rose papaye #FFC0CB · jaune ananas #FCE883 · vert tropical #069494.
@@ -269,6 +269,78 @@
   --scene-tree-3: #85decb;
   --scene-pavement: #e3eaf1;
   --scene-curb: #c9d6e3;
+}
+
+/* Fiche 3 « Charming seaside » : bleu ciel clair #B3EBF2 · bleu pastel #85D1DB · vert clair #B6F2D1 · menthe très
+   clair #C9FDF2. Tout est pastel : page bleu ciel (70 %), panneaux menthe-blanc, barres bleu pastel fondu dans la
+   page, bleu profond (dérivé du pastel) pour l'action et le texte, vert de mer (dérivé du vert clair) pour l'accent
+   et l'environnement ; entraide = menthe, culture = bleu pastel. Le logo garde les teintes sombres : les pastels
+   purs disparaîtraient sur la barre. */
+:root[data-palette='seaside'] {
+  --brand: #0f6978;
+  --brand-hover: #0c5a67;
+  --brand-press: #0a4b56;
+  --terra: #1b6e47;
+  --surface: #caf1f6;
+  --ground: #effefb;
+  --ground-hover: #dff8f3;
+  --ground-press: #cdf2ea;
+  --field-bg: #fff;
+  --on-brand: #fff;
+  --trust: #0f6978;
+  --trust-soft: #d3f7e3;
+  --ink: #1b3a40;
+  --muted: #46646b;
+  --line: #9fd6de;
+  --danger: #b8382f;
+  --danger-soft: #fbe3e0;
+  --pending: #7d5a14;
+  --pending-soft: #f6ecc4;
+  --disabled-bg: #d5e6e9;
+  --disabled-ink: #5e7278;
+  --culture: #4fb3c0;
+  --tag-culture-bg: #b8e6ec;
+  --tag-culture-ink: #0f5f6b;
+  --tag-social-bg: #c9fdf2;
+  --tag-social-ink: #167a66;
+  --tag-environment-bg: #c8f5da;
+  --tag-environment-ink: #1b6e47;
+  --avatar-bg: #b8e6ec;
+  --avatar-ink: #0f5f6b;
+  --map-ground: #d8f6e6;
+  --map-line: #a9e0c4;
+  --note-bg: #dff8f3;
+  --note-ink: #3f6a6f;
+  --card-selected-bg: #d9f3f6;
+  /* Cartes d'action : vert clair 70 %, menthe 80 %, bleu pastel 55 % (plus foncé que la page pour s'en détacher). */
+  --card-environment-bg: #ccf6df;
+  --card-social-bg: #d4fdf5;
+  --card-culture-bg: #b5e4ea;
+  --shadow: 0 8px 30px #0f3f4a1a;
+  /* Barres bleu pastel fondu à 50 % dans la page (opaque : l'en-tête collant doit cacher le contenu). */
+  --bar-bg: #a8e1e9;
+  --bar-hover: #b5e6ec;
+  --bar-press: #9adbe4;
+  --bar-ink: #1b3a40;
+  --bar-muted: #2f5a63;
+  --bar-line: #8fd3dc;
+  --bar-accent: #0b5563;
+  --bar-accent-hover: #084451;
+  --bar-on-accent: #fff;
+  --bar-soft: #b5e6ec;
+  --mark-pin: #0f6978;
+  --mark-flag: #1f8a5a;
+  --mark-dot: #c9fdf2;
+  --scene-sky-top: #caf1f6;
+  --scene-sky-bottom: #85d1db;
+  --scene-sun: #fff1b8;
+  --scene-accent: #85d1db;
+  --scene-coat: #1b6e47;
+  --scene-tree-1: #b6f2d1;
+  --scene-tree-2: #5fc98f;
+  --scene-tree-3: #c9fdf2;
+  --scene-pavement: #dcecee;
+  --scene-curb: #bfd9dd;
 }
 
 /* Thème de l'espace d'administration (#22) : nuit de forêt, accent inversé (la terracotta devient la couleur

@@ -3,7 +3,7 @@
 // Lu au démarrage (app/main.tsx) avant le premier rendu, changé par la bascule `layout/PaletteSwitch`.
 // À retirer, avec la bascule, une fois la palette choisie.
 
-export const PALETTES = ['forest', 'tropical', 'spring'] as const;
+export const PALETTES = ['forest', 'tropical', 'spring', 'seaside'] as const;
 export type Palette = (typeof PALETTES)[number];
 
 const DEFAULT_PALETTE: Palette = 'forest';

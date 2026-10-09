@@ -15,7 +15,7 @@ export const APP_LABELS = {
   // Exploration DA (branche explore/palettes) : bascule entre les fiches de couleurs, à retirer avec elle.
   palette: {
     label: 'Colour palette',
-    names: { forest: 'Forest', tropical: 'Tropical', spring: 'Spring' },
+    names: { forest: 'Forest', tropical: 'Tropical', spring: 'Spring', seaside: 'Seaside' },
   },
   nav: {
     home: 'Home',
