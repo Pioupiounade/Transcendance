@@ -390,8 +390,8 @@
   --card-environment-bg: #c6edea;
   --card-social-bg: #eed3c7;
   --card-culture-bg: #e7daf4;
-  /* Cartes d'organisation : vert des barres (demande du 09/10/2026 ; la constellation garde brand / trust-soft). */
-  --card-organization-bg: #d0e9ce;
+  /* Cartes d'organisation : voile lavande (28 % sur le panneau), seule touche violette de la page (09/10/2026). */
+  --card-organization-bg: #e6dbec;
   --shadow: 0 8px 30px #2d2a331a;
   /* Barres menthe rétro = Tiffany fondu à 28 % dans la page jaune (50 % tranchait trop avec la page, 09/10/2026) ;
      opaque ; lien courant et pastille en violet. */
