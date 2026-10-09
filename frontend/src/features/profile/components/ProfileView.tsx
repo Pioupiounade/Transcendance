@@ -7,6 +7,7 @@ import { INTEREST_LABELS } from '../interestLabels';
 
 interface ProfileViewProps {
   profile: UserProfile;
+  userId?: string;
   isOwnProfile?: boolean;
   isAuthenticated?: boolean;
   onEdit: () => void;
@@ -22,6 +23,7 @@ interface ProfileViewProps {
 
 export const ProfileView: React.FC<ProfileViewProps> = ({
   profile,
+  userId,
   isOwnProfile = false,
   isAuthenticated = true,
   activity,
@@ -113,7 +115,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
             </button>
           ) : isAuthenticated ? (
             <FriendshipCTA
-              userId={profile.id}
+              userId={userId ?? ''}
               status={profile.friendshipStatus ?? 'NONE'}
               onStatusChange={onFriendshipChange}
             />

@@ -92,8 +92,12 @@ export async function getPublicProfile(userId: string): Promise<PublicProfile> {
   };
 }
 
-export async function getProfile(): Promise<UserProfile> {
-  const data = await http.get<ApiProfile>('/profiles/me');
+export async function getProfile(): Promise<UserProfile | null> {
+  const data = await http.get<ApiProfile | null>('/profiles/me');
+
+  if (!data) {
+    return null;
+  }
 
   return {
     username: data.username,
@@ -161,7 +165,14 @@ export async function createProfile(profile: UserProfile, avatar?: File | null):
   });
 
   if (avatar) await uploadAvatar(avatar);
-  return getProfile();
+  
+  const savedProfile = await getProfile();
+
+if (!savedProfile) {
+  throw new Error('Profile not found after save');
+}
+
+return savedProfile;
 }
 
 export async function updateProfile(profile: UserProfile, avatar?: File | null): Promise<UserProfile> {
@@ -175,7 +186,14 @@ export async function updateProfile(profile: UserProfile, avatar?: File | null):
   });
 
   if (avatar) await uploadAvatar(avatar);
-  return getProfile();
+  
+  const savedProfile = await getProfile();
+
+  if (!savedProfile) {
+    throw new Error('Profile not found after save');
+  }
+
+  return savedProfile;
 }
 
 export async function sendFriendRequest(targetUserId: string): Promise<FriendshipStatus> {
@@ -239,17 +257,11 @@ export function useProfile(userId?: string) {
     setIsLoading(true);
     setError(null);
 
-    const request = userId ? getPublicProfile(userId) : getProfile();
-
-    request
+    if (userId) {
+  getPublicProfile(userId)
       .then((data) => {
         if (!isMounted) return;
-
-        if (userId) {
-          setUserProfileState(data, setProfile);
-        } else {
-          setProfile(data as UserProfile);
-        }
+        setUserProfileState(data, setProfile);
       })
       .catch((err) => {
         if (isMounted) {
@@ -260,6 +272,22 @@ export function useProfile(userId?: string) {
       .finally(() => {
         if (isMounted) setIsLoading(false);
       });
+  } else {
+    getProfile()
+      .then((data) => {
+        if (!isMounted) return;
+        setProfile(data);
+      })
+      .catch((err) => {
+        if (isMounted) {
+          setError(err as Error);
+          setProfile(null);
+        }
+      })
+      .finally(() => {
+        if (isMounted) setIsLoading(false);
+      });
+  }
 
     return () => {
       isMounted = false;
