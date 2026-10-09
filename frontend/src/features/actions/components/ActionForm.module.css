@@ -80,7 +80,7 @@
 .option:has(input:checked) {
   background: var(--brand);
   border-color: var(--brand);
-  color: #fff;
+  color: var(--on-brand);
 }
 .option:has(input:focus-visible) {
   outline: var(--focus-ring);

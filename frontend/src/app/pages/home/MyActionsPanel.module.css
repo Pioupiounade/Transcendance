@@ -60,7 +60,7 @@
   align-items: center;
   gap: 12px;
   padding: 8px 0;
-  border-bottom: 1px solid #eceadf;
+  border-bottom: 1px solid var(--line);
 }
 .row:last-child {
   border-bottom: 0;
@@ -71,7 +71,7 @@
   place-items: center;
   height: 58px;
   border-radius: 13px;
-  background: #f1f3e8;
+  background: var(--card-selected-bg);
   color: var(--brand);
   line-height: 1.05;
 }

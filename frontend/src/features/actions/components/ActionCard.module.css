@@ -117,7 +117,7 @@
   gap: 8px;
   margin-top: 13px;
   padding-top: 11px;
-  border-top: 1px solid #dde2d4;
+  border-top: 1px solid var(--line);
   font-size: 12px;
 }
 

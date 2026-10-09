@@ -9,7 +9,7 @@
   overflow: hidden;
   border: 1px solid var(--line);
   border-radius: var(--r-card);
-  background: radial-gradient(circle at 50% 50%, var(--ground) 0%, var(--surface) 70%, #f1ede3 100%);
+  background: radial-gradient(circle at 50% 50%, var(--ground) 0%, var(--surface) 70%, color-mix(in srgb, var(--surface) 75%, var(--line)) 100%);
   box-shadow: var(--shadow);
   user-select: none;
 }
@@ -135,7 +135,7 @@
 .youAvatar {
   box-shadow:
     0 0 0 6px var(--trust-soft),
-    0 10px 30px #265c4b2a;
+    0 10px 30px color-mix(in srgb, var(--brand) 16%, transparent);
 }
 .youDisc {
   display: grid;
@@ -147,8 +147,8 @@
   background: var(--terra);
   color: var(--ground);
   box-shadow:
-    0 0 0 6px #b6533926,
-    0 10px 30px #b653392a;
+    0 0 0 6px color-mix(in srgb, var(--terra) 15%, transparent),
+    0 10px 30px color-mix(in srgb, var(--terra) 16%, transparent);
 }
 .youDiscCompact {
   width: 56px;
@@ -173,7 +173,7 @@
   margin: 0;
   padding: 6px 12px;
   border-radius: 999px;
-  background: #fffefacc;
+  background: color-mix(in srgb, var(--ground) 80%, transparent);
   color: var(--muted);
   font-size: 12px;
   font-weight: 600;

@@ -22,7 +22,7 @@
 .hero {
   display: grid;
   overflow: hidden;
-  background: #fdf6f1;
+  background: var(--scene-sky-top);
 }
 .heroScene {
   height: 300px;
@@ -71,7 +71,7 @@
   gap: 6px;
   padding: 6px 12px;
   border-radius: 999px;
-  background: #fffefacc;
+  background: color-mix(in srgb, var(--ground) 80%, transparent);
   color: var(--brand);
 }
 
@@ -168,7 +168,7 @@
   height: 46px;
   margin-bottom: 6px;
   border-radius: 50%;
-  background: #fffefa;
+  background: var(--ground);
 }
 .social {
   background: var(--tag-social-bg);
@@ -187,7 +187,7 @@
   padding: 48px 38px;
   border-radius: var(--r-card);
   background: var(--brand);
-  color: #fff;
+  color: var(--on-brand);
   text-align: center;
   display: grid;
   justify-items: center;
@@ -199,7 +199,8 @@
 }
 .closing p {
   max-width: 480px;
-  color: #e5eedfd9;
+  color: var(--on-brand);
+  opacity: 0.85;
   font-size: 15px;
 }
 .closingActions {
@@ -213,7 +214,7 @@
 .closingLink {
   font-size: 14px;
   font-weight: 600;
-  color: #fff;
+  color: var(--on-brand);
   text-underline-offset: 4px;
 }
 
