@@ -8,7 +8,14 @@ import { LegalPage } from './pages/LegalPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 
 import { ActionsListPage } from '@/features/actions';
-import { ROUTES, editActionPath, mapFocusPath, organizationManagePath, organizationPath } from './routes';
+import {
+  ROUTES,
+  actionDetailPath,
+  editActionPath,
+  mapFocusPath,
+  organizationManagePath,
+  organizationPath,
+} from './routes';
 import { ProfilePage, PublicProfilePage } from '../features/profile';
 
 
@@ -25,6 +32,8 @@ const OrganizationManagePage = lazyPage(() =>
 );
 const AdminLayout = lazyPage(() => import('@/features/admin').then((m) => m.AdminLayout));
 const AdminUsersPage = lazyPage(() => import('@/features/admin').then((m) => m.AdminUsersPage));
+const AdminActionsPage = lazyPage(() => import('@/features/admin').then((m) => m.AdminActionsPage));
+const AdminOrganizationsPage = lazyPage(() => import('@/features/admin').then((m) => m.AdminOrganizationsPage));
 const FriendsPage = lazyPage(() => import('@/features/friends').then((m) => m.FriendsPage));
 
 const router = createBrowserRouter([
@@ -70,10 +79,21 @@ const router = createBrowserRouter([
             children: [
               {
                 path: ROUTES.admin,
-                element: <AdminLayout />,
+                element: (
+                  <AdminLayout
+                    usersPath={ROUTES.adminUsers}
+                    actionsPath={ROUTES.adminActions}
+                    organizationsPath={ROUTES.adminOrganizations}
+                  />
+                ),
                 children: [
                   { index: true, element: <Navigate to={ROUTES.adminUsers} replace /> },
                   { path: ROUTES.adminUsers, element: <AdminUsersPage /> },
+                  { path: ROUTES.adminActions, element: <AdminActionsPage actionPath={actionDetailPath} /> },
+                  {
+                    path: ROUTES.adminOrganizations,
+                    element: <AdminOrganizationsPage organizationPath={organizationPath} />,
+                  },
                 ],
               },
             ],

@@ -30,6 +30,9 @@
   --line: #dddcd2;
   --danger: #b93832;
   --danger-soft: #fbedea;
+  /* Statut « en attente » (file de modération) : ambre, même famille que l'étiquette culture. */
+  --pending: #78551b;
+  --pending-soft: #f6ebca;
   --disabled-bg: #e2e4dc;
   --disabled-ink: #687267;
   --culture: #90681f;
@@ -101,6 +104,8 @@
   --line: #344a40;
   --danger: #f59a8f;
   --danger-soft: #3d2320;
+  --pending: #f0c37a;
+  --pending-soft: #3a3120;
   --disabled-bg: #25342d;
   --disabled-ink: #8a9a90;
   --avatar-bg: #3a4d43;

@@ -2,6 +2,8 @@
 export { OrganizationsPage } from './pages/OrganizationsPage';
 export { OrganizationPage } from './pages/OrganizationPage';
 export { OrganizationManagePage } from './pages/OrganizationManagePage';
+export { useOrganizations } from './api/useOrganizations';
+export { suspendOrganization, closeOrganization, reopenOrganization } from './api/organizationsApi';
 export { ORGANIZATION_STATUS, ROLE_ORG, MEMBER_STATUS } from './types';
 export type {
   Organization,
