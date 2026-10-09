@@ -68,7 +68,7 @@ export function ActionsListPage() {
   }, [filteredActions, currentPage]);
 
   if (authStatus === 'anonymous') return <MyActionsSignIn />;
-  if (authStatus === 'loading' || isContextLoading) {
+  if (authStatus === 'loading') {
     return (
       <div className={styles.container}>
         <div className={styles.statusMessage} role="status">
