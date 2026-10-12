@@ -69,6 +69,21 @@ export const transferOwnership = (organizationId: string, newOwnerId: string) =>
     `/organization-members/organization/${organizationId}/transfer-ownership/${newOwnerId}`,
   );
 
+/** Champs de création (`CreateOrganizationDto`, tous obligatoires) ; `location` = `[latitude, longitude]`. */
+export type CreateOrganizationInput = {
+  title: string;
+  description: string;
+  address: string;
+  location: [number, number];
+};
+
+/**
+ * Crée une organisation (JWT) : `ACTIVE`, `creator_id` = moi. Depuis le 09/10/2026 (#135) le backend crée aussi
+ * mon adhésion `OWNER` dans la même transaction : la fiche se gère dès l'arrivée. 400 = compte non actif.
+ */
+export const createOrganization = (input: CreateOrganizationInput) =>
+  http.post<Organization>('/organizations', input);
+
 /** Champs modifiables d'une organisation (`UpdateOrganizationDto`, tous facultatifs). */
 export type UpdateOrganizationInput = { title?: string; description?: string; address?: string };
 

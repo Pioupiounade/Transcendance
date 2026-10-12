@@ -6,6 +6,9 @@ Généré le 2026-09-24 par lecture de `backend/src/**/*.controller.ts`, `backen
 (flux complet création → participations → `approve` → commentaires → `complete` → points ; amis ; organisation).
 Ce fichier décrit ce que le code **fait**, pas ce que `Docs/prisma_rules.md` prévoit. À régénérer à chaque changement du backend.
 
+**Mis à jour le 2026-10-12** (backend `d05fe380`, PR #135) : `POST /organizations` crée désormais le membre `OWNER` (§12, §16
+« organisations orphelines »). Aucune autre route sondée ce jour-là.
+
 **Relu et resondé le 2026-10-08** (backend `cc7168e0` : PR #102 fiche d'action, #109 notifications, #114 anti-spam des
 commentaires) : modules `actions`, `participations`, `organizations`, `organization-members`, `friend-requests`, nouveau
 module `notifications`, `app.module.ts`, `schema.prisma`. Auth, users, profiles, interests, friendships et points n'ont pas changé.
@@ -323,7 +326,7 @@ Script : `tests/test-participations-autonome.sh`.
 | `GET /organizations` | aucun | query optionnelle : `creator_id` **ou** `lat` + `lng` + `radius` (km). Priorité : `creator_id` > rayon > tout | `Organization[]` (tous statuts, y compris `SUSPENDED`/`CLOSED`) | `creator_id` sans résultat → **404** « No organizations created by this user » ; rayon sans résultat → `[]` ; valeurs non numériques → `[]` |
 | `GET /organizations/search?q=` | aucun | query `q` (sous-chaîne du `title`, insensible à la casse) | `Organization[]` (max 15) | `q` absent → 15 premières |
 | `GET /organizations/:id` | aucun | — | `Organization` | 404 « Organization not found » |
-| `POST /organizations` | JWT | body `CreateOrganizationDto` : `title`, `description`, `address` (strings), `location` (`[number, number]`). **Plus de `creator_id`** (400 si envoyé) | 201 `Organization` (`ACTIVE`, `creator_id` = moi) | 404 « Creator not found » ; 400 « Only an active user can create an organization ». **Ne crée aucun `OrganizationMember`** : le créateur n'est pas `OWNER` (voir §15) |
+| `POST /organizations` | JWT | body `CreateOrganizationDto` : `title`, `description`, `address` (strings), `location` (`[number, number]`). **Plus de `creator_id`** (400 si envoyé) | 201 `Organization` (`ACTIVE`, `creator_id` = moi). **Depuis le 09/10/2026 (#135) : crée aussi mon `OrganizationMember` `OWNER` `ACTIVE` (validé) dans la même transaction** | 404 « Creator not found » ; 400 « Only an active user can create an organization » |
 | `PATCH /organizations/:id` | JWT | body `UpdateOrganizationDto` : `title?`, `description?`, `address?`, `location?` | `Organization` | 404 « Organization not found », « User not found » ; 403 « You are not allowed to update this organization » sauf `ADMIN`, **créateur**, ou membre `ACTIVE` `MANAGER`/`OWNER`. Aucune vérification du statut de l'organisation ni du compte appelant |
 | `PATCH /organizations/:id/suspend` | JWT, **ADMIN** | — | `Organization` (`SUSPENDED`) | 404 ; 403 « Only an admin can suspend an organization » ; 400 « Only an active organization can be suspended » |
 | `PATCH /organizations/:id/deactivate` | JWT | — | `Organization` (`CLOSED`) | 404 ; 403 « You are not allowed to close this organization » (mêmes rôles que `update`) ; 400 « Organization is not active » |
@@ -431,11 +434,11 @@ chaque participant +10. Scripts : `tests/test_action_management.sh`, `tests/test
   relaie `/static` vers le backend (`vite.config.ts`) ; en prod Nginx devra faire de même.
 - **Profils non publics** : `GET /profiles/:userId` renvoie 404 pour un profil `FRIENDS_ONLY` ou `PRIVATE`, même à un ami
   ou à son propriétaire (§7) ; pour soi-même, utiliser `GET /profiles/me`.
-- **Organisations orphelines** : `POST /organizations` ne crée pas de membership `OWNER` et aucune route n'en crée une
-  (`transfer-ownership` exige un `OWNER` existant). Le créateur peut modifier/fermer son organisation mais **ne peut ni
-  gérer ni voir ses membres, ni créer d'action pour elle** (403 vérifié) ; un `ADMIN` peut `add`/`approve`, mais la
-  récompense `OWNER` échoue (404 « Organization owner not found ») et **annule l'opération** ; `leave`/`remove`/`ban`
-  échouent de même. Seuls `join` (→ `PENDING`) et `deny` fonctionnent. Ticket backend : créer le membre `OWNER` à la création.
+- **Organisations orphelines** : corrigé le 09/10/2026 (#135), `POST /organizations` crée désormais le membre `OWNER`
+  dans la même transaction. Les organisations créées **avant** restent sans `OWNER` et aucune route n'en crée un après
+  coup (`transfer-ownership` exige un `OWNER` existant) : leur créateur peut modifier/fermer mais **ne peut ni gérer ni
+  voir leurs membres, ni créer d'action pour elles** (403) ; un `ADMIN` peut `add`/`approve`, mais la récompense `OWNER`
+  échoue (404 « Organization owner not found ») et **annule l'opération** ; `leave`/`remove`/`ban` échouent de même.
 - Une liste filtrée vide renvoie **404** (`GET /actions?…`, `GET /organizations?creator_id=`) : à traduire en liste vide.
   Les listes de `/organization-members`, `/participations`, `/friend-requests`, `/friendships`, `/actions/:id/comments`
   et `/organizations/:id/comments` renvoient `[]`.

@@ -16,6 +16,7 @@ export const ROUTES = {
   createAction: '/actions/new',
   editAction: '/actions/:id/edit',
   organizations: '/organizations',
+  createOrganization: '/organizations/new',
   organization: '/organizations/:id',
   organizationManage: '/organizations/:id/manage',
   admin: '/admin',

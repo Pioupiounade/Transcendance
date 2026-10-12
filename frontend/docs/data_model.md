@@ -449,8 +449,8 @@ Backend = `main` au 24/09 (#40 auth/users/profiles/interests/orgs/membres/points
 
 | Feature | Backend | Frontend |
 |---|---|---|
-| Créer / consulter / chercher / modifier une organisation | ✅ 8 routes, rayon sur `GET /organizations` | 🟡 annuaire (#61, #63 : recherche, tri, « All / Mine », fermées masquées, pagination, le tout côté client sur `GET /organizations`) et fiche publique (#64 : « About », lieu sur mini-carte, actions, membres, discussion #71) ; ❌ créer / modifier |
-| Membres : rejoindre, approuver, refuser, retirer, bannir, quitter, rôles, transfert | ✅ 14 routes, mais **aucun `OWNER` créé à la création** → gestion cassée tant que le backend ne le corrige pas ; un demandeur ne peut **pas lire** sa demande | ✅ #64 : « Join » sur la fiche (anonyme → `/login`), badge de mon rôle ; l'état d'une demande n'apparaît qu'en recliquant (409 traduit). ✅ #62 : `/organizations/:id/manage` (demandes, membres, rôles, transfert, réglages, fermer / rouvrir) ; ❌ quitter, ajouter directement, débannir (pas de route) |
+| Créer / consulter / chercher / modifier une organisation | ✅ 8 routes, rayon sur `GET /organizations` | 🟡 annuaire (#61, #63 : recherche, tri, « All / Mine », fermées masquées, pagination, le tout côté client sur `GET /organizations`) et fiche publique (#64 : « About », lieu sur mini-carte, actions, membres, discussion #71) ; ✅ créer (#106 : `/organizations/new`, carte en sélecteur de lieu + formulaire, le créateur devient `OWNER` grâce à #135) ; ✅ modifier depuis « Settings » du tableau de bord (#62) |
+| Membres : rejoindre, approuver, refuser, retirer, bannir, quitter, rôles, transfert | ✅ 14 routes ; `OWNER` créé à la création depuis le 09/10/2026 (#135 ; les organisations antérieures restent sans owner) ; un demandeur ne peut **pas lire** sa demande | ✅ #64 : « Join » sur la fiche (anonyme → `/login`), badge de mon rôle ; l'état d'une demande n'apparaît qu'en recliquant (409 traduit). ✅ #62 : `/organizations/:id/manage` (demandes, membres, rôles, transfert, réglages, fermer / rouvrir) ; ❌ quitter, ajouter directement, débannir (pas de route) |
 | Actions portées par une organisation | ✅ `organization_id` à la création (MANAGER/OWNER) ; `GET /actions?organization_id=` (404 si vide) | 🟡 #64 : à venir + terminées sur la fiche, filtrées côté client sur `GET /actions` (pas de 404 en console) ; ❌ champ non proposé à la création |
 
 ### Transverse (sujet ft_transcendence)
@@ -481,7 +481,7 @@ Backend = `main` au 24/09 (#40 auth/users/profiles/interests/orgs/membres/points
 6. **TanStack Query** : remplacer l'intérieur de `useActions`, `useCreateAction`, `useProfile` ; les composants ne bougent pas.
 7. **Backend à demander par ticket** : rejet d'action, suppression (action, compte), **service des fichiers uploadés** (`/static`), `OptionalJwtAuthGuard` sur
    `GET /profiles/:userId` (profils `FRIENDS_ONLY` / `PRIVATE` invisibles pour tous), dépendances `sharp` / `uuid` dans `package.json`, recherche d'actions par
-   rayon/texte/date, lecture des points, membre `OWNER` à la création d'une organisation, CORS ou Nginx, `.env` versionnés.
+   rayon/texte/date, lecture des points, CORS ou Nginx, `.env` versionnés (le membre `OWNER` à la création est fait, #135).
 8. **Contradictions doc/code à trancher** (audit du 20/09) : qui valide une action (modérateur vs créateur), inscription sur
    action approuvée, blocage de n'importe qui vs d'un ami, réactivation d'un compte désactivé.
 
