@@ -23,7 +23,7 @@ export default defineConfig(({ mode }) => {
       changeOrigin: true,
     },
   };
-
+  
   return {
     plugins: [react()],
     resolve: {

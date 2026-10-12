@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { http } from '@/shared/api';
 import { friendsApi } from '@/features/friends/api/friendsApi';
+import { isApiError } from '@/shared/api';
 import type {
   PublicProfile,
   InterestCategory,
@@ -184,9 +185,11 @@ export async function sendFriendRequest(targetUserId: string): Promise<Friendshi
 
 export async function acceptFriendRequest(targetUserId: string): Promise<FriendshipStatus> {
   const received = await friendsApi.getReceivedRequests();
-  const req = received.find(
-    (r) => String(r.requester_id ?? r.requester?.user_id) === String(targetUserId),
-  );
+  const req = received.find((r: any) => {
+    const senderId = r.requester_id ?? r.requester?.user_id ?? r.requester?.id ?? r.requester?.userId;
+    return String(senderId) === String(targetUserId);
+  });
+
   if (req) {
     await friendsApi.acceptFriendRequest(req.friend_request_id);
   }
@@ -195,9 +198,11 @@ export async function acceptFriendRequest(targetUserId: string): Promise<Friends
 
 export async function declineFriendRequest(targetUserId: string): Promise<FriendshipStatus> {
   const received = await friendsApi.getReceivedRequests();
-  const req = received.find(
-    (r) => String(r.requester_id ?? r.requester?.user_id) === String(targetUserId),
-  );
+  const req = received.find((r: any) => {
+    const senderId = r.requester_id ?? r.requester?.user_id ?? r.requester?.id ?? r.requester?.userId;
+    return String(senderId) === String(targetUserId);
+  });
+
   if (req) {
     await friendsApi.rejectFriendRequest(req.friend_request_id);
   }
@@ -207,9 +212,11 @@ export async function declineFriendRequest(targetUserId: string): Promise<Friend
 export async function cancelOrRemoveFriend(targetUserId: string): Promise<FriendshipStatus> {
   try {
     await friendsApi.removeFriend(targetUserId);
-  } catch {
-    console.log(`Cannot remove friend: ${targetUserId}`);
-    // Ignore if the friendship no longer exists
+  } catch (err: unknown) {
+    if (isApiError(err) && err.status === 404) {
+      return 'NONE';
+    }
+    throw err;
   }
   return 'NONE';
 }
