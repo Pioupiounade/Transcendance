@@ -56,7 +56,7 @@ export function GlobalSearch() {
   const showResults = query.trim().length >= 2;
 
   return (
-    <div style={{ position: 'relative', width: '100px' }}>
+    <div style={{ position: 'relative', width: '200px' }}>
       <input
         type="search"
         value={query}
