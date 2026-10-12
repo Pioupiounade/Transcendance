@@ -190,10 +190,9 @@ export async function acceptFriendRequest(targetUserId: string): Promise<Friends
     return String(senderId) === String(targetUserId);
   });
 
-  if (!req) {
-    throw new Error(`No friend request found from user ${targetUserId}`);
+  if (req) {
+    await friendsApi.acceptFriendRequest(req.friend_request_id);
   }
-  await friendsApi.acceptFriendRequest(req.friend_request_id);
   return 'ACCEPTED';
 }
 
@@ -204,10 +203,9 @@ export async function declineFriendRequest(targetUserId: string): Promise<Friend
     return String(senderId) === String(targetUserId);
   });
 
-  if (!req) {
-    throw new Error(`No friend request found from user ${targetUserId}`);
+  if (req) {
+    await friendsApi.rejectFriendRequest(req.friend_request_id);
   }
-  await friendsApi.rejectFriendRequest(req.friend_request_id);
   return 'NONE';
 }
 
@@ -281,4 +279,8 @@ function setUserProfileState(
     visibility: (data.visibility as ProfileVisibility) ?? 'PUBLIC',
     location: null,
   });
+}
+
+export async function deactivateAccount(): Promise<void> {
+  await http.patch('/users/me/deactivate');
 }
