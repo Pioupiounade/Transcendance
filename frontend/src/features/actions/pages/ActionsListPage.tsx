@@ -96,7 +96,7 @@ export function ActionsListPage() {
     <div className={styles.container}>
       <header className={styles.header}>
         <div className={styles.headerRow}>
-          <h1 className={styles.title}>{text.title}</h1>
+          <h1 className={styles.title}>{text.listTitle}</h1>
           <Button onClick={() => navigate('/actions/new')}>
             {text.newAction}
           </Button>
