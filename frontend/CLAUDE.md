@@ -259,8 +259,14 @@ features/       1 domaine métier = 1 module ; interface = index.ts
                 description, adresse ; fermer / rouvrir). permissions.ts = miroir des règles du backend (jamais
                 sur soi ni sur le owner, un manager n'agit que sur des MEMBER, rôles réservés au owner / ADMIN).
                 Les réponses du backend sont rejouées localement (pas de rechargement de liste). Organisation
-                inactive : demandes et membres en lecture seule. Manques backend : pas de débannissement, pas
-                d'OWNER à la création d'une organisation, pas d'« ajouter un membre » côté UI (non demandé).
+                inactive : demandes et membres en lecture seule. Manques backend : pas de débannissement ; pas
+                d'« ajouter un membre » côté UI (non demandé).
+                Création (#106) : CreateOrganizationPage `/organizations/new` (sous `RequireAuth` ; bouton « Create an
+                organization » dans l'en-tête de l'annuaire, connectés seulement) = NeighborhoodMap en simple sélecteur
+                de lieu (pin déplaçable, sans popup) + OrganizationForm (nom, description ≤ 500, adresse ; validation.ts,
+                lieu réclamé à l'envoi comme ActionForm) → `POST /organizations` (api/organizationsApi
+                `createOrganization`). Le backend crée le membre `OWNER` depuis #135 (09/10/2026) : la fiche de la
+                nouvelle organisation affiche « You own this organization » et « Manage » dès l'arrivée, sans message.
   admin/          Epic 8, réservé au rôle ADMIN. AdminLayout (route parente `/admin/*`) pose le thème sombre
                 `data-theme="admin"` sur <html> le temps de la visite et porte la barre d'onglets Accounts / Actions /
                 Organizations : des NavLink (une URL par section, `aria-current`), chemins reçus en props. Trois pages
