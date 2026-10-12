@@ -9,5 +9,7 @@ export const toAuthErrorMessage = (error: unknown): string => {
   if (error.isNetwork) return AUTH_LABELS.errors.network;
   if (error.status === 401) return AUTH_LABELS.errors.invalidCredentials;
   if (error.status === 400 && error.messages.includes(EMAIL_TAKEN)) return AUTH_LABELS.errors.emailTaken;
+  if (error.status === 403) return AUTH_LABELS.errors.disabled;
+  //if (error.status === XXX) return AUTH_LABELS.errors.suspended;
   return AUTH_LABELS.errors.unknown;
 };
