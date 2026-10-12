@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, ForbiddenException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
@@ -46,6 +46,15 @@ export class AuthService {
 		const isPasswordValid = await argon2.verify(user.password_hash, password);
 		if (!isPasswordValid) {
 			throw new UnauthorizedException('Invalid credentials');
+		}
+
+		// Verify if the user is suspended or deactivated
+		if (user.account_status === 'SUSPENDED') {
+			throw new ForbiddenException('User account is suspended');
+		}
+
+		if (user.account_status === 'DEACTIVATED') {
+			throw new ForbiddenException('User account is deactivated');
 		}
 
 		const tokens = await this.generateTokenPair(

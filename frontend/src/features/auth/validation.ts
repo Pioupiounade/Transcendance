@@ -16,7 +16,11 @@ export const validateEmail = (value: string): string | null => {
 };
 
 /** Connexion : on ne juge pas un mot de passe existant, il doit juste être saisi. */
-export const validatePassword = (value: string): string | null => (value === '' ? t.passwordRequired : null);
+export const validatePassword = (value: string): string | null => {
+  if (value === '') return t.passwordRequired;
+  if (value.length < PASSWORD_MIN_LENGTH) return t.passwordTooShort(PASSWORD_MIN_LENGTH, PASSWORD_MIN_LENGTH - value.length);
+  return null;
+}
 
 /** Inscription : la règle du DTO, expliquée. */
 export const validateNewPassword = (value: string): string | null => {

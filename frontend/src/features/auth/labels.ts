@@ -19,6 +19,8 @@ export const AUTH_LABELS = {
     invalidCredentials: 'Wrong email address or password.',
     emailTaken: 'An account already uses this email address. Sign in instead?',
     network: 'We could not reach the server. Check your connection and try again.',
+    disabled: 'Your account has been disabled.',
+    //suspended: 'Your account has been suspended.',
     unknown: 'Something went wrong on our side. Please try again.',
   },
   login: {
