@@ -1,6 +1,12 @@
 export type ProfileVisibility = 'PUBLIC' | 'PRIVATE' | 'FRIENDS_ONLY';
 
-export type FriendshipStatus = 'NONE' | 'PENDING_SENT' | 'PENDING_RECEIVED' | 'ACCEPTED' | 'BLOCKED';
+export type FriendshipStatus =
+  | 'NONE'
+  | 'PENDING_SENT'
+  | 'PENDING_RECEIVED'
+  | 'ACCEPTED'
+  | 'BLOCKED'
+  | 'BLOCKED_BY_OTHER';
 
 export type InterestCategory =
   | 'ENV_FLOWER_POWER'

@@ -7,14 +7,21 @@ import {
   updateProfile,
   getProfileActivity,
   getMyInterests,
+  deactivateAccount,
 } from '../api/profileApi';
 import { ProfileView } from '../components/ProfileView';
 import { ProfileForm } from '../components/ProfileForm';
+import { ProfileSettingsPanel } from '../components/ProfileSettingsPanel';
+import { ProfileTabs } from '../components/ProfileTabs';
+import { PROFILE_TABS, profilePanelId, profileTabId, type ProfileTabId } from '../profileTabIds';
 import type { ProfileActivity, UserProfile, InterestCategory } from '../types';
+import { useAuth } from '@/features/auth/hooks/useAuth';
 import { isApiError } from '@/shared/api';
 
 export const ProfilePage: React.FC = () => {
+  const { logout } = useAuth();
   const { profile, isLoading, error, setProfile } = useProfile();
+  const [activeTab, setActiveTab] = useState<ProfileTabId>('overview');
   const [isEditing, setIsEditing] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
@@ -83,17 +90,13 @@ export const ProfilePage: React.FC = () => {
       const toSelect = selectedInterests.filter(
         (interest) => !interests.includes(interest),
       );
-      const results = await Promise.allSettled(toSelect.map(selectInterest));
+      await Promise.allSettled(toSelect.map(selectInterest));
 
       try {
         setInterests(await getMyInterests());
       } catch {
         setInterestsError('Unable to reload interests. Please reload the page.');
         return;
-      }
-
-      if (results.some((result) => result.status === 'rejected')) {
-        setInterestsError('Some interests could not be saved. Please reload the page.');
       }
     } catch (failure) {
       setCreateError(
@@ -105,55 +108,6 @@ export const ProfilePage: React.FC = () => {
       setIsSaving(false);
     }
   };
-
-  if (isLoading) {
-    return (
-      <div style={{ textAlign: 'center', padding: '4rem 1rem' }}>
-        <p className="help" style={{ justifyContent: 'center' }}>Loading profile...</p>
-      </div>
-    );
-  }
-
-  if (isCreating) {
-    return (
-      <>
-        {createError && <p role="alert">{createError}</p>}
-        <ProfileForm
-          onSave={handleCreate}
-          onCancel={() => setIsCreating(false)}
-          isSaving={isSaving}
-          initialInterests={interests}
-        />
-      </>
-    );
-  }
-
-  if (isApiError(error) && error.status === 404 && !profile) {
-    return (
-      <div style={{ textAlign: 'center', padding: '4rem 1rem' }}>
-        <h2>No profile yet</h2>
-        <p>Your account does not have a profile yet.</p>
-        <button
-          type="button"
-          onClick={() => setIsCreating(true)}
-          disabled={interestsLoading}
-        >
-          Create profile
-        </button>
-      </div>
-    );
-  }
-
-  if (!profile) {
-    return (
-      <div style={{ textAlign: 'center', padding: '4rem 1rem' }}>
-        <h2>Profile not found</h2>
-        <p className="help help--error" style={{ justifyContent: 'center' }}>
-          Unable to load profile data.
-        </p>
-      </div>
-    );
-  }
 
   const handleSave = async (
     updated: UserProfile,
@@ -183,18 +137,13 @@ export const ProfilePage: React.FC = () => {
           .map(removeInterest),
       ];
 
-      const results = await Promise.allSettled(changes);
+      await Promise.allSettled(changes);
 
       try {
         setInterests(await getMyInterests());
       } catch {
         setInterestsError('Unable to reload interests. Please reload the page.');
         throw new Error('Unable to reload interests.');
-      }
-
-      if (results.some((result) => result.status === 'rejected')) {
-        setUpdateError('Some interests could not be saved. Please try again.');
-        return;
       }
 
       setIsEditing(false);
@@ -209,33 +158,128 @@ export const ProfilePage: React.FC = () => {
     }
   };
 
-  if (isEditing) {
+  const handleDeactivate = async () => {
+    await deactivateAccount();
+    try {
+      await logout();
+    } catch {
+      // Ignorar fallo de sesión ya revocada en el backend
+    } finally {
+      localStorage.clear();
+      sessionStorage.clear();
+      window.location.href = '/';
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div style={{ textAlign: 'center', padding: '4rem 1rem' }}>
+        <p className="help" style={{ justifyContent: 'center' }}>Loading profile...</p>
+      </div>
+    );
+  }
+
+  if (isCreating) {
     return (
       <>
-        {updateError && <p role="alert">{updateError}</p>}
+        {createError && <p role="alert">{createError}</p>}
         <ProfileForm
-          initialData={profile}
-          initialInterests={interests}
-          onSave={handleSave}
-          onCancel={() => setIsEditing(false)}
+          onSave={handleCreate}
+          onCancel={() => setIsCreating(false)}
           isSaving={isSaving}
+          initialInterests={interests}
         />
       </>
     );
   }
 
+  if (!error && !profile) {
+    return (
+      <div style={{ textAlign: 'center', padding: '4rem 1rem' }}>
+        <h2>No profile yet</h2>
+        <p>Your account does not have a profile yet.</p>
+        <button
+          type="button"
+          onClick={() => setIsCreating(true)}
+          disabled={interestsLoading}
+        >
+          Create profile
+        </button>
+      </div>
+    );
+  }
+
+  if (!profile) {
+    return (
+      <div style={{ textAlign: 'center', padding: '4rem 1rem' }}>
+        <h2>Profile not found</h2>
+        <p className="help help--error" style={{ justifyContent: 'center' }}>
+          Unable to load profile data.
+        </p>
+      </div>
+    );
+  }
+
   return (
-    <ProfileView
-      profile={profile}
-      isOwnProfile={true}
-      onEdit={() => setIsEditing(true)}
-      onFriendshipChange={() => {}}
-      activity={activity}
-      activityLoading={activityLoading}
-      activityError={activityError}
-      interests={interests}
-      interestsLoading={interestsLoading}
-      interestsError={interestsError}
-    />
+    <div style={{ maxWidth: '840px', margin: '0 auto', padding: '1rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'center' }}>
+        <ProfileTabs
+          tabs={PROFILE_TABS}
+          value={activeTab}
+          onChange={(tab) => {
+            setIsEditing(false);
+            setActiveTab(tab);
+          }}
+        />
+      </div>
+
+      <div
+        role="tabpanel"
+        id={profilePanelId('overview')}
+        aria-labelledby={profileTabId('overview')}
+        hidden={activeTab !== 'overview'}
+        style={{ marginTop: '1.5rem' }}
+      >
+        {activeTab === 'overview' && (
+          isEditing ? (
+            <>
+              {updateError && <p role="alert">{updateError}</p>}
+              <ProfileForm
+                initialData={profile}
+                initialInterests={interests}
+                onSave={handleSave}
+                onCancel={() => setIsEditing(false)}
+                isSaving={isSaving}
+              />
+            </>
+          ) : (
+            <ProfileView
+              profile={profile}
+              isOwnProfile={true}
+              onEdit={() => setIsEditing(true)}
+              onFriendshipChange={() => { }}
+              activity={activity}
+              activityLoading={activityLoading}
+              activityError={activityError}
+              interests={interests}
+              interestsLoading={interestsLoading}
+              interestsError={interestsError}
+            />
+          )
+        )}
+      </div>
+
+      <div
+        role="tabpanel"
+        id={profilePanelId('settings')}
+        aria-labelledby={profileTabId('settings')}
+        hidden={activeTab !== 'settings'}
+        style={{ marginTop: '1.5rem' }}
+      >
+        {activeTab === 'settings' && (
+          <ProfileSettingsPanel onDeactivateAccount={handleDeactivate} />
+        )}
+      </div>
+    </div>
   );
 };

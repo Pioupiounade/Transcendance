@@ -4,13 +4,15 @@ import { FriendCard } from '../components/FriendCard';
 import { FriendRequestsList } from '../components/FriendRequestsList';
 
 export const FriendsPage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'friends' | 'requests'>('friends');
-  const {
+const [activeTab, setActiveTab] =
+  useState<'friends' | 'requests' | 'blocked'>('friends');  const {
     friends,
     receivedRequests,
     sentRequests,
     loading,
     error,
+    blockedFriends,
+    unblockFriend,
     acceptRequest,
     rejectRequest,
     removeFriend,
@@ -87,38 +89,90 @@ export const FriendsPage: React.FC = () => {
           >
             Requests ({receivedRequests.length})
           </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('blocked')}
+            className="btn"
+            style={{
+              flex: 1,
+              padding: '8px 16px',
+              borderRadius: '8px',
+              fontSize: '0.9rem',
+              fontWeight: 600,
+              cursor: 'pointer',
+              border: 'none',
+              background: activeTab === 'blocked' ? 'var(--brand, #265c4b)' : 'transparent',
+              color: activeTab === 'blocked' ? '#ffffff' : 'var(--ink, #263f36)',
+            }}
+          >
+            Blocked ({blockedFriends.length})
+          </button>
         </div>
 
         {/* Contenedor principal de la pestaña activa */}
         <div style={{ marginTop: '0.5rem' }}>
-          {activeTab === 'friends' ? (
-            friends.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '2.5rem 1rem', background: 'var(--surface, #f8f5ef)', borderRadius: '12px' }}>
-                <p style={{ margin: 0, fontWeight: 500, color: 'var(--muted, #64748b)' }}>
-                  You don't have any friends added yet.
-                </p>
-              </div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                {friends.map((friend) => (
-                  <FriendCard
-                    key={friend.user_id}
-                    friend={friend}
-                    onRemove={removeFriend}
-                    onBlock={blockFriend}
-                  />
-                ))}
-              </div>
-            )
-          ) : (
-            <FriendRequestsList
-              receivedRequests={receivedRequests}
-              sentRequests={sentRequests}
-              onAccept={acceptRequest}
-              onReject={rejectRequest}
-            />
-          )}
-        </div>
+  {activeTab === 'friends' && (
+    friends.length === 0 ? (
+      <div style={{ textAlign: 'center', padding: '2.5rem 1rem', background: 'var(--surface, #f8f5ef)', borderRadius: '12px' }}>
+        <p>You don't have any friends added yet.</p>
+      </div>
+    ) : (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        {friends.map((friend) => (
+          <FriendCard
+            key={friend.user_id}
+            friend={friend}
+            onRemove={removeFriend}
+            onBlock={blockFriend}
+          />
+        ))}
+      </div>
+    )
+  )}
+
+  {activeTab === 'requests' && (
+    <FriendRequestsList
+      receivedRequests={receivedRequests}
+      sentRequests={sentRequests}
+      onAccept={acceptRequest}
+      onReject={rejectRequest}
+    />
+  )}
+
+  {activeTab === 'blocked' && (
+    blockedFriends.length === 0 ? (
+      <div style={{ textAlign: 'center', padding: '2.5rem 1rem', background: 'var(--surface, #f8f5ef)', borderRadius: '12px' }}>
+        <p>You don't have any blocked users.</p>
+      </div>
+    ) : (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        {blockedFriends.map((user) => (
+          <div
+            key={user.user_id}
+            className="panel"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: '14px 18px',
+            }}
+          >
+            <span>@{user.username || 'unknown'}</span>
+
+            <button
+              type="button"
+              className="btn btn--secondary"
+              onClick={() => unblockFriend(user.user_id)}
+            >
+              Unblock
+            </button>
+          </div>
+        ))}
+      </div>
+    )
+  )}
+</div>
+
 
       </div>
     </div>

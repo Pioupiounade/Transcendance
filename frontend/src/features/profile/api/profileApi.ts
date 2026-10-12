@@ -92,8 +92,12 @@ export async function getPublicProfile(userId: string): Promise<PublicProfile> {
   };
 }
 
-export async function getProfile(): Promise<UserProfile> {
-  const data = await http.get<ApiProfile>('/profiles/me');
+export async function getProfile(): Promise<UserProfile | null> {
+  const data = await http.get<ApiProfile | null>('/profiles/me');
+
+  if (!data) {
+    return null;
+  }
 
   return {
     username: data.username,
@@ -161,7 +165,14 @@ export async function createProfile(profile: UserProfile, avatar?: File | null):
   });
 
   if (avatar) await uploadAvatar(avatar);
-  return getProfile();
+  
+  const savedProfile = await getProfile();
+
+if (!savedProfile) {
+  throw new Error('Profile not found after save');
+}
+
+return savedProfile;
 }
 
 export async function updateProfile(profile: UserProfile, avatar?: File | null): Promise<UserProfile> {
@@ -175,7 +186,14 @@ export async function updateProfile(profile: UserProfile, avatar?: File | null):
   });
 
   if (avatar) await uploadAvatar(avatar);
-  return getProfile();
+  
+  const savedProfile = await getProfile();
+
+  if (!savedProfile) {
+    throw new Error('Profile not found after save');
+  }
+
+  return savedProfile;
 }
 
 export async function sendFriendRequest(targetUserId: string): Promise<FriendshipStatus> {
@@ -190,10 +208,9 @@ export async function acceptFriendRequest(targetUserId: string): Promise<Friends
     return String(senderId) === String(targetUserId);
   });
 
-  if (!req) {
-    throw new Error(`No friend request found from user ${targetUserId}`);
+  if (req) {
+    await friendsApi.acceptFriendRequest(req.friend_request_id);
   }
-  await friendsApi.acceptFriendRequest(req.friend_request_id);
   return 'ACCEPTED';
 }
 
@@ -204,22 +221,34 @@ export async function declineFriendRequest(targetUserId: string): Promise<Friend
     return String(senderId) === String(targetUserId);
   });
 
-  if (!req) {
-    throw new Error(`No friend request found from user ${targetUserId}`);
+  if (req) {
+    await friendsApi.rejectFriendRequest(req.friend_request_id);
   }
-  await friendsApi.rejectFriendRequest(req.friend_request_id);
   return 'NONE';
 }
 
-export async function cancelOrRemoveFriend(targetUserId: string): Promise<FriendshipStatus> {
-  try {
-    await friendsApi.removeFriend(targetUserId);
-  } catch (err: unknown) {
-    if (isApiError(err) && err.status === 404) {
-      return 'NONE';
-    }
-    throw err;
+export async function cancelOrRemoveFriend(
+  targetUserId: string,
+): Promise<FriendshipStatus> {
+  const sentRequests = await http.get<any[]>(
+    '/friend-requests/sentRequests',
+  );
+
+  const pendingRequest = sentRequests.find(
+    (request) =>
+      String(request.addressee?.user_id) === String(targetUserId),
+  );
+
+  if (pendingRequest) {
+    await http.delete<void>(
+      `/friend-requests/${pendingRequest.friend_request_id}`,
+    );
+
+    return 'NONE';
   }
+
+  await http.delete<void>(`/friendships/${targetUserId}`);
+
   return 'NONE';
 }
 
@@ -239,17 +268,11 @@ export function useProfile(userId?: string) {
     setIsLoading(true);
     setError(null);
 
-    const request = userId ? getPublicProfile(userId) : getProfile();
-
-    request
+    if (userId) {
+  getPublicProfile(userId)
       .then((data) => {
         if (!isMounted) return;
-
-        if (userId) {
-          setUserProfileState(data, setProfile);
-        } else {
-          setProfile(data as UserProfile);
-        }
+        setUserProfileState(data, setProfile);
       })
       .catch((err) => {
         if (isMounted) {
@@ -260,6 +283,22 @@ export function useProfile(userId?: string) {
       .finally(() => {
         if (isMounted) setIsLoading(false);
       });
+  } else {
+    getProfile()
+      .then((data) => {
+        if (!isMounted) return;
+        setProfile(data);
+      })
+      .catch((err) => {
+        if (isMounted) {
+          setError(err as Error);
+          setProfile(null);
+        }
+      })
+      .finally(() => {
+        if (isMounted) setIsLoading(false);
+      });
+  }
 
     return () => {
       isMounted = false;
@@ -281,4 +320,8 @@ function setUserProfileState(
     visibility: (data.visibility as ProfileVisibility) ?? 'PUBLIC',
     location: null,
   });
+}
+
+export async function deactivateAccount(): Promise<void> {
+  await http.patch('/users/me/deactivate');
 }

@@ -43,9 +43,16 @@ export class ProfilesController {
     return this.profilesService.findOwnProfile(req.user.id);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get(':userId')
-  findOne(@Param('userId') userId: string) {
-    return this.profilesService.findOne(userId);
+  findOne(
+    @Req() req: any,
+    @Param('userId') userId: string,
+  ) {
+    return this.profilesService.findOne(
+      userId,
+      req.user.id,
+    );
   }
 
   @UseGuards(JwtAuthGuard)
