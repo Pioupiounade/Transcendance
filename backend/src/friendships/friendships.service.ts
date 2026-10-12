@@ -253,4 +253,31 @@ async removeFriend(currentUserId: string, friendUserId: string) {
             removedFriendship.blocked_by_user_id?.toString() ?? null,
     };
 }
+
+  async getFriendshipStatus(currentUserId: string, friendUserId: string) {
+  const user = await this.getActiveUser(currentUserId);
+
+  const friendship = await this.findFriendshipBetweenUsers(
+    currentUserId,
+    friendUserId,
+  );
+
+  if (!friendship) {
+    return { status: 'NONE' };
+  }
+
+  if (friendship.status === FriendshipStatus.ACTIVE) {
+    return { status: 'ACCEPTED' };
+  }
+
+  if (friendship.status === FriendshipStatus.BLOCKED) {
+    if (friendship.blocked_by_user_id === user.user_id) {
+      return { status: 'BLOCKED_BY_ME' };
+    }
+
+    return { status: 'BLOCKED_BY_OTHER' };
+  }
+
+  return { status: 'NONE' };
+}
 }

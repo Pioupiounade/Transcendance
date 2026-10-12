@@ -208,10 +208,9 @@ export async function acceptFriendRequest(targetUserId: string): Promise<Friends
     return String(senderId) === String(targetUserId);
   });
 
-  if (!req) {
-    throw new Error(`No friend request found from user ${targetUserId}`);
+  if (req) {
+    await friendsApi.acceptFriendRequest(req.friend_request_id);
   }
-  await friendsApi.acceptFriendRequest(req.friend_request_id);
   return 'ACCEPTED';
 }
 
@@ -222,22 +221,34 @@ export async function declineFriendRequest(targetUserId: string): Promise<Friend
     return String(senderId) === String(targetUserId);
   });
 
-  if (!req) {
-    throw new Error(`No friend request found from user ${targetUserId}`);
+  if (req) {
+    await friendsApi.rejectFriendRequest(req.friend_request_id);
   }
-  await friendsApi.rejectFriendRequest(req.friend_request_id);
   return 'NONE';
 }
 
-export async function cancelOrRemoveFriend(targetUserId: string): Promise<FriendshipStatus> {
-  try {
-    await friendsApi.removeFriend(targetUserId);
-  } catch (err: unknown) {
-    if (isApiError(err) && err.status === 404) {
-      return 'NONE';
-    }
-    throw err;
+export async function cancelOrRemoveFriend(
+  targetUserId: string,
+): Promise<FriendshipStatus> {
+  const sentRequests = await http.get<any[]>(
+    '/friend-requests/sentRequests',
+  );
+
+  const pendingRequest = sentRequests.find(
+    (request) =>
+      String(request.addressee?.user_id) === String(targetUserId),
+  );
+
+  if (pendingRequest) {
+    await http.delete<void>(
+      `/friend-requests/${pendingRequest.friend_request_id}`,
+    );
+
+    return 'NONE';
   }
+
+  await http.delete<void>(`/friendships/${targetUserId}`);
+
   return 'NONE';
 }
 
@@ -309,4 +320,8 @@ function setUserProfileState(
     visibility: (data.visibility as ProfileVisibility) ?? 'PUBLIC',
     location: null,
   });
+}
+
+export async function deactivateAccount(): Promise<void> {
+  await http.patch('/users/me/deactivate');
 }

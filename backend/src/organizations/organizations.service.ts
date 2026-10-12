@@ -145,7 +145,8 @@ export class OrganizationsService {
         'Only an active user can create an organization',
       );
     }
-    const createdOrganization = await this.prisma.organization.create({
+    const createdOrganization = await this.prisma.$transaction(async (tx) => {
+    const organization = await tx.organization.create({
       data: {
         title: data.title,
         description: data.description,
@@ -154,6 +155,20 @@ export class OrganizationsService {
         creator_id: BigInt(currentUserId),
       },
     });
+
+    await tx.organizationMember.create({
+      data: {
+        organization_id: organization.organization_id,
+        user_id: BigInt(currentUserId),
+        status: MemberStatus.ACTIVE,
+        role: RoleOrg.OWNER,
+        validated_by_org_man: true,
+        validated_at: new Date(),
+      },
+    });
+
+    return organization;
+  });
 
     return {
       ...createdOrganization,

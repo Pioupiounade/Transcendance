@@ -8,19 +8,23 @@ export function useSocialManagement() {
   const [sentRequests, setSentRequests] = useState<FriendRequestItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [blockedFriends, setBlockedFriends] = useState<FriendUserSummary[]>([]);
 
   const fetchAll = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const [friendsData, receivedData, sentData] = await Promise.all([
-        friendsApi.getMyFriends(),
-        friendsApi.getReceivedRequests(),
-        friendsApi.getSentRequests(),
-      ]);
-      setFriends(friendsData);
-      setReceivedRequests(receivedData);
-      setSentRequests(sentData);
+     const [friendsData, blockedData, receivedData, sentData] = await Promise.all([
+      friendsApi.getMyFriends(),
+      friendsApi.getBlockedFriends(),
+      friendsApi.getReceivedRequests(),
+      friendsApi.getSentRequests(),
+    ]);
+
+    setFriends(friendsData);
+    setBlockedFriends(blockedData);
+    setReceivedRequests(receivedData);
+    setSentRequests(sentData);
     } catch (err: any) {
       setError(err?.message || 'Error loading social connections');
     } finally {
@@ -52,16 +56,25 @@ export function useSocialManagement() {
     setFriends((prev) => prev.filter((f) => f.user_id !== friendUserId));
   };
 
+  const handleUnblockFriend = async (friendUserId: string) => {
+    await friendsApi.unblockFriend(friendUserId);
+    setBlockedFriends((prev) =>
+      prev.filter((f) => f.user_id !== friendUserId),
+    );
+  };
+
   return {
     friends,
     receivedRequests,
     sentRequests,
     loading,
     error,
+    blockedFriends,
     refresh: fetchAll,
     acceptRequest: handleAcceptRequest,
     rejectRequest: handleRejectRequest,
     removeFriend: handleRemoveFriend,
     blockFriend: handleBlockFriend,
+    unblockFriend: handleUnblockFriend,
   };
 }

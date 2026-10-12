@@ -5,6 +5,7 @@ import { APP_LABELS } from '../labels';
 import { ROUTES } from '../routes';
 import { Brandmark } from './Brandmark';
 import { NAV_ITEMS } from './navItems';
+import { GlobalSearch } from '../components/GlobalSearch';
 import styles from './AppHeader.module.css';
 
 export function AppHeader() {
@@ -29,6 +30,7 @@ export function AppHeader() {
       </nav>
 
       <div className={styles.actions}>
+              {status === 'authenticated' && <GlobalSearch />}
         {user?.role === ROLE_APP.ADMIN && (
           <NavLink to={ROUTES.admin} className={styles.adminLink}>
             <Icon name="shield" size={18} />

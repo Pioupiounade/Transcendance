@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Patch, Query, Param, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Patch, Query, Param, Req, UseGuards } from '@nestjs/common';
 import { FriendRequestsService } from './friend-requests.service';
 import { SendFriendRequestDto } from './dto/send-friend-request.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth-guard';
@@ -38,6 +38,18 @@ export class FriendRequestsController {
     @Param('requestId') requestId: string,
     ) {
     return this.friendRequestsService.rejectFriendRequest(
+        req.user.id,
+        requestId,
+    );
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Delete(':requestId')
+    cancelFriendRequest(
+    @Req() req: any,
+    @Param('requestId') requestId: string,
+    ) {
+    return this.friendRequestsService.cancelFriendRequest(
         req.user.id,
         requestId,
     );
