@@ -50,32 +50,6 @@ export function PublicProfilePage() {
         ]);
 
         if (!active) return;
-        if (data.visibility === 'PRIVATE') {
-          setIsPrivate(true);
-          return;
-        }
-
-        let resolvedStatus: FriendshipStatus = 'NONE';
-        let isFriend = false;
-
-        if (currentUserId) {
-          const [friends, sentRequests, receivedRequests] = await Promise.all([
-            http.get<any[]>('/friendships/me').catch(() => []),
-            http.get<any[]>('/friend-requests/sentRequests').catch(() => []),
-            http.get<any[]>('/friend-requests/receivedRequests').catch(() => []),
-          ]);
-
-          if (!active) return;
-          
-          isFriend = friends.some((f) => {
-            const fid =
-              f.friend?.user_id ??
-              f.friend_id ??
-              f.user?.user_id ??
-              f.user_id ??
-              (String(f.user1_id) === String(currentUserId) ? f.user2_id : f.user1_id);
-            return String(fid) === targetId;
-          });
 
         let resolvedStatus: FriendshipStatus = 'NONE';
         let isFriend = false;
