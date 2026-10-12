@@ -312,6 +312,41 @@ async rejectFriendRequest(currentUserId: string, requestId: string) {
     };
 }
 
+// Annuler une demande d'ami envoyée
+async cancelFriendRequest(currentUserId: string, requestId: string) {
+  const user = await this.getActiveUser(currentUserId);
+
+  const request = await this.prisma.friendRequest.findUnique({
+    where: {
+      friend_request_id: BigInt(requestId),
+    },
+  });
+
+  if (!request) {
+    throw new NotFoundException('Friend request not found');
+  }
+
+  if (request.status !== FriendRequestStatus.PENDING) {
+    throw new BadRequestException(
+      'This friend request can no longer be cancelled',
+    );
+  }
+
+  if (request.requester_id !== user.user_id) {
+    throw new ForbiddenException(
+      'Only the sender can cancel this friend request',
+    );
+  }
+
+  await this.prisma.friendRequest.delete({
+    where: {
+      friend_request_id: BigInt(requestId),
+    },
+  });
+
+  return { success: true };
+}
+
 //Voir mes demandes d'ami envoyees
 async mySentRequests(currentUserId: string) {
     const user = await this.getActiveUser(currentUserId);

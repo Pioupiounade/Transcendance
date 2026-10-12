@@ -33,4 +33,8 @@ export const friendsApi = {
 
   rejectFriendRequest: (requestId: string) =>
     http.patch<void>(`/friend-requests/${requestId}/reject`, {}),
+
+  getFriendshipStatus: (friendUserId: string) =>
+  http.get<{ status: string }>(`/friendships/${friendUserId}/status`),
+
 };

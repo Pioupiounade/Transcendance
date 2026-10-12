@@ -209,15 +209,28 @@ export async function declineFriendRequest(targetUserId: string): Promise<Friend
   return 'NONE';
 }
 
-export async function cancelOrRemoveFriend(targetUserId: string): Promise<FriendshipStatus> {
-  try {
-    await friendsApi.removeFriend(targetUserId);
-  } catch (err: unknown) {
-    if (isApiError(err) && err.status === 404) {
-      return 'NONE';
-    }
-    throw err;
+export async function cancelOrRemoveFriend(
+  targetUserId: string,
+): Promise<FriendshipStatus> {
+  const sentRequests = await http.get<any[]>(
+    '/friend-requests/sentRequests',
+  );
+
+  const pendingRequest = sentRequests.find(
+    (request) =>
+      String(request.addressee?.user_id) === String(targetUserId),
+  );
+
+  if (pendingRequest) {
+    await http.delete<void>(
+      `/friend-requests/${pendingRequest.friend_request_id}`,
+    );
+
+    return 'NONE';
   }
+
+  await http.delete<void>(`/friendships/${targetUserId}`);
+
   return 'NONE';
 }
 
