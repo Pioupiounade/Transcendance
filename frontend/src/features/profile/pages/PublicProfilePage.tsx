@@ -5,6 +5,7 @@ import { getPublicProfile } from '../api/profileApi';
 import { ProfileView } from '../components/ProfileView';
 import type { FriendshipStatus, InterestCategory, UserProfile } from '../types';
 import { friendsApi } from '@/features/friends/api/friendsApi';
+import { http } from '@/shared/api';
 
 export function PublicProfilePage() {
   const { userId } = useParams<{ userId: string }>();
@@ -31,18 +32,64 @@ export function PublicProfilePage() {
       return;
     }
 
-    Promise.all([
-      getPublicProfile(userId),
-      friendsApi.getSentRequests(),
-      friendsApi.getReceivedRequests(),
-      friendsApi.getFriendshipStatus(userId),
-    ])
-      .then(([data, sentRequests, receivedRequests, friendshipRelation]: any[]) => {
-        // Détection de la visibilité restreinte depuis le DTO backend
-        if (
-          data.isPrivate ||
-          data.visibility === 'PRIVATE'
-        ) {
+    async function loadData() {
+      try {
+        const targetId = String(userId);
+
+        const profilePromise = getPublicProfile(userId!);
+        const relationsPromise = currentUserId
+          ? Promise.all([
+              http.get<any[]>('/friendships/me').catch(() => []),
+              http.get<any[]>('/friend-requests/sentRequests').catch(() => []),
+              http.get<any[]>('/friend-requests/receivedRequests').catch(() => []),
+            ])
+          : Promise.resolve([[], [], []]);
+
+        const [data, [friends, sentRequests, receivedRequests]] = await Promise.all([
+          profilePromise,
+          relationsPromise,
+        ]);
+
+        if (!active) return;
+
+        let resolvedStatus: FriendshipStatus = 'NONE';
+        let isFriend = false;
+
+        if (currentUserId) {
+          isFriend = friends.some((f) => {
+            const fid =
+              f.friend?.user_id ??
+              f.friend_id ??
+              f.user?.user_id ??
+              f.user_id ??
+              (String(f.user1_id) === String(currentUserId) ? f.user2_id : f.user1_id);
+            return String(fid) === targetId;
+          });
+
+          if (isFriend) {
+            resolvedStatus = 'ACCEPTED';
+          } else {
+            const isSent = sentRequests.some((r) => {
+              const aid = r.addressee_id ?? r.addressee?.user_id ?? r.addresseeId;
+              return String(aid) === targetId;
+            });
+
+            if (isSent) {
+              resolvedStatus = 'PENDING_SENT';
+            } else {
+              const isReceived = receivedRequests.some((r) => {
+                const rid = r.requester_id ?? r.requester?.user_id ?? r.requesterId;
+                return String(rid) === targetId;
+              });
+
+              if (isReceived) {
+                resolvedStatus = 'PENDING_RECEIVED';
+              }
+            }
+          }
+        }
+
+        if (data.visibility === 'PRIVATE') {
           setIsPrivate(true);
           return;
         }
@@ -73,34 +120,36 @@ export function PublicProfilePage() {
 
         // Profil public complet
         setUserProfile({
+          id: String((data as any).user_id ?? data.userId),
           username: data.username,
           description: data.description ?? undefined,
-          profilePicture: data.profile_picture ?? data.profilePicture ?? undefined,
+          profilePicture: (data as any).profile_picture ?? data.profilePicture ?? undefined,
           commune: data.commune ?? null,
           visibility: data.visibility ?? 'PUBLIC',
           location: null,
           friendshipStatus,
         });
+
         setUserInterests(data.interests ?? []);
-      })
-      .catch((err) => {
+      } catch (err: any) {
         if (!active) return;
         if (err?.status === 403 || err?.status === 404) {
           setIsPrivate(true);
         } else {
           setError(true);
         }
-      })
-      .finally(() => {
+      } finally {
         if (active) setIsLoading(false);
-      });
+      }
+    }
+
+    loadData();
 
     return () => {
       active = false;
     };
-  }, [userId]);
+  }, [userId, currentUserId]);
 
-  // Redirection synchrone immédiate si c'est son propre profil
   if (currentUserId && userId && currentUserId === String(userId)) {
     return <Navigate to="/profile" replace />;
   }
@@ -140,7 +189,8 @@ export function PublicProfilePage() {
       profile={userProfile}
       userId={userId ?? ''}
       isOwnProfile={false}
-      onEdit={() => { }}
+      isAuthenticated={Boolean(currentUserId)}
+      onEdit={() => {}}
       onFriendshipChange={(newStatus: FriendshipStatus) => {
         setUserProfile((prev) => (prev ? { ...prev, friendshipStatus: newStatus } : null));
       }}

@@ -39,3 +39,6 @@ lerna-debug.log*
 *.sln
 *.sw?
 .aider*
+
+// Certificates
+*.pem

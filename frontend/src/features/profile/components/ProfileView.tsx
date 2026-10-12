@@ -9,6 +9,7 @@ interface ProfileViewProps {
   profile: UserProfile;
   userId?: string;
   isOwnProfile?: boolean;
+  isAuthenticated?: boolean;
   onEdit: () => void;
   onFriendshipChange?: (newStatus: FriendshipStatus) => void;
   onDeleteAccount?: () => Promise<void> | void;
@@ -24,6 +25,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
   profile,
   userId,
   isOwnProfile = false,
+  isAuthenticated = true,
   activity,
   activityLoading,
   activityError,
@@ -100,7 +102,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
             </div>
           </div>
 
-          {/* Action button: Edit profile for owner, Friendship CTA for others */}
+          {/* Action button: Edit profile for owner, Friendship CTA for authenticated visitors, nothing for guests */}
           {isOwnProfile ? (
             <button
               type="button"
@@ -111,13 +113,13 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
             >
               <span className="btn-label">Edit Profile</span>
             </button>
-          ) : (
+          ) : isAuthenticated ? (
             <FriendshipCTA
               userId={userId ?? ''}
               status={profile.friendshipStatus ?? 'NONE'}
               onStatusChange={onFriendshipChange}
             />
-          )}
+          ) : null}
         </div>
 
         {/* Bio / Description */}

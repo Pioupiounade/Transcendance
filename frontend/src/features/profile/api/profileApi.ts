@@ -1,6 +1,17 @@
 import { useEffect, useState } from 'react';
 import { http } from '@/shared/api';
-import type { PublicProfile, InterestCategory, ProfileActivity, ProfileOrganization, ProfileParticipation, ProfileVisibility, UserProfile, FriendshipStatus } from '../types';
+import { friendsApi } from '@/features/friends/api/friendsApi';
+import { isApiError } from '@/shared/api';
+import type {
+  PublicProfile,
+  InterestCategory,
+  ProfileActivity,
+  ProfileOrganization,
+  ProfileParticipation,
+  ProfileVisibility,
+  UserProfile,
+  FriendshipStatus,
+} from '../types';
 
 type ApiProfile = {
   user_id: string;
@@ -90,9 +101,10 @@ export async function getProfile(): Promise<UserProfile> {
     description: data.description ?? undefined,
     profilePicture: data.profile_picture ?? undefined,
     visibility: data.visibility,
-    location: data.location?.length === 2
-      ? { latitude: data.location[0], longitude: data.location[1] }
-      : null,
+    location:
+      data.location?.length === 2
+        ? { latitude: data.location[0], longitude: data.location[1] }
+        : null,
   };
 }
 
@@ -166,27 +178,34 @@ export async function updateProfile(profile: UserProfile, avatar?: File | null):
   return getProfile();
 }
 
-export async function sendFriendRequest(
-  targetUserId: string,
-): Promise<FriendshipStatus> {
-  await http.patch('/friend-requests/me/send', {
-    addressee_id: String(targetUserId),
-  });
-
+export async function sendFriendRequest(targetUserId: string): Promise<FriendshipStatus> {
+  await friendsApi.sendFriendRequest(targetUserId);
   return 'PENDING_SENT';
 }
 
-export async function acceptFriendRequest(
-  targetUserId: string,
-): Promise<FriendshipStatus> {
-  void targetUserId;
+export async function acceptFriendRequest(targetUserId: string): Promise<FriendshipStatus> {
+  const received = await friendsApi.getReceivedRequests();
+  const req = received.find((r: any) => {
+    const senderId = r.requester_id ?? r.requester?.user_id ?? r.requester?.id ?? r.requester?.userId;
+    return String(senderId) === String(targetUserId);
+  });
+
+  if (req) {
+    await friendsApi.acceptFriendRequest(req.friend_request_id);
+  }
   return 'ACCEPTED';
 }
 
-export async function declineFriendRequest(
-  targetUserId: string,
-): Promise<FriendshipStatus> {
-  void targetUserId;
+export async function declineFriendRequest(targetUserId: string): Promise<FriendshipStatus> {
+  const received = await friendsApi.getReceivedRequests();
+  const req = received.find((r: any) => {
+    const senderId = r.requester_id ?? r.requester?.user_id ?? r.requester?.id ?? r.requester?.userId;
+    return String(senderId) === String(targetUserId);
+  });
+
+  if (req) {
+    await friendsApi.rejectFriendRequest(req.friend_request_id);
+  }
   return 'NONE';
 }
 
@@ -215,10 +234,8 @@ export async function cancelOrRemoveFriend(
   return 'NONE';
 }
 
-export async function unblockUser(
-  targetUserId: string,
-): Promise<FriendshipStatus> {
-  void targetUserId;
+export async function unblockUser(targetUserId: string): Promise<FriendshipStatus> {
+  await friendsApi.unblockFriend(targetUserId);
   return 'NONE';
 }
 
@@ -233,23 +250,14 @@ export function useProfile(userId?: string) {
     setIsLoading(true);
     setError(null);
 
-    const request = userId
-      ? getPublicProfile(userId)
-      : getProfile();
+    const request = userId ? getPublicProfile(userId) : getProfile();
 
     request
       .then((data) => {
         if (!isMounted) return;
 
         if (userId) {
-          setProfile({
-            username: data.username,
-            commune: data.commune,
-            description: data.description ?? undefined,
-            profilePicture: data.profilePicture ?? undefined,
-            visibility: 'PUBLIC',
-            location: null,
-          });
+          setUserProfileState(data, setProfile);
         } else {
           setProfile(data as UserProfile);
         }
@@ -270,4 +278,22 @@ export function useProfile(userId?: string) {
   }, [userId]);
 
   return { profile, isLoading, error, setProfile };
+}
+
+function setUserProfileState(
+  data: PublicProfile,
+  setProfile: (profile: UserProfile | null) => void,
+) {
+  setProfile({
+    username: data.username,
+    commune: data.commune,
+    description: data.description ?? undefined,
+    profilePicture: data.profilePicture ?? undefined,
+    visibility: (data.visibility as ProfileVisibility) ?? 'PUBLIC',
+    location: null,
+  });
+}
+
+export async function deactivateAccount(): Promise<void> {
+  await http.patch('/users/me/deactivate');
 }
