@@ -222,14 +222,16 @@ export const ProfilePage: React.FC = () => {
 
   return (
     <div style={{ maxWidth: '840px', margin: '0 auto', padding: '1rem' }}>
-      <ProfileTabs
-        tabs={PROFILE_TABS}
-        value={activeTab}
-        onChange={(tab) => {
-          setIsEditing(false);
-          setActiveTab(tab);
-        }}
-      />
+      <div style={{ display: 'flex', justifyContent: 'center' }}>
+        <ProfileTabs
+          tabs={PROFILE_TABS}
+          value={activeTab}
+          onChange={(tab) => {
+            setIsEditing(false);
+            setActiveTab(tab);
+          }}
+        />
+      </div>
 
       <div
         role="tabpanel"
@@ -255,7 +257,7 @@ export const ProfilePage: React.FC = () => {
               profile={profile}
               isOwnProfile={true}
               onEdit={() => setIsEditing(true)}
-              onFriendshipChange={() => {}}
+              onFriendshipChange={() => { }}
               activity={activity}
               activityLoading={activityLoading}
               activityError={activityError}

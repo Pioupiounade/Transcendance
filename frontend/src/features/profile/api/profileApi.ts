@@ -208,7 +208,8 @@ export async function cancelOrRemoveFriend(targetUserId: string): Promise<Friend
   try {
     await friendsApi.removeFriend(targetUserId);
   } catch {
-    // Silenciar si la amistad ya no existía
+    console.log(`Cannot remove friend: ${targetUserId}`);
+    // Ignore if the friendship no longer exists
   }
   return 'NONE';
 }

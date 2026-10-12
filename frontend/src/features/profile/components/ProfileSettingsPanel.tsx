@@ -96,13 +96,13 @@ export const ProfileSettingsPanel: React.FC<ProfileSettingsPanelProps> = ({
     setIsDeactivating(true);
     try {
       await onDeactivateAccount();
+      dialogRef.current?.close();
     } catch (err) {
       setError(
         isApiError(err) && err.messages.length > 0
           ? err.messages.join(' ')
           : 'Failed to deactivate account. Please try again.',
       );
-      dialogRef.current?.close();
     } finally {
       setIsDeactivating(false);
     }
@@ -196,6 +196,12 @@ export const ProfileSettingsPanel: React.FC<ProfileSettingsPanelProps> = ({
         <p className="help" style={{ margin: '12px 0 24px', fontSize: '14px' }}>
           Are you sure you want to deactivate your account? Your profile will be hidden from the neighborhood.
         </p>
+
+        {error && (
+          <p className="help help--error" role="alert" style={{ marginBottom: '12px' }}>
+            {error}
+          </p>
+        )}
 
         <div style={{ display: 'flex', gap: '12px' }}>
           <button
