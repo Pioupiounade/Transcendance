@@ -11,7 +11,7 @@ interface FriendRequestsListProps {
 }
 
 function resolveUser(req: FriendRequestItem, type: 'received' | 'sent') {
-  const target: FriendRequestUser | undefined = type === 'received' ? req.requester : req.addressee;  
+  const target: FriendRequestUser | undefined = type === 'received' ? req.requester : req.addressee;
   const userId = target?.user_id ?? '';
   const username = target?.username ?? `user_${userId || 'unknown'}`;
   const avatar = target?.profile_picture ?? undefined;

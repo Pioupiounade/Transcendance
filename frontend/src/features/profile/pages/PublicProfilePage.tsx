@@ -120,7 +120,6 @@ export function PublicProfilePage() {
 
         // Profil public complet
         setUserProfile({
-          id: String((data as any).user_id ?? data.userId),
           username: data.username,
           description: data.description ?? undefined,
           profilePicture: (data as any).profile_picture ?? data.profilePicture ?? undefined,

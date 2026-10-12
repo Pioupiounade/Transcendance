@@ -193,7 +193,7 @@ export const ProfilePage: React.FC = () => {
     );
   }
 
-  if (isApiError(error) && error.status === 404 && !profile) {
+  if (!error && !profile) {
     return (
       <div style={{ textAlign: 'center', padding: '4rem 1rem' }}>
         <h2>No profile yet</h2>
