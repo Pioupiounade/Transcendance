@@ -7,6 +7,18 @@
   gap: 20px;
 }
 
+/* En-tête : texte à gauche, « Create an organization » calé en bas à droite ; à la ligne sur mobile. */
+.intro {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px 24px;
+}
+
+.create {
+  flex: none;
+}
 
 .eyebrow {
   margin-bottom: 8px;
@@ -83,6 +95,9 @@
   .page {
     padding: 24px 16px;
     gap: 16px;
+  }
+  .create {
+    width: 100%;
   }
   .grid {
     grid-template-columns: minmax(0, 1fr);

@@ -5,7 +5,7 @@ import { useAuth } from '@/features/auth';
 import { fetchMyProfile } from '@/features/profile';
 import { useResource } from '@/shared/hooks/useResource';
 import { pageTitle } from '@/shared/lib/pageTitle';
-import { Button } from '@/shared/ui';
+import { Button, ButtonLink, Icon } from '@/shared/ui';
 import { useMyMemberships } from '../api/useMyMemberships';
 import { useOrganizations } from '../api/useOrganizations';
 import { DirectoryToolbar } from '../components/DirectoryToolbar';
@@ -19,6 +19,8 @@ import styles from './OrganizationsPage.module.css';
 type OrganizationsPageProps = {
   /** Chemin de la fiche d'une organisation ; `app/` le connaît, la feature non. */
   organizationPath: (id: string) => string;
+  /** Page de création (#106), proposée aux seuls connectés. */
+  createPath: string;
 };
 
 const text = ORGANIZATIONS_LABELS.list;
@@ -40,7 +42,7 @@ const useCenterProfile = () => {
  * `/organizations` : l'annuaire (#63). La constellation autour de l'utilisateur, puis la liste. Recherche, tri,
  * « All / Mine » et organisations fermées vivent dans l'URL (directory.ts) : revenir d'une fiche retrouve la liste.
  */
-export function OrganizationsPage({ organizationPath }: OrganizationsPageProps) {
+export function OrganizationsPage({ organizationPath, createPath }: OrganizationsPageProps) {
   const [params, setParams] = useSearchParams();
   const { status } = useAuth();
   const all = useOrganizations();
@@ -96,9 +98,18 @@ export function OrganizationsPage({ organizationPath }: OrganizationsPageProps) 
     <section className={styles.page}>
       <title>{pageTitle(text.title)}</title>
       <header className={styles.intro}>
-        <p className={styles.eyebrow}>{text.eyebrow}</p>
-        <h1>{text.title}</h1>
-        <p className={styles.lead}>{text.lead}</p>
+        <div>
+          <p className={styles.eyebrow}>{text.eyebrow}</p>
+          <h1>{text.title}</h1>
+          <p className={styles.lead}>{text.lead}</p>
+        </div>
+        {/* Créer (#106) : la route est protégée, le bouton n'est proposé qu'à un connecté. */}
+        {authenticated && (
+          <ButtonLink to={createPath} className={styles.create}>
+            <Icon name="plus" size={16} />
+            {ORGANIZATIONS_LABELS.create.button}
+          </ButtonLink>
+        )}
       </header>
 
       <DirectoryToolbar view={view} onChange={change} canFilterMine={authenticated} inactiveCount={inactive} />
