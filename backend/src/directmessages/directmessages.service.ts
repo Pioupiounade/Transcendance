@@ -28,7 +28,7 @@ export class DirectMessagesService {
 		});
 
 		if (!friendship) {
-			throw new ForbiddenException('You can only send messages yo active friends.');
+			throw new ForbiddenException('You can only send messages to active friends.');
 		}
 
 		const msgCount = await this.prisma.directMessage.count({

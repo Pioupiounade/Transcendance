@@ -4,7 +4,6 @@ import { JwtAuthGuard } from "../auth/guards/jwt-auth-guard";
 import { CreateDirectMessageDto } from "./dto/create-message.dto";
 
 @Controller('direct-messages')
-
 @UseGuards(JwtAuthGuard)
 export class DirectMessagesController {
   constructor(private readonly dmService: DirectMessagesService) {}
@@ -15,7 +14,7 @@ export class DirectMessagesController {
 		@Param('friendId') friendId: string,
 		@Body() dto: CreateDirectMessageDto
 	) {
-		const userId = BigInt(req.user.user_id);
+		const userId = BigInt(req.user.id);
 		const targetUserId = BigInt(friendId);
 
 		const message = await this.dmService.sendMessage(userId, targetUserId, dto);
@@ -33,7 +32,7 @@ export class DirectMessagesController {
 		@Req() req: any,
 		@Param('friendId') friendId: string
 	) {
-		const userId = BigInt(req.user.user_id);
+		const userId = BigInt(req.user.id);
 		const targetUserId = BigInt(friendId);
 
 		const messages = await this.dmService.getMessages(userId, targetUserId);
