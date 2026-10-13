@@ -9,3 +9,4 @@ export function useOrganizations() {
   const { data, loading, error, reload } = useResource(fetchOrganizations);
   return { organizations: data ?? NO_ORGANIZATIONS, loading, error, reload };
 }
+

@@ -4,7 +4,11 @@ import { ROLE_APP, useAuth } from '@/features/auth';
 import { formatDayMonth } from '@/shared/lib/formatDate';
 import { pageTitle } from '@/shared/lib/pageTitle';
 import { Avatar, ButtonLink, Icon } from '@/shared/ui';
-import { useOrganization, useOrganizationMembers } from '../api/useOrganization';
+import {
+  useMyOrganizationMembership,
+  useOrganization,
+  useOrganizationMembers,
+} from '../api/useOrganization';
 import { MembershipStatus } from '../components/MembershipStatus';
 import { OrganizationActions } from '../components/OrganizationActions';
 import { OrganizationComments } from '../components/OrganizationComments';
@@ -34,11 +38,16 @@ const sinceLabel = (iso: string): string => {
  * `/organizations/:id` : fiche publique (#64). En-tête avec ma relation à l'organisation (rôle ou « Join »), puis
  * à gauche « About », ses actions et la discussion (#71), à droite le lieu sur une mini-carte et les membres actifs.
  */
+
 export function OrganizationPage({ listPath, upcomingActionPath, managePath }: OrganizationPageProps) {
   const { id = '' } = useParams<{ id: string }>();
-  const { user } = useAuth();
+  const { status, user } = useAuth();
   const { organization, loading, notFound, error } = useOrganization(id);
   const members = useOrganizationMembers(id);
+  const membership = useMyOrganizationMembership(
+  id,
+  status === 'authenticated',
+);
   // La liste publique ne contient que les membres actifs : m'y trouver = être membre.
   const myRole = members.members.find((member) => member.user_id === user?.user_id)?.role ?? null;
   const canManage = managerLevel(myRole, user?.role === ROLE_APP.ADMIN) !== null;
@@ -94,6 +103,7 @@ export function OrganizationPage({ listPath, upcomingActionPath, managePath }: O
                     key={`${organization.organization_id}:${user?.user_id ?? ''}`}
                     organizationId={organization.organization_id}
                     role={myRole}
+                    membership={membership.membership}
                   />
                 )}
                 {canManage && (

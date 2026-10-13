@@ -102,6 +102,23 @@ export class OrganizationmembersService {
         }));
     }
 
+    async findMyMembership(organizationId: bigint, userId: bigint) {
+        const membership = await this.prisma.organizationMember.findUnique({
+            where: {
+                organization_id_user_id: {
+                    organization_id: organizationId,
+                    user_id: userId,
+                },
+            },
+            select: {
+                status: true,
+                role: true,
+            },
+        });
+
+        return membership;
+    }
+
     // Get all the members of the organization - active, banned, pending, rejected
     async findAllMemberships(organizationId: bigint, requesterId: bigint) {
         const requester = await this.prisma.user.findUnique({
@@ -578,60 +595,75 @@ export class OrganizationmembersService {
         });
 
         if (existingMembership?.status === MemberStatus.BANNED) {
-            throw new ForbiddenException('You are banned from this organization');
+            return {
+                success: false as const,
+                reason: 'BANNED' as const,
+            };
         }
 
         if (existingMembership?.status === MemberStatus.PENDING) {
-            throw new ConflictException('A membership request is already pending');
+            return {
+                success: false as const,
+                reason: 'PENDING' as const,
+            };
         }
 
         if (existingMembership?.status === MemberStatus.ACTIVE) {
-            throw new ConflictException('You are already a member of this organization');
+            return {
+                success: false as const,
+                reason: 'ALREADY_MEMBER' as const,
+            };
         }
 
         if (existingMembership?.status === MemberStatus.REJECTED) {
-            throw new ConflictException('A previous membership request has already been rejected');
+            return {
+                success: false as const,
+                reason: 'REJECTED' as const,
+            };
         }
 
         const membership = await this.prisma.organizationMember.create({
-  data: {
-    organization_id: organizationId,
-    user_id: userId,
-    role: RoleOrg.MEMBER,
-    status: MemberStatus.PENDING,
-    validated_by_org_man: false,
-    validated_at: null,
-  },
-});
+            data: {
+                organization_id: organizationId,
+                user_id: userId,
+                role: RoleOrg.MEMBER,
+                status: MemberStatus.PENDING,
+                validated_by_org_man: false,
+                validated_at: null,
+            },
+        });
 
         const managers = await this.prisma.organizationMember.findMany({
-        where: {
-            organization_id: organizationId,
-            status: MemberStatus.ACTIVE,
-            role: {
-            in: [RoleOrg.OWNER, RoleOrg.MANAGER],
+            where: {
+                organization_id: organizationId,
+                status: MemberStatus.ACTIVE,
+                role: {
+                    in: [RoleOrg.OWNER, RoleOrg.MANAGER],
+                },
+                user: {
+                    account_status: AccountStatus.ACTIVE,
+                },
             },
-            user: {
-            account_status: AccountStatus.ACTIVE,
+            select: {
+                user_id: true,
             },
-        },
-        select: {
-            user_id: true,
-        },
         });
 
         for (const manager of managers) {
-        await this.notificationsService.notifyUser({
-            userId: manager.user_id,
-            type: NotificationType.ORGANIZATION_JOIN_REQUEST,
-            title: 'New organization membership request',
-            message: `A user requested to join "${organization.title}".`,
-            link: `/organizations/${organization.organization_id.toString()}`,
-        });
+            await this.notificationsService.notifyUser({
+                userId: manager.user_id,
+                type: NotificationType.ORGANIZATION_JOIN_REQUEST,
+                title: 'New organization membership request',
+                message: `A user requested to join "${organization.title}".`,
+                link: `/organizations/${organization.organization_id.toString()}`,
+            });
         }
 
-        return membership;
-    }
+        return {
+            success: true as const,
+            membership,
+        };
+        }
 
     // Approve a membership request
     async approveMembership(requesterId: bigint, organizationId: bigint, targetUserId: bigint) {

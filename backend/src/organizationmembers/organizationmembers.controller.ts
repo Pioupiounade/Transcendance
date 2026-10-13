@@ -24,12 +24,25 @@ export class OrganizationmembersController {
       username,
     );
   }
+  
   @Get('organization/:organizationId/members')
   findAllMembers(
     @Param('organizationId') organizationId: string,
   ) {
     return this.organizationMembersService.findAllMembers(
       this.toBigInt(organizationId, 'organizationId'),
+    );
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('organization/:organizationId/me')
+  findMyMembership(
+    @Req() req: any,
+    @Param('organizationId') organizationId: string,
+  ) {
+    return this.organizationMembersService.findMyMembership(
+      this.toBigInt(organizationId, 'organizationId'),
+      BigInt(req.user.id),
     );
   }
 
