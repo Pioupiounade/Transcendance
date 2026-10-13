@@ -17,6 +17,7 @@ import { PointtransactionModule } from './pointtransaction/pointtransaction.modu
 import { AuthModule } from "./auth/auth.module";
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { NotificationsModule } from './notifications/notifications.module';
+import { DirectMessagesModule } from './directmessages/directmessages.module';
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { NotificationsModule } from './notifications/notifications.module';
     PointtransactionModule,
     AuthModule,
     NotificationsModule,
+    DirectMessagesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

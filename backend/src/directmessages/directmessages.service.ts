@@ -1,10 +1,14 @@
 import { Injectable, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { CreateDirectMessageDto } from './dto/create-message.dto';
 
 @Injectable()
 export class DirectMessagesService {
-	constructor(private prisma: PrismaService) { }
+	constructor(
+		private prisma: PrismaService,
+		private notifications: NotificationsService
+	) { }
 
 	async sendMessage(senderId: bigint, receiverId: bigint, dto: CreateDirectMessageDto) {
 		// Check if the receiver exists
@@ -13,13 +17,15 @@ export class DirectMessagesService {
 				status: 'ACTIVE',
 				OR: [
 					{ user1_id: senderId, user2_id: receiverId },
-					{ user1_id: receiverId, user2_id: senderId },
+					{ user1_id: receiverId, user2_id: senderId }
 				],
+				user1: { account_status: 'ACTIVE' },
+				user2: { account_status: 'ACTIVE' }
 			},
 		});
 
 		if (!friendship) {
-			throw new ForbiddenException('You can only send messages to your friends.');
+			throw new ForbiddenException('You can only send messages yo active friends.');
 		}
 
 		const msgCount = await this.prisma.directMessage.count({
@@ -58,6 +64,17 @@ export class DirectMessagesService {
 				content: dto.content,
 			},
 		});
+
+		// Create Notification
+		await this.notifications.notifyUser({
+			userId: receiverId,
+			type: 'NEW_MESSAGE',
+			title: 'New Direct Message',
+			message: dto.content.length > 50
+				? `${dto.content.substring(0, 47)}...`
+				: dto.content
+		});
+
 		return message;
 	}
 
@@ -68,13 +85,15 @@ export class DirectMessagesService {
 				status: 'ACTIVE',
 				OR: [
 					{ user1_id: userId, user2_id: friendId },
-					{ user1_id: friendId, user2_id: userId },
+					{ user1_id: friendId, user2_id: userId }
 				],
+				user1: { account_status: 'ACTIVE' },
+				user2: { account_status: 'ACTIVE' }
 			},
 		});
 
 		if (!friendship) {
-			throw new ForbiddenException('You can only view messages with your friends.');
+			throw new ForbiddenException('You can only view messages with your active friends.');
 		}
 
 		// Set messages readed
