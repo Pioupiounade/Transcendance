@@ -25,6 +25,7 @@ import { WebpCompressorPipe } from '../common/shart-transform.pipe';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { ParseIntPipe } from '@nestjs/common/pipes/parse-int.pipe';
 import { DeleteFileOnErrorInterceptor } from '../common/interceptor';
+import { RequireProfileGuard } from '../auth/guards/require-profile.guard';
 
 @Controller('actions')
 export class ActionsController {
@@ -61,7 +62,7 @@ export class ActionsController {
     return this.actionsService.findOne(id);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RequireProfileGuard)
   @Post()
   create(
     @Req() req: any,
@@ -125,7 +126,7 @@ export class ActionsController {
 
   // Comments routes
   @Post(':id/comments')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RequireProfileGuard)
   async addComment(
     @Param('id', ParseIntPipe) actionId: string,
     @Req() req: any,

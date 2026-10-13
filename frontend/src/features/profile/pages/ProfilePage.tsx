@@ -19,7 +19,7 @@ import { useAuth } from '@/features/auth/hooks/useAuth';
 import { isApiError } from '@/shared/api';
 
 export const ProfilePage: React.FC = () => {
-  const { logout } = useAuth();
+  const { signOut } = useAuth();
   const { profile, isLoading, error, setProfile } = useProfile();
   const [activeTab, setActiveTab] = useState<ProfileTabId>('overview');
   const [isEditing, setIsEditing] = useState(false);
@@ -210,7 +210,7 @@ export const ProfilePage: React.FC = () => {
   const handleDeactivate = async () => {
     await deactivateAccount();
     try {
-      await logout();
+      await signOut();
     } catch {
       // Ignorar fallo de sesión ya revocada en el backend
     } finally {

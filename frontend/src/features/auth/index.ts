@@ -9,3 +9,5 @@ export { useAuth } from './hooks/useAuth';
 export { AUTH_ROUTES } from './routes';
 export { ROLE_APP, ACCOUNT_STATUS } from './types';
 export type { AuthUser, AuthStatus, RoleApp, AccountStatus } from './types';
+export { AccountSuspendedPage } from './pages/AccountSuspendedPage';
+export { RequireActiveAccount } from './components/RequireActiveAccount';

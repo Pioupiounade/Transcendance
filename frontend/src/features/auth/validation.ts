@@ -15,12 +15,19 @@ export const validateEmail = (value: string): string | null => {
   return null;
 };
 
-/** Connexion : on ne juge pas un mot de passe existant, il doit juste être saisi. */
+/** Connexion : même contrainte de longueur que le DTO backend. */
 export const validatePassword = (value: string): string | null => {
   if (value === '') return t.passwordRequired;
-  if (value.length < PASSWORD_MIN_LENGTH) return t.passwordTooShort(PASSWORD_MIN_LENGTH, PASSWORD_MIN_LENGTH - value.length);
+
+  if (value.length < PASSWORD_MIN_LENGTH) {
+    return t.passwordTooShort(
+      PASSWORD_MIN_LENGTH,
+      PASSWORD_MIN_LENGTH - value.length,
+    );
+  }
+
   return null;
-}
+};
 
 /** Inscription : la règle du DTO, expliquée. */
 export const validateNewPassword = (value: string): string | null => {

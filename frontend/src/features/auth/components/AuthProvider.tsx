@@ -1,6 +1,13 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { session } from '@/shared/api';
-import { getMe, login, logout, register, type AuthResponse, type Credentials } from '../api/authApi';
+import {
+  getMe,
+  login,
+  logout,
+  register,
+  type AuthSuccessResponse,
+  type Credentials,
+} from '../api/authApi';
 import { AuthContext, type AuthState } from '../hooks/authContext';
 import type { AuthStatus, AuthUser } from '../types';
 
@@ -34,15 +41,37 @@ export function AuthProvider({ children }: AuthProviderProps) {
   useEffect(() => session.onExpire(() => setSnapshot(ANONYMOUS)), []);
 
   // Login et register renvoient la même chose : tokens + utilisateur.
-  const open = useCallback((response: AuthResponse) => {
-    const { user, ...tokens } = response;
+ const open = useCallback((response: AuthSuccessResponse) => {
+  const { success: _success, user, ...tokens } = response;
     session.set(tokens, user.user_id);
     setSnapshot({ status: 'authenticated', user });
   }, []);
 
-  const signIn = useCallback(async (credentials: Credentials) => open(await login(credentials)), [open]);
-  const signUp = useCallback(async (credentials: Credentials) => open(await register(credentials)), [open]);
+  const signIn = useCallback(
+    async (credentials: Credentials) => {
+      const response = await login(credentials);
 
+      if (!response.success) {
+        throw response;
+      }
+
+      open(response);
+    },
+    [open],
+  );
+
+  const signUp = useCallback(
+    async (credentials: Credentials) => {
+      const response = await register(credentials);
+
+      if (!response.success) {
+        throw response;
+      }
+
+      open(response);
+    },
+    [open],
+  );
   const signOut = useCallback(async () => {
     try {
       await logout();

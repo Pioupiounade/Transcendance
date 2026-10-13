@@ -152,7 +152,7 @@ export function OrganizationConstellation({ organizations, center, you, organiza
   };
 
   return (
-    <div className={styles.constellation} aria-hidden="true">
+    <div className={styles.constellation}>
       <div ref={frameRef} className={styles.frame}>
         {frame && geometry && (
           <svg className={styles.canvas} width={frame.width} height={frame.height} viewBox={`0 0 ${frame.width} ${frame.height}`}>

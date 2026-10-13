@@ -266,7 +266,7 @@ export class ParticipationsService {
       throw new NotFoundException('Action not found');
     }
 
-    if ( action.status !== ActionStatus.PENDING && action.status !== ActionStatus.APPROVED &&
+    if ( action.status !== ActionStatus.PENDING && action.status !== ActionStatus.APPROVED && action.status !== ActionStatus.CANCELLED &&
       action.status !== ActionStatus.COMPLETED) {
       throw new BadRequestException('Participants are not available for this action status');
     }

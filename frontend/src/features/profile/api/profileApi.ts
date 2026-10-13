@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { http } from '@/shared/api';
 import { friendsApi } from '@/features/friends/api/friendsApi';
-import { isApiError } from '@/shared/api';
 import type {
   PublicProfile,
   InterestCategory,
@@ -75,20 +74,54 @@ type ApiPublicProfile = {
   isPrivate?: boolean;
 };
 
-export async function getPublicProfile(userId: string): Promise<PublicProfile> {
-  const data = await http.get<ApiPublicProfile>(
-    `/profiles/${encodeURIComponent(userId)}`,
-  );
+type ApiUnavailablePublicProfile = {
+  available: false;
+  reason: 'ACCOUNT_DEACTIVATED' | 'ACCOUNT_SUSPENDED';
+  user_id: string;
+};
+
+export type UnavailablePublicProfile = {
+  available: false;
+  reason: 'ACCOUNT_DEACTIVATED' | 'ACCOUNT_SUSPENDED';
+  userId: string;
+};
+
+export type PublicProfileResult =
+  | PublicProfile
+  | UnavailablePublicProfile;
+
+export function isUnavailablePublicProfile(
+  data: PublicProfileResult,
+): data is UnavailablePublicProfile {
+  return 'available' in data && data.available === false;
+}
+
+export async function getPublicProfile(
+  userId: string,
+): Promise<PublicProfileResult> {
+    const data = await http.get<
+    ApiPublicProfile | ApiUnavailablePublicProfile
+  >(`/profiles/${encodeURIComponent(userId)}`);
+
+  if ('available' in data && data.available === false) {
+    return {
+      available: false,
+      reason: data.reason,
+      userId: data.user_id,
+    };
+  }
+
+  const profile = data as ApiPublicProfile;
 
   return {
-    userId: data.user_id,
-    username: data.username,
-    description: data.description,
-    profilePicture: data.profile_picture,
-    commune: data.commune,
-    interests: data.interests,
-    visibility: data.visibility,
-    isPrivate: data.isPrivate,
+    userId: profile.user_id,
+    username: profile.username,
+    description: profile.description,
+    profilePicture: profile.profile_picture,
+    commune: profile.commune,
+    interests: profile.interests,
+    visibility: profile.visibility,
+    isPrivate: profile.isPrivate,
   };
 }
 
@@ -269,36 +302,42 @@ export function useProfile(userId?: string) {
     setError(null);
 
     if (userId) {
-  getPublicProfile(userId)
-      .then((data) => {
-        if (!isMounted) return;
-        setUserProfileState(data, setProfile);
-      })
-      .catch((err) => {
-        if (isMounted) {
-          setError(err as Error);
-          setProfile(null);
-        }
-      })
-      .finally(() => {
-        if (isMounted) setIsLoading(false);
-      });
-  } else {
-    getProfile()
-      .then((data) => {
-        if (!isMounted) return;
-        setProfile(data);
-      })
-      .catch((err) => {
-        if (isMounted) {
-          setError(err as Error);
-          setProfile(null);
-        }
-      })
-      .finally(() => {
-        if (isMounted) setIsLoading(false);
-      });
-  }
+      getPublicProfile(userId)
+        .then((data) => {
+          if (!isMounted) return;
+
+          if (isUnavailablePublicProfile(data)) {
+            setProfile(null);
+            return;
+          }
+
+          setUserProfileState(data, setProfile);
+        })
+        .catch((err) => {
+          if (isMounted) {
+            setError(err as Error);
+            setProfile(null);
+          }
+        })
+        .finally(() => {
+          if (isMounted) setIsLoading(false);
+        });
+    } else {
+      getProfile()
+        .then((data) => {
+          if (!isMounted) return;
+          setProfile(data);
+        })
+        .catch((err) => {
+          if (isMounted) {
+            setError(err as Error);
+            setProfile(null);
+          }
+        })
+        .finally(() => {
+          if (isMounted) setIsLoading(false);
+        });
+    }
 
     return () => {
       isMounted = false;

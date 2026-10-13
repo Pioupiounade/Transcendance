@@ -49,8 +49,24 @@ export class ProfilesService {
       },
     });
 
-    if (!profile || profile.user.account_status !== AccountStatus.ACTIVE) {
+    if (!profile) {
       throw new NotFoundException('Profile not found');
+    }
+
+    if (profile.user.account_status === AccountStatus.DEACTIVATED) {
+      return {
+        available: false as const,
+        reason: 'ACCOUNT_DEACTIVATED' as const,
+        user_id: profile.user_id.toString(),
+      };
+    }
+
+    if (profile.user.account_status === AccountStatus.SUSPENDED) {
+      return {
+        available: false as const,
+        reason: 'ACCOUNT_SUSPENDED' as const,
+        user_id: profile.user_id.toString(),
+      };
     }
 
     const isOwner = profile.user_id.toString() === viewerId;
@@ -100,7 +116,13 @@ export class ProfilesService {
         });
 
         if (!friendship) {
-          throw new NotFoundException('Profile not found');
+          return {
+            user_id: profile.user_id.toString(),
+            username: profile.username,
+            profile_picture: profile.profile_picture ?? null,
+            visibility: ProfileVisibility.FRIENDS_ONLY,
+            isPrivate: true,
+          };
         }
       }
     }
