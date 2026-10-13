@@ -8,7 +8,7 @@ import { NotificationType } from '../../generated/prisma/client';
 export class NotificationsController {
   constructor(
     private readonly notificationsService: NotificationsService,
-  ) {}
+  ) { }
 
   @Get('me')
   findMine(@Req() req: any) {
