@@ -1,10 +1,13 @@
-import { Injectable, ForbiddenException } from '@nestjs/common';
+import { Injectable, ForbiddenException, Logger } from '@nestjs/common';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { CreateDirectMessageDto } from './dto/create-message.dto';
 
 @Injectable()
 export class DirectMessagesService {
+	private readonly logger = new Logger(DirectMessagesService.name);
+
 	constructor(
 		private prisma: PrismaService,
 		private notifications: NotificationsService
@@ -120,5 +123,30 @@ export class DirectMessagesService {
 		});
 
 		return messages;
+	}
+
+	// Cron job to delete messages older than 60 days
+	@Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
+	async purgeOldMessages() {
+		this.logger.log('Purging old direct messages...');
+
+		const sixtyDaysAgo = new Date();
+		sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
+
+		try {
+			const result = await this.prisma.directMessage.deleteMany({
+				where: {
+					created_at: { lt: sixtyDaysAgo }
+				},
+			});
+
+			if (result.count > 0) {
+				this.logger.log(`Purged ${result.count} old direct messages.`);
+			} else {
+				this.logger.log('No old direct messages to purge.');
+			}
+		} catch (error) {
+			this.logger.error('Error occurred while purging old direct messages:', error);
+		}
 	}
 }

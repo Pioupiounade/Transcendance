@@ -4,6 +4,8 @@ import { join } from 'path';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { ScheduleModule } from '@nestjs/schedule';
 import { UsersModule } from './users/users.module';
 import { OrganizationsModule } from './organizations/organizations.module';
 import { ActionsModule } from './actions/actions.module';
@@ -15,7 +17,6 @@ import { ParticipationsModule } from './participations/participations.module';
 import { OrganizationmembersModule } from './organizationmembers/organizationmembers.module';
 import { PointtransactionModule } from './pointtransaction/pointtransaction.module';
 import { AuthModule } from "./auth/auth.module";
-import { ServeStaticModule } from '@nestjs/serve-static';
 import { NotificationsModule } from './notifications/notifications.module';
 import { DirectMessagesModule } from './directmessages/directmessages.module';
 
@@ -29,6 +30,7 @@ import { DirectMessagesModule } from './directmessages/directmessages.module';
       serveRoot: '/static',
     }),
     PrismaModule,
+    ScheduleModule.forRoot(),
     UsersModule,
     OrganizationsModule,
     ActionsModule,
