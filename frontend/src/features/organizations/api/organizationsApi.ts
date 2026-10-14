@@ -5,6 +5,8 @@ import type {
   Organization,
   OrganizationComment,
   OrganizationMember,
+  MemberStatus,
+  RoleOrg,
 } from '../types';
 
 /** Toutes les organisations, tous statuts (docs/api_contract.md §12). */
@@ -21,6 +23,17 @@ export const fetchOrganization = (id: string, signal?: AbortSignal) =>
 /** Membres actifs (comptes actifs) d'une organisation, route publique (§13). */
 export const fetchOrganizationMembers = (id: string, signal?: AbortSignal) =>
   http.list<OrganizationMember>(`/organization-members/organization/${id}/members`, { signal });
+
+export type MyOrganizationMembership = {
+  status: MemberStatus;
+  role: RoleOrg;
+};
+
+export const fetchMyOrganizationMembership = (id: string, signal?: AbortSignal) =>
+  http.get<MyOrganizationMembership | null>(
+    `/organization-members/organization/${id}/me`,
+    { signal },
+  );
 
 /**
  * Demande d'adhésion (JWT) : crée une adhésion `PENDING`, à valider par un gestionnaire. 409 = demande déjà en

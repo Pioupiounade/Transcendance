@@ -4,7 +4,15 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
 import * as argon2 from 'argon2';
-import { AccountStatus, Prisma, RoleApp } from '../../generated/prisma/client';
+import {
+  AccountStatus,
+  ActionStatus,
+  Prisma,
+  RoleApp,
+  MemberStatus,
+  RoleOrg,
+  OrganizationStatus,
+} from '../../generated/prisma/client';
 import { PointtransactionService } from '../pointtransaction/pointtransaction.service';
 
 @Injectable()
@@ -182,18 +190,89 @@ export class UsersService {
 
 //6. desactiver un utilisateur
   async deactivate(id: string) {
-    const user = await this.prisma.user.update({
-      where: {
-        user_id: BigInt(id),
-      },
-      data: {
-        account_status: AccountStatus.DEACTIVATED,
-      },
+    const userId = BigInt(id);
+
+    const user = await this.prisma.$transaction(async (tx) => {
+      const existingUser = await tx.user.findUnique({
+        where: { user_id: userId },
+      });
+
+      if (!existingUser) {
+        throw new NotFoundException('User not found');
+      }
+
+      const ownedActiveOrganization = await tx.organizationMember.findFirst({
+        where: {
+          user_id: userId,
+          role: RoleOrg.OWNER,
+          status: MemberStatus.ACTIVE,
+          organization: {
+            organization_status: OrganizationStatus.ACTIVE,
+          },
+        },
+      });
+
+      if (ownedActiveOrganization) {
+        throw new BadRequestException(
+          'Transfer organization ownership before deactivating your account',
+        );
+      }
+
+      await tx.organizationMember.deleteMany({
+        where: {
+          user_id: userId,
+          status: MemberStatus.ACTIVE,
+          role: {
+            in: [RoleOrg.MEMBER, RoleOrg.MANAGER],
+          },
+        },
+      });
+      // 1. Retirer l'utilisateur des actions encore ouvertes
+      await tx.participation.deleteMany({
+        where: {
+          user_id: userId,
+          action: {
+            status: {
+              in: [
+                ActionStatus.PENDING,
+                ActionStatus.APPROVED,
+              ],
+            },
+          },
+        },
+      });
+
+      // 2. Annuler les actions encore ouvertes qu'il a créées
+      await tx.action.updateMany({
+        where: {
+          creator_id: userId,
+          status: {
+            in: [
+              ActionStatus.PENDING,
+              ActionStatus.APPROVED,
+            ],
+          },
+        },
+        data: {
+          status: ActionStatus.CANCELLED,
+        },
+      });
+
+      // 3. Désactiver le compte
+      return tx.user.update({
+        where: {
+          user_id: userId,
+        },
+        data: {
+          account_status: AccountStatus.DEACTIVATED,
+          refresh_token: null,
+        },
+      });
     });
 
     const {
-      password_hash,
-      refresh_token,
+      password_hash: _,
+      refresh_token: __,
       ...safeUser
     } = user;
 
@@ -201,7 +280,7 @@ export class UsersService {
       ...safeUser,
       user_id: safeUser.user_id.toString(),
     };
-}
+  }
 
 //7. suspendre un utilisateur
   async suspend(targetUserId: string, currentUserId: string) {

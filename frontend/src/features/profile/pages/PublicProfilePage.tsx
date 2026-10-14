@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useParams, Navigate } from 'react-router';
 import { useAuth } from '@/features/auth';
-import { getPublicProfile } from '../api/profileApi';
+import {
+  getPublicProfile,
+  isUnavailablePublicProfile,
+} from '../api/profileApi';
 import { ProfileView } from '../components/ProfileView';
 import type { FriendshipStatus, InterestCategory, UserProfile } from '../types';
 import { friendsApi } from '@/features/friends/api/friendsApi';
-import { http } from '@/shared/api';
 
 export function PublicProfilePage() {
   const { userId } = useParams<{ userId: string }>();
@@ -18,8 +20,13 @@ export function PublicProfilePage() {
   const [isPrivate, setIsPrivate] = useState(false);
   const [error, setError] = useState(false);
 
+  const [unavailableReason, setUnavailableReason] = useState<
+    'ACCOUNT_DEACTIVATED' | 'ACCOUNT_SUSPENDED' | null
+  >(null);
+
   useEffect(() => {
     let active = true;
+    setUnavailableReason(null);
     setIsLoading(true);
     setError(false);
     setIsPrivate(false);
@@ -34,62 +41,27 @@ export function PublicProfilePage() {
 
     async function loadData() {
       try {
-        const targetId = String(userId);
-
-        const profilePromise = getPublicProfile(userId!);
-        const relationsPromise = currentUserId
-          ? Promise.all([
-              http.get<any[]>('/friendships/me').catch(() => []),
-              http.get<any[]>('/friend-requests/sentRequests').catch(() => []),
-              http.get<any[]>('/friend-requests/receivedRequests').catch(() => []),
-            ])
-          : Promise.resolve([[], [], []]);
-
-        const [data, [friends, sentRequests, receivedRequests]] = await Promise.all([
-          profilePromise,
-          relationsPromise,
-        ]);
+        const [data, friends, sentRequests, receivedRequests, friendshipRelation] =
+          await Promise.all([
+            getPublicProfile(userId!),
+            friendsApi.getMyFriends(),
+            friendsApi.getSentRequests(),
+            friendsApi.getReceivedRequests(),
+            friendsApi.getFriendshipStatus(userId!),
+          ]);
 
         if (!active) return;
 
-        let resolvedStatus: FriendshipStatus = 'NONE';
-        let isFriend = false;
-
-        if (currentUserId) {
-          isFriend = friends.some((f) => {
-            const fid =
-              f.friend?.user_id ??
-              f.friend_id ??
-              f.user?.user_id ??
-              f.user_id ??
-              (String(f.user1_id) === String(currentUserId) ? f.user2_id : f.user1_id);
-            return String(fid) === targetId;
-          });
-
-          if (isFriend) {
-            resolvedStatus = 'ACCEPTED';
-          } else {
-            const isSent = sentRequests.some((r) => {
-              const aid = r.addressee_id ?? r.addressee?.user_id ?? r.addresseeId;
-              return String(aid) === targetId;
-            });
-
-            if (isSent) {
-              resolvedStatus = 'PENDING_SENT';
-            } else {
-              const isReceived = receivedRequests.some((r) => {
-                const rid = r.requester_id ?? r.requester?.user_id ?? r.requesterId;
-                return String(rid) === targetId;
-              });
-
-              if (isReceived) {
-                resolvedStatus = 'PENDING_RECEIVED';
-              }
-            }
-          }
+        if (isUnavailablePublicProfile(data)) {
+          setUnavailableReason(data.reason);
+          return;
         }
 
-        if (data.visibility === 'PRIVATE') {
+        if (
+          data.isPrivate ||
+          data.visibility === 'PRIVATE' ||
+          data.visibility === 'FRIENDS_ONLY'
+        ) {
           setIsPrivate(true);
           return;
         }
@@ -116,6 +88,13 @@ export function PublicProfilePage() {
           )
         ) {
           friendshipStatus = 'PENDING_RECEIVED';
+        } else if (
+          friends.some(
+            (friend: any) =>
+              String(friend.user_id ?? friend.friend?.user_id) === String(userId),
+          )
+        ) {
+          friendshipStatus = 'ACCEPTED';
         }
 
         // Profil public complet
@@ -157,6 +136,28 @@ export function PublicProfilePage() {
     return (
       <div style={{ textAlign: 'center', padding: '4rem 1rem' }}>
         <p className="help" style={{ justifyContent: 'center' }}>Loading profile...</p>
+      </div>
+    );
+  }
+
+  if (unavailableReason === 'ACCOUNT_DEACTIVATED') {
+    return (
+      <div style={{ textAlign: 'center', padding: '4rem 1rem' }}>
+        <h2>Profile deactivated</h2>
+        <p className="help" style={{ justifyContent: 'center' }}>
+          This account is no longer active.
+        </p>
+      </div>
+    );
+  }
+
+  if (unavailableReason === 'ACCOUNT_SUSPENDED') {
+    return (
+      <div style={{ textAlign: 'center', padding: '4rem 1rem' }}>
+        <h2>Profile unavailable</h2>
+        <p className="help" style={{ justifyContent: 'center' }}>
+          This account is currently unavailable.
+        </p>
       </div>
     );
   }

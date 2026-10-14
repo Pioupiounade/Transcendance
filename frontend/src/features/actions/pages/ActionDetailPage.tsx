@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router';
 import { useAuth } from '@/features/auth';
 import type { Organization } from '@/features/organizations';
 import { fetchActionParticipants, joinAction, leaveAction, type ActionParticipantApi } from '@/features/participations';
-import { getPublicProfile, type PublicProfile } from '@/features/profile';
+import { getPublicProfile, isUnavailablePublicProfile, type PublicProfile } from '@/features/profile';
 import { fetchActionOrganization } from '../api/actionOrganizations';
 import { approveAction, completeAction, fetchAction } from '../api/actionsApi';
 import { ActionComments } from '../components/ActionComments';
@@ -72,14 +72,36 @@ const toParticipants = (rows: ActionParticipantApi[]): ActionParticipant[] =>
 
 // Tout ce que la fiche affiche. Le profil du créateur (404 s'il est privé) et l'organisation sont facultatifs :
 // leur échec ne cache pas l'action.
-const loadDetail = async (id: string, signal: AbortSignal): Promise<Detail> => {
+const loadDetail = async (
+  id: string,
+  signal: AbortSignal,
+): Promise<Detail> => {
   const action = await fetchAction(id, signal);
-  const [participantRows, creatorProfile, organization] = await Promise.all([
-    fetchActionParticipants(id, signal),
-    getPublicProfile(action.creator_id).catch(() => null),
-    action.organization_id === null ? null : fetchActionOrganization(action.organization_id, signal).catch(() => null),
-  ]);
-  return { action, participants: toParticipants(participantRows), creatorProfile, organization };
+
+  const [participantRows, creatorProfileResult, organization] =
+    await Promise.all([
+      fetchActionParticipants(id, signal),
+      getPublicProfile(action.creator_id).catch(() => null),
+      action.organization_id === null
+        ? null
+        : fetchActionOrganization(
+            action.organization_id,
+            signal,
+          ).catch(() => null),
+    ]);
+
+  const creatorProfile =
+    creatorProfileResult &&
+    isUnavailablePublicProfile(creatorProfileResult)
+      ? null
+      : creatorProfileResult;
+
+  return {
+    action,
+    participants: toParticipants(participantRows),
+    creatorProfile,
+    organization,
+  };
 };
 
 export const ActionDetailPage: React.FC<ActionDetailPageProps> = ({ editPath }) => {

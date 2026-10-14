@@ -1,4 +1,8 @@
-import { Injectable, UnauthorizedException, ForbiddenException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
@@ -16,7 +20,23 @@ export class AuthService {
 	) {}
 
 	async register(data: CreateUserDto) {
-		const createdUser = await this.usersService.create(data);
+		let createdUser;
+
+		try {
+			createdUser = await this.usersService.create(data);
+		} catch (error) {
+			if (
+			error instanceof BadRequestException &&
+			error.message === 'Email is already used'
+			) {
+			return {
+				success: false as const,
+				reason: 'EMAIL_TAKEN' as const,
+			};
+			}
+
+			throw error;
+		}
 		
 		// Create both Token and Refresh Token
 		const tokens = await this.generateTokenPair(
@@ -32,6 +52,7 @@ export class AuthService {
 		const { refresh_token, ...safeUser } = user;
 
 		return {
+			success: true as const,
 			user: safeUser,
 			...tokens,
 		};
@@ -39,22 +60,28 @@ export class AuthService {
 
 	async login(email: string, password: string) {
 		const user = await this.usersService.findOneByEmail(email);
+
 		if (!user) {
-			throw new UnauthorizedException('Invalid credentials');
+			return {
+			success: false as const,
+			reason: 'INVALID_CREDENTIALS' as const,
+			};
 		}
 
 		const isPasswordValid = await argon2.verify(user.password_hash, password);
-		if (!isPasswordValid) {
-			throw new UnauthorizedException('Invalid credentials');
-		}
 
-		// Verify if the user is suspended or deactivated
-		if (user.account_status === 'SUSPENDED') {
-			throw new ForbiddenException('User account is suspended');
+		if (!isPasswordValid) {
+			return {
+			success: false as const,
+			reason: 'INVALID_CREDENTIALS' as const,
+			};
 		}
 
 		if (user.account_status === 'DEACTIVATED') {
-			throw new ForbiddenException('User account is deactivated');
+			return {
+				success: false as const,
+				reason: 'ACCOUNT_DISABLED' as const,
+			};
 		}
 
 		const tokens = await this.generateTokenPair(
@@ -68,9 +95,10 @@ export class AuthService {
 		const { password_hash, refresh_token, ...userWithoutPassword } = user;
 
 		return {
+			success: true as const,
 			user: {
-				...userWithoutPassword,
-				user_id: user.user_id.toString(),
+			...userWithoutPassword,
+			user_id: user.user_id.toString(),
 			},
 			...tokens,
 		};

@@ -2,12 +2,13 @@ import { Body, Controller, Delete, Get, Patch, Query, Param, Req, UseGuards } fr
 import { FriendRequestsService } from './friend-requests.service';
 import { SendFriendRequestDto } from './dto/send-friend-request.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth-guard';
+import { RequireProfileGuard } from '../auth/guards/require-profile.guard';
 
 @Controller('friend-requests')
 export class FriendRequestsController {
     constructor(private friendRequestsService: FriendRequestsService) { }
 
-    @UseGuards(JwtAuthGuard)
+    @UseGuards(JwtAuthGuard, RequireProfileGuard)
     @Patch('me/send')
     sendFriendRequest(
         @Req() req: any,
@@ -19,7 +20,7 @@ export class FriendRequestsController {
         );
     }
 
-    @UseGuards(JwtAuthGuard)
+    @UseGuards(JwtAuthGuard, RequireProfileGuard)
     @Patch(':requestId/accept')
     acceptFriendRequest(
         @Req() req: any,
@@ -31,7 +32,7 @@ export class FriendRequestsController {
         );
     }
 
-    @UseGuards(JwtAuthGuard)
+    @UseGuards(JwtAuthGuard, RequireProfileGuard)
     @Patch(':requestId/reject')
     rejectFriendRequest(
         @Req() req: any,

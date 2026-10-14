@@ -4,6 +4,7 @@ import { CreateOrganizationDto } from './dto/create-organization.dto';
 import { UpdateOrganizationDto } from './dto/update-organization.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth-guard';
 import { OrganizationCommentDto } from './dto/organization-comments.dto';
+import { RequireProfileGuard } from '../auth/guards/require-profile.guard';
 
 @Controller('organizations')
 export class OrganizationsController {
@@ -43,7 +44,7 @@ export class OrganizationsController {
     return this.organizationsService.findOne(id);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RequireProfileGuard)
   @Post()
   create(
     @Req() req: any,
@@ -107,7 +108,7 @@ export class OrganizationsController {
 
   // Endpoint for Comments
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RequireProfileGuard)
   @Post(':id/comments')
   addComment(
     @Req() req: any,

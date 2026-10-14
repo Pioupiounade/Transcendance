@@ -22,6 +22,7 @@ export const AUTH_LABELS = {
     disabled: 'Your account has been disabled.',
     //suspended: 'Your account has been suspended.',
     unknown: 'Something went wrong on our side. Please try again.',
+    accountDisabled: 'This account has been disabled.',
   },
   login: {
     title: 'Good to see you again.',

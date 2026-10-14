@@ -1,12 +1,11 @@
 import { createBrowserRouter, Navigate, RouterProvider } from 'react-router';
-import { LoginPage, RegisterPage, RequireAuth, RequireRole, ROLE_APP } from '@/features/auth';
+import { LoginPage, RegisterPage, RequireAuth, RequireRole, ROLE_APP, RequireActiveAccount, AccountSuspendedPage } from '@/features/auth';
 import { APP_LABELS } from './labels';
 import { lazyPage } from './lazyPage';
 import { PageShell } from './layout/PageShell';
 import { HomePage } from './pages/home/HomePage';
 import { LegalPage } from './pages/LegalPage';
 import { NotFoundPage } from './pages/NotFoundPage';
-
 import { ActionsListPage } from '@/features/actions';
 import {
   ROUTES,
@@ -16,8 +15,11 @@ import {
   organizationManagePath,
   organizationPath,
 } from './routes';
-import { ProfilePage, PublicProfilePage } from '../features/profile';
-
+import {
+  ProfilePage,
+  PublicProfilePage,
+  RequireProfile,
+} from '../features/profile';
 
 // Routes en données. Une page = une ligne ; les pages de feature sont chargées
 // paresseusement (un chunk par feature), `PageShell` fournit le Suspense.
@@ -44,65 +46,141 @@ const router = createBrowserRouter([
     path: ROUTES.home,
     element: <PageShell />,
     children: [
-      { index: true, element: <HomePage /> },
-      { path: ROUTES.actions, element: <ActionsListPage /> },
-      { path: ROUTES.map, element: <MapPage editPath={editActionPath} /> },
+      // Routes toujours accessibles
+      { path: ROUTES.login, element: <LoginPage /> },
       {
-        path: ROUTES.organizations,
-        element: <OrganizationsPage organizationPath={organizationPath} createPath={ROUTES.createOrganization} />,
-      },
-      {
-        path: ROUTES.organization,
+        path: ROUTES.register,
         element: (
-          <OrganizationPage
-            listPath={ROUTES.organizations}
-            upcomingActionPath={mapFocusPath}
-            managePath={organizationManagePath}
+          <RegisterPage
+            termsPath={ROUTES.terms}
+            privacyPath={ROUTES.privacy}
           />
         ),
       },
-      { path: ROUTES.login, element: <LoginPage /> },
-      { path: ROUTES.register, element: <RegisterPage termsPath={ROUTES.terms} privacyPath={ROUTES.privacy} /> },
       { path: ROUTES.terms, element: <LegalPage title={APP_LABELS.pages.terms.title} /> },
       { path: ROUTES.privacy, element: <LegalPage title={APP_LABELS.pages.privacy.title} /> },
-      { path: ROUTES.actionDetail, element: <ActionDetailPage editPath={editActionPath} /> },
-      { path: ROUTES.profileDetail, element: <ProfilePage /> },
-      { path: ROUTES.publicProfile, element: <PublicProfilePage /> },
+      {
+        path: '/account-suspended',
+        element: <AccountSuspendedPage />,
+      },
+      // Profil personnel : accessible dès que connecté,
+      // même si le profil n'existe pas encore.
       {
         element: <RequireAuth />,
         children: [
-          { path: ROUTES.profile, element: <ProfilePage /> },
-          { path: ROUTES.friends, element: <FriendsPage /> },
-          { path: ROUTES.createAction, element: <CreateActionPage mapPath={ROUTES.map} /> },
-          { path: ROUTES.editAction, element: <EditActionPage mapPath={ROUTES.map} /> },
           {
-            path: ROUTES.createOrganization,
-            element: <CreateOrganizationPage organizationPath={organizationPath} listPath={ROUTES.organizations} />,
-          },
-          {
-            path: ROUTES.organizationManage,
-            element: <OrganizationManagePage organizationPath={organizationPath} />,
-          },
-          {
-            // Espace d'administration : un non-admin voit la page 404, l'espace n'est pas annoncé.
-            element: <RequireRole role={ROLE_APP.ADMIN} denied={<NotFoundPage />} />,
+            element: <RequireActiveAccount />,
             children: [
+              { path: ROUTES.profile, element: <ProfilePage /> },
+            ],
+          },
+        ],
+      },
+      // Tout le reste nécessite un profil créé
+  {
+    element: <RequireActiveAccount />,
+    children: [
+      {
+        element: <RequireProfile />,
+        children: [
+          { index: true, element: <HomePage /> },
+          { path: ROUTES.actions, element: <ActionsListPage /> },
+          { path: ROUTES.map, element: <MapPage editPath={editActionPath} /> },
+
+          {
+            path: ROUTES.organizations,
+            element: (
+              <OrganizationsPage
+                organizationPath={organizationPath}
+                createPath={ROUTES.createOrganization}
+              />
+            ),
+          },
+
+          {
+            path: ROUTES.organization,
+            element: (
+              <OrganizationPage
+                listPath={ROUTES.organizations}
+                upcomingActionPath={mapFocusPath}
+                managePath={organizationManagePath}
+              />
+            ),
+          },
+
+          { path: ROUTES.actionDetail, element: <ActionDetailPage editPath={editActionPath} /> },
+          { path: ROUTES.profileDetail, element: <ProfilePage /> },
+          { path: ROUTES.publicProfile, element: <PublicProfilePage /> },
+
+          {
+            element: <RequireAuth />,
+            children: [
+              { path: ROUTES.friends, element: <FriendsPage /> },
+              { path: ROUTES.createAction, element: <CreateActionPage mapPath={ROUTES.map} /> },
+              { path: ROUTES.editAction, element: <EditActionPage mapPath={ROUTES.map} /> },
+
               {
-                path: ROUTES.admin,
+                path: ROUTES.createOrganization,
                 element: (
-                  <AdminLayout
-                    usersPath={ROUTES.adminUsers}
-                    actionsPath={ROUTES.adminActions}
-                    organizationsPath={ROUTES.adminOrganizations}
+                  <CreateOrganizationPage
+                    organizationPath={organizationPath}
+                    listPath={ROUTES.organizations}
+                  />
+                ),
+              },
+
+              {
+                path: ROUTES.organizationManage,
+                element: (
+                  <OrganizationManagePage
+                    organizationPath={organizationPath}
+                  />
+                ),
+              },
+
+              {
+                element: (
+                  <RequireRole
+                    role={ROLE_APP.ADMIN}
+                    denied={<NotFoundPage />}
                   />
                 ),
                 children: [
-                  { index: true, element: <Navigate to={ROUTES.adminUsers} replace /> },
-                  { path: ROUTES.adminUsers, element: <AdminUsersPage /> },
-                  { path: ROUTES.adminActions, element: <AdminActionsPage actionPath={actionDetailPath} /> },
                   {
-                    path: ROUTES.adminOrganizations,
-                    element: <AdminOrganizationsPage organizationPath={organizationPath} />,
+                    path: ROUTES.admin,
+                    element: (
+                      <AdminLayout
+                        usersPath={ROUTES.adminUsers}
+                        actionsPath={ROUTES.adminActions}
+                        organizationsPath={ROUTES.adminOrganizations}
+                      />
+                    ),
+                    children: [
+                      {
+                        index: true,
+                        element: <Navigate to={ROUTES.adminUsers} replace />,
+                      },
+                      {
+                        path: ROUTES.adminUsers,
+                        element: <AdminUsersPage />,
+                      },
+                      {
+                        path: ROUTES.adminActions,
+                        element: (
+                          <AdminActionsPage
+                            actionPath={actionDetailPath}
+                          />
+                        ),
+                      },
+                      {
+                        path: ROUTES.adminOrganizations,
+                        element: (
+                          <AdminOrganizationsPage
+                            organizationPath={organizationPath}
+                          />
+                        ),
+                      },
+                    ],
                   },
                 ],
               },
@@ -110,6 +188,8 @@ const router = createBrowserRouter([
           },
         ],
       },
+    ],
+  },
       { path: '*', element: <NotFoundPage /> },
     ],
   },

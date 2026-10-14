@@ -5,13 +5,16 @@ import { Button, ButtonLink, Icon } from '@/shared/ui';
 import { joinOrganization } from '../api/organizationsApi';
 import { toJoinFailure, type JoinFailure } from '../errors';
 import { ORGANIZATIONS_LABELS } from '../labels';
-import type { RoleOrg } from '../types';
+import type { MemberStatus, RoleOrg } from '../types';
 import styles from './MembershipStatus.module.css';
 
 type MembershipStatusProps = {
   organizationId: string;
-  /** Mon rôle si je suis membre actif ; `null` sinon (visiteur, non-membre, demande en attente : indistincts). */
   role: RoleOrg | null;
+  membership: {
+    status: MemberStatus;
+    role: RoleOrg;
+  } | null;
 };
 
 type Request = { state: 'idle' | 'sending' | 'sent' } | JoinFailure;
@@ -23,10 +26,19 @@ const text = ORGANIZATIONS_LABELS.membership;
  * Le backend ne laisse pas un demandeur lire sa demande : après un rechargement le bouton revient, et c'est la
  * réponse au second clic (409) qui dit « en attente », « refusée » ou « déjà membre ».
  */
-export function MembershipStatus({ organizationId, role }: MembershipStatusProps) {
+export function MembershipStatus({ organizationId, role, membership }: MembershipStatusProps) {
   const { status } = useAuth();
   const location = useLocation();
   const [request, setRequest] = useState<Request>({ state: 'idle' });
+
+  if (membership?.status === 'PENDING') {
+    return (
+      <p className={styles.note} role="status">
+        <Icon name="check" size={16} strokeWidth={2.4} />
+        {text.sent}
+      </p>
+    );
+  }
 
   if (role) {
     return (
