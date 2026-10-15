@@ -59,8 +59,7 @@ export function PublicProfilePage() {
 
         if (
           data.isPrivate ||
-          data.visibility === 'PRIVATE' ||
-          data.visibility === 'FRIENDS_ONLY'
+          data.visibility === 'PRIVATE'
         ) {
           setIsPrivate(true);
           return;
