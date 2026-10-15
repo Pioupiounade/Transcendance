@@ -108,8 +108,8 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({
       return;
     }
 
-    if (file.size > 2 * 1024 * 1024) {
-      setAvatarError('Image exceeds the 2 MB limit.');
+    if (file.size > 5 * 1024 * 1024) {
+      setAvatarError('Image exceeds the 5 MB limit.');
       return;
     }
 

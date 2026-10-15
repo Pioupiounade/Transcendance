@@ -22,6 +22,8 @@ import { UpdateProfileDto } from './dto/update-profile.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth-guard';
 import { createStorageOptions } from '../common/multer.config';
 import { DeleteFileOnErrorInterceptor } from '../common/interceptor';
+import * as path from 'path';
+import * as fs from 'fs';
 
 @Controller('profiles')
 export class ProfilesController {
@@ -75,9 +77,7 @@ export class ProfilesController {
 
   @Patch('me/avatar')
   @UseGuards(JwtAuthGuard)
-  @UseInterceptors(FileInterceptor('file', createStorageOptions('avatars')),
-    DeleteFileOnErrorInterceptor
-  )
+  @UseInterceptors(FileInterceptor('file', createStorageOptions('avatars')), DeleteFileOnErrorInterceptor)
   async uploadAvatar(
     @Req() req: any,
     @UploadedFile(
@@ -94,9 +94,25 @@ export class ProfilesController {
       throw new BadRequestException('User ID not found in request');
     }
 
+    const existingProfile = await this.profilesService.findOne(String(userId));
+    let oldAvatarPath: string | null = null;
+    if (existingProfile && existingProfile.profile_picture) {
+      oldAvatarPath = existingProfile.profile_picture;
+    }
+
     const avatarUrl = `/static/avatars/${processedFilename}`;
-    return this.profilesService.updateProfile(String(userId), {
+    const updatedProfile = await this.profilesService.updateProfile(String(userId), {
       profile_picture: avatarUrl,
     });
+
+    // Remove old avatar if it exists
+    if (oldAvatarPath && oldAvatarPath.startsWith('/static/avatars/')) {
+      const relativePath = oldAvatarPath.replace('/static/', '');
+      const absolutePath = path.join(process.cwd(), 'uploads', relativePath);
+      
+      await fs.promises.unlink(absolutePath).catch(() => {
+        // Silent
+      });
+    }
   }
 }
