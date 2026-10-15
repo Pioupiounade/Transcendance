@@ -20,7 +20,7 @@ export class WebpCompressorPipe implements PipeTransform<Express.Multer.File, Pr
       throw new BadRequestException('File is required');
     }
 
-    const input = file.path || file.buffer;
+    const inputBuffer = file.buffer ?? (await fs.readFile(file.path));
 
     // Nom du fichier avec extension .webp
     const baseName = path.parse(file.filename).name;
@@ -29,7 +29,7 @@ export class WebpCompressorPipe implements PipeTransform<Express.Multer.File, Pr
 
     try {
       // Conservation de la résolution d'origine + conversion en WebP
-      await sharp(input)
+      await sharp(inputBuffer)
         .webp({ quality: this.quality })
         .toFile(outputPath);
 
@@ -40,6 +40,9 @@ export class WebpCompressorPipe implements PipeTransform<Express.Multer.File, Pr
 
       return webpFilename;
     } catch (error) {
+      if (file.path) {
+        await fs.unlink(file.path).catch(() => {});
+      }
       throw new BadRequestException('Failed to process and compress image');
     }
   }
