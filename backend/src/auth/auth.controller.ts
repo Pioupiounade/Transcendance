@@ -25,7 +25,7 @@ export class AuthController {
 	@Post('logout')
 	logout(@Req() req: Request) {
 		const user = (req as any).user;
-		return this.authService.logout(user.id);
+		return this.authService.logout(user.id, user.sessionId);
 	}
 
 	@UseGuards(JwtRefreshGuard)
@@ -33,7 +33,11 @@ export class AuthController {
 	@Post('refresh')
 	refreshTokens(@Req() req: Request) {
 		const user = (req as any).user;
-		return this.authService.refreshTokens(user.id, user.refreshToken);
+		return this.authService.refreshTokens(
+			user.id,
+			user.sessionId,
+			user.refreshToken,
+		);
 	}
 
 	@UseGuards(JwtAuthGuard)

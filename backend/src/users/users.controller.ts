@@ -20,6 +20,12 @@ export class UsersController {
     return this.usersService.findOneSafe(req.user.id);
   }
 
+  @UseGuards(JwtAuthGuard)
+  @Patch('me/heartbeat')
+  heartbeat(@Req() req: any) {
+    return this.usersService.updateLastSeen(req.user.id);
+  }
+  
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.usersService.findOneSafe(id);

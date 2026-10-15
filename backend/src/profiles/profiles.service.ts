@@ -4,11 +4,15 @@ import { CreateProfileDto } from './dto/create-profile.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { ProfileVisibility, AccountStatus, FriendshipStatus } from '../../generated/prisma/client';
 import { findCommune } from './find-commune';
+import { RealtimeGateway } from '../realtime/realtime.gateway';
 
 @Injectable()
 export class ProfilesService {
 
-  constructor(private prisma: PrismaService) { }
+  constructor(
+    private prisma: PrismaService,
+    private realtimeGateway: RealtimeGateway,
+  ) {}
 
   //Trouver tous les profils publics des utilisateurs actifs
   async findAll() {
@@ -41,6 +45,7 @@ export class ProfilesService {
         user: {
           select: {
             account_status: true,
+            last_seen_at: true,
             interests: {
               select: { interest: true },
             },
@@ -126,13 +131,17 @@ export class ProfilesService {
         }
       }
     }
-
     const { location, user, ...safeProfile } = profile;
+
+    const isOnline = this.realtimeGateway.isUserOnline(
+      profile.user_id.toString(),
+    );
 
     return {
       ...safeProfile,
       user_id: safeProfile.user_id.toString(),
       interests: user.interests.map(({ interest }) => interest),
+      is_online: isOnline,
     };
   }
 

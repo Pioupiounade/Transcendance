@@ -9,6 +9,7 @@ import { UsersService } from '../users/users.service';
 import { CreateUserDto } from '../users/dto/create-user.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import * as argon2 from 'argon2';
+import { randomUUID } from 'node:crypto';
 
 @Injectable()
 export class AuthService {
@@ -39,13 +40,11 @@ export class AuthService {
 		}
 		
 		// Create both Token and Refresh Token
-		const tokens = await this.generateTokenPair(
+		const tokens = await this.createSessionTokens(
 			createdUser.user_id.toString(),
 			createdUser.email,
 			createdUser.role,
 		);
-
-		await this.updateRefreshDb(tokens.refresh_token, createdUser.user_id.toString());
 
 		const user = await this.usersService.findOne(createdUser.user_id.toString());
 
@@ -84,13 +83,11 @@ export class AuthService {
 			};
 		}
 
-		const tokens = await this.generateTokenPair(
+		const tokens = await this.createSessionTokens(
 			user.user_id.toString(),
 			user.email,
 			user.role,
 		);
-
-		await this.updateRefreshDb(tokens.refresh_token, user.user_id.toString());
 
 		const { password_hash, refresh_token, ...userWithoutPassword } = user;
 
@@ -104,18 +101,44 @@ export class AuthService {
 		};
 	}
 	
-	async logout(userId: string) {
-		await this.updateRefreshDb(null, userId);
+	async logout(userId: string, sessionId: string) {
+		if (!sessionId) {
+			throw new UnauthorizedException('Invalid session');
+		}
+
+		await this.prisma.authSession.deleteMany({
+			where: {
+			session_id: sessionId,
+			user_id: BigInt(userId),
+			},
+		});
+
 		return { message: 'Logout successful' };
 	}
 
-	async refreshTokens(userId: string, refreshToken: string) {
+	async refreshTokens(
+		userId: string,
+		sessionId: string,
+		refreshToken: string,
+		) {
 		const user = await this.usersService.findOne(userId);
-		if (!user || !user.refresh_token) {
+
+		const authSession = await this.prisma.authSession.findFirst({
+			where: {
+			session_id: sessionId,
+			user_id: BigInt(userId),
+			},
+		});
+
+		if (!user || !authSession) {
 			throw new UnauthorizedException('Access Denied');
 		}
 
-		const isRefreshValid = await argon2.verify(user.refresh_token, refreshToken);
+		const isRefreshValid = await argon2.verify(
+			authSession.refresh_token_hash,
+			refreshToken,
+		);
+
 		if (!isRefreshValid) {
 			throw new UnauthorizedException('Access Denied');
 		}
@@ -124,9 +147,18 @@ export class AuthService {
 			user.user_id.toString(),
 			user.email,
 			user.role,
+			sessionId,
 		);
 
-		await this.updateRefreshDb(tokens.refresh_token, user.user_id.toString());
+		await this.prisma.authSession.update({
+			where: {
+			session_id: sessionId,
+			},
+			data: {
+			refresh_token_hash: await argon2.hash(tokens.refresh_token),
+			expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+			},
+		});
 
 		return tokens;
 	}
@@ -140,17 +172,29 @@ export class AuthService {
 	}
 
 
-	private async generateTokenPair(userId: string, email: string, role: string) {
-		const jwtPayload = { id: userId, email: email, role: role };
+	private async generateTokenPair(
+		userId: string,
+		email: string,
+		role: string,
+		sessionId: string,
+	) {
+		const jwtPayload = {
+			id: userId,
+			email,
+			role,
+			sessionId,
+		};
 
 		const [accessToken, refreshToken] = await Promise.all([
 			this.jwtService.signAsync(jwtPayload, {
-				secret: this.configService.get<string>('JWT_SECRET') || 'fallback-secret',
-				expiresIn: '15m',
+			secret: this.configService.get<string>('JWT_SECRET') || 'fallback-secret',
+			expiresIn: '15m',
 			}),
 			this.jwtService.signAsync(jwtPayload, {
-				secret: this.configService.get<string>('JWT_REFRESH_SECRET') || 'fallback-refresh-secret',
-				expiresIn: '7d',
+			secret:
+				this.configService.get<string>('JWT_REFRESH_SECRET') ||
+				'fallback-refresh-secret',
+			expiresIn: '7d',
 			}),
 		]);
 
@@ -158,6 +202,32 @@ export class AuthService {
 			access_token: accessToken,
 			refresh_token: refreshToken,
 		};
+	}
+
+	private async createSessionTokens(
+		userId: string,
+		email: string,
+		role: string,
+	) {
+		const sessionId = randomUUID();
+
+		const tokens = await this.generateTokenPair(
+			userId,
+			email,
+			role,
+			sessionId,
+		);
+
+		await this.prisma.authSession.create({
+			data: {
+			session_id: sessionId,
+			user_id: BigInt(userId),
+			refresh_token_hash: await argon2.hash(tokens.refresh_token),
+			expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+			},
+		});
+
+		return tokens;
 	}
 
 	async updateRefreshDb(refreshToken: string | null, userId: string): Promise<void> {

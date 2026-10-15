@@ -18,6 +18,11 @@ export default defineConfig(({ mode }) => {
           },
         }
       : {}),
+    '/socket.io': {
+      target: proxyTarget,
+      changeOrigin: true,
+      ws: true,
+    },
     '/static': {
       target: proxyTarget,
       changeOrigin: true,

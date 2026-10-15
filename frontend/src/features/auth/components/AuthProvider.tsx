@@ -1,3 +1,4 @@
+import { io } from 'socket.io-client';
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { session } from '@/shared/api';
 import {
@@ -39,6 +40,45 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }, []);
 
   useEffect(() => session.onExpire(() => setSnapshot(ANONYMOUS)), []);
+
+  useEffect(() => {
+    if (snapshot.status !== 'authenticated') return;
+
+    const token = session.accessToken;
+    if (!token) return;
+
+    const socket = io({
+      path: '/socket.io',
+      auth: {
+        token,
+      },
+    });
+
+    const handleOnline = ({ userId }: { userId: string }) => {
+      window.dispatchEvent(
+        new CustomEvent('presence:change', {
+          detail: { userId, isOnline: true },
+        }),
+      );
+    };
+
+    const handleOffline = ({ userId }: { userId: string }) => {
+      window.dispatchEvent(
+        new CustomEvent('presence:change', {
+          detail: { userId, isOnline: false },
+        }),
+      );
+    };
+
+    socket.on('presence:online', handleOnline);
+    socket.on('presence:offline', handleOffline);
+
+    return () => {
+      socket.off('presence:online', handleOnline);
+      socket.off('presence:offline', handleOffline);
+      socket.disconnect();
+    };
+  }, [snapshot.status]);
 
   // Login et register renvoient la même chose : tokens + utilisateur.
  const open = useCallback((response: AuthSuccessResponse) => {

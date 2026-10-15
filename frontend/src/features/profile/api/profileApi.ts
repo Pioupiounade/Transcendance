@@ -72,6 +72,7 @@ type ApiPublicProfile = {
   interests: InterestCategory[];
   visibility?: ProfileVisibility;
   isPrivate?: boolean;
+  is_online?: boolean;
 };
 
 type ApiUnavailablePublicProfile = {
@@ -122,6 +123,7 @@ export async function getPublicProfile(
     interests: profile.interests,
     visibility: profile.visibility,
     isPrivate: profile.isPrivate,
+    is_online: profile.is_online,
   };
 }
 

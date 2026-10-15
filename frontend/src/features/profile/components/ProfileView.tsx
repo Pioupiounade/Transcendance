@@ -87,6 +87,15 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
               >
                 @{profile.username}
               </h1>
+              <p
+                className="help"
+                style={{
+                  margin: '4px 0 0',
+                  fontWeight: 600,
+                }}
+              >
+                {profile.isOnline ? '● Online' : '○ Offline'}
+              </p>
               {profile.commune ? (
                 <p className="help" style={{ margin: '4px 0 0' }}>
                   {profile.commune}
