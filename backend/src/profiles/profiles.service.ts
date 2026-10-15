@@ -146,27 +146,58 @@ export class ProfilesService {
   }
 
   //Trouver un profil specifique avec le username
-  async findByUsername(query: string) {
+  async findByUsername(query: string, viewerId: string) {
+    const viewerUserId = BigInt(viewerId);
+
+    const friendships = await this.prisma.friendship.findMany({
+      where: {
+        status: FriendshipStatus.ACTIVE,
+        OR: [
+          { user1_id: viewerUserId },
+          { user2_id: viewerUserId },
+        ],
+      },
+      select: {
+        user1_id: true,
+        user2_id: true,
+      },
+    });
+
+    const friendIds = friendships.map((friendship) =>
+      friendship.user1_id === viewerUserId
+        ? friendship.user2_id
+        : friendship.user1_id,
+    );
+
     const profiles = await this.prisma.profile.findMany({
       where: {
         username: {
           contains: query,
           mode: 'insensitive',
         },
-        visibility: ProfileVisibility.PUBLIC,
         user: {
           account_status: AccountStatus.ACTIVE,
         },
+        OR: [
+          {
+            visibility: ProfileVisibility.PUBLIC,
+          },
+          {
+            visibility: ProfileVisibility.FRIENDS_ONLY,
+            user_id: {
+              in: friendIds,
+            },
+          },
+        ],
       },
       take: 15,
     });
 
-    return profiles.map(({ location, ...profile }) => ({ //retirer location de la reponse retournee par la fonction
+    return profiles.map(({ location, ...profile }) => ({
       ...profile,
       user_id: profile.user_id.toString(),
     }));
   }
-
 
   //Creer un nouveau profil
   async create(currentUserId: string, data: CreateProfileDto) {
