@@ -110,18 +110,15 @@
 
 .carousel-main {
   position: relative;
-  width: fit-content;
-  max-width: 100%;
-  border-radius: 16px;
-  overflow: hidden;
+  width: 100%;
+  height: 280px;
   margin: 10px auto;
-  background: var(--surface, #f8f5ef);
-  border: 1px solid var(--line, #e2e8f0);
 }
 
 .carousel-image {
-  max-width: 100%;
-  max-height: 320px;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
   display: block;
 }
 
@@ -247,6 +244,7 @@
   }
 
   .carousel-main {
+    height: 240px;
     margin: 0.5rem auto;
   }
 }
