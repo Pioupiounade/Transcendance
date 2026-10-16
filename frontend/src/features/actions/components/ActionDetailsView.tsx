@@ -266,7 +266,7 @@ export const ActionDetailsView: React.FC<ActionDetailsViewProps> = ({
             {onAddPhotosBefore && (
               <PhotoPicker
                 id="add-photos-before"
-                label={photoText.addBefore}
+                label={photoText.add}
                 stored={countOf('before')}
                 onPick={onAddPhotosBefore}
                 loadingLabel={photoText.adding}
@@ -275,7 +275,7 @@ export const ActionDetailsView: React.FC<ActionDetailsViewProps> = ({
             {onAddPhotosAfter && (
               <PhotoPicker
                 id="add-photos-after"
-                label={photoText.addAfter}
+                label={photoText.add}
                 stored={countOf('after')}
                 onPick={onAddPhotosAfter}
                 loadingLabel={photoText.adding}

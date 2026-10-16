@@ -248,7 +248,7 @@ export function ActionForm({ location, action, onSaved, onCancel }: ActionFormPr
           <p className={styles.legend}>{photoText.formLabel}</p>
           <PhotoPicker
             id="photosBefore"
-            label={photoText.addBefore}
+            label={photoText.add}
             stored={(action?.images_before.length ?? 0) + photos.length}
             onPick={(files) => setPhotos((previous) => [...previous, ...files])}
           />

@@ -108,8 +108,7 @@ export const ACTIONS_LABELS = {
     after: 'After',
     slide: (phase: string, position: number) => `${phase} photo ${position}`,
     formLabel: 'Photos of the place before the action (optional)',
-    addBefore: 'Add before photos',
-    addAfter: 'Add after photos',
+    add: 'Add photos',
     adding: 'Adding photos…',
     help: (max: number, maxMb: number) => `Up to ${max} photos, JPG, PNG or WebP, ${maxMb} MB each.`,
     withFailures: (notice: string, failed: readonly string[]) =>
