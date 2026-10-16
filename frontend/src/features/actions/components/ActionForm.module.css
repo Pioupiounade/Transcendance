@@ -103,6 +103,13 @@
   margin-top: 2px;
 }
 
+.photos {
+  margin: 0 4px;
+  padding-left: 18px;
+  font-size: var(--caption);
+  color: var(--muted);
+}
+
 .row {
   display: grid;
   gap: 12px;

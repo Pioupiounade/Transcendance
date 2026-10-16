@@ -14,6 +14,7 @@ import styles from './ActionEditorPage.module.css';
 
 const text = ACTIONS_LABELS.edit;
 const cancelText = ACTIONS_LABELS.cancelAction;
+const photoText = ACTIONS_LABELS.photos;
 
 /** `/actions/:id/edit` (protégée) : créateur ou ADMIN, action `PENDING`/`APPROVED`. Annulation = « suppression ». */
 type EditActionPageProps = {
@@ -30,8 +31,10 @@ export function EditActionPage({ mapPath }: EditActionPageProps) {
 
   const blocker = action ? manageBlocker(action, user) : null;
 
-  const onSaved = (saved: ActionRecord) =>
-    navigate(`${mapPath}?${FOCUS_PARAM}=${saved.action_id}`, { state: { notice: text.saved } });
+  const onSaved = (saved: ActionRecord, failedPhotos: string[]) =>
+    navigate(`${mapPath}?${FOCUS_PARAM}=${saved.action_id}`, {
+      state: { notice: photoText.withFailures(text.saved, failedPhotos) },
+    });
   const onCancelled = () => navigate(mapPath, { state: { notice: cancelText.done } });
 
   const message = notFound

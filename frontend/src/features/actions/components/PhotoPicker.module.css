@@ -1,0 +1,22 @@
+.picker {
+  display: grid;
+  justify-items: start;
+  gap: 6px;
+}
+
+.help,
+.error {
+  display: flex;
+  gap: 6px;
+  margin: 0 4px;
+  font-size: var(--caption);
+  font-weight: 600;
+  color: var(--muted);
+}
+.error {
+  color: var(--danger);
+}
+.error > svg {
+  flex: none;
+  margin-top: 2px;
+}

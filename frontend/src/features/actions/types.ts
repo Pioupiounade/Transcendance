@@ -65,6 +65,9 @@ export const OPEN_STATUSES: readonly ActionStatus[] = [ACTION_STATUS.PENDING, AC
 export type ActionDetailCategory = 'environment' | 'social' | 'cultural';
 export type ActionDetailStatus = 'pending' | 'approved' | 'rejected' | 'completed' | 'cancelled';
 
+/** Photo du carrousel, étiquetée par la liste d'origine (`images_before` / `images_after`). */
+export type ActionPhoto = { src: string; phase: 'before' | 'after' };
+
 export type ActionOrganizer = {
   userId: string;
   name: string;
@@ -84,8 +87,8 @@ export type ActionDetailData = {
   minParticipants: number;
     maxParticipants: number | null,
   currentParticipants: number;
-  /** URLs des photos (5 max). */
-  images: string[];
+  /** Photos avant puis après (3 max chacune). */
+  images: ActionPhoto[];
   organizer: ActionOrganizer;
   validatedByUserId?: string;
   validatedAt?: string;

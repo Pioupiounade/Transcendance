@@ -20,7 +20,8 @@
   - `minParticipants`: number
   - `maxParticipants`: number
   - `currentParticipants`: number
-  - `images`: string[] (up to 5 photos)
+  - `images`: ActionPhoto[] (`{ src, phase: 'before' | 'after' }`): `images_before` then `images_after`, max 3 each, each tagged Before/After in the carousel
+    - Add-only (no removal): before photos by the creator while `PENDING`, after photos by the creator or a participant once `COMPLETED` (status rule enforced in the UI only; the backend does not check it yet)
   - `organizer`: ActionOrganizer
   - `validatedByUserId`?: string
   - `validatedAt`?: string

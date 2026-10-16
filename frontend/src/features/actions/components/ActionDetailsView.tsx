@@ -4,6 +4,10 @@ import type { ActionDetailData, ActionParticipant } from '../types';
 import './ActionDetailsView.css';
 import { Avatar, Button } from '../../../shared/ui';
 import { toActionErrorMessage } from '../errors';
+import { ACTIONS_LABELS } from '../labels';
+import { PhotoPicker } from './PhotoPicker';
+
+const photoText = ACTIONS_LABELS.photos;
 
 interface ActionDetailsViewProps {
   action: ActionDetailData;
@@ -14,6 +18,8 @@ interface ActionDetailsViewProps {
   onEdit?: () => void;
   onApprove?: () => Promise<void> | void;
   onComplete?: () => Promise<void> | void;
+  onAddPhotosBefore?: (files: File[]) => Promise<void>;
+  onAddPhotosAfter?: (files: File[]) => Promise<void>;
 }
 
 export const ActionDetailsView: React.FC<ActionDetailsViewProps> = ({
@@ -24,6 +30,8 @@ export const ActionDetailsView: React.FC<ActionDetailsViewProps> = ({
   onEdit,
   onApprove,
   onComplete,
+  onAddPhotosBefore,
+  onAddPhotosAfter,
 }) => {
   const {
     title,
@@ -42,6 +50,7 @@ export const ActionDetailsView: React.FC<ActionDetailsViewProps> = ({
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const totalImages = images?.length || 0;
+  const countOf = (phase: 'before' | 'after') => images.filter((photo) => photo.phase === phase).length;
 
   const [isJoined, setIsJoined] = useState<boolean>(action.isJoined ?? false);
   const [participantsCount, setParticipantsCount] = useState<number>(
@@ -218,10 +227,11 @@ export const ActionDetailsView: React.FC<ActionDetailsViewProps> = ({
                 ‹
               </button>
               <img
-                src={images[currentIndex]}
-                alt={`Image ${currentIndex + 1}`}
+                src={images[currentIndex].src}
+                alt={photoText.slide(photoText[images[currentIndex].phase], currentIndex + 1)}
                 className="carousel-image"
               />
+              <span className="chip carousel-tag">{photoText[images[currentIndex].phase]}</span>
               <button
                 type="button"
                 className="carousel-control next"
@@ -237,16 +247,40 @@ export const ActionDetailsView: React.FC<ActionDetailsViewProps> = ({
             </div>
 
             <div className="carousel-thumbnails">
-              {images.map((src, idx) => (
+              {images.map((photo, idx) => (
                 <img
                   key={idx}
-                  src={src}
-                  alt={`Thumbnail ${idx + 1}`}
+                  src={photo.src}
+                  alt={photoText.slide(photoText[photo.phase], idx + 1)}
+                  title={photoText[photo.phase]}
                   className={`thumbnail ${idx === currentIndex ? 'active' : ''}`}
                   onClick={() => setCurrentIndex(idx)}
                 />
               ))}
             </div>
+          </div>
+        )}
+
+        {(onAddPhotosBefore || onAddPhotosAfter) && (
+          <div className="photo-actions">
+            {onAddPhotosBefore && (
+              <PhotoPicker
+                id="add-photos-before"
+                label={photoText.addBefore}
+                stored={countOf('before')}
+                onPick={onAddPhotosBefore}
+                loadingLabel={photoText.adding}
+              />
+            )}
+            {onAddPhotosAfter && (
+              <PhotoPicker
+                id="add-photos-after"
+                label={photoText.addAfter}
+                stored={countOf('after')}
+                onPick={onAddPhotosAfter}
+                loadingLabel={photoText.adding}
+              />
+            )}
           </div>
         )}
 

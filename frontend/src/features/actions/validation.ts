@@ -37,6 +37,20 @@ export const isCategory = (value: string): value is Category => Object.values<st
 
 export const validateCategory = (value: string): string | null => (isCategory(value) ? null : t.categoryRequired);
 
+/** Miroir de l'upload `photo-before` / `photo-after` : extension, 10 Mo par fichier, 3 photos par liste. */
+export const PHOTO_ACCEPT = 'image/jpeg,image/png,image/webp';
+export const PHOTO_MAX_MB = 10;
+export const PHOTO_MAX_COUNT = 3;
+const PHOTO_EXTENSION = /\.(jpg|jpeg|png|webp)$/i;
+
+/** `stored` = photos déjà comptées dans la liste (en base et déjà choisies). */
+export const validatePhotos = (files: readonly File[], stored: number): string | null => {
+  if (files.some((file) => !PHOTO_EXTENSION.test(file.name))) return t.photoType;
+  if (files.some((file) => file.size > PHOTO_MAX_MB * 1024 * 1024)) return t.photoTooLarge(PHOTO_MAX_MB);
+  if (stored + files.length > PHOTO_MAX_COUNT) return t.photoTooMany(PHOTO_MAX_COUNT);
+  return null;
+};
+
 /** Valeur d'un `datetime-local` (`YYYY-MM-DDTHH:mm`, heure locale) : requise, valide, à venir. */
 export const validateScheduledAt = (value: string): string | null => {
   if (value === '') return t.dateRequired;

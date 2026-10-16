@@ -8,7 +8,7 @@ type ActionEditorProps = {
   /** Lieu de départ : `?at=` (création) ou celui de l'action (modification). */
   initialLocation: LatLng | null;
   action?: ActionRecord;
-  onSaved: (action: ActionRecord) => void;
+  onSaved: (action: ActionRecord, failedPhotos: string[]) => void;
   onCancel: () => void;
 };
 

@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
-import type { ActionDetailData } from '../types';
+import type { ActionDetailData, ActionPhoto } from '../types';
 
 const TEST_IMAGES = [
   'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=800&auto=format&fit=crop&q=80',
   'https://images.unsplash.com/photo-1448375240586-882707db888b?w=800&auto=format&fit=crop&q=80',
   'https://images.unsplash.com/photo-1513836279014-a89f7a76ae86?w=800&auto=format&fit=crop&q=80',
 ];
+
+const beforePhotos = (sources: string[]): ActionPhoto[] => sources.map((src) => ({ src, phase: 'before' }));
 
 export const MOCK_ACTIONS_DB: Record<string, ActionDetailData> = {
   // 1. APROBADA - Medio ambiente (Visible en el directorio)
@@ -21,7 +23,7 @@ export const MOCK_ACTIONS_DB: Record<string, ActionDetailData> = {
     minParticipants: 5,
     maxParticipants: 30,
     currentParticipants: 12,
-    images: TEST_IMAGES,
+    images: beforePhotos(TEST_IMAGES),
     organizer: {
       userId: 'usr-103',
       name: 'leslie_curie',
@@ -62,10 +64,10 @@ export const MOCK_ACTIONS_DB: Record<string, ActionDetailData> = {
     minParticipants: 4,
     maxParticipants: 15,
     currentParticipants: 15,
-    images: [
+    images: beforePhotos([
       'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=800&auto=format&fit=crop&q=80',
       'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=800&auto=format&fit=crop&q=80',
-    ],
+    ]),
     organizer: {
       userId: 'usr-102',
       name: 'carlos_dev',
@@ -106,9 +108,9 @@ export const MOCK_ACTIONS_DB: Record<string, ActionDetailData> = {
     minParticipants: 10,
     maxParticipants: 50,
     currentParticipants: 24,
-    images: [
+    images: beforePhotos([
       'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=800&auto=format&fit=crop&q=80',
-    ],
+    ]),
     organizer: {
       userId: 'usr-105',
       name: 'claire_cine',
@@ -136,9 +138,9 @@ export const MOCK_ACTIONS_DB: Record<string, ActionDetailData> = {
     minParticipants: 3,
     maxParticipants: 12,
     currentParticipants: 8,
-    images: [
+    images: beforePhotos([
       'https://images.unsplash.com/photo-1485965120184-e220f721d03e?w=800&auto=format&fit=crop&q=80',
-    ],
+    ]),
     organizer: {
       userId: 'usr-102',
       name: 'carlos_dev',
@@ -164,9 +166,9 @@ export const MOCK_ACTIONS_DB: Record<string, ActionDetailData> = {
     minParticipants: 5,
     maxParticipants: 20,
     currentParticipants: 6,
-    images: [
+    images: beforePhotos([
       'https://images.unsplash.com/photo-1584473457406-6240486418e9?w=800&auto=format&fit=crop&q=80',
-    ],
+    ]),
     organizer: {
       userId: 'usr-101',
       name: 'lennox_92',
@@ -192,9 +194,9 @@ export const MOCK_ACTIONS_DB: Record<string, ActionDetailData> = {
     minParticipants: 2,
     maxParticipants: 25,
     currentParticipants: 20,
-    images: [
+    images: beforePhotos([
       'https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?w=800&auto=format&fit=crop&q=80',
-    ],
+    ]),
     organizer: {
       userId: 'usr-106',
       name: 'sophie_lecture',
@@ -219,7 +221,7 @@ export const MOCK_ACTIONS_DB: Record<string, ActionDetailData> = {
     minParticipants: 5,
     maxParticipants: 30,
     currentParticipants: 1,
-    images: TEST_IMAGES,
+    images: beforePhotos(TEST_IMAGES),
     organizer: {
       userId: 'usr-101',
       name: 'lennox_92',
@@ -247,9 +249,9 @@ export const MOCK_ACTIONS_DB: Record<string, ActionDetailData> = {
     minParticipants: 10,
     maxParticipants: 60,
     currentParticipants: 45,
-    images: [
+    images: beforePhotos([
       'https://images.unsplash.com/photo-1531058020387-3be344556be6?w=800&auto=format&fit=crop&q=80',
-    ],
+    ]),
     organizer: {
       userId: 'usr-102',
       name: 'carlos_dev',

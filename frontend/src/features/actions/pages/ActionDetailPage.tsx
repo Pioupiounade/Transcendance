@@ -5,10 +5,10 @@ import type { Organization } from '@/features/organizations';
 import { fetchActionParticipants, joinAction, leaveAction, type ActionParticipantApi } from '@/features/participations';
 import { getPublicProfile, isUnavailablePublicProfile, type PublicProfile } from '@/features/profile';
 import { fetchActionOrganization } from '../api/actionOrganizations';
-import { approveAction, completeAction, fetchAction } from '../api/actionsApi';
+import { approveAction, completeAction, fetchAction, uploadPhotoAfter, uploadPhotoBefore } from '../api/actionsApi';
 import { ActionComments } from '../components/ActionComments';
 import { ActionDetailsView } from '../components/ActionDetailsView';
-import type { Action, ActionDetailData, ActionParticipant } from '../types';
+import type { Action, ActionDetailData, ActionParticipant, ActionRecord } from '../types';
 
 const toActionDetailData = (
 action: Action,
@@ -34,7 +34,10 @@ currentUserId: string | null): ActionDetailData => ({
   maxParticipants: action.max_participants,
   currentParticipants: action.participant_count,
 
-  images: [...action.images_before, ...action.images_after],
+  images: [
+    ...action.images_before.map((src) => ({ src, phase: 'before' as const })),
+    ...action.images_after.map((src) => ({ src, phase: 'after' as const })),
+  ],
 
   organizer: {
     userId: action.creator_id,
@@ -163,6 +166,16 @@ export const ActionDetailPage: React.FC<ActionDetailPageProps> = ({ editPath }) 
     await refresh(id, false);
   };
 
+  // Une photo à la fois (le backend vérifie le plafond à chaque ajout) ; le carrousel est relu même après un échec.
+  const addPhotos = (upload: (actionId: string, file: File) => Promise<ActionRecord>) => async (files: File[]) => {
+    if (!id) return;
+    try {
+      for (const file of files) await upload(id, file);
+    } finally {
+      await refresh(id, false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div style={{ textAlign: 'center', padding: 'var(--s4)' }}>
@@ -200,6 +213,10 @@ export const ActionDetailPage: React.FC<ActionDetailPageProps> = ({ editPath }) 
     )
   );
 
+  // Rôles comme le backend (avant : créateur ; après : créateur ou participant) ; PENDING/COMPLETED n'est vérifié que côté UI.
+  const canAddBeforePhotos = isCreator && action.status === 'PENDING';
+  const canAddAfterPhotos = canComment && action.status === 'COMPLETED';
+
   return (
     <>
       <ActionDetailsView
@@ -220,6 +237,8 @@ export const ActionDetailPage: React.FC<ActionDetailPageProps> = ({ editPath }) 
         }
         onApprove={canApprove ? handleApprove : undefined}
         onComplete={canComplete ? handleComplete : undefined}
+        onAddPhotosBefore={canAddBeforePhotos ? addPhotos(uploadPhotoBefore) : undefined}
+        onAddPhotosAfter={canAddAfterPhotos ? addPhotos(uploadPhotoAfter) : undefined}
       />
       <ActionComments
         actionId={action.action_id}

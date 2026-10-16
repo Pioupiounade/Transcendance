@@ -8,7 +8,7 @@ type CreateActionDialogProps = {
   /** Lieu choisi sur la carte ; `null` = fermé. */
   location: LatLng | null;
   onClose: () => void;
-  onCreated: (action: ActionRecord) => void;
+  onCreated: (action: ActionRecord, failedPhotos: string[]) => void;
 };
 
 const text = ACTIONS_LABELS.create;
