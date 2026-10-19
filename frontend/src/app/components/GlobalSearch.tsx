@@ -5,6 +5,7 @@ import {
   type GlobalSearchResults,
 } from '../api/globalSearchApi';
 import { organizationPath } from '../routes';
+import styles from './GlobalSearch.module.css';
 
 export function GlobalSearch() {
   const [query, setQuery] = useState('');
@@ -56,7 +57,7 @@ export function GlobalSearch() {
   const showResults = query.trim().length >= 2;
 
   return (
-    <div style={{ position: 'relative', width: '200px' }}>
+    <div className={styles.search}>
       <input
         type="search"
         value={query}
@@ -72,12 +73,8 @@ export function GlobalSearch() {
 
       {showResults && (
         <div
+          className={styles.results}
           style={{
-            position: 'absolute',
-            top: 'calc(100% + 8px)',
-            left: 0,
-            right: 0,
-            zIndex: 50,
             background: 'var(--ground, #ffffff)',
             border: '1px solid var(--line, #e2e8f0)',
             borderRadius: '12px',

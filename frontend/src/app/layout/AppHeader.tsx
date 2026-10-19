@@ -18,7 +18,7 @@ export function AppHeader() {
     <header className={styles.topbar}>
       <Link to={ROUTES.home} className={styles.wordmark}>
         <Brandmark />
-        {APP_LABELS.brand}
+        <span className={styles.wordmarkText}>{APP_LABELS.brand}</span>
       </Link>
 
       <nav className={styles.nav} aria-label={APP_LABELS.mainNav}>
@@ -45,7 +45,7 @@ export function AppHeader() {
           </Link>
         )}
         {status === 'authenticated' && (
-          <Button variant="secondary" onClick={() => void signOut()}>
+          <Button variant="secondary" className={styles.signOut} onClick={() => void signOut()}>
             {APP_LABELS.signOut}
           </Button>
         )}
