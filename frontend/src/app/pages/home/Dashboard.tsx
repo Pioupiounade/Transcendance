@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 import {
+  CategoryFilter,
   DEFAULT_CENTER,
   FOCUS_PARAM,
   NeighborhoodMap,
@@ -8,12 +9,13 @@ import {
   distanceMeters,
   useActions,
   type Action,
+  type Category,
 } from '@/features/actions';
 import type { AuthUser } from '@/features/auth';
 import { useMyParticipations } from '@/features/participations';
 import { useMyProfile } from '@/features/profile';
 import { pageTitle } from '@/shared/lib/pageTitle';
-import { Icon } from '@/shared/ui';
+import { ButtonLink, Icon } from '@/shared/ui';
 import { APP_LABELS } from '../../labels';
 import { ROUTES, editActionPath } from '../../routes';
 import { MyActionsPanel, type AgendaItem } from './MyActionsPanel';
@@ -24,20 +26,27 @@ type DashboardProps = { user: AuthUser };
 
 const text = APP_LABELS.pages.dashboard;
 const NEARBY_LIMIT = 6;
+/* Anneau de la jauge : rayon 20 dans une boîte de 48. */
+const RING = 2 * Math.PI * 20;
 
 const mapFocusPath = (id: string) => `${ROUTES.map}?${FOCUS_PARAM}=${id}`;
 
-/** Tableau de bord du quartier : carte compacte, mon agenda, actions ouvertes les plus proches. */
+/** Tableau de bord du quartier (refonte) : salutation, jauge d'engagement, filtres, carte, agenda, actions proches. */
 export function Dashboard({ user }: DashboardProps) {
   const navigate = useNavigate();
   const actionsState = useActions();
   const participationsState = useMyParticipations();
   const { profile } = useMyProfile();
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [category, setCategory] = useState<Category | null>(null);
 
-  const open = useMemo(
+  const openAll = useMemo(
     () => actionsState.actions.filter((action) => OPEN_STATUSES.includes(action.status)),
     [actionsState.actions],
+  );
+  const open = useMemo(
+    () => (category === null ? openAll : openAll.filter((action) => action.category === category)),
+    [openAll, category],
   );
 
   const joinedIds = useMemo(
@@ -52,7 +61,7 @@ export function Dashboard({ user }: DashboardProps) {
 
   // Mon agenda : les actions ouvertes que j'organise et celles que j'ai rejointes, par date.
   const agenda = useMemo<AgendaItem[]>(() => {
-    const organised = open
+    const organised = openAll
       .filter((action) => action.creator_id === user.user_id)
       .map<AgendaItem>((action) => ({
         id: action.action_id,
@@ -75,7 +84,7 @@ export function Dashboard({ user }: DashboardProps) {
         to: mapFocusPath(participation.action_id),
       }));
     return [...organised, ...joined].sort((a, b) => a.scheduledAt.localeCompare(b.scheduledAt));
-  }, [open, participationsState.participations, user.user_id]);
+  }, [openAll, participationsState.participations, user.user_id]);
 
   // Autour de moi : les actions ouvertes des autres, les plus proches du point de référence d'abord.
   const reference = profile?.location ?? DEFAULT_CENTER;
@@ -90,6 +99,7 @@ export function Dashboard({ user }: DashboardProps) {
   );
 
   const name = profile?.username ?? text.anonymousName;
+  const ratio = openAll.length === 0 ? 0 : Math.min(1, agenda.length / openAll.length);
 
   return (
     <section className={styles.page}>
@@ -98,17 +108,38 @@ export function Dashboard({ user }: DashboardProps) {
       <header className={styles.intro}>
         <div>
           <p className={styles.eyebrow}>{text.eyebrow}</p>
-          <h1>{text.greeting(name)}</h1>
+          <h1>{text.greeting(name)}!</h1>
           <p className={styles.lead}>{text.lead}</p>
         </div>
-        <div className={styles.chip}>
-          <Icon name="pin" size={18} />
-          <div>
-            <small>{text.exploring}</small>
-            <strong>{profile?.location ? text.homeArea : text.defaultArea}</strong>
+        {/* Jauge : part des actions ouvertes du quartier qui sont sur mon agenda ; le « + » suggère une action. */}
+        <div className={styles.gauge}>
+          <svg className={styles.ring} viewBox="0 0 48 48" aria-hidden="true" focusable="false">
+            <circle className={styles.track} cx="24" cy="24" r="20" />
+            <circle
+              className={styles.progress}
+              cx="24"
+              cy="24"
+              r="20"
+              strokeDasharray={`${ratio * RING} ${RING}`}
+              transform="rotate(-90 24 24)"
+            />
+          </svg>
+          <div className={styles.gaugeText}>
+            <strong>
+              {agenda.length}
+              <small>/{openAll.length}</small>
+            </strong>
+            <span>
+              {text.gauge.label} · {text.gauge.of(openAll.length)}
+            </span>
           </div>
+          <ButtonLink to={ROUTES.createAction} variant="accent" className={styles.plus} aria-label={text.suggest} title={text.suggest}>
+            <Icon name="plus" size={22} strokeWidth={2.2} />
+          </ButtonLink>
         </div>
       </header>
+
+      <CategoryFilter value={category} onChange={setCategory} />
 
       <div className={styles.layout}>
         <div className={styles.map}>

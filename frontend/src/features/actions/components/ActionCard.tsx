@@ -1,7 +1,7 @@
 import { ButtonLink, Icon } from '@/shared/ui';
 import { formatDateTime } from '@/shared/lib/formatDate';
 import { ACTIONS_LABELS, ACTION_STATUS_LABELS, CATEGORY_ICONS, CATEGORY_LABELS } from '../labels';
-import type { Action } from '../types';
+import { ACTION_STATUS, type Action } from '../types';
 import styles from './ActionCard.module.css';
 
 type ActionCardProps = {
@@ -22,33 +22,45 @@ const seatsLabel = (action: Action): string => {
   return text.seatsLeft(action.remaining_seats);
 };
 
-/** Carte de la liste (DESIGN.md §6 « Action card ») : un bouton à bascule, miroir du pin sur la carte. */
+/**
+ * Carte de la liste (refonte) : un bandeau pastel teinté par la catégorie tient lieu de photo, la catégorie et le
+ * statut (ou la distance) en pilules dessus, puis titre, date, description et le pied. Un bouton à bascule, miroir
+ * du pin sur la carte. Une action en attente de modération porte des hachures.
+ */
 export function ActionCard({ action, selected, onSelect, distance, editTo }: ActionCardProps) {
   const category = action.category;
+  const pending = action.status === ACTION_STATUS.PENDING;
   return (
-    <article
-      className={[styles.card, styles[`${category.toLowerCase()}Card`], selected && styles.selected]
-        .filter(Boolean)
-        .join(' ')}
-    >
+    <article className={[styles.card, selected && styles.selected].filter(Boolean).join(' ')}>
       <button type="button" className={styles.body} aria-pressed={selected} onClick={() => onSelect(action.action_id)}>
-        <span className={styles.top}>
-          <span className={[styles.tag, styles[category.toLowerCase()]].join(' ')}>
+        <span className={[styles.cover, styles[category.toLowerCase()], pending && styles.pendingCover].filter(Boolean).join(' ')}>
+          <span className={styles.tag}>
             <Icon name={CATEGORY_ICONS[category]} size={14} />
             {CATEGORY_LABELS[category]}
           </span>
-          <span className={styles.status}>{distance ?? ACTION_STATUS_LABELS[action.status]}</span>
-        </span>
-        <span className={styles.title}>{action.title}</span>
-        <span className={styles.meta}>{formatDateTime(action.scheduled_at)}</span>
-        <span className={styles.description}>{action.description}</span>
-        <span className={styles.bottom}>
-          <span className={styles.people}>
-            <Icon name="users" size={15} />
-            {text.neighbours(action.participant_count)}
+          <span className={[styles.status, pending && !distance && styles.pendingStatus].filter(Boolean).join(' ')}>
+            {distance ?? ACTION_STATUS_LABELS[action.status]}
           </span>
-          <span className={[styles.seats, action.remaining_seats === 0 && styles.seatsFull].filter(Boolean).join(' ')}>
-            {seatsLabel(action)}
+          <Icon name={CATEGORY_ICONS[category]} size={64} strokeWidth={1.1} className={styles.coverIcon} />
+        </span>
+        <span className={styles.content}>
+          <span className={styles.title}>{action.title}</span>
+          <span className={styles.meta}>
+            <Icon name="calendar" size={14} />
+            {formatDateTime(action.scheduled_at)}
+          </span>
+          <span className={styles.description}>{action.description}</span>
+          <span className={styles.bottom}>
+            <span className={styles.people}>
+              <Icon name="users" size={15} />
+              {text.neighbours(action.participant_count)}
+            </span>
+            <span className={[styles.seats, action.remaining_seats === 0 && styles.seatsFull].filter(Boolean).join(' ')}>
+              {seatsLabel(action)}
+            </span>
+            <span className={styles.go} aria-hidden="true">
+              <Icon name="arrow" size={16} strokeWidth={2.2} />
+            </span>
           </span>
         </span>
       </button>

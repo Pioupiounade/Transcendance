@@ -6,6 +6,7 @@ export { EditActionPage } from './pages/EditActionPage';
 export { NeighborhoodMap } from './components/NeighborhoodMap';
 export { PlaceMap } from './components/PlaceMap';
 export { ActionCard } from './components/ActionCard';
+export { CategoryFilter } from './components/CategoryFilter';
 export { useActions } from './api/useActions';
 export { approveAction, cancelAction } from './api/actionsApi';
 export { canManageAction } from './permissions';

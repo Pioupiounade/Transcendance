@@ -11,7 +11,8 @@ import {
   useActions,
 } from '@/features/actions';
 import { pageTitle } from '@/shared/lib/pageTitle';
-import { Button, ButtonLink, Icon, Steps, StreetScene, type IconName } from '@/shared/ui';
+import { Button, ButtonLink, Icon, Steps, type IconName } from '@/shared/ui';
+import quartier from '@/assets/quartier.jpg';
 import { APP_LABELS } from '../../labels';
 import { ROUTES } from '../../routes';
 import styles from './Landing.module.css';
@@ -21,7 +22,7 @@ const STEP_ICONS: IconName[] = ['map', 'plus', 'users'];
 const TRUST_ICONS: IconName[] = ['users', 'lock', 'check'];
 const UPCOMING_LIMIT = 3;
 
-/** Accueil des visiteurs : la promesse, comment ça marche, la carte vivante du quartier, puis l'inscription. */
+/** Accueil des visiteurs (refonte) : la promesse sur fond clair, comment ça marche, la carte vivante, puis l'inscription. */
 export function Landing() {
   const navigate = useNavigate();
   const { actions, loading, error, reload } = useActions();
@@ -66,9 +67,25 @@ export function Landing() {
             ))}
           </ul>
         </div>
-        <div className={styles.heroScene}>
-          <StreetScene />
-        </div>
+        {/* Photo de quartier (refonte) : la « carte photo » du brief, décorative, avec un cartouche vers la carte. */}
+        <figure className={styles.heroPhoto}>
+          <img src={quartier} alt="" width={1800} height={1201} />
+          {open.length > 0 && (
+            <span className={styles.heroBadge}>
+              <span className={styles.heroDot} aria-hidden="true" />
+              {text.photo.badge(open.length)}
+            </span>
+          )}
+          <figcaption className={styles.heroCaption}>
+            <span>
+              <small>{text.photo.kicker}</small>
+              <strong>{text.photo.title}</strong>
+            </span>
+            <Link to={ROUTES.map} className={styles.heroGo} aria-label={text.photo.cta} title={text.photo.cta}>
+              <Icon name="arrow" size={18} strokeWidth={2.2} />
+            </Link>
+          </figcaption>
+        </figure>
       </section>
 
       <section className={styles.section} aria-labelledby="how-title">
@@ -143,7 +160,7 @@ export function Landing() {
         <h2 id="closing-title">{text.closing.title}</h2>
         <p>{text.closing.lead}</p>
         <div className={styles.closingActions}>
-          <ButtonLink to={ROUTES.register} variant="secondary" size="lg">
+          <ButtonLink to={ROUTES.register} variant="accent" size="lg">
             {text.closing.cta}
           </ButtonLink>
           <Link to={ROUTES.login} className={styles.closingLink}>
