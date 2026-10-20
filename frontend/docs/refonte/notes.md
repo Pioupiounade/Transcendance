@@ -26,7 +26,7 @@ Pioupiounades (nom, pin, structure des pages). L'espace admin garde son thème s
   2026-10-20 12-02-42.png` ; le gris puis le voile sauge ont été essayés et écartés), pins pastel à icône noire.
 - **Pages d'auth** (login, register) : photo de rue (`refs/login.jpg` → `src/assets/login.jpg`, bande 2:1) à la
   place du dessin, fondue vers le fond en bas ; derrière la carte, un plan de quartier pastel très discret (`AuthBackdrop` :
-  trois rubans de rues jusqu'en bas de l'écran et un bassin, opacité 0.45) remplace les pins. My Actions visiteur : photo de marché (`refs/actions.png` →
+  sept rubans de rues dont trois jusqu'en bas de l'écran, et un bassin, opacité 0.45) remplace les pins. My Actions visiteur : photo de marché (`refs/actions.png` →
   `src/assets/actions.jpg`, 490 × 579) en carte à côté de la promesse. Le dessin `StreetScene` n'est plus monté
   nulle part (toujours dans `shared/ui`).
 
