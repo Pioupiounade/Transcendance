@@ -18,7 +18,7 @@ export function AppHeader() {
     <header className={styles.topbar}>
       <Link to={ROUTES.home} className={styles.wordmark}>
         <Brandmark />
-        <span className={styles.wordmarkText}>{APP_LABELS.brand}</span>
+        <span className={styles.brandName}>{APP_LABELS.brand}</span>
       </Link>
 
       <nav className={styles.nav} aria-label={APP_LABELS.mainNav}>
