@@ -36,3 +36,17 @@ Pioupiounades (nom, pin, structure des pages). L'espace admin garde son thème s
 - Photos d'action (#148, LeNy) : le bandeau pastel est prévu pour accueillir la photo quand elle existe.
 - Recherche globale (`app/components/GlobalSearch.tsx`, Marie, 200 px en styles inline) : sur mobile elle prend la
   place du nom de la marque (le pin reste).
+
+## Voir la branche
+
+```
+git fetch origin
+git switch explore/refonte-ux
+docker compose -f docker/docker-compose.yml exec frontend npm install   # la police (pas de make re : la base reste)
+```
+Puis `http://localhost:5173`. Comptes de démo : `demo.seed.alice@example.test` / `DemoPass123!` (membre),
+`demo.seed.grace@example.test` (admin). Comparer avec `git switch main`.
+
+Captures (`captures/`, 1440 px, 20/10/2026) : 01 accueil visiteur, 02 tableau de bord, 03 My Actions, 04 carte,
+05 annuaire des organisations, 06 fiche d'organisation, 07 login, 08 My Actions visiteur, 09 admin (sombre, inchangé),
+10 et 11 mobile.
