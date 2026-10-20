@@ -101,11 +101,11 @@ export function MapPage({ editPath }: MapPageProps) {
       ?.scrollIntoView({ block: 'nearest', behavior: prefersReducedMotion() ? 'auto' : 'smooth' });
   }, [selected]);
 
-  const onCreated = (action: ActionRecord) => {
+  const onCreated = (action: ActionRecord, failedPhotos: string[]) => {
     setComposing(false);
     setDraft(null);
     setSelectedId(action.action_id);
-    setNotice(create.submitted);
+    setNotice(ACTIONS_LABELS.photos.withFailures(create.submitted, failedPhotos));
     reload();
   };
 

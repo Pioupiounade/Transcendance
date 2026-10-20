@@ -27,8 +27,10 @@ export const createAction = (input: CreateActionInput) => http.post<ActionRecord
 /**
  * Body de `PATCH /actions/:id` (`UpdateActionDto`) : tout est facultatif, `max_participants` ne peut pas être
  * remis à « sans limite » (le DTO refuse `null`). L'organisation ne se change pas depuis le frontend.
+ * Les deux listes de photos sont obligatoires : le backend écrit `?? []`, une liste omise serait effacée.
  */
-export type UpdateActionInput = Partial<Omit<CreateActionInput, 'organization_id'>>;
+export type UpdateActionInput = Partial<Omit<CreateActionInput, 'organization_id'>> &
+  Pick<ActionRecord, 'images_before' | 'images_after'>;
 
 /** Modifie une action ouverte (créateur, ADMIN ou manager de l'organisation). 400 « can no longer be modified » sinon. */
 export const updateAction = (id: string, input: UpdateActionInput) =>
@@ -36,6 +38,26 @@ export const updateAction = (id: string, input: UpdateActionInput) =>
 
 /** Annule une action `PENDING`/`APPROVED` (seule « suppression » offerte par l'API). */
 export const cancelAction = (id: string) => http.patch<ActionRecord>(`/actions/${id}/cancel`);
+
+const photoBody = (file: File): FormData => {
+  const body = new FormData();
+  body.append('file', file);
+  return body;
+};
+
+/**
+ * Ajoute une photo « avant » : créateur seulement (403 sinon), 3 max (400), action inconnue 404.
+ * Le backend ne vérifie pas (encore) le statut : la règle `PENDING` n'est appliquée que côté UI.
+ */
+export const uploadPhotoBefore = (id: string, file: File) =>
+  http.post<ActionRecord>(`/actions/${id}/photo-before`, photoBody(file));
+
+/**
+ * Ajoute une photo « après » : créateur ou participant (403 sinon), 3 max (400), action inconnue 404.
+ * Le backend ne vérifie pas (encore) le statut : la règle `COMPLETED` n'est appliquée que côté UI.
+ */
+export const uploadPhotoAfter = (id: string, file: File) =>
+  http.post<ActionRecord>(`/actions/${id}/photo-after`, photoBody(file));
 
 export const approveAction = (id: string) => http.patch<ActionRecord>(`/actions/${id}/approve`);
 

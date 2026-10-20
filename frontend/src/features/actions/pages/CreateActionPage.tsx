@@ -10,6 +10,7 @@ import styles from './ActionEditorPage.module.css';
 import { useEffect } from 'react';
 
 const text = ACTIONS_LABELS.create;
+const photoText = ACTIONS_LABELS.photos;
 
 /** `/actions/new` (protégée) : choisir un lieu sur la carte puis décrire l'action. `?at=lat,lng` pré-place le pin. */
 type CreateActionPageProps = {
@@ -23,8 +24,10 @@ export function CreateActionPage({ mapPath }: CreateActionPageProps) {
   const draftParam = searchParams.get(DRAFT_PARAM);
   const initialLocation = useMemo(() => parseDraft(draftParam), [draftParam]);
 
-  const onSaved = (action: ActionRecord) =>
-    navigate(`${mapPath}?${FOCUS_PARAM}=${action.action_id}`, { state: { notice: text.submitted } });
+  const onSaved = (action: ActionRecord, failedPhotos: string[]) =>
+    navigate(`${mapPath}?${FOCUS_PARAM}=${action.action_id}`, {
+      state: { notice: photoText.withFailures(text.submitted, failedPhotos) },
+    });
 
   useEffect(() => {
     const testOrganizations = async () => {

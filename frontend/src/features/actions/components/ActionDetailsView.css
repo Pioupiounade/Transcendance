@@ -111,18 +111,14 @@
 .carousel-main {
   position: relative;
   width: 100%;
-  height: 320px;
-  border-radius: 16px;
-  overflow: hidden;
+  height: 280px;
   margin: 10px auto;
-  background: var(--surface, #f8f5ef);
-  border: 1px solid var(--line, #e2e8f0);
 }
 
 .carousel-image {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   display: block;
 }
 
@@ -160,6 +156,20 @@
 .carousel-control:disabled {
   opacity: 0.3;
   cursor: default;
+}
+
+/* Étiquette Before / After de la photo affichée */
+.carousel-tag {
+  position: absolute;
+  top: 0.75rem;
+  left: 0.75rem;
+}
+
+.photo-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin: 0.5rem 0 1rem;
 }
 
 /* Contador 1 / 3 centrado */
@@ -234,8 +244,7 @@
   }
 
   .carousel-main {
-    height: auto;
-    aspect-ratio: 4 / 3;
-    margin: 0.5rem 0;
+    height: 240px;
+    margin: 0.5rem auto;
   }
 }

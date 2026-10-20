@@ -6,9 +6,10 @@ import { Button, FloatingField, FloatingTextarea, Icon } from '@/shared/ui';
 import { fetchManageableOrganizations } from '../api/actionOrganizations';
 import { useCreateAction } from '../api/useCreateAction';
 import { useUpdateAction } from '../api/useUpdateAction';
+import { useUploadPhotosBefore } from '../api/useUploadPhotosBefore';
 import { toActionErrorMessage } from '../errors';
 import { ACTIONS_LABELS, CATEGORY_ICONS, CATEGORY_LABELS } from '../labels';
-import { CATEGORY, type ActionRecord, type LatLng } from '../types';
+import { ACTION_STATUS, CATEGORY, type ActionRecord, type LatLng } from '../types';
 
 import {
   DESCRIPTION_MAX_LENGTH,
@@ -24,19 +25,22 @@ import {
   validateTitle,
 } from '../validation';
 import styles from './ActionForm.module.css';
+import { PhotoPicker } from './PhotoPicker';
 
 type ActionFormProps = {
   /** Lieu choisi sur la carte ; `null` = pas encore choisi (le formulaire le réclame à l'envoi). */
   location: LatLng | null;
   /** Présente = modification de cette action (`PATCH`) ; absente = création (`POST`). */
   action?: ActionRecord;
-  onSaved: (action: ActionRecord) => void;
+  /** `failedPhotos` : noms des photos « avant » choisies que l'upload a refusées (l'action reste enregistrée). */
+  onSaved: (action: ActionRecord, failedPhotos: string[]) => void;
   onCancel: () => void;
 };
 
 type Values = { title: string; description: string; category: string; scheduledAt: string; maxParticipants: string };
 
 const text = ACTIONS_LABELS.form;
+const photoText = ACTIONS_LABELS.photos;
 
 const toValues = (action: ActionRecord | undefined): Values =>
   action
@@ -56,6 +60,8 @@ const toValues = (action: ActionRecord | undefined): Values =>
 export function ActionForm({ location, action, onSaved, onCancel }: ActionFormProps) {
   const create = useCreateAction();
   const update = useUpdateAction();
+  const uploadPhotos = useUploadPhotosBefore();
+  const [photos, setPhotos] = useState<File[]>([]);
   const [initial] = useState(() => toValues(action));
   const [spotMissing, setSpotMissing] = useState(false);
   const [organizations, setOrganizations] = useState<Organization[]>([]);
@@ -63,6 +69,8 @@ export function ActionForm({ location, action, onSaved, onCancel }: ActionFormPr
 
   const { user } = useAuth();
   const userId = user?.user_id ?? null;
+  // Photos « avant » : rôle créateur comme le backend ; la condition PENDING n'est vérifiée que côté UI.
+  const canAddPhotos = !action || (action.creator_id === userId && action.status === ACTION_STATUS.PENDING);
 
   // Création seulement : les organisations que je gère, pour le choix facultatif. En cas d'échec la liste reste
   // vide et l'action se crée sans organisation.
@@ -108,7 +116,14 @@ export function ActionForm({ location, action, onSaved, onCancel }: ActionFormPr
             organization_id: Number(organizationId),
           }),
       };
-      onSaved(action ? await update(action.action_id, input) : await create(input));
+      const saved = action
+        ? await update(action.action_id, {
+            ...input,
+            images_before: action.images_before,
+            images_after: action.images_after,
+          })
+        : await create(input);
+      onSaved(saved, await uploadPhotos(saved.action_id, photos));
     },
     toActionErrorMessage,
   );
@@ -227,6 +242,25 @@ export function ActionForm({ location, action, onSaved, onCancel }: ActionFormPr
           error={form.errorOf('maxParticipants')}
         />
       </div>
+
+      {canAddPhotos && (
+        <div className={styles.group}>
+          <p className={styles.legend}>{photoText.formLabel}</p>
+          <PhotoPicker
+            id="photosBefore"
+            label={photoText.add}
+            stored={(action?.images_before.length ?? 0) + photos.length}
+            onPick={(files) => setPhotos((previous) => [...previous, ...files])}
+          />
+          {photos.length > 0 && (
+            <ul className={styles.photos}>
+              {photos.map((file, index) => (
+                <li key={index}>{file.name}</li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
 
       {form.serverError && (
         <p className={styles.serverError} role="alert">

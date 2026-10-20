@@ -17,5 +17,8 @@ const describe = (error: unknown, rejected: (reason: string) => string): string 
 /** Traduit une erreur de création, modification ou annulation d'action en message affichable. */
 export const toActionErrorMessage = (error: unknown): string => describe(error, t.rejected);
 
+/** Traduit une erreur d'upload de photo. */
+export const toPhotoErrorMessage = (error: unknown): string => describe(error, t.photoRejected);
+
 /** Traduit une erreur d'envoi de commentaire. */
 export const toCommentErrorMessage = (error: unknown): string => describe(error, t.commentRejected);

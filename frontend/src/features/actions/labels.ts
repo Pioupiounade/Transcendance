@@ -103,6 +103,19 @@ export const ACTIONS_LABELS = {
     saving: 'Saving…',
     cancel: 'Cancel',
   },
+  photos: {
+    before: 'Before',
+    after: 'After',
+    slide: (phase: string, position: number) => `${phase} photo ${position}`,
+    formLabel: 'Photos of the place before the action (optional)',
+    add: 'Add photos',
+    adding: 'Adding photos…',
+    help: (max: number, maxMb: number) => `Up to ${max} photos, JPG, PNG or WebP, ${maxMb} MB each.`,
+    withFailures: (notice: string, failed: readonly string[]) =>
+      failed.length === 0
+        ? notice
+        : `${notice} These photos could not be added: ${failed.join(', ')}. You can add them later from the edit or detail page.`,
+  },
   card: {
     neighbours: (count: number) => (count === 1 ? '1 neighbour' : `${count} neighbours`),
     seatsLeft: (count: number) => (count === 1 ? '1 seat left' : `${count} seats left`),
@@ -160,6 +173,9 @@ export const ACTIONS_LABELS = {
     datePast: 'Choose a date in the future.',
     commentRequired: 'Write something first.',
     maxParticipantsInvalid: (min: number) => `Enter a whole number of at least ${min}, or leave it empty.`,
+    photoType: 'Only JPG, PNG and WebP photos are allowed.',
+    photoTooLarge: (maxMb: number) => `Each photo must be ${maxMb} MB or less.`,
+    photoTooMany: (max: number) => `Up to ${max} photos are allowed.`,
   },
   errors: {
     signedOut: 'Your session has expired. Sign in again to continue.',
@@ -167,6 +183,7 @@ export const ACTIONS_LABELS = {
     notFound: 'This action does not exist or has been removed.',
     rejected: (reason: string) => `The action was not accepted: ${reason}`,
     commentRejected: (reason: string) => `Your comment was not accepted: ${reason}`,
+    photoRejected: (reason: string) => `The photo was not accepted: ${reason}`,
     network: 'We could not reach the server. Check your connection and try again.',
     unknown: 'Something went wrong on our side. Please try again.',
   },
