@@ -25,8 +25,12 @@ Pioupiounades (nom, pin, structure des pages). L'espace admin garde son thème s
 - **Carte** : tuiles OSM dans leurs couleurs d'origine (choix de l'utilisateur, `refs/Screenshot from
   2026-10-20 12-02-42.png` ; le gris puis le voile sauge ont été essayés et écartés), pins pastel à icône noire.
 - **Pages d'auth** (login, register) : photo de rue (`refs/login.jpg` → `src/assets/login.jpg`, bande 2:1) à la
-  place du dessin, fondue vers le fond en bas ; derrière la carte, un plan de quartier pastel très discret (`AuthBackdrop` :
-  sept rubans de rues dont trois jusqu'en bas de l'écran, et un bassin, opacité 0.45) remplace les pins. My Actions visiteur : photo de marché (`refs/actions.png` →
+  place du dessin, fondue vers le fond en bas ; derrière la carte, le plan réel du quartier de l'école 42 (`AuthBackdrop` +
+  `authNeighbourhood.ts`, opacité 0.45) remplace les pins : rues en sauge par largeur, voies ferrées en lavande
+  pointillée, parcs pistache, eau glace, l'école en point citron à gauche de la carte. Données
+  © OpenStreetMap contributors (ODbL), extrait Overpass `osm/paris42.json` autour du 96 bd Bessières (42 Paris),
+  générées par `osm/gen_neighbourhood.py` (projection 1 px ≈ 1 m, viewBox 1440 × 1000). Pour un autre campus :
+  refaire l'extrait Overpass autour de son adresse et relancer le script avec ses coordonnées. My Actions visiteur : photo de marché (`refs/actions.png` →
   `src/assets/actions.jpg`, 490 × 579) en carte à côté de la promesse. Le dessin `StreetScene` n'est plus monté
   nulle part (toujours dans `shared/ui`).
 
