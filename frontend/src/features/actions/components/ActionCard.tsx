@@ -25,7 +25,7 @@ const seatsLabel = (action: Action): string => {
 /**
  * Carte de la liste (refonte) : un bandeau pastel teinté par la catégorie tient lieu de photo, la catégorie et le
  * statut (ou la distance) en pilules dessus, puis titre, date, description et le pied. Un bouton à bascule, miroir
- * du pin sur la carte. Une action en attente de modération porte des hachures.
+ * du pin sur la carte. Une action en attente de modération le dit sur sa pilule de statut (hachurée).
  */
 export function ActionCard({ action, selected, onSelect, distance, editTo }: ActionCardProps) {
   const category = action.category;
@@ -33,7 +33,7 @@ export function ActionCard({ action, selected, onSelect, distance, editTo }: Act
   return (
     <article className={[styles.card, selected && styles.selected].filter(Boolean).join(' ')}>
       <button type="button" className={styles.body} aria-pressed={selected} onClick={() => onSelect(action.action_id)}>
-        <span className={[styles.cover, styles[category.toLowerCase()], pending && styles.pendingCover].filter(Boolean).join(' ')}>
+        <span className={[styles.cover, styles[category.toLowerCase()]].join(' ')}>
           <span className={styles.tag}>
             <Icon name={CATEGORY_ICONS[category]} size={14} />
             {CATEGORY_LABELS[category]}

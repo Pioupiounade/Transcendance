@@ -15,9 +15,10 @@ Pioupiounades (nom, pin, structure des pages). L'espace admin garde son thème s
   icônes `arrow` et `bell`. Marque : pin noir, fanion citron.
 - **Coquille** : en-tête sans trait, nav dans une pilule blanche (entrée courante noire), barre mobile flottante (rond
   noir pour l'entrée courante, libellés lus par les lecteurs d'écran), pied de page sans trait.
-- **Cartes d'action** : blanches, bandeau pastel teinté par la catégorie en guise de photo (sauge = Environment,
-  lavande = Mutual aid, citron pâle = Culture), catégorie et statut/distance en pilules, rond flèche noir. Action
-  `PENDING` : bandeau et pilule hachurés.
+- **Cartes d'action** : blanches, bandeau en guise de photo teinté par la catégorie, pastels chauds en dégradé
+  (`--cover-*` : pistache = Environment, rose-lavande = Mutual aid, citron-abricot = Culture), catégorie et
+  statut/distance en pilules, rond flèche noir. Action `PENDING` : seule la pilule de statut est hachurée (les
+  hachures sur le bandeau ont été retirées le 20/10/2026).
 - **Accueil connecté** : « Hello {name}! » en grand, jauge (actions de mon agenda / actions ouvertes autour) avec
   « + » citron vers la création, puces de catégorie qui filtrent carte et « Near you ».
 - **Landing** : hero centré sans l'illustration de rue, tuiles pastel (`Steps`), bandeau final noir + bouton citron.

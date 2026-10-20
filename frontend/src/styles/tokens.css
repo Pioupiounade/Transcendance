@@ -76,6 +76,11 @@
   --card-environment-bg: #ffffff;
   --card-social-bg: #ffffff;
   --card-culture-bg: #ffffff;
+  /* Bandeaux des cartes d'action (en guise de photo) : pastels plus chauds que les tags, en léger dégradé :
+     pistache, rose-lavande, citron-abricot. Lus avec les encres des tags (contraste ≥ 6:1). */
+  --cover-environment: linear-gradient(135deg, #e6f0d9 0%, #d3e6cc 100%);
+  --cover-social: linear-gradient(135deg, #f6e8ef 0%, #e8def4 100%);
+  --cover-culture: linear-gradient(135deg, #fff5c8 0%, #ffe5b0 100%);
 
   /* Espacements */
   --s1: 4px;
@@ -157,6 +162,9 @@
   --note-bg: #1f3028;
   --note-ink: #b7c5b8;
   --card-selected-bg: #20332a;
+  --cover-environment: linear-gradient(135deg, #223a2f 0%, #1c3026 100%);
+  --cover-social: linear-gradient(135deg, #3a2a35 0%, #2a2a3f 100%);
+  --cover-culture: linear-gradient(135deg, #3a3120 0%, #332a18 100%);
   --shadow: 0 8px 30px #0000004d;
   --shadow-float: 0 14px 36px #0000006b;
   --focus-ring: 3px solid #9fd3b5;

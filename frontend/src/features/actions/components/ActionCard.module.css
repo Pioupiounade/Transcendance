@@ -35,7 +35,9 @@
   text-align: left;
 }
 
-/* Bandeau : même rayon que la carte moins la marge, l'icône de la catégorie en filigrane. */
+/* Bandeau : même rayon que la carte moins la marge, pastel chaud en dégradé (`--cover-*`), reflet doux en haut à
+   gauche, l'icône de la catégorie en filigrane. Pas de hachures ici (demande du 20/10/2026) : l'attente se lit
+   sur la pilule de statut. */
 .cover {
   position: relative;
   display: grid;
@@ -43,28 +45,28 @@
   height: 132px;
   margin: 6px 6px 0;
   border-radius: calc(var(--r-action) - 6px);
-  background: var(--tag-environment-bg);
+  background: var(--cover-environment);
   color: var(--tag-environment-ink);
   overflow: hidden;
 }
-.social {
-  background: var(--tag-social-bg);
-  color: var(--tag-social-ink);
-}
-.cultural {
-  background: var(--tag-culture-bg);
-  color: var(--tag-culture-ink);
-}
-.coverIcon {
-  opacity: 0.5;
-}
-.pendingCover::after {
+.cover::before {
   content: '';
   position: absolute;
   inset: 0;
-  background: var(--hatch);
-  opacity: 0.55;
+  background: radial-gradient(circle at 18% 12%, #ffffff8c, transparent 55%);
   pointer-events: none;
+}
+.social {
+  background: var(--cover-social);
+  color: var(--tag-social-ink);
+}
+.cultural {
+  background: var(--cover-culture);
+  color: var(--tag-culture-ink);
+}
+.coverIcon {
+  position: relative;
+  opacity: 0.5;
 }
 
 .tag,
