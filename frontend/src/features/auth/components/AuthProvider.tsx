@@ -44,10 +44,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
   useEffect(() => {
     if (snapshot.status !== 'authenticated') return;
 
-  const socket = io({
-    path: '/socket.io',
-    auth: (cb) => cb({ token: session.accessToken }),
-  });
+    const socket = io({
+      path: '/socket.io',
+      auth: (cb) => cb({ token: session.accessToken }),
+    });
 
     const handleOnline = ({ userId }: { userId: string }) => {
       window.dispatchEvent(
@@ -65,15 +65,27 @@ export function AuthProvider({ children }: AuthProviderProps) {
       );
     };
 
+    const unsubscribe = session.onTokensChanged(() => {
+      if (!session.accessToken) return;
+
+      socket.auth = { token: session.accessToken };
+      if (socket.connected) {
+        socket.disconnect();
+      }
+      socket.connect();
+    });
+
     socket.on('presence:online', handleOnline);
     socket.on('presence:offline', handleOffline);
 
     return () => {
+      unsubscribe();
       socket.off('presence:online', handleOnline);
       socket.off('presence:offline', handleOffline);
       socket.disconnect();
     };
   }, [snapshot.status]);
+
 
   // Login et register renvoient la même chose : tokens + utilisateur.
  const open = useCallback((response: AuthSuccessResponse) => {
