@@ -9,7 +9,7 @@
 .hero {
   height: var(--hero-height);
   overflow: hidden;
-  background: #fbefe6;
+  background: var(--surface);
 }
 .backdropScene {
   display: block;
@@ -33,7 +33,7 @@
   /* Chevauche le trottoir de l'illustration, pas le square (la maquette montait à -75 px). */
   margin: -40px auto 0;
   padding: 32px 38px;
-  border: 1px solid #e8e2d6;
+  border: 1px solid var(--line);
   border-radius: var(--r-card);
   background: var(--ground);
   box-shadow: var(--shadow);
@@ -57,7 +57,7 @@
   margin-top: var(--s4);
   padding: 12px 16px;
   border-radius: var(--r-field);
-  background: #f1f5eb;
+  background: var(--sage-soft);
   font-size: 13px;
   color: var(--ink);
 }

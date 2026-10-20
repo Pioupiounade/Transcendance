@@ -6,7 +6,7 @@
   /* Hauteurs surchargeables par l'hôte (tableau de bord : carte plus basse). */
   min-height: var(--map-min-height, 570px);
   border: 1px solid var(--map-line);
-  border-radius: 25px;
+  border-radius: var(--r-card);
   overflow: hidden;
   background: var(--map-ground);
 }
@@ -18,10 +18,10 @@
   background: var(--map-ground);
 }
 
-/* Tuiles OSM adoucies vers le fond `--map-ground` de la maquette : les pins forêt / terracotta ressortent.
-   Alternatives sans clé API comparées le 23/09/2026 (CARTO en exige une désormais) : ce filtre l'emporte. */
+/* Refonte : tuiles OSM presque monochromes et claires (façon « Positron », sans clé API : CARTO en exige une
+   depuis le 23/09/2026) ; les pins pastel ressortent sur ce fond. */
 .canvas :global(.leaflet-tile-pane) {
-  filter: saturate(0.45) sepia(0.18) contrast(0.92) brightness(1.04);
+  filter: grayscale(0.9) brightness(1.06) contrast(0.88);
 }
 
 /* Popup Leaflet aux couleurs du callout de la maquette (classes globales de Leaflet). */
@@ -46,8 +46,8 @@
 }
 .canvas :global(.leaflet-control-attribution) {
   font-size: 11px;
-  background: #fffaf0db;
-  color: #536253;
+  background: #ffffffd9;
+  color: var(--muted);
 }
 .canvas :global(.leaflet-bar) {
   border: 1px solid var(--line);
@@ -90,21 +90,21 @@
   place-items: center;
   width: 49px;
   height: 49px;
-  background: var(--brand);
-  color: #fff;
-  border: 4px solid #fffef7;
+  background: var(--sage);
+  color: var(--ink);
+  border: 4px solid var(--ground);
   border-radius: 50% 50% 50% 10%;
   transform: rotate(-45deg);
   box-shadow:
-    0 5px 0 #274c3520,
-    0 9px 18px #274c3526;
+    0 5px 0 #1c1c1c14,
+    0 9px 18px #1c1c1c26;
   transition: scale var(--t-base);
 }
 .pin > svg {
   transform: rotate(45deg);
 }
 .social {
-  background: var(--terra);
+  background: var(--lavender);
 }
 .cultural {
   background: var(--culture);
@@ -113,7 +113,7 @@
   scale: 1.1;
 }
 .selected {
-  outline: 8px solid #fff9;
+  outline: 8px solid #1c1c1c1f;
   scale: 1.12;
 }
 
