@@ -21,6 +21,10 @@
   --accent: #fff04d;
   --accent-soft: #fffac2;
   --on-accent: #1c1c1c;
+  /* Marque : le pin garde ses couleurs d'origine (forêt, fanion terracotta, point crème), quel que soit le thème. */
+  --logo-pin: #265c4b;
+  --logo-flag: #b65339;
+  --logo-dot: #fffefa;
   --surface: #fafafa;
   --ground: #ffffff;
   --ground-hover: #f4f4f4;
@@ -115,6 +119,9 @@
   --accent: #f0c37a;
   --accent-soft: #3a3120;
   --on-accent: #24130d;
+  --logo-pin: #e58a6b;
+  --logo-flag: #9fd3b5;
+  --logo-dot: #1a2922;
   --surface: #111c18;
   --ground: #1a2922;
   --ground-hover: #223429;
