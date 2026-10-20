@@ -1,15 +1,32 @@
 /* DESIGN.md §6 « Auth card », §7 breakpoints */
 .page {
-  --hero-height: 295px;
+  --hero-height: 360px;
   position: relative;
   padding-bottom: var(--s6);
 }
 
-/* Illustration partagée (`shared/ui` StreetScene), ancrée en bas et recadrée par `preserveAspectRatio: slice`. */
+/* Photo de rue (`assets/login.jpg`, bande 2:1), recadrée par `object-fit`, fondue vers le fond de page en bas
+   pour que la carte se détache. */
 .hero {
+  position: relative;
   height: var(--hero-height);
   overflow: hidden;
   background: var(--surface);
+}
+.heroPhoto {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 55%;
+}
+.hero::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 0;
+  height: 90px;
+  background: linear-gradient(to bottom, transparent, var(--surface));
+  pointer-events: none;
 }
 .backdropScene {
   display: block;
@@ -80,7 +97,7 @@
 
 @media (max-width: 760px) {
   .page {
-    --hero-height: 190px;
+    --hero-height: 230px;
     padding: 0 16px var(--s5);
   }
   .hero {
