@@ -34,12 +34,12 @@
   height: 100%;
 }
 
-/* Quelques pins très atténués (`AuthBackdrop`) sous l'illustration, derrière la carte. */
+/* Petit plan de quartier pastel (`AuthBackdrop`) sous la photo, derrière la carte ; ses couleurs sont déjà
+   discrètes, pas d'opacité globale. */
 .backdrop {
   position: absolute;
   inset: var(--hero-height) 0 0;
   overflow: hidden;
-  opacity: 0.09;
   pointer-events: none;
 }
 

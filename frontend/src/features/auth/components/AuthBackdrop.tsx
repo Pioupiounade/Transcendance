@@ -1,38 +1,54 @@
-import { Icon, type IconName } from '@/shared/ui';
 import styles from './AuthLayout.module.css';
 
-// Fond sous l'illustration : quelques pins des catégories (feuille, cœur, soleil), très atténués (CSS `.backdrop`).
-// La carte d'auth occupe le centre (x 475–965 sur 1440) : les pins restent sur les côtés.
+/**
+ * Fond des pages d'auth (refonte, 20/10/2026) : un petit plan de quartier très simple, rubans de rues en sauge,
+ * îlots au trait, un square et un bassin, un passage piéton. Pastels de la palette, aucune pin. Décoratif.
+ * La carte d'auth occupe le centre (x 475–965 sur 1440) : les rues passent dessous, les îlots restent sur les côtés.
+ */
 
-type Pin = { x: number; y: number; scale: number; color: string; icon: IconName; outline?: boolean };
+const ROAD = { fill: 'none', stroke: 'var(--sage-soft)', strokeLinecap: 'round', strokeLinejoin: 'round' } as const;
+const BLOCK = { fill: 'none', stroke: 'var(--line)', strokeWidth: 1.5, rx: 12 } as const;
 
-const PINS: Pin[] = [
-  { x: 150, y: 140, scale: 1.3, color: 'var(--brand)', icon: 'leaf' },
-  { x: 330, y: 330, scale: 0.9, color: 'var(--terra)', icon: 'heart', outline: true },
-  { x: 90, y: 520, scale: 1.1, color: 'var(--culture)', icon: 'sun' },
-  { x: 400, y: 620, scale: 0.7, color: 'var(--brand)', icon: 'leaf', outline: true },
-  { x: 1080, y: 120, scale: 1, color: 'var(--terra)', icon: 'heart' },
-  { x: 1300, y: 300, scale: 1.4, color: 'var(--brand)', icon: 'leaf', outline: true },
-  { x: 1120, y: 500, scale: 0.8, color: 'var(--culture)', icon: 'sun' },
-  { x: 1340, y: 640, scale: 1, color: 'var(--terra)', icon: 'heart' },
+// Îlots : [x, y, largeur, hauteur], hors des rubans et hors de la carte centrale.
+const BLOCKS: ReadonlyArray<readonly [number, number, number, number]> = [
+  [52, 60, 128, 96],
+  [52, 190, 128, 70],
+  [290, 40, 118, 118],
+  [290, 200, 118, 76],
+  [1030, 70, 96, 110],
+  [1030, 215, 96, 60],
+  [1300, 420, 110, 90],
+  [1300, 540, 110, 70],
+  [1000, 420, 150, 88],
 ];
-
-const PIN_PATH = 'M0 0C-14-18-22-28-22-40a22 22 0 1 1 44 0c0 12-8 22-22 40Z';
 
 export function AuthBackdrop() {
   return (
     <svg className={styles.backdropScene} viewBox="0 0 1440 700" preserveAspectRatio="xMidYMin slice" aria-hidden="true" focusable="false">
-      {PINS.map((pin) => (
-        <g key={`${pin.x}-${pin.y}`} transform={`translate(${pin.x} ${pin.y}) scale(${pin.scale})`}>
-          <path
-            d={PIN_PATH}
-            fill={pin.outline ? 'none' : pin.color}
-            stroke={pin.color}
-            strokeWidth={pin.outline ? 3 : 0}
-          />
-          <Icon name={pin.icon} size={22} x={-11} y={-51} color={pin.outline ? pin.color : '#fffef7'} />
-        </g>
+      {/* Rues : une grande courbe qui traverse sous la carte, deux rues latérales, une rue basse à droite. */}
+      <path d="M-40 520C300 490 480 330 760 300S1200 200 1500 150" strokeWidth={28} {...ROAD} />
+      <path d="M232-20C244 200 184 420 212 720" strokeWidth={18} {...ROAD} />
+      <path d="M1186-20C1166 220 1244 420 1206 720" strokeWidth={18} {...ROAD} />
+      <path d="M980 620L1500 590" strokeWidth={18} {...ROAD} />
+
+      {/* Passage piéton sur la grande courbe, en haut à droite (la courbe y passe à (1335, 182), pente -12°). */}
+      {[0, 1, 2, 3].map((i) => (
+        <rect key={i} x={1314 + i * 14} y={167} width={7} height={30} rx={2} fill="var(--ground)" transform="rotate(-12 1338 182)" />
       ))}
+
+      {/* Îlots au trait. */}
+      {BLOCKS.map(([x, y, w, h]) => (
+        <rect key={`${x}-${y}`} x={x} y={y} width={w} height={h} {...BLOCK} />
+      ))}
+
+      {/* Le square : pistache, trois arbres, entre les îlots de droite. */}
+      <circle cx={1092} cy={348} r={56} fill="#e6f0d9" />
+      <circle cx={1074} cy={338} r={9} fill="#cfe3c6" />
+      <circle cx={1108} cy={364} r={11} fill="#cfe3c6" />
+      <circle cx={1098} cy={318} r={7} fill="#cfe3c6" />
+
+      {/* Le bassin. */}
+      <ellipse cx={1330} cy={300} rx={72} ry={44} fill="var(--ice-soft)" />
     </svg>
   );
 }
