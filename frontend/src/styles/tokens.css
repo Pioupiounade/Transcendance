@@ -1,60 +1,79 @@
-/* Tokens de design — source : ../Docs/DESIGN.md (valeurs finales, forêt + terracotta).
-   Un seul bloc :root ; la maquette en avait deux, le second écrasant le premier. */
+/* Tokens de design — exploration « refonte » (docs/refonte/refs/brief.md) : interface claire et aérée, boutons noirs,
+   jaune citron pour l'attention, pastels (sauge, lavande, glace) pour les surfaces, hachures pour l'attente.
+   Un seul bloc :root ; les noms de tokens sont conservés pour que les composants et le thème admin continuent de lire. */
 :root {
-  /* Typographie */
-  --font: "Avenir Next", "Nunito Sans", Avenir, system-ui, sans-serif;
-  --display: 32px;
-  --title: 22px;
+  /* Typographie : géométrique, titres légers et grands (brief §3). */
+  --font: 'Plus Jakarta Sans Variable', 'Plus Jakarta Sans', Inter, system-ui, sans-serif;
+  --display: 40px;
+  --title: 24px;
   --body: 16px;
   --caption: 13px;
   --track: 0;
-  --btn-w: 700;
+  --btn-w: 600;
+  --title-w: 400;
 
-  /* Couleurs — cœur */
-  --brand: #265c4b;
-  --brand-hover: #1d493b;
-  --brand-press: #153a2f;
-  --terra: #b65339;
-  --surface: #f8f5ef;
-  --ground: #fffefa;
-  --ground-hover: #eeede4;
-  --ground-press: #efefec;
-  --field-bg: #fff;
-  --on-brand: #fff;
-  --trust: #265c4b;
-  --trust-soft: #e5eedf;
-  --ink: #263f36;
+  /* Couleurs — cœur. `--brand` est la couleur d'action (boutons noirs), `--accent` le jaune citron (surface,
+     jamais sous un texte blanc), `--terra` reste la couleur d'emphase secondaire : encre. */
+  --brand: #1c1c1c;
+  --brand-hover: #333333;
+  --brand-press: #000000;
+  --terra: #1c1c1c;
+  --accent: #fff04d;
+  --accent-soft: #fffac2;
+  --on-accent: #1c1c1c;
+  --surface: #fafafa;
+  --ground: #ffffff;
+  --ground-hover: #f4f4f4;
+  --ground-press: #ececec;
+  --field-bg: #ffffff;
+  --on-brand: #ffffff;
+  --ink: #1c1c1c;
 
-  /* Couleurs — secondaires */
-  --muted: #65736b;
-  --line: #dddcd2;
-  --danger: #b93832;
-  --danger-soft: #fbedea;
-  /* Statut « en attente » (file de modération) : ambre, même famille que l'étiquette culture. */
-  --pending: #78551b;
-  --pending-soft: #f6ebca;
-  --disabled-bg: #e2e4dc;
-  --disabled-ink: #687267;
-  --culture: #90681f;
-  --tag-culture-bg: #f6ebca;
-  --tag-culture-ink: #78551b;
-  --tag-social-bg: #f8e3d8;
-  --tag-social-ink: #a04b34;
-  --tag-environment-bg: #e5eedf;
-  --tag-environment-ink: #265c4b;
-  --avatar-bg: #f2d6bc;
-  --avatar-ink: #62452e;
-  --map-ground: #e5eacf;
-  --map-line: #cbd8bc;
-  --note-bg: #eee8d8;
-  --note-ink: #69715d;
-  --card-selected-bg: #f3f6ea;
-  /* Fonds de carte d'action, très légers, teintés par catégorie (chaleur sans bruit). */
-  --card-environment-bg: #f1f6ea;
-  --card-social-bg: #fbeee5;
-  --card-culture-bg: #fbf2dd;
+  /* Pastels (brief §2) : fond plein, fond léger, encre lisible dessus (contraste ≥ 7:1). */
+  --sage: #bccfd3;
+  --sage-soft: #dce7e9;
+  --sage-ink: #2f4d53;
+  --lavender: #d2ceec;
+  --lavender-soft: #eae8f7;
+  --lavender-ink: #46407a;
+  --ice: #dce9ee;
+  --ice-soft: #eef5f7;
+  --ice-ink: #35545e;
 
-  /* Espacements (DESIGN.md §3) */
+  /* Couleurs — secondaires. `--muted` lisible (5:1) ; `--muted-soft` = le gris du brief, décoratif seulement. */
+  --muted: #6b6b6b;
+  --muted-soft: #9e9e9e;
+  --line: #ececec;
+  --trust: #1c1c1c;
+  --trust-soft: var(--lavender-soft);
+  --danger: #c9372c;
+  --danger-soft: #fdecea;
+  /* Attente (file de modération, demande en cours) : gris hachuré (brief §3). */
+  --pending: #6b6b6b;
+  --pending-soft: #f2f2f2;
+  --hatch: repeating-linear-gradient(135deg, #c4c4c4 0 1.5px, transparent 1.5px 7px);
+  --disabled-bg: #f2f2f2;
+  --disabled-ink: #8a8a8a;
+  --culture: var(--accent);
+  --tag-culture-bg: var(--accent-soft);
+  --tag-culture-ink: #6b5b00;
+  --tag-social-bg: var(--lavender-soft);
+  --tag-social-ink: var(--lavender-ink);
+  --tag-environment-bg: var(--sage-soft);
+  --tag-environment-ink: var(--sage-ink);
+  --avatar-bg: var(--sage-soft);
+  --avatar-ink: var(--sage-ink);
+  --map-ground: #eef0f0;
+  --map-line: #ececec;
+  --note-bg: var(--ice-soft);
+  --note-ink: var(--ice-ink);
+  --card-selected-bg: var(--accent-soft);
+  /* Cartes d'action : blanches ; la catégorie teinte leur bandeau (ActionCard), plus le fond. */
+  --card-environment-bg: #ffffff;
+  --card-social-bg: #ffffff;
+  --card-culture-bg: #ffffff;
+
+  /* Espacements */
   --s1: 4px;
   --s2: 8px;
   --s3: 16px;
@@ -62,18 +81,19 @@
   --s5: 40px;
   --s6: 64px;
 
-  /* Rayons */
+  /* Rayons : pilules partout, grands arrondis sur les surfaces. */
   --r-btn: 999px;
-  --r-field: 12px;
-  --r-chip: 30px;
-  --r-action: 19px;
-  --r-panel: 22px;
-  --r-card: 24px;
-  --r-tag: 7px;
+  --r-field: 18px;
+  --r-chip: 999px;
+  --r-action: 26px;
+  --r-panel: 26px;
+  --r-card: 30px;
+  --r-tag: 999px;
 
   /* Élévation, focus, mouvement */
-  --shadow: 0 8px 30px #263f3610;
-  --focus-ring: 3px solid var(--terra);
+  --shadow: 0 10px 30px #1c1c1c0d;
+  --shadow-float: 0 14px 36px #1c1c1c1f;
+  --focus-ring: 3px solid var(--ink);
   --focus-offset: 3px;
   --t-fast: 120ms;
   --t-base: 150ms;
@@ -82,9 +102,9 @@
   /* mobile ≤ 760px · tablette 761–1100px · desktop > 1100px · large > 1500px */
 }
 
-/* Thème de l'espace d'administration (#22) : nuit de forêt, accent inversé (la terracotta devient la couleur
-   d'action, la sauge l'accent secondaire) pour qu'on sache toujours qu'on est côté admin. Posé sur <html> par
-   `AdminLayout` ; ne redéfinit que des couleurs. Contrastes vérifiés (texte ≥ 4.5:1). */
+/* Thème de l'espace d'administration (#22), inchangé dans la refonte : nuit de forêt, accent inversé (la terracotta
+   devient la couleur d'action, la sauge l'accent secondaire) pour qu'on sache toujours qu'on est côté admin. Posé sur
+   <html> par `AdminLayout` ; ne redéfinit que des couleurs. Contrastes vérifiés (texte ≥ 4.5:1). */
 :root[data-theme='admin'] {
   color-scheme: dark;
   --brand: #e58a6b;
@@ -92,28 +112,47 @@
   --brand-press: #d97a5a;
   --on-brand: #24130d;
   --terra: #9fd3b5;
+  --accent: #f0c37a;
+  --accent-soft: #3a3120;
+  --on-accent: #24130d;
   --surface: #111c18;
   --ground: #1a2922;
   --ground-hover: #223429;
   --ground-press: #2a3f33;
   --field-bg: #131f1a;
+  --sage-soft: #223a2f;
+  --sage-ink: #9fd3b5;
+  --lavender-soft: #2a2a3f;
+  --lavender-ink: #c9c4ee;
+  --ice-soft: #1f3028;
+  --ice-ink: #b7c5b8;
   --trust: #9fd3b5;
   --trust-soft: #223a2f;
   --ink: #f4f0e6;
   --muted: #a8b7ad;
+  --muted-soft: #7f8f85;
   --line: #344a40;
   --danger: #f59a8f;
   --danger-soft: #3d2320;
   --pending: #f0c37a;
   --pending-soft: #3a3120;
+  --hatch: repeating-linear-gradient(135deg, #4a5a50 0 1.5px, transparent 1.5px 7px);
   --disabled-bg: #25342d;
   --disabled-ink: #8a9a90;
+  --tag-culture-bg: #f6ebca;
+  --tag-culture-ink: #78551b;
+  --tag-social-bg: #f8e3d8;
+  --tag-social-ink: #a04b34;
+  --tag-environment-bg: #e5eedf;
+  --tag-environment-ink: #265c4b;
   --avatar-bg: #3a4d43;
   --avatar-ink: #f4f0e6;
   --note-bg: #1f3028;
   --note-ink: #b7c5b8;
   --card-selected-bg: #20332a;
   --shadow: 0 8px 30px #0000004d;
+  --shadow-float: 0 14px 36px #0000006b;
+  --focus-ring: 3px solid #9fd3b5;
 }
 
 @media (prefers-reduced-motion: reduce) {

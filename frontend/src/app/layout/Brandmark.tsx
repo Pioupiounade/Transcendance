@@ -13,7 +13,7 @@ export function Brandmark({ className, size = 34 }: { className?: string; size?:
       aria-hidden="true"
       focusable="false"
     >
-      <path fill="var(--terra)" d="M73.29 -47.93L131.65 2.8A8 8 0 0 1 130.76 15.55L65.9 57.66Z" />
+      <path fill="var(--accent)" d="M73.29 -47.93L131.65 2.8A8 8 0 0 1 130.76 15.55L65.9 57.66Z" />
       <path fill="var(--brand)" d="M85.03 52.63L6.8 179.01A8 8 0 0 1 -6.8 179.01L-85.03 52.63A100 100 0 1 1 85.03 52.63Z" />
       <path fill="var(--ground)" d="M7 -20a25 25 0 1 0 50 0a25 25 0 1 0 -50 0Z" />
     </svg>

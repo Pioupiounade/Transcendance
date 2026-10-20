@@ -1,4 +1,4 @@
-/* Base globale — reset minimal + typographie (DESIGN.md §2, §4 focus). Le reste vit dans les composants. */
+/* Base globale — reset minimal + typographie (refonte : titres grands et légers). Le reste vit dans les composants. */
 *,
 *::before,
 *::after {
@@ -37,14 +37,19 @@ ol {
 
 h1 {
   font-size: var(--display);
-  font-weight: 700;
-  line-height: 1.15;
-  letter-spacing: -1px;
+  font-weight: var(--title-w);
+  line-height: 1.1;
+  letter-spacing: -0.8px;
 }
 
 h2 {
   font-size: var(--title);
-  font-weight: 700;
+  font-weight: 500;
+  letter-spacing: -0.4px;
+}
+
+h3 {
+  font-weight: 600;
 }
 
 a {
@@ -80,7 +85,7 @@ textarea {
 
 @media (max-width: 760px) {
   h1 {
-    font-size: 28px;
+    font-size: 32px;
   }
 }
 
