@@ -78,8 +78,12 @@ const toParticipants = (rows: ActionParticipantApi[]): ActionParticipant[] =>
 const loadDetail = async (
   id: string,
   signal: AbortSignal,
-): Promise<Detail> => {
+): Promise<Detail | null> => {
   const action = await fetchAction(id, signal);
+
+  if (action === null) {
+    return null;
+  }
 
   const [participantRows, creatorProfileResult, organization] =
     await Promise.all([
@@ -134,10 +138,30 @@ export const ActionDetailPage: React.FC<ActionDetailPageProps> = ({ editPath }) 
   // groupe des participants ; le reste de la fiche ne bouge pas.
   const refresh = async (actionId: string, withParticipants: boolean) => {
     const action = await fetchAction(actionId);
-    const participants = withParticipants ? toParticipants(await fetchActionParticipants(actionId)) : null;
+
+    if (action === null) {
+      setLoaded((previous) =>
+        previous?.id === actionId
+          ? { id: actionId, detail: null }
+          : previous,
+      );
+      return;
+    }
+
+    const participants = withParticipants
+      ? toParticipants(await fetchActionParticipants(actionId))
+      : null;
+
     setLoaded((previous) =>
       previous?.detail && previous.id === actionId
-        ? { id: actionId, detail: { ...previous.detail, action, participants: participants ?? previous.detail.participants } }
+        ? {
+            id: actionId,
+            detail: {
+              ...previous.detail,
+              action,
+              participants: participants ?? previous.detail.participants,
+            },
+          }
         : previous,
     );
   };

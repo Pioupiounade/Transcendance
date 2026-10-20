@@ -21,7 +21,10 @@ export function PublicProfilePage() {
   const [error, setError] = useState(false);
 
   const [unavailableReason, setUnavailableReason] = useState<
-    'ACCOUNT_DEACTIVATED' | 'ACCOUNT_SUSPENDED' | null
+    | 'PROFILE_UNAVAILABLE'
+    | 'ACCOUNT_DEACTIVATED'
+    | 'ACCOUNT_SUSPENDED'
+    | null
   >(null);
 
   useEffect(() => {
@@ -41,14 +44,8 @@ export function PublicProfilePage() {
 
     async function loadData() {
       try {
-        const [data, friends, sentRequests, receivedRequests, friendshipRelation] =
-          await Promise.all([
-            getPublicProfile(userId!),
-            friendsApi.getMyFriends(),
-            friendsApi.getSentRequests(),
-            friendsApi.getReceivedRequests(),
-            friendsApi.getFriendshipStatus(userId!),
-          ]);
+        // Le profil public est accessible même sans connexion.
+        const data = await getPublicProfile(userId!);
 
         if (!active) return;
 
@@ -68,40 +65,60 @@ export function PublicProfilePage() {
 
         let friendshipStatus: FriendshipStatus = 'NONE';
 
-        if (friendshipRelation.status === 'BLOCKED_BY_ME') {
-          friendshipStatus = 'BLOCKED';
-        } else if (friendshipRelation.status === 'BLOCKED_BY_OTHER') {
-          friendshipStatus = 'BLOCKED_BY_OTHER';
-        } else if (friendshipRelation.status === 'ACCEPTED') {
-          friendshipStatus = 'ACCEPTED';
-        } else if (
-          sentRequests.some(
-            (request: any) =>
-              String(request.addressee?.user_id) === String(userId),
-          )
-        ) {
-          friendshipStatus = 'PENDING_SENT';
-        } else if (
-          receivedRequests.some(
-            (request: any) =>
-              String(request.requester?.user_id) === String(userId),
-          )
-        ) {
-          friendshipStatus = 'PENDING_RECEIVED';
-        } else if (
-          friends.some(
-            (friend: any) =>
-              String(friend.user_id ?? friend.friend?.user_id) === String(userId),
-          )
-        ) {
-          friendshipStatus = 'ACCEPTED';
+        // Les données d'amitié ne sont utiles que si l'utilisateur est connecté.
+        if (currentUserId) {
+          const [
+            friends,
+            sentRequests,
+            receivedRequests,
+            friendshipRelation,
+          ] = await Promise.all([
+            friendsApi.getMyFriends(),
+            friendsApi.getSentRequests(),
+            friendsApi.getReceivedRequests(),
+            friendsApi.getFriendshipStatus(userId!),
+          ]);
+
+          if (!active) return;
+
+          if (friendshipRelation.status === 'BLOCKED_BY_ME') {
+            friendshipStatus = 'BLOCKED';
+          } else if (friendshipRelation.status === 'BLOCKED_BY_OTHER') {
+            friendshipStatus = 'BLOCKED_BY_OTHER';
+          } else if (friendshipRelation.status === 'ACCEPTED') {
+            friendshipStatus = 'ACCEPTED';
+          } else if (
+            sentRequests.some(
+              (request: any) =>
+                String(request.addressee?.user_id) === String(userId),
+            )
+          ) {
+            friendshipStatus = 'PENDING_SENT';
+          } else if (
+            receivedRequests.some(
+              (request: any) =>
+                String(request.requester?.user_id) === String(userId),
+            )
+          ) {
+            friendshipStatus = 'PENDING_RECEIVED';
+          } else if (
+            friends.some(
+              (friend: any) =>
+                String(friend.user_id ?? friend.friend?.user_id) ===
+                String(userId),
+            )
+          ) {
+            friendshipStatus = 'ACCEPTED';
+          }
         }
 
-        // Profil public complet
         setUserProfile({
           username: data.username,
           description: data.description ?? undefined,
-          profilePicture: (data as any).profile_picture ?? data.profilePicture ?? undefined,
+          profilePicture:
+            (data as any).profile_picture ??
+            data.profilePicture ??
+            undefined,
           commune: data.commune ?? null,
           visibility: data.visibility ?? 'PUBLIC',
           location: null,
@@ -111,6 +128,7 @@ export function PublicProfilePage() {
         setUserInterests(data.interests ?? []);
       } catch (err: any) {
         if (!active) return;
+
         if (err?.status === 403 || err?.status === 404) {
           setIsPrivate(true);
         } else {
@@ -120,6 +138,7 @@ export function PublicProfilePage() {
         if (active) setIsLoading(false);
       }
     }
+
 
     loadData();
 
@@ -162,12 +181,23 @@ export function PublicProfilePage() {
     );
   }
 
+  if (unavailableReason === 'PROFILE_UNAVAILABLE') {
+    return (
+      <div style={{ textAlign: 'center', padding: '4rem 1rem' }}>
+        <h2>Profile not found</h2>
+        <p className="help" style={{ justifyContent: 'center' }}>
+          Public profile unavailable.
+        </p>
+      </div>
+    );
+  }
+
   if (isPrivate) {
     return (
       <div style={{ textAlign: 'center', padding: '4rem 1rem' }}>
-        <h2>Private Profile</h2>
+        <h2>Profile unavailable</h2>
         <p className="help" style={{ justifyContent: 'center' }}>
-          This user has set their profile to private.
+          This profile does not exist or is not publicly accessible.
         </p>
       </div>
     );

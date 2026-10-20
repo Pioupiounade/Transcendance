@@ -40,7 +40,6 @@ const AdminUsersPage = lazyPage(() => import('@/features/admin').then((m) => m.A
 const AdminActionsPage = lazyPage(() => import('@/features/admin').then((m) => m.AdminActionsPage));
 const AdminOrganizationsPage = lazyPage(() => import('@/features/admin').then((m) => m.AdminOrganizationsPage));
 const FriendsPage = lazyPage(() => import('@/features/friends').then((m) => m.FriendsPage));
-
 const router = createBrowserRouter([
   {
     path: ROUTES.home,
@@ -109,7 +108,6 @@ const router = createBrowserRouter([
           },
 
           { path: ROUTES.actionDetail, element: <ActionDetailPage editPath={editActionPath} /> },
-          { path: ROUTES.profileDetail, element: <ProfilePage /> },
           { path: ROUTES.publicProfile, element: <PublicProfilePage /> },
 
           {

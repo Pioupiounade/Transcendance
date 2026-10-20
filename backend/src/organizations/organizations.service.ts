@@ -25,18 +25,21 @@ export class OrganizationsService {
   }
 
   //2. recupere une organisation grace a son id
-  async findOne(id: string) { // Nest JS recupere l'id de l'URL comme un string
+  async findOne(id: string) {
+    if (!/^\d+$/.test(id)) {
+      return null;
+    }
+
     const organization = await this.prisma.organization.findUnique({
       where: {
-        organization_id: BigInt(id), // cherche dans la PostgreSQL apres avoir converti le string en BigInt
+        organization_id: BigInt(id),
       },
     });
 
     if (!organization) {
-      throw new NotFoundException('Organization not found');
+      return null;
     }
 
-    // On retourne l'organisation avec son BigInt converti en string
     return {
       ...organization,
       organization_id: organization.organization_id.toString(),

@@ -3,22 +3,46 @@ import { useResource } from '@/shared/hooks/useResource';
 import { fetchOrganization, fetchOrganizationMembers, fetchMyOrganizationMembership } from './organizationsApi';
 
 /** Une organisation par id : `notFound` (404) séparé des autres erreurs. */
+
+/** Une organisation par id : absence et erreurs sont distinguées. */
 export function useOrganization(id: string) {
-  const load = useCallback((signal: AbortSignal) => fetchOrganization(id, signal), [id]);
+  const load = useCallback(
+    (signal: AbortSignal) => fetchOrganization(id, signal),
+    [id],
+  );
+
   const { data, loading, error } = useResource(load);
+
   return {
     organization: data,
     loading,
-    notFound: error?.status === 404,
+    notFound:
+      !loading &&
+      (data == null || error?.status === 404),
     error: error && error.status !== 404 ? error : null,
   };
 }
 
-/** Membres actifs d'une organisation. */
-export function useOrganizationMembers(id: string) {
-  const load = useCallback((signal: AbortSignal) => fetchOrganizationMembers(id, signal), [id]);
+/** Membres actifs d'une organisation existante. */
+export function useOrganizationMembers(
+  id: string,
+  enabled: boolean,
+) {
+  const load = useCallback(
+    (signal: AbortSignal) =>
+      enabled
+        ? fetchOrganizationMembers(id, signal)
+        : Promise.resolve([]),
+    [id, enabled],
+  );
+
   const { data, loading, error } = useResource(load);
-  return { members: data ?? [], loading, error };
+
+  return {
+    members: data ?? [],
+    loading: enabled && loading,
+    error: enabled ? error : null,
+  };
 }
 
 export function useMyOrganizationMembership(id: string, enabled: boolean) {
