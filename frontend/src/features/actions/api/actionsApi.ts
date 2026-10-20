@@ -2,7 +2,17 @@ import { http } from '@/shared/api';
 import type { Action, ActionRecord, Category, LatLng } from '../types';
 
 /** Une action enrichie (`participant_count`, `remaining_seats`). 404 → `ApiError` status 404. */
-export const fetchAction = (id: string, signal?: AbortSignal) => http.get<Action>(`/actions/${id}`, { signal });
+export const fetchAction = async (
+  id: string,
+  signal?: AbortSignal,
+): Promise<Action | null> => {
+  const action = await http.get<Action | null>(
+    `/actions/${id}`,
+    { signal },
+  );
+
+  return action ?? null;
+};
 
 /** Récupère la liste des actions. */
 export const fetchActions = (signal?: AbortSignal) => http.get<Action[]>('/actions', { signal });

@@ -43,16 +43,27 @@ export function OrganizationPage({ listPath, upcomingActionPath, managePath }: O
   const { id = '' } = useParams<{ id: string }>();
   const { status, user } = useAuth();
   const { organization, loading, notFound, error } = useOrganization(id);
-  const members = useOrganizationMembers(id);
+
+  const organizationAvailable =
+    !loading &&
+    organization != null &&
+    !notFound &&
+    !error;
+
+  const members = useOrganizationMembers(
+    id,
+    organizationAvailable,
+  );
+
   const membership = useMyOrganizationMembership(
-  id,
-  status === 'authenticated',
-);
+    id,
+    status === 'authenticated' && organizationAvailable,
+  );
+
   // La liste publique ne contient que les membres actifs : m'y trouver = être membre.
   const myRole = members.members.find((member) => member.user_id === user?.user_id)?.role ?? null;
   const canManage = managerLevel(myRole, user?.role === ROLE_APP.ADMIN) !== null;
 
-  const message = notFound ? text.notFound : error ? text.error : null;
   const inactive = organization !== null && organization.organization_status !== ORGANIZATION_STATUS.ACTIVE;
 
   return (
@@ -67,9 +78,23 @@ export function OrganizationPage({ listPath, upcomingActionPath, managePath }: O
           {text.loading}
         </p>
       )}
-      {message && (
+      {notFound && (
+        <div
+          className={styles.state}
+          role="status"
+          style={{ textAlign: 'center', padding: '4rem 1rem' }}
+        >
+          <h2>Organization not found</h2>
+          <p>{text.notFound}</p>
+          <ButtonLink to={listPath} variant="secondary">
+            {text.back}
+          </ButtonLink>
+        </div>
+      )}
+
+      {error && (
         <div className={styles.state} role="alert">
-          <p>{message}</p>
+          <p>{text.error}</p>
           <ButtonLink to={listPath} variant="secondary">
             {text.back}
           </ButtonLink>

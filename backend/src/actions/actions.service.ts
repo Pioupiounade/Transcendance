@@ -32,6 +32,10 @@ export class ActionsService {
   //2. recupere une action grace a son id
   // GET /actions/:id
   async findOne(id: string) {
+    if (!/^\d+$/.test(id)) {
+      return null;
+    }
+
     const action = await this.prisma.action.findUnique({
       where: {
         action_id: BigInt(id),
@@ -39,7 +43,7 @@ export class ActionsService {
     });
 
     if (!action) {
-      throw new NotFoundException('Action not found');
+      return null;
     }
 
     const participantCount = await this.prisma.participation.count({

@@ -20,6 +20,7 @@ import { ProfilesService } from './profiles.service';
 import { CreateProfileDto } from './dto/create-profile.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth-guard';
+import { OptionalJwtAuthGuard } from '../auth/guards/optional-jwt-auth-guard';
 import { createStorageOptions } from '../common/multer.config';
 import { DeleteFileOnErrorInterceptor } from '../common/interceptor';
 
@@ -43,7 +44,7 @@ export class ProfilesController {
     return this.profilesService.findOwnProfile(req.user.id);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(OptionalJwtAuthGuard)
   @Get(':userId')
   findOne(
     @Req() req: any,
@@ -51,7 +52,7 @@ export class ProfilesController {
   ) {
     return this.profilesService.findOne(
       userId,
-      req.user.id,
+      req.user?.id,
     );
   }
 

@@ -26,11 +26,16 @@ export function useAction(id: string) {
   }, [id]);
 
   const loading = result === null || result.id !== id;
-  const error = loading ? null : result.error;
+  const current = loading ? null : result;
+  const error = current?.error ?? null;
+
   return {
-    action: loading ? null : result.action,
+    action: current?.action ?? null,
     loading,
-    notFound: error?.status === 404,
+    notFound:
+      current !== null &&
+      (current.error?.status === 404 ||
+        (current.error === null && current.action === null)),
     error: error && error.status !== 404 ? error : null,
   };
 }
