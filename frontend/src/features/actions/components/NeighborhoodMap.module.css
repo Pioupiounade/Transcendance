@@ -23,7 +23,7 @@
    (matrice de couleur SVG inline, espace sRGB) : il ne touche que les tuiles, jamais les pins ni les popups.
    12 variantes comparées le 20/10/2026 : le gris était jugé sombre et froid. */
 .canvas :global(.leaflet-tile-pane) {
-  filter: saturate(0.6) brightness(1.08) contrast(0.86)
+  filter: saturate(0.78) brightness(1.06) contrast(0.9)
     url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg'><filter id='sage' color-interpolation-filters='sRGB'><feColorMatrix type='matrix' values='0.894 0 0 0 0 0 0.925 0 0 0 0 0 0.933 0 0 0 0 0 1 0'/></filter></svg>#sage");
 }
 
