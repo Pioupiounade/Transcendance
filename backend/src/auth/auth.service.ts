@@ -10,6 +10,7 @@ import { CreateUserDto } from '../users/dto/create-user.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import * as argon2 from 'argon2';
 import { randomUUID } from 'node:crypto';
+import { Cron, CronExpression } from '@nestjs/schedule';
 
 @Injectable()
 export class AuthService {
@@ -121,6 +122,10 @@ export class AuthService {
 		sessionId: string,
 		refreshToken: string,
 		) {
+
+		if (!sessionId) {
+			throw new UnauthorizedException('Invalid session');
+		}
 		const user = await this.usersService.findOne(userId);
 
 		const authSession = await this.prisma.authSession.findFirst({
@@ -132,6 +137,10 @@ export class AuthService {
 
 		if (!user || !authSession) {
 			throw new UnauthorizedException('Access Denied');
+		}
+
+		if (authSession.expires_at <= new Date()) {
+			throw new UnauthorizedException('Session expired');
 		}
 
 		const isRefreshValid = await argon2.verify(
@@ -241,5 +250,18 @@ export class AuthService {
 			where: { user_id: BigInt(userId) },
 			data: { refresh_token: hashedToken },
 		});
+	}
+
+	@Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
+	async purgeExpiredSessions() {
+		const result = await this.prisma.authSession.deleteMany({
+			where: {
+				expires_at: {
+				lt: new Date(),
+				},
+			},
+		});
+
+		console.log(`Purged ${result.count} expired auth sessions`);
 	}
 }

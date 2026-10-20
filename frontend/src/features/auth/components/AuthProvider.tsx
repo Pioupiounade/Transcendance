@@ -44,15 +44,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
   useEffect(() => {
     if (snapshot.status !== 'authenticated') return;
 
-    const token = session.accessToken;
-    if (!token) return;
-
-    const socket = io({
-      path: '/socket.io',
-      auth: {
-        token,
-      },
-    });
+  const socket = io({
+    path: '/socket.io',
+    auth: (cb) => cb({ token: session.accessToken }),
+  });
 
     const handleOnline = ({ userId }: { userId: string }) => {
       window.dispatchEvent(

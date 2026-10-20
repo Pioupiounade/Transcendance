@@ -131,11 +131,39 @@ export class ProfilesService {
         }
       }
     }
-    const { location, user, ...safeProfile } = profile;
+        const { location, user, ...safeProfile } = profile;
 
-    const isOnline = this.realtimeGateway.isUserOnline(
-      profile.user_id.toString(),
-    );
+    let canSeePresence = isOwner;
+
+    if (!isOwner && viewerId) {
+      const visitorId = BigInt(viewerId);
+
+      const friendship = await this.prisma.friendship.findFirst({
+        where: {
+          status: FriendshipStatus.ACTIVE,
+          blocked_by_user_id: null,
+          OR: [
+            {
+              user1_id: visitorId,
+              user2_id: profile.user_id,
+            },
+            {
+              user1_id: profile.user_id,
+              user2_id: visitorId,
+            },
+          ],
+        },
+        select: {
+          user1_id: true,
+        },
+      });
+
+      canSeePresence = Boolean(friendship);
+    }
+
+      const isOnline =
+      canSeePresence &&
+      this.realtimeGateway.isUserOnline(profile.user_id.toString());
 
     return {
       ...safeProfile,

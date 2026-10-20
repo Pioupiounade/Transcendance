@@ -1,4 +1,4 @@
-import { Injectable, ForbiddenException } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { Request } from 'express';
@@ -14,13 +14,29 @@ export class JwtRefreshStrategy extends PassportStrategy(Strategy, 'jwt-refresh'
 		});
 	}
 
-	validate(req: Request, payload: any) {
-		const authHeader = req.body.refresh_token;
-		if (!authHeader) {
-			throw new ForbiddenException('Missing refresh token');
+	validate(
+		req: Request,
+		payload: {
+			id: string;
+			email: string;
+			role: string;
+			sessionId: string;
+		},
+	) {
+		if (!payload?.sessionId) {
+			throw new UnauthorizedException('Missing session ID');
 		}
 
-		const refreshToken = authHeader.replace('Bearer ', '').trim();
-		return { ...payload, refreshToken }; // Include the refresh token in the returned payload
+		const refreshToken = req.body?.refresh_token;
+
+		if (typeof refreshToken !== 'string' || !refreshToken.trim()) {
+			throw new UnauthorizedException('Missing refresh token');
+		}
+
+		return {
+			...payload,
+			sessionId: payload.sessionId,
+			refreshToken: refreshToken.replace(/^Bearer\s+/i, '').trim(),
+		};
 	}
 }

@@ -8,6 +8,7 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { Server, Socket } from 'socket.io';
 import { PrismaService } from '../prisma/prisma.service';
+import { ConfigService } from '@nestjs/config';
 
 @WebSocketGateway({
   cors: {
@@ -30,7 +31,43 @@ export class RealtimeGateway
   constructor(
     private readonly jwtService: JwtService,
     private readonly prisma: PrismaService,
+    private readonly configService: ConfigService,
   ) {}
+
+  private async getFriendIds(userId: string): Promise<string[]> {
+    const friendships = await this.prisma.friendship.findMany({
+      where: {
+        status: 'ACTIVE',
+        blocked_by_user_id: null,
+        OR: [
+          { user1_id: BigInt(userId) },
+          { user2_id: BigInt(userId) },
+        ],
+      },
+      select: {
+        user1_id: true,
+        user2_id: true,
+      },
+    });
+
+    return friendships.map((friendship) =>
+      (friendship.user1_id === BigInt(userId)
+        ? friendship.user2_id
+        : friendship.user1_id
+      ).toString(),
+    );
+  }
+
+  private async emitPresenceToFriends(
+    userId: string,
+    event: 'presence:online' | 'presence:offline',
+  ): Promise<void> {
+    const friendIds = await this.getFriendIds(userId);
+
+    for (const friendId of friendIds) {
+      this.server.to(`user:${friendId}`).emit(event, { userId });
+    }
+  }
 
   async handleConnection(@ConnectedSocket() client: Socket) {
     const token = client.handshake.auth?.token;
@@ -43,10 +80,16 @@ export class RealtimeGateway
     try {
       const payload = await this.jwtService.verifyAsync<{
         id: string;
-      }>(token);
+      }>(token, {
+        secret: this.configService.get<string>('JWT_SECRET') || 'fallback-secret',
+      });
 
       client.data.userId = payload.id;
       client.join(`user:${payload.id}`);
+
+      const room = `user:${payload.id}`;
+      const connectionCount =
+        this.server.sockets.adapter.rooms.get(room)?.size ?? 0;
 
       await this.prisma.user.update({
         where: {
@@ -57,13 +100,12 @@ export class RealtimeGateway
         },
       });
 
-      const room = `user:${payload.id}`;
-      const connectionCount = this.server.sockets.adapter.rooms.get(room)?.size ?? 0;
-
       if (connectionCount === 1) {
-        this.server.emit('presence:online', {
-          userId: payload.id,
-        });
+        try {
+          await this.emitPresenceToFriends(payload.id, 'presence:online');
+        } catch (error) {
+          console.error('Failed to broadcast online presence:', error);
+        }
       }
     } catch {
       client.disconnect();
@@ -75,23 +117,32 @@ export class RealtimeGateway
 
     if (!userId) return;
 
-    await this.prisma.user.update({
-      where: {
-        user_id: BigInt(userId),
-      },
-      data: {
-        last_seen_at: new Date(),
-      },
-    });
+    try {
+      await this.prisma.user.update({
+        where: {
+          user_id: BigInt(userId),
+        },
+        data: {
+          last_seen_at: new Date(),
+        },
+      });
+    } catch (error) {
+      console.error(
+        `Failed to update last_seen_at for user ${userId}:`,
+        error,
+      );
+    }
 
     const room = `user:${userId}`;
     const remainingConnections =
       this.server.sockets.adapter.rooms.get(room)?.size ?? 0;
 
     if (remainingConnections === 0) {
-      this.server.emit('presence:offline', {
-        userId,
-      });
+      try {
+        await this.emitPresenceToFriends(userId, 'presence:offline');
+      } catch (error) {
+        console.error('Failed to broadcast offline presence:', error);
+      }
     }
   }
 }
