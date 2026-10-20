@@ -21,8 +21,8 @@ Pioupiounades (nom, pin, structure des pages). L'espace admin garde son thème s
 - **Accueil connecté** : « Hello {name}! » en grand, jauge (actions de mon agenda / actions ouvertes autour) avec
   « + » citron vers la création, puces de catégorie qui filtrent carte et « Near you ».
 - **Landing** : hero centré sans l'illustration de rue, tuiles pastel (`Steps`), bandeau final noir + bouton citron.
-- **Carte** : tuiles OSM pastel sous un voile sauge (filtre CSS + matrice SVG inline, pas de clé API ; le gris
-  de la première passe était jugé sombre et froid), pins pastel à icône noire.
+- **Carte** : tuiles OSM dans leurs couleurs d'origine (choix de l'utilisateur, `refs/Screenshot from
+  2026-10-20 12-02-42.png` ; le gris puis le voile sauge ont été essayés et écartés), pins pastel à icône noire.
 - **Illustration de rue** (`StreetScene`) : recolorée (gris, pastels, citron) pour les pages d'auth et My Actions visiteur.
 
 ## Non traité (à décider ensemble)

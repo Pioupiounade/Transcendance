@@ -18,13 +18,11 @@
   background: var(--map-ground);
 }
 
-/* Refonte : tuiles OSM pastel (parcs verts doux, eau bleu glace, rues jaune pâle) sous un voile sauge, pour rester
-   dans la palette sans clé API (CARTO en exige une depuis le 23/09/2026). Le voile est un produit par #e4ecee
-   (matrice de couleur SVG inline, espace sRGB) : il ne touche que les tuiles, jamais les pins ni les popups.
-   12 variantes comparées le 20/10/2026 : le gris était jugé sombre et froid. */
+/* Refonte : tuiles OSM dans leurs couleurs d'origine (référence de l'utilisateur, 20/10/2026 :
+   `docs/refonte/refs/Screenshot from 2026-10-20 12-02-42.png`). Les voiles gris puis sauge ont été essayés et
+   écartés ; CARTO exige une clé API depuis le 23/09/2026. Les pins pastel à icône noire restent lisibles. */
 .canvas :global(.leaflet-tile-pane) {
-  filter: saturate(0.78) brightness(1.06) contrast(0.9)
-    url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg'><filter id='sage' color-interpolation-filters='sRGB'><feColorMatrix type='matrix' values='0.894 0 0 0 0 0 0.925 0 0 0 0 0 0.933 0 0 0 0 0 1 0'/></filter></svg>#sage");
+  filter: none;
 }
 
 /* Popup Leaflet aux couleurs du callout de la maquette (classes globales de Leaflet). */

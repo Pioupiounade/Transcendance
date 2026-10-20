@@ -67,7 +67,7 @@
   --tag-environment-ink: var(--sage-ink);
   --avatar-bg: var(--sage-soft);
   --avatar-ink: var(--sage-ink);
-  --map-ground: #e9eff0;
+  --map-ground: #f2efe9; /* fond « land » des tuiles OSM, visible pendant le chargement */
   --map-line: #ececec;
   --note-bg: var(--ice-soft);
   --note-ink: var(--ice-ink);
