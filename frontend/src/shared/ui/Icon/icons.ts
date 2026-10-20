@@ -21,6 +21,7 @@ export const ICONS = {
   shield: '<path d="M12 3 5 6v6c0 4.5 3 7.5 7 9 4-1.5 7-4.5 7-9V6l-7-3Z"/><path d="m9 12 2 2 4-4"/>',
   clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
   flag: '<path d="M5 21V4M5 4h12l-2 4 2 4H5"/>',
+  bell: '<path d="M6 10a6 6 0 0 1 12 0c0 5 2 7 2 7H4s2-2 2-7ZM10 20a2 2 0 0 0 4 0M12 2v2"/>',
 } as const;
 
 export type IconName = keyof typeof ICONS;

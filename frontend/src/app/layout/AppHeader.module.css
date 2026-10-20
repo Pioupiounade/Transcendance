@@ -59,6 +59,12 @@
   align-items: center;
   gap: 12px;
 }
+/* Desktop : le groupe garde sa largeur naturelle, la recherche ne descend jamais sous ses 200 px. */
+@media (min-width: 761px) {
+  .actions {
+    min-width: max-content;
+  }
+}
 
 .profileLink {
   display: inline-flex;
@@ -95,14 +101,11 @@
     padding: 0 24px;
     gap: 16px;
   }
-  .nav {
-    gap: 16px;
-  }
 }
 
-/* Tablette étroite : icônes seules (libellé lu par les lecteurs d'écran, `title` au survol), pour que la nav
-   reste assez courte et donc centrée entre deux colonnes égales. */
-@media (max-width: 1000px) {
+/* Sous 1350 px : icônes seules (libellé lu par les lecteurs d'écran, `title` au survol), pour que le logo, la nav
+   et les actions tiennent sur une ligne. */
+@media (max-width: 1349px) {
   .nav {
     gap: 6px;
   }
@@ -119,6 +122,59 @@
     clip: rect(0 0 0 0);
     white-space: nowrap;
     border: 0;
+  }
+}
+
+/* Avec l'entrée admin, la ligne est plus longue : icônes seules et entrée admin carrée dès 1439 px.
+   `:where()` garde aux règles le poids de `.nav` : l'espacement ≤ 1000 px plus bas l'emporte. */
+@media (min-width: 761px) and (max-width: 1439px) {
+  :where(.topbar:has(.adminLink)) .nav {
+    gap: 6px;
+  }
+  :where(.topbar:has(.adminLink)) .link {
+    padding: 3px 10px 0;
+  }
+  :where(.topbar:has(.adminLink)) .linkLabel,
+  .adminLabel {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    border: 0;
+  }
+  .adminLink {
+    justify-content: center;
+    width: 44px;
+    padding: 0;
+  }
+}
+
+@media (min-width: 761px) and (max-width: 1000px) {
+  .topbar {
+    padding: 0 18px;
+    gap: 12px;
+  }
+  .actions {
+    gap: 8px;
+  }
+  .nav {
+    gap: 4px;
+  }
+}
+
+/* Logo sur une ligne dès que l'en-tête le permet (900 px, 950 px avec l'entrée admin) ; plus étroit, il passe à la ligne. */
+@media (min-width: 900px) {
+  .topbar:not(:has(.adminLink)) .wordmark {
+    white-space: nowrap;
+  }
+}
+@media (min-width: 950px) {
+  .wordmark {
+    white-space: nowrap;
   }
 }
 

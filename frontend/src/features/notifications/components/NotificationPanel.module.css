@@ -1,0 +1,64 @@
+.panel {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 50;
+  width: 360px;
+  max-height: min(480px, 70dvh);
+  display: flex;
+  flex-direction: column;
+  background: var(--ground);
+  border: 1px solid var(--line);
+  border-radius: var(--r-panel);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s3);
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--line);
+}
+
+.title {
+  font-size: 16px;
+}
+
+.readAll {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--brand);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.readAll:hover {
+  color: var(--brand-hover);
+}
+
+.status {
+  padding: var(--s4) 18px;
+  font-size: 14px;
+  color: var(--muted);
+  text-align: center;
+}
+
+.list {
+  overflow-y: auto;
+}
+.list > li + li {
+  border-top: 1px solid var(--line);
+}
+
+/* Sous la barre de 72 px, sur toute la largeur : ancré à la cloche, le menu déborderait à gauche. */
+@media (max-width: 760px) {
+  .panel {
+    position: fixed;
+    top: 80px;
+    left: 12px;
+    right: 12px;
+    width: auto;
+  }
+}
