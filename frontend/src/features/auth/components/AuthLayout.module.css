@@ -2,6 +2,8 @@
 .page {
   --hero-height: 360px;
   position: relative;
+  /* Remplit l'écran jusqu'au pied de page (84 px d'en-tête, 80 px de pied) : le fond va jusqu'en bas. */
+  min-height: calc(100vh - 164px);
   padding-bottom: var(--s6);
 }
 
@@ -34,12 +36,14 @@
   height: 100%;
 }
 
-/* Petit plan de quartier pastel (`AuthBackdrop`) sous la photo, derrière la carte ; ses couleurs sont déjà
-   discrètes, pas d'opacité globale. */
+/* Plan de quartier pastel (`AuthBackdrop`) sous la photo, derrière la carte. Il déborde sous le pied de page
+   (transparent) pour aller jusqu'en bas de l'écran, et passe sous tout le reste (`z-index: -1`). */
 .backdrop {
   position: absolute;
-  inset: var(--hero-height) 0 0;
+  inset: var(--hero-height) 0 -120px;
+  z-index: -1;
   overflow: hidden;
+  opacity: 0.7;
   pointer-events: none;
 }
 
