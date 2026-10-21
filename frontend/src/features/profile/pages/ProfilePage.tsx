@@ -83,7 +83,9 @@ export const ProfilePage: React.FC = () => {
     setCreateError(null);
 
     try {
+
       const savedProfile = await createProfile(values, avatar);
+
       setProfile(savedProfile);
       setIsCreating(false);
 
@@ -98,12 +100,20 @@ export const ProfilePage: React.FC = () => {
         setInterestsError('Unable to reload interests. Please reload the page.');
         return;
       }
+
     } catch (failure) {
-      setCreateError(
-        isApiError(failure) && failure.messages.length > 0
-          ? failure.messages.join(' ')
-          : 'Unable to create your profile.',
-      );
+      if (
+        isApiError(failure) &&
+        failure.messages.some((message) => message === 'Username is already taken')
+      ) {
+        setCreateError('This username is already taken. Please choose another one.');
+      } else {
+        setCreateError(
+          isApiError(failure) && failure.messages.length > 0
+            ? failure.messages.join(' ')
+            : 'Unable to create your profile.',
+        );
+      }
     } finally {
       setIsSaving(false);
     }

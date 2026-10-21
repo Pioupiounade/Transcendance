@@ -40,6 +40,18 @@ export class ProfilesController {
     return this.profilesService.findByUsername(q);
   }
 
+  @Get('username-available')
+  @UseGuards(JwtAuthGuard)
+  async isUsernameTaken(@Query('username') username: string) {
+    if (!username?.trim()) {
+      throw new BadRequestException('Username is required');
+    }
+
+    return {
+      available: !(await this.profilesService.isUsernameTaken(username)),
+    };
+  }
+
   @UseGuards(JwtAuthGuard)
   @Get('me')
   findOwnProfile(@Req() req: any) {

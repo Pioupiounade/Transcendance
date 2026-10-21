@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import type { UserProfile, InterestCategory } from '../types';
 import './ProfileForm.css';
 import { INTEREST_LABELS } from '../interestLabels';
+import { isUsernameAvailable } from '../api/profileApi';
 
 interface ProfileFormProps {
   initialData?: UserProfile;
@@ -131,7 +132,8 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({
     );
   };  
 
-  const handleSubmit = (e: React.FormEvent) => {
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setUsernameError(null);
     setLocationError(null);
@@ -150,7 +152,18 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({
 
     if (hasError) return;
 
-    onSave(formData, selectedInterests, avatar);
+    try {
+      const available = await isUsernameAvailable(formData.username);
+
+      if (!available) {
+        setUsernameError('This username is already taken. Please choose another one.');
+        return;
+      }
+
+      onSave(formData, selectedInterests, avatar);
+    } catch {
+      setUsernameError('Unable to verify username availability. Please try again.');
+    }
   };
 
   return (

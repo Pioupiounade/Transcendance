@@ -185,6 +185,17 @@ export async function getProfileActivity(): Promise<ProfileActivity> {
   return { points, organizations, participations };
 }
 
+export async function isUsernameAvailable(
+  username: string,
+): Promise<boolean> {
+  const result = await http.get<{ available: boolean }>(
+    '/profiles/username-available',
+    { query: { username } },
+  );
+
+  return result.available;
+}
+
 export async function createProfile(profile: UserProfile, avatar?: File | null): Promise<UserProfile> {
   if (!profile.location) {
     throw new Error('Location is required to create a profile');
