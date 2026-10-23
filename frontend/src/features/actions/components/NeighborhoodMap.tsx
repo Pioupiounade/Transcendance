@@ -101,21 +101,33 @@ export function NeighborhoodMap({
   }, [draft]);
 
   const fitToActions = useCallback(() => {
-    if (!map) return;
-    const animate = !prefersReducedMotion();
-    if (actions.length === 0) {
-      // Sans action à cadrer, le brouillon (sélecteur de lieu, modification) donne le centre.
-      const spot = draftRef.current;
-      if (spot) map.setView(spot, FOCUS_ZOOM, { animate });
-      else map.setView(DEFAULT_CENTER, DEFAULT_ZOOM, { animate });
-      return;
-    }
-    map.fitBounds(latLngBounds(actions.map((action) => action.location)), {
-      padding: FIT_PADDING,
-      maxZoom: FOCUS_ZOOM,
-      animate,
-    });
-  }, [map, actions]);
+  if (!map) return;
+  
+  // Sécurité : s'assurer que le conteneur de la carte existe toujours dans le DOM
+  const container = map.getContainer();
+  if (!container || !container.isConnected) return;
+
+  const animate = !prefersReducedMotion();
+  if (actions.length === 0) {
+    const spot = draftRef.current;
+    if (spot) map.setView(spot, FOCUS_ZOOM, { animate });
+    else map.setView(DEFAULT_CENTER, DEFAULT_ZOOM, { animate });
+    return;
+  }
+
+  // Filtrer les localisations pour éviter les données corrompues ou incomplètes
+  const validLocations = actions
+    .map((action) => action.location)
+    .filter((loc): loc is [number, number] => Array.isArray(loc) && loc.length === 2);
+
+  if (validLocations.length === 0) return;
+
+  map.fitBounds(latLngBounds(validLocations), {
+    padding: FIT_PADDING,
+    maxZoom: FOCUS_ZOOM,
+    animate,
+  });
+}, [map, actions]);
 
   useEffect(() => {
     fitToActions();
