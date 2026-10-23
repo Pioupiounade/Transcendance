@@ -1,5 +1,5 @@
 /* Page des messages : un seul panneau blanc, amis à gauche, fil à droite ; sur téléphone un volet à la fois.
-   La hauteur suit la fenêtre moins le chrome (en-tête, titre, marges, barre basse sous 1380 px). */
+   La hauteur suit la fenêtre moins le chrome (en-tête, titre, marges, barre basse sous 1320 px). */
 .container {
   --messages-chrome: 236px;
   max-width: 1180px;
@@ -86,7 +86,7 @@
   margin-top: var(--s2);
 }
 
-@media (max-width: 1379px) {
+@media (max-width: 1319px) {
   .container {
     --messages-chrome: 328px;
   }

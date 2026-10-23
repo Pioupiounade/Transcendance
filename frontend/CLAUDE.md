@@ -220,7 +220,8 @@ features/       1 domaine métier = 1 module ; interface = index.ts
   participations/ useMyParticipations (sur useResource ; visiteur : liste vide sans appel), fetchActionParticipants /
                 joinAction / leaveAction (#60), type MyParticipation
   messages/     messagerie entre amis (backend #155, api_contract §18), discrète : pas d'entrée de nav, une pastille
-                MessagesButton `{ to }` dans l'en-tête (point citron = notifications `NEW_MESSAGE` non lues, relues toutes les
+                MessagesButton `{ to }` dans l'en-tête sur téléphone, bulle noire flottante en bas à droite dès 761 px (façon
+                Messenger, masquée sur `/messages`, AppFooter lui réserve 104 px à droite) (point citron = notifications `NEW_MESSAGE` non lues, relues toutes les
                 30 s et après l'événement fenêtre `messages:read`). MessagesPage `/messages[/:friendId]` `{ listPath, threadPath,
                 friendsPath, profilePath }` : ConversationList = mes amis actifs (`friendsApi.getMyFriends`, le backend ne liste
                 pas les fils), ThreadPane = bandeau + MessageThread (bulles par jour, défilement au dernier message) +

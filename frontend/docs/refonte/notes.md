@@ -45,7 +45,8 @@ Pioupiounades (nom, pin, structure des pages). L'espace admin garde son thème s
 - Recherche globale (`app/components/GlobalSearch.tsx`, Marie, 200 px) : elle garde ses 200 px jusqu'à 760 px ; sur
   téléphone elle se rétracte (120 px min.) et prend la place du nom de la marque sous 520 px (570 px pour un admin,
   qui a une pastille de plus), le pin reste.
-- Messagerie (`features/messages`, backend #155) : pastille à côté de la cloche (point citron = message non lu), page
+- Messagerie (`features/messages`, backend #155) : bulle noire flottante en bas à droite dès 761 px (façon Messenger),
+  pastille à côté de la cloche sur téléphone (point citron = message non lu), page
   `/messages` en un panneau blanc, amis à gauche, bulles noires / grises à droite, un volet à la fois sur téléphone.
   Sondage toutes les 5 s sur le fil ouvert, 30 s pour la pastille (pas de temps réel : la branche socket.io du
   coéquipier, #128, n'est pas fusionnée).

@@ -1,6 +1,6 @@
-/* Refonte : pied de page sans trait, texte discret. */
+/* Refonte : pied de page sans trait, texte discret ; à droite, la place de la bulle Messages (56 px + marges). */
 .footer {
-  padding: 28px 38px 32px;
+  padding: 28px 104px 32px 38px;
   font-size: 12px;
   color: var(--muted);
 }

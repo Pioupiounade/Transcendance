@@ -1,4 +1,4 @@
-/* Pastille de l'en-tête, jumelle de la cloche (44 px, bord fin) ; noire sur la page des messages. */
+/* Sur téléphone : pastille de l'en-tête, jumelle de la cloche (44 px, bord fin), noire sur la page des messages. */
 .button {
   position: relative;
   display: grid;
@@ -33,4 +33,53 @@
   border: 2px solid var(--ground);
   border-radius: 50%;
   background: var(--accent);
+}
+
+/* Hors téléphone (≥ 761 px) : la pastille quitte l'en-tête pour une bulle noire flottante en bas à droite, façon
+   Messenger (hors flux : l'en-tête ne la compte plus). Sur la page des messages elle disparaît, on y est ;
+   le pied de page lui réserve sa place à droite (AppFooter). */
+@media (min-width: 761px) {
+  .button {
+    position: fixed;
+    right: 24px;
+    bottom: 24px;
+    z-index: 10;
+    width: 56px;
+    height: 56px;
+    border-color: var(--brand);
+    background: var(--brand);
+    color: var(--on-brand);
+    box-shadow: var(--shadow-float);
+    transition:
+      background-color var(--t-fast),
+      transform var(--t-fast);
+  }
+  .button:hover {
+    background: var(--brand-hover);
+  }
+  .button:active {
+    transform: scale(0.96);
+  }
+  .button[aria-current='page'] {
+    display: none;
+  }
+  .button svg {
+    width: 24px;
+    height: 24px;
+  }
+  .dot {
+    top: 2px;
+    right: 2px;
+    width: 14px;
+    height: 14px;
+    border-color: var(--surface);
+  }
+}
+
+/* Avec la barre basse flottante (761–1319 px), la bulle s'aligne sur sa hauteur. */
+@media (min-width: 761px) and (max-width: 1319px) {
+  .button {
+    right: 16px;
+    bottom: 16px;
+  }
 }

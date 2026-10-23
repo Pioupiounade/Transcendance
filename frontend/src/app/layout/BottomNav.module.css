@@ -1,10 +1,10 @@
-/* Barre de navigation inférieure, dès que la nav quitte l'en-tête (≤ 1379 px, voir AppHeader) : pilule flottante,
+/* Barre de navigation inférieure, dès que la nav quitte l'en-tête (≤ 1319 px, voir AppHeader) : pilule flottante,
    item courant = rond noir. Bornée à 480 px et centrée sur tablette, pleine largeur moins 14 px sur téléphone. */
 .bar {
   display: none;
 }
 
-@media (max-width: 1379px) {
+@media (max-width: 1319px) {
   .bar {
     position: fixed;
     inset-inline: max(14px, calc(50% - 240px));
