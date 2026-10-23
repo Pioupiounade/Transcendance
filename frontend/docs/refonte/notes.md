@@ -13,8 +13,11 @@ Pioupiounades (nom, pin, structure des pages). L'espace admin garde son thème s
   `app/main.tsx`). Titres en graisse 300/400, `--title-w`.
 - **Kit** : boutons pilules (noir / blanc / `accent` citron), puces blanches enfoncées = noires, avatar sur sauge,
   icônes `arrow` et `bell`. Marque : pin noir, fanion citron.
-- **Coquille** : en-tête sans trait, nav dans une pilule blanche (entrée courante noire), barre mobile flottante (rond
-  noir pour l'entrée courante, libellés lus par les lecteurs d'écran), pied de page sans trait.
+- **Coquille** : en-tête sans trait, nav dans une pilule blanche (entrée courante noire), barre basse flottante (rond
+  noir pour l'entrée courante, libellés lus par les lecteurs d'écran), pied de page sans trait. Trois modes mesurés
+  sur la largeur réelle des blocs : ≥ 1320 px la nav est dans l'en-tête et n'est jamais comprimée ; de 761 à 1319 px
+  elle descend dans la barre basse (bornée à 480 px, centrée) et l'en-tête garde le nom complet ; ≤ 760 px déconnexion
+  en pastille icône, recherche rétractable, avatar masqué.
 - **Cartes d'action** : blanches, bandeau en guise de photo teinté par la catégorie, pastels chauds en dégradé
   (`--cover-*` : pistache = Environment, rose-lavande = Mutual aid, citron-abricot = Culture), catégorie et
   statut/distance en pilules, rond flèche noir. Action `PENDING` : seule la pilule de statut est hachurée (les
@@ -39,8 +42,9 @@ Pioupiounades (nom, pin, structure des pages). L'espace admin garde son thème s
 - Pages coéquipiers (friends, profile, fiche d'action `ActionDetailsView`) : héritent des tokens, pas de la grammaire.
 - `Docs/DESIGN.md` et `frontend/CLAUDE.md` décrivent encore forêt + terracotta : à réécrire si la direction est adoptée.
 - Photos d'action (#148, LeNy) : le bandeau pastel est prévu pour accueillir la photo quand elle existe.
-- Recherche globale (`app/components/GlobalSearch.tsx`, Marie, 200 px en styles inline) : sur mobile elle prend la
-  place du nom de la marque (le pin reste).
+- Recherche globale (`app/components/GlobalSearch.tsx`, Marie, 200 px) : elle garde ses 200 px jusqu'à 760 px ; sur
+  téléphone elle se rétracte (120 px min.) et prend la place du nom de la marque sous 480 px (600 px pour un admin,
+  qui a une pastille de plus), le pin reste.
 
 ## Voir la branche
 

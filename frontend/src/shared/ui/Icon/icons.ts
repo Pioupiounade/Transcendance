@@ -23,6 +23,7 @@ export const ICONS = {
   flag: '<path d="M5 21V4M5 4h12l-2 4 2 4H5"/>',
   arrow: '<path d="M7 17 17 7M8 7h9v9"/>',
   bell: '<path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4l2-2ZM10 20a2 2 0 0 0 4 0"/>',
+  logout: '<path d="M10 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4M15 8l4 4-4 4M19 12H9"/>',
 } as const;
 
 export type IconName = keyof typeof ICONS;

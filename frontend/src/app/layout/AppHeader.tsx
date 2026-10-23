@@ -31,7 +31,11 @@ export function AppHeader() {
       </nav>
 
       <div className={styles.actions}>
-              {status === 'authenticated' && <GlobalSearch />}
+        {status === 'authenticated' && (
+          <div className={styles.search}>
+            <GlobalSearch />
+          </div>
+        )}
         {user?.role === ROLE_APP.ADMIN && (
           <NavLink to={ROUTES.admin} className={styles.adminLink}>
             <Icon name="shield" size={18} />
@@ -45,8 +49,11 @@ export function AppHeader() {
           </Link>
         )}
         {status === 'authenticated' && (
-          <Button variant="secondary" className={styles.signOut} onClick={() => void signOut()}>
-            {APP_LABELS.signOut}
+          <Button variant="secondary" className={styles.signOut} onClick={() => void signOut()} title={APP_LABELS.signOut}>
+            <span className={styles.signOutIcon} aria-hidden="true">
+              <Icon name="logout" size={20} />
+            </span>
+            <span className={styles.signOutLabel}>{APP_LABELS.signOut}</span>
           </Button>
         )}
         {status === 'anonymous' && (
