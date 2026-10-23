@@ -663,9 +663,6 @@ export class ActionsService {
       isManagerOrOwner = membership?.status === MemberStatus.ACTIVE &&
         (membership.role === RoleOrg.MANAGER || membership.role === RoleOrg.OWNER);
 
-      if (organization.organization_status !== OrganizationStatus.ACTIVE && !isAdmin) {
-        throw new ForbiddenException('Only an admin can cancel an action from an inactive organization');
-      }
     }
 
     if (!isAdmin && !isCreator && !isManagerOrOwner) {

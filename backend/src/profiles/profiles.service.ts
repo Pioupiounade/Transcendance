@@ -179,6 +179,15 @@ export class ProfilesService {
     };
   }
 
+  async isUsernameTaken(username: string): Promise<boolean> {
+    const existingProfile = await this.prisma.profile.findUnique({
+      where: { username },
+      select: { user_id: true },
+    });
+
+    return existingProfile !== null;
+  }
+
   //Trouver un profil specifique avec le username
   async findByUsername(query: string, viewerId: string) {
     const viewerUserId = BigInt(viewerId);
