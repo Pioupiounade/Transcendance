@@ -161,9 +161,9 @@ export class ProfilesService {
       canSeePresence = Boolean(friendship);
     }
 
-      const isOnline =
-      canSeePresence &&
-      this.realtimeGateway.isUserOnline(profile.user_id.toString());
+      const isOnline = canSeePresence 
+        ? this.realtimeGateway.isUserOnline(userId)
+        : undefined;
 
     return {
       ...safeProfile,
