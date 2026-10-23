@@ -4,7 +4,7 @@ import { MessagesButton } from '@/features/messages';
 import { NotificationBell } from '@/features/notifications';
 import { Avatar, Button, ButtonLink, Icon } from '@/shared/ui';
 import { APP_LABELS } from '../labels';
-import { ROUTES } from '../routes';
+import { ROUTES, publicProfilePath } from '../routes';
 import { Brandmark } from './Brandmark';
 import { NAV_ITEMS } from './navItems';
 import { GlobalSearch } from '../components/GlobalSearch';
@@ -43,7 +43,7 @@ export function AppHeader() {
             <span className={styles.adminLabel}>{APP_LABELS.admin}</span>
           </NavLink>
         )}
-        {status === 'authenticated' && <MessagesButton to={ROUTES.messages} />}
+        {status === 'authenticated' && <MessagesButton to={ROUTES.messages} profilePath={publicProfilePath} />}
         {status === 'authenticated' && <NotificationBell />}
         {status === 'authenticated' && user && (
           <Link to={ROUTES.profile} className={styles.profileLink} aria-label={APP_LABELS.myProfile}>

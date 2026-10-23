@@ -5,11 +5,14 @@
   place-items: center;
   width: 44px;
   height: 44px;
+  padding: 0;
   border: 1.5px solid var(--line);
   border-radius: 50%;
   background: var(--ground);
   color: var(--ink);
+  font: inherit;
   text-decoration: none;
+  cursor: pointer;
   transition:
     background-color var(--t-fast),
     color var(--t-fast);
@@ -36,8 +39,8 @@
 }
 
 /* Hors téléphone (≥ 761 px) : la pastille quitte l'en-tête pour une bulle noire flottante en bas à droite, façon
-   Messenger (hors flux : l'en-tête ne la compte plus). Sur la page des messages elle disparaît, on y est ;
-   le pied de page lui réserve sa place à droite (AppFooter). */
+   Messenger (hors flux : l'en-tête ne la compte plus), qui ouvre le volet MessagesDock juste au-dessus. Sur la page
+   des messages, ni bulle ni volet (MessagesButton ne les rend pas) ; le pied de page lui réserve sa place (AppFooter). */
 @media (min-width: 761px) {
   .button {
     position: fixed;
@@ -60,8 +63,10 @@
   .button:active {
     transform: scale(0.96);
   }
-  .button[aria-current='page'] {
-    display: none;
+  .button[aria-expanded='true'] {
+    background: var(--ground);
+    border-color: var(--line);
+    color: var(--ink);
   }
   .button svg {
     width: 24px;

@@ -4,6 +4,11 @@ export const MESSAGES_LABELS = {
   entry: 'Messages',
   entryUnread: (count: number) => `Messages, ${count} new`,
   conversations: 'Conversations',
+  dock: {
+    open: 'Open messages',
+    close: 'Close messages',
+    fullPage: 'Open the messages page',
+  },
   backToList: 'All conversations',
   viewProfile: 'View profile',
   pickFriend: {

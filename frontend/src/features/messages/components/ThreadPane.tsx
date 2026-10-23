@@ -12,12 +12,14 @@ import styles from './ThreadPane.module.css';
 type ThreadPaneProps = {
   friend: FriendUserSummary;
   currentUserId: string;
-  listPath: string;
   profilePath: (userId: string) => string;
-};
+} & (
+  | { /** Page : retour vers la liste par lien, visible sur téléphone seulement. */ listPath: string; onBack?: never }
+  | { /** Volet : retour par bouton, toujours visible. */ onBack: () => void; listPath?: never }
+);
 
 /** Le fil avec un ami ; à l'ouverture et à chaque message reçu, les notifications de message sont marquées lues. */
-export function ThreadPane({ friend, currentUserId, listPath, profilePath }: ThreadPaneProps) {
+export function ThreadPane({ friend, currentUserId, profilePath, ...back }: ThreadPaneProps) {
   const { messages, error, send, refresh } = useThread(friend.user_id);
   const name = friend.username ?? MESSAGES_LABELS.unknownUser;
 
@@ -37,9 +39,20 @@ export function ThreadPane({ friend, currentUserId, listPath, profilePath }: Thr
   return (
     <div className={styles.pane}>
       <header className={styles.bar}>
-        <Link to={listPath} className={styles.back} aria-label={MESSAGES_LABELS.backToList}>
-          <Icon name="chevronLeft" size={22} />
-        </Link>
+        {back.onBack ? (
+          <button
+            type="button"
+            className={`${styles.back} ${styles.backAlways}`}
+            aria-label={MESSAGES_LABELS.backToList}
+            onClick={back.onBack}
+          >
+            <Icon name="chevronLeft" size={22} />
+          </button>
+        ) : (
+          <Link to={back.listPath} className={styles.back} aria-label={MESSAGES_LABELS.backToList}>
+            <Icon name="chevronLeft" size={22} />
+          </Link>
+        )}
         <Avatar name={name} src={friend.profile_picture} size={40} />
         <div className={styles.who}>
           <h2 className={styles.name}>@{name}</h2>
