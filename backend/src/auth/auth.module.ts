@@ -14,7 +14,7 @@ import { PrismaModule } from '../prisma/prisma.module';
     UsersModule,
     JwtModule.register({
       global: true,
-      secret: process.env.JWT_SECRET ?? 'fallback',
+      secret: process.env.JWT_SECRET || 'fallback-secret',
       signOptions: { expiresIn: '7d' },
     }),
   ],

@@ -269,6 +269,11 @@ export const ProfilePage: React.FC = () => {
     );
   }
 
+  const displayedProfile = {
+    ...profile,
+    isOnline: true,
+  };
+
   return (
     <div style={{ maxWidth: '840px', margin: '0 auto', padding: '1rem' }}>
       <div style={{ display: 'flex', justifyContent: 'center' }}>
@@ -303,7 +308,7 @@ export const ProfilePage: React.FC = () => {
             </>
           ) : (
             <ProfileView
-              profile={profile}
+              profile={displayedProfile}
               isOwnProfile={true}
               onEdit={() => setIsEditing(true)}
               onFriendshipChange={() => { }}

@@ -59,8 +59,7 @@ export function PublicProfilePage() {
 
         if (
           data.isPrivate ||
-          data.visibility === 'PRIVATE' ||
-          data.visibility === 'FRIENDS_ONLY'
+          data.visibility === 'PRIVATE'
         ) {
           setIsPrivate(true);
           return;
@@ -106,6 +105,7 @@ export function PublicProfilePage() {
           visibility: data.visibility ?? 'PUBLIC',
           location: null,
           friendshipStatus,
+          isOnline: data.is_online,
         });
 
         setUserInterests(data.interests ?? []);
@@ -127,6 +127,34 @@ export function PublicProfilePage() {
       active = false;
     };
   }, [userId, currentUserId]);
+
+  useEffect(() => {
+    const handlePresenceChange = (event: Event) => {
+      const { userId: changedUserId, isOnline } = (
+        event as CustomEvent<{
+          userId: string;
+          isOnline: boolean;
+        }>
+      ).detail;
+
+      if (String(changedUserId) !== String(userId)) return;
+
+      setUserProfile((previous) =>
+        previous
+          ? {
+              ...previous,
+              isOnline,
+            }
+          : previous,
+      );
+    };
+
+    window.addEventListener('presence:change', handlePresenceChange);
+
+    return () => {
+      window.removeEventListener('presence:change', handlePresenceChange);
+    };
+  }, [userId]);
 
   if (currentUserId && userId && currentUserId === String(userId)) {
     return <Navigate to="/profile" replace />;

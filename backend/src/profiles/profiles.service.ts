@@ -4,11 +4,15 @@ import { CreateProfileDto } from './dto/create-profile.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { ProfileVisibility, AccountStatus, FriendshipStatus } from '../../generated/prisma/client';
 import { findCommune } from './find-commune';
+import { RealtimeGateway } from '../realtime/realtime.gateway';
 
 @Injectable()
 export class ProfilesService {
 
-  constructor(private prisma: PrismaService) { }
+  constructor(
+    private prisma: PrismaService,
+    private realtimeGateway: RealtimeGateway,
+  ) {}
 
   //Trouver tous les profils publics des utilisateurs actifs
   async findAll() {
@@ -41,6 +45,7 @@ export class ProfilesService {
         user: {
           select: {
             account_status: true,
+            last_seen_at: true,
             interests: {
               select: { interest: true },
             },
@@ -126,38 +131,101 @@ export class ProfilesService {
         }
       }
     }
+        const { location, user, ...safeProfile } = profile;
 
-    const { location, user, ...safeProfile } = profile;
+    let canSeePresence = isOwner;
+
+    if (!isOwner && viewerId) {
+      const visitorId = BigInt(viewerId);
+
+      const friendship = await this.prisma.friendship.findFirst({
+        where: {
+          status: FriendshipStatus.ACTIVE,
+          blocked_by_user_id: null,
+          OR: [
+            {
+              user1_id: visitorId,
+              user2_id: profile.user_id,
+            },
+            {
+              user1_id: profile.user_id,
+              user2_id: visitorId,
+            },
+          ],
+        },
+        select: {
+          user1_id: true,
+        },
+      });
+
+      canSeePresence = Boolean(friendship);
+    }
+
+      const isOnline = canSeePresence 
+        ? this.realtimeGateway.isUserOnline(userId)
+        : undefined;
 
     return {
       ...safeProfile,
       user_id: safeProfile.user_id.toString(),
       interests: user.interests.map(({ interest }) => interest),
+      is_online: isOnline,
     };
   }
 
   //Trouver un profil specifique avec le username
-  async findByUsername(query: string) {
+  async findByUsername(query: string, viewerId: string) {
+    const viewerUserId = BigInt(viewerId);
+
+    const friendships = await this.prisma.friendship.findMany({
+      where: {
+        status: FriendshipStatus.ACTIVE,
+        OR: [
+          { user1_id: viewerUserId },
+          { user2_id: viewerUserId },
+        ],
+      },
+      select: {
+        user1_id: true,
+        user2_id: true,
+      },
+    });
+
+    const friendIds = friendships.map((friendship) =>
+      friendship.user1_id === viewerUserId
+        ? friendship.user2_id
+        : friendship.user1_id,
+    );
+
     const profiles = await this.prisma.profile.findMany({
       where: {
         username: {
           contains: query,
           mode: 'insensitive',
         },
-        visibility: ProfileVisibility.PUBLIC,
         user: {
           account_status: AccountStatus.ACTIVE,
         },
+        OR: [
+          {
+            visibility: ProfileVisibility.PUBLIC,
+          },
+          {
+            visibility: ProfileVisibility.FRIENDS_ONLY,
+            user_id: {
+              in: friendIds,
+            },
+          },
+        ],
       },
       take: 15,
     });
 
-    return profiles.map(({ location, ...profile }) => ({ //retirer location de la reponse retournee par la fonction
+    return profiles.map(({ location, ...profile }) => ({
       ...profile,
       user_id: profile.user_id.toString(),
     }));
   }
-
 
   //Creer un nouveau profil
   async create(currentUserId: string, data: CreateProfileDto) {

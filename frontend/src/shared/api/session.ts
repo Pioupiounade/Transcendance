@@ -14,6 +14,7 @@ const STORAGE_KEY = 'pioupiounades.session';
 let accessToken: string | null = null;
 let persisted: Persisted | null = readPersisted();
 const expireListeners = new Set<() => void>();
+const tokenListeners = new Set<() => void>();
 
 function readPersisted(): Persisted | null {
   try {
@@ -64,6 +65,13 @@ export const session = {
     accessToken = tokens.access_token;
     persisted = { refreshToken: tokens.refresh_token, userId };
     writePersisted(persisted);
+
+    tokenListeners.forEach((listener) => listener());
+  },
+
+  onTokensChanged(listener: () => void): () => void {
+    tokenListeners.add(listener);
+    return () => tokenListeners.delete(listener);
   },
 
   clear(): void {

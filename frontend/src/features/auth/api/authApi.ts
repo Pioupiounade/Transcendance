@@ -29,3 +29,10 @@ export const register = (credentials: Credentials) =>
 export const getMe = (signal?: AbortSignal) => http.get<AuthUser>('/auth/me', { signal });
 
 export const logout = () => http.post<{ message: string }>('/auth/logout');
+
+export const heartbeat = (signal?: AbortSignal) =>
+  http.patch<{ user_id: string; last_seen_at: string }>(
+    '/users/me/heartbeat',
+    undefined,
+    { signal },
+  );

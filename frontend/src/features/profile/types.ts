@@ -27,6 +27,7 @@ export interface UserProfile {
   profilePicture?: string;
   friendshipStatus?: FriendshipStatus;
   commune?: string | null;
+  isOnline?: boolean;
 }
 
 export interface PublicProfile {
@@ -38,6 +39,7 @@ export interface PublicProfile {
   interests: InterestCategory[];
   visibility?: 'PUBLIC' | 'PRIVATE' | 'FRIENDS_ONLY';
   isPrivate?: boolean;
+  is_online?: boolean;
 }
 
 export interface ProfileOrganization {

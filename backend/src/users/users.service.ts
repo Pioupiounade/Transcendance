@@ -126,6 +126,27 @@ export class UsersService {
       user_id: safeUser.user_id.toString(),
     };
 }
+
+  async updateLastSeen(id: string) {
+  const user = await this.prisma.user.update({
+    where: {
+      user_id: BigInt(id),
+    },
+    data: {
+      last_seen_at: new Date(),
+    },
+    select: {
+      user_id: true,
+      last_seen_at: true,
+    },
+  });
+
+  return {
+    user_id: user.user_id.toString(),
+    last_seen_at: user.last_seen_at,
+  };
+}
+
   //4. mettre a jour l'adresse mail
   async updateEmail(id: string, data: UpdateUserDto) {
     const email = data.email?.toLowerCase(); // Convert email to lowercase

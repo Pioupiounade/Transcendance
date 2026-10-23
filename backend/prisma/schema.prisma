@@ -34,6 +34,7 @@ model User {
   created_at     DateTime      @default(now())
   updated_at     DateTime      @updatedAt
   refresh_token  String?
+  last_seen_at   DateTime?
 
   // 2. Champs de relation Prisma
   profile Profile?
@@ -66,6 +67,24 @@ model User {
 
   sent_messages     DirectMessage[] @relation("SentMessages")
   received_messages DirectMessage[] @relation("ReceivedMessages")
+  
+  auth_sessions AuthSession[]
+}
+
+// --------------------------------------------------
+// AUTH SESSIONS
+// --------------------------------------------------
+
+model AuthSession {
+  session_id         String   @id @default(cuid())
+  user_id            BigInt
+  refresh_token_hash String
+  created_at         DateTime @default(now())
+  expires_at         DateTime
+
+  user User @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+
+  @@index([user_id])
 }
 
 // --------------------------------------------------

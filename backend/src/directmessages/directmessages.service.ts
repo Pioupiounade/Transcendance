@@ -3,6 +3,7 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { CreateDirectMessageDto } from './dto/create-message.dto';
+import { NotificationType } from '../../generated/prisma/client';
 
 @Injectable()
 export class DirectMessagesService {
@@ -71,7 +72,7 @@ export class DirectMessagesService {
 		// Create Notification
 		await this.notifications.notifyUser({
 			userId: receiverId,
-			type: 'NEW_MESSAGE',
+			type: NotificationType.NEW_MESSAGE,
 			title: 'New Direct Message',
 			message: dto.content.length > 50
 				? `${dto.content.substring(0, 47)}...`

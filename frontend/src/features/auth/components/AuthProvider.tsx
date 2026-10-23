@@ -1,3 +1,4 @@
+import { io } from 'socket.io-client';
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { session } from '@/shared/api';
 import {
@@ -39,6 +40,52 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }, []);
 
   useEffect(() => session.onExpire(() => setSnapshot(ANONYMOUS)), []);
+
+  useEffect(() => {
+    if (snapshot.status !== 'authenticated') return;
+
+    const socket = io({
+      path: '/socket.io',
+      auth: (cb) => cb({ token: session.accessToken }),
+    });
+
+    const handleOnline = ({ userId }: { userId: string }) => {
+      window.dispatchEvent(
+        new CustomEvent('presence:change', {
+          detail: { userId, isOnline: true },
+        }),
+      );
+    };
+
+    const handleOffline = ({ userId }: { userId: string }) => {
+      window.dispatchEvent(
+        new CustomEvent('presence:change', {
+          detail: { userId, isOnline: false },
+        }),
+      );
+    };
+
+    const unsubscribe = session.onTokensChanged(() => {
+      if (!session.accessToken) return;
+
+      socket.auth = { token: session.accessToken };
+      if (socket.connected) {
+        socket.disconnect();
+      }
+      socket.connect();
+    });
+
+    socket.on('presence:online', handleOnline);
+    socket.on('presence:offline', handleOffline);
+
+    return () => {
+      unsubscribe();
+      socket.off('presence:online', handleOnline);
+      socket.off('presence:offline', handleOffline);
+      socket.disconnect();
+    };
+  }, [snapshot.status]);
+
 
   // Login et register renvoient la même chose : tokens + utilisateur.
  const open = useCallback((response: AuthSuccessResponse) => {

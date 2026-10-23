@@ -34,9 +34,13 @@ export class ProfilesController {
     return this.profilesService.findAll();
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get('search')
-  findByUsername(@Query('q') q: string) {
-    return this.profilesService.findByUsername(q);
+  findByUsername(
+    @Req() req: any,
+    @Query('q') q: string,
+  ) {
+    return this.profilesService.findByUsername(q, req.user.id);
   }
 
   @UseGuards(JwtAuthGuard)

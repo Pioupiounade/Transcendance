@@ -1,10 +1,14 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationType } from '../../generated/prisma/client';
+import { RealtimeGateway } from '../realtime/realtime.gateway';
 
 @Injectable()
 export class NotificationsService {
-  constructor(private prisma: PrismaService) { }
+  constructor(
+    private prisma: PrismaService,
+    private realtimeGateway: RealtimeGateway,
+  ) {}
 
   async findMine(userId: string) {
     const notifications = await this.prisma.notification.findMany({
@@ -84,7 +88,15 @@ export class NotificationsService {
           link: params.link,
         },
       });
-      return this.serializeNotification(notification);
+
+      const serialized = this.serializeNotification(notification);
+
+      this.realtimeGateway.server
+        .to(`user:${params.userId.toString()}`)
+        .emit('notification:new', serialized);
+
+      return serialized;
+
     } catch {
       return null;
     }
