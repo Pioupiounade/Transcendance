@@ -9,7 +9,8 @@ export type NotificationType =
   | 'ORGANIZATION_COMMENT'
   | 'ACTION_APPROVED'
   | 'ACTION_STATUS_CHANGED'
-  | 'NEW_MESSAGE';
+  | 'NEW_MESSAGE'
+  | 'ORGANIZATION_OWNERSHIP_TRANSFERRED';
 
 export interface NotificationPreference {
   user_id: string;
@@ -27,6 +28,7 @@ export const NOTIFICATION_LABELS: Record<NotificationType, string> = {
   ACTION_APPROVED: 'Action approval',
   ACTION_MIN_REACHED: 'Minimum participants reached',
   ACTION_MAX_REACHED: 'Action full',
+  ORGANIZATION_OWNERSHIP_TRANSFERRED: 'Organization ownership transferred to you',
 };
 
 export async function getNotificationPreferences(): Promise<NotificationPreference[]> {

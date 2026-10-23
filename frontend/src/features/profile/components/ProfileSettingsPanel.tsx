@@ -7,6 +7,12 @@ import {
 } from '../api/notificationsApi';
 import { isApiError } from '@/shared/api';
 import styles from './ProfileSettingsPanel.module.css';
+import { useMyMemberships } from '@/features/organizations/api/useMyMemberships';
+import {
+  MEMBER_STATUS,
+  ORGANIZATION_STATUS,
+  ROLE_ORG,
+} from '@/features/organizations/types';
 
 interface ProfileSettingsPanelProps {
   onDeactivateAccount: () => Promise<void> | void;
@@ -22,11 +28,26 @@ const FALLBACK_LABELS: Record<NotificationType, string> = {
   ACTION_APPROVED: 'Action approval',
   ACTION_MIN_REACHED: 'Minimum participants reached',
   ACTION_MAX_REACHED: 'Action full',
+  ORGANIZATION_OWNERSHIP_TRANSFERRED: 'Organization ownership transferred to you',
 };
 
 export const ProfileSettingsPanel: React.FC<ProfileSettingsPanelProps> = ({
   onDeactivateAccount,
 }) => {
+
+  const {
+   memberships,
+   loading: membershipsLoading,
+   error: membershipsError,
+  } = useMyMemberships();
+
+  const ownsActiveOrganization = memberships.some(
+    (membership) =>
+      membership.role === ROLE_ORG.OWNER &&
+      membership.status === MEMBER_STATUS.ACTIVE &&
+      membership.organization.organization_status === ORGANIZATION_STATUS.ACTIVE,
+  );
+
   const [preferences, setPreferences] = useState<Record<NotificationType, boolean>>({
     ACTION_MIN_REACHED: true,
     ACTION_MAX_REACHED: true,
@@ -37,6 +58,7 @@ export const ProfileSettingsPanel: React.FC<ProfileSettingsPanelProps> = ({
     ACTION_APPROVED: true,
     ACTION_STATUS_CHANGED: true,
     NEW_MESSAGE: true,
+    ORGANIZATION_OWNERSHIP_TRANSFERRED: true,
   });
 
   const [isLoading, setIsLoading] = useState(true);
@@ -127,6 +149,7 @@ export const ProfileSettingsPanel: React.FC<ProfileSettingsPanelProps> = ({
     'ACTION_APPROVED',
     'ACTION_MIN_REACHED',
     'ACTION_MAX_REACHED',
+    'ORGANIZATION_OWNERSHIP_TRANSFERRED',
   ];
 
   return (
@@ -171,10 +194,28 @@ export const ProfileSettingsPanel: React.FC<ProfileSettingsPanelProps> = ({
           Deactivate your account. Your profile and actions will no longer be visible to others.
         </p>
 
+        {ownsActiveOrganization && (
+          <p className="help help--error" role="alert">
+            Transfer ownership of your active organization before deactivating
+            your account.
+          </p>
+        )}
+
+        {membershipsError && (
+          <p className="help help--error" role="alert">
+            Unable to verify organization ownership. Please try again later.
+          </p>
+        )}
+
         <div className={styles.dangerActions}>
           <button
             type="button"
             className={`btn btn--secondary ${styles.btnDanger}`}
+            disabled={
+              membershipsLoading ||
+              membershipsError !== null ||
+              ownsActiveOrganization
+            }
             onClick={() => dialogRef.current?.showModal()}
           >
             Deactivate Account
@@ -216,7 +257,12 @@ export const ProfileSettingsPanel: React.FC<ProfileSettingsPanelProps> = ({
             type="button"
             className="btn btn--primary btn--block"
             onClick={handleConfirmDeactivate}
-            disabled={isDeactivating}
+            disabled={
+              isDeactivating ||
+              membershipsLoading ||
+              membershipsError !== null ||
+              ownsActiveOrganization
+            }
             style={{ backgroundColor: 'var(--danger, #dc2626)', borderColor: 'var(--danger, #dc2626)' }}
           >
             {isDeactivating ? 'Deactivating...' : 'Yes, Deactivate'}

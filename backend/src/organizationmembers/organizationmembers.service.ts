@@ -983,11 +983,12 @@ export class OrganizationmembersService {
     }
 
     // Transfer ownership
-    async transferOwnership(requesterId: bigint, organizationId: bigint, newOwnerId: bigint) {
-        await this.checkCanManageRoles(
-            requesterId,
-            organizationId,
-        );
+    async transferOwnership(
+        requesterId: bigint,
+        organizationId: bigint,
+        newOwnerId: bigint,
+    ) {
+        await this.checkCanManageRoles(requesterId, organizationId);
 
         const newOwnerMembership = await this.prisma.organizationMember.findUnique({
             where: {
@@ -1002,15 +1003,24 @@ export class OrganizationmembersService {
                         account_status: true,
                     },
                 },
+                organization: {
+                    select: {
+                        title: true,
+                    },
+                },
             },
         });
 
         if (!newOwnerMembership) {
-            throw new NotFoundException('New owner is not a member of this organization');
+            throw new NotFoundException(
+                'New owner is not a member of this organization',
+            );
         }
 
         if (newOwnerMembership.status !== MemberStatus.ACTIVE) {
-            throw new BadRequestException('New owner membership is not active');
+            throw new BadRequestException(
+                'New owner membership is not active',
+            );
         }
 
         if (newOwnerMembership.user.account_status !== AccountStatus.ACTIVE) {
@@ -1033,7 +1043,7 @@ export class OrganizationmembersService {
             throw new NotFoundException('Current organization owner not found');
         }
 
-        return this.prisma.$transaction([
+        const updatedMemberships = await this.prisma.$transaction([
             this.prisma.organizationMember.update({
                 where: {
                     organization_id_user_id: {
@@ -1058,5 +1068,15 @@ export class OrganizationmembersService {
                 },
             }),
         ]);
+
+        await this.notificationsService.notifyUser({
+            userId: newOwnerId,
+            type: NotificationType.ORGANIZATION_OWNERSHIP_TRANSFERRED,
+            title: 'You are now the organization owner',
+            message: `You are now the owner of ${newOwnerMembership.organization.title}.`,
+            link: `/organizations/${organizationId}`,
+        });
+
+        return updatedMemberships;
     }
 }

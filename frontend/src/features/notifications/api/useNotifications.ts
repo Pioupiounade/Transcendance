@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Notification } from '../types';
 import { fetchMyNotifications, markAllNotificationsRead, markNotificationRead } from './notificationsApi';
 
-const POLL_INTERVAL_MS = 30_000;
+const POLL_INTERVAL_MS = 5_000;
 
 /** Dernière liste reçue ; `receivedAt` sert d'instant présent aux « il y a 5 minutes ». */
 export type NotificationsSnapshot = { notifications: Notification[]; receivedAt: number };
@@ -34,13 +34,22 @@ export function useNotifications() {
   useEffect(() => {
     disposed.current = false;
     void refresh();
+
     const timer = window.setInterval(() => {
       if (document.visibilityState === 'visible') void refresh();
     }, POLL_INTERVAL_MS);
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') void refresh();
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
     return () => {
       disposed.current = true;
       latestRequest.current?.abort();
       window.clearInterval(timer);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [refresh]);
 
