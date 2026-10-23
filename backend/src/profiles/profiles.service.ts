@@ -34,7 +34,10 @@ export class ProfilesService {
   //Trouver un profil specifique avec l'user_id
   async findOne(userId: string, viewerId?: string) {
     if (!/^\d+$/.test(userId)) {
-      throw new NotFoundException('Profile not found');
+      return {
+        available: false as const,
+        reason: 'PROFILE_UNAVAILABLE' as const,
+      };
     }
 
     const profile = await this.prisma.profile.findUnique({
@@ -55,7 +58,10 @@ export class ProfilesService {
     });
 
     if (!profile) {
-      throw new NotFoundException('Profile not found');
+      return {
+        available: false as const,
+        reason: 'PROFILE_UNAVAILABLE' as const,
+      };
     }
 
     if (profile.user.account_status === AccountStatus.DEACTIVATED) {

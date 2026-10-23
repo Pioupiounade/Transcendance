@@ -61,8 +61,19 @@ const byRoleThenName = (a: OrganizationMember, b: OrganizationMember) =>
 export function OrganizationManagePage({ organizationPath }: OrganizationManagePageProps) {
   const { id = '' } = useParams<{ id: string }>();
   const { user } = useAuth();
+
   const loaded = useOrganization(id);
-  const members = useOrganizationMembers(id);
+
+  const organizationAvailable =
+    !loaded.loading &&
+    loaded.organization != null &&
+    !loaded.notFound &&
+    !loaded.error;
+
+  const members = useOrganizationMembers(
+    id,
+    organizationAvailable,
+  );
 
   const backTo = organizationPath(id);
   const myRole = members.members.find((member) => member.user_id === user?.user_id)?.role ?? null;

@@ -16,9 +16,18 @@ export const fetchOrganizations = (signal?: AbortSignal) => http.list<Organizati
 export const fetchUserMemberships = (userId: string, signal?: AbortSignal) =>
   http.get<MembershipWithOrganization[]>(`/organization-members/user/${userId}/organizations`, { signal });
 
-/** Une organisation ; 404 → `ApiError` status 404. */
-export const fetchOrganization = (id: string, signal?: AbortSignal) =>
-  http.get<Organization>(`/organizations/${id}`, { signal });
+/** Récupère une organisation ; une réponse vide signifie qu'elle n'existe pas. */
+export const fetchOrganization = async (
+  id: string,
+  signal?: AbortSignal,
+): Promise<Organization | null> => {
+  const organization = await http.get<Organization | null>(
+    `/organizations/${id}`,
+    { signal },
+  );
+
+  return organization ?? null;
+};
 
 /** Membres actifs (comptes actifs) d'une organisation, route publique (§13). */
 export const fetchOrganizationMembers = (id: string, signal?: AbortSignal) =>

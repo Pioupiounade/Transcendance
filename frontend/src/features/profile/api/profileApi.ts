@@ -77,13 +77,13 @@ type ApiPublicProfile = {
 
 type ApiUnavailablePublicProfile = {
   available: false;
-  reason: 'ACCOUNT_DEACTIVATED' | 'ACCOUNT_SUSPENDED';
+  reason: 'ACCOUNT_DEACTIVATED' | 'ACCOUNT_SUSPENDED' | 'PROFILE_UNAVAILABLE';
   user_id: string;
 };
 
 export type UnavailablePublicProfile = {
   available: false;
-  reason: 'ACCOUNT_DEACTIVATED' | 'ACCOUNT_SUSPENDED';
+  reason: 'ACCOUNT_DEACTIVATED' | 'ACCOUNT_SUSPENDED' | 'PROFILE_UNAVAILABLE';
   userId: string;
 };
 
