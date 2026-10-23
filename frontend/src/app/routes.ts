@@ -7,6 +7,8 @@ export const ROUTES = {
   actions: '/actions',
   map: '/map',
   friends: '/friends',
+  messages: '/messages',
+  messageThread: '/messages/:friendId',
   profile: '/profile',
   publicProfile: '/profiles/:userId',
   terms: '/terms',
@@ -32,6 +34,10 @@ export const editActionPath = (id: string): string => ROUTES.editAction.replace(
 export const organizationPath = (id: string): string => ROUTES.organization.replace(':id', id);
 
 export const organizationManagePath = (id: string): string => ROUTES.organizationManage.replace(':id', id);
+
+export const messageThreadPath = (friendId: string): string => ROUTES.messageThread.replace(':friendId', friendId);
+
+export const publicProfilePath = (userId: string): string => ROUTES.publicProfile.replace(':userId', userId);
 
 /** La carte, centrée sur une action ouverte (`MapPage` lit `?focus=`). */
 export const mapFocusPath = (actionId: string): string => `${ROUTES.map}?${FOCUS_PARAM}=${actionId}`;

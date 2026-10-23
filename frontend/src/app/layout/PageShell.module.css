@@ -32,8 +32,8 @@
   top: 16px;
 }
 
-@media (max-width: 1319px) {
-  /* Réserve la place de la barre basse flottante (fixe, 12 px au-dessus du bord), affichée sous 1320 px. */
+@media (max-width: 1379px) {
+  /* Réserve la place de la barre basse flottante (fixe, 12 px au-dessus du bord), affichée sous 1380 px. */
   .shell {
     padding-bottom: calc(var(--bottom-nav-height) + 28px + env(safe-area-inset-bottom));
   }

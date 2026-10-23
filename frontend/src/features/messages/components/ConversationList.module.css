@@ -1,0 +1,40 @@
+.list {
+  padding: 10px;
+}
+
+.items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  padding: 8px 10px;
+  border-radius: var(--r-field);
+  color: var(--ink);
+  text-decoration: none;
+  transition: background-color var(--t-fast);
+}
+.item:hover {
+  background: var(--ground-hover);
+}
+.item[aria-current='page'] {
+  background: var(--brand);
+  color: var(--on-brand);
+}
+
+.name {
+  min-width: 0;
+  overflow: hidden;
+  font-size: 15px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

@@ -1,10 +1,12 @@
 /* Refonte : en-tête aéré sans trait, nav en pilules, entrée admin et avatar en pastilles blanches.
-   Trois modes, calés sur la largeur réelle des blocs (marque 195 px, nav 612 px, actions 417 px membre / 534 px admin) :
-   - large, ≥ 1320 px : marque | nav en pilules, jamais comprimée | actions, sur une grille 1fr auto 1fr
-     (1366 px avec barre de défilement reste large ; admin icône seule sous 1440 px) ;
-   - compact, 761–1319 px : la nav passe dans la barre basse flottante (BottomNav), l'en-tête garde marque + actions ;
-   - téléphone, ≤ 760 px : en-tête de 72 px, déconnexion en pastille icône, recherche rétractable, avatar masqué
-     (Profile est dans la barre basse). Le nom de la marque reste jusqu'à 480 px (600 px pour un admin). */
+   Trois modes, calés sur la largeur réelle des blocs (marque 195 px, nav 612 px, actions 471 px membre / 588 px admin,
+   recherche + messages + cloche + avatar + déconnexion) :
+   - large, ≥ 1380 px : marque | nav en pilules, jamais comprimée | actions, sur une grille 1fr auto 1fr
+     (admin en icône seule sous 1440 px) ;
+   - compact, 761–1379 px : la nav passe dans la barre basse flottante (BottomNav), l'en-tête garde marque + actions ;
+     déconnexion en pastille icône sous 1000 px ;
+   - téléphone, ≤ 760 px : en-tête de 72 px, recherche rétractable, avatar masqué (Profile est dans la barre basse).
+     Le nom de la marque reste jusqu'à 520 px (570 px pour un admin). */
 .topbar {
   /* Gouttière de l'en-tête, lue aussi par GlobalSearch pour aligner ses résultats sur téléphone. */
   --header-gutter: 38px;
@@ -158,13 +160,34 @@
 }
 
 /* Compact : la nav descend dans la barre basse, l'en-tête n'a plus que la marque et les actions. */
-@media (max-width: 1319px) {
+@media (max-width: 1379px) {
   .topbar {
     display: flex;
     justify-content: space-between;
   }
   .nav {
     display: none;
+  }
+}
+
+/* Sous 1000 px la déconnexion devient une pastille icône, comme la cloche et les messages. */
+@media (max-width: 1000px) {
+  .signOut {
+    width: 46px;
+    padding: 0;
+  }
+  .signOutIcon {
+    display: grid;
+    place-items: center;
+  }
+  .signOutLabel {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
   }
 }
 
@@ -187,32 +210,15 @@
     flex: 0 1 200px;
     min-width: 120px;
   }
-  .signOut {
-    width: 46px;
-    padding: 0;
-  }
-  .signOutIcon {
-    display: grid;
-    place-items: center;
-  }
-  .signOutLabel {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0 0 0 0);
-    white-space: nowrap;
-  }
 }
 
 /* Téléphone connecté : pin seul, la recherche prend la place du nom ; un admin a une pastille de plus, donc plus tôt. */
-@media (max-width: 600px) {
+@media (max-width: 570px) {
   .topbar:has(.adminLink) .brandName {
     display: none;
   }
 }
-@media (max-width: 480px) {
+@media (max-width: 520px) {
   .topbar:has(.search) .brandName {
     display: none;
   }

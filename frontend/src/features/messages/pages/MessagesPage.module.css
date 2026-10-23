@@ -1,0 +1,122 @@
+/* Page des messages : un seul panneau blanc, amis à gauche, fil à droite ; sur téléphone un volet à la fois.
+   La hauteur suit la fenêtre moins le chrome (en-tête, titre, marges, barre basse sous 1380 px). */
+.container {
+  --messages-chrome: 236px;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 30px 38px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+}
+
+.title {
+  margin: 0;
+  color: var(--ink);
+  font-size: var(--display);
+  font-weight: var(--title-w);
+  letter-spacing: -1px;
+  line-height: 1.15;
+}
+
+.panel {
+  display: grid;
+  grid-template-columns: 300px minmax(0, 1fr);
+  height: calc(100dvh - var(--messages-chrome));
+  min-height: 440px;
+  border-radius: var(--r-card);
+  background: var(--ground);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.side {
+  min-height: 0;
+  border-right: 1px solid var(--line);
+  overflow-y: auto;
+}
+
+.main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+.state {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--s3);
+  padding: var(--s4);
+  color: var(--muted);
+  font-size: 14px;
+}
+
+/* États vides : rond sauge, titre, texte, bouton éventuel. */
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s2);
+  max-width: 340px;
+  margin: auto;
+  padding: var(--s4);
+  color: var(--muted);
+  font-size: 14px;
+  text-align: center;
+}
+.emptyIcon {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  margin-bottom: var(--s1);
+  border-radius: 50%;
+  background: var(--sage-soft);
+  color: var(--sage-ink);
+}
+.emptyTitle {
+  margin: 0;
+  color: var(--ink);
+  font-size: 18px;
+  font-weight: 600;
+}
+.emptyCta {
+  margin-top: var(--s2);
+}
+
+@media (max-width: 1379px) {
+  .container {
+    --messages-chrome: 328px;
+  }
+}
+
+@media (max-width: 1000px) {
+  .panel {
+    grid-template-columns: 250px minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 760px) {
+  .container {
+    --messages-chrome: 252px;
+    padding: 18px 18px 24px;
+    gap: var(--s2);
+  }
+  .title {
+    font-size: 32px;
+  }
+  .panel {
+    grid-template-columns: minmax(0, 1fr);
+    min-height: 380px;
+    border-radius: var(--r-panel);
+  }
+  .side {
+    border-right: 0;
+  }
+  .panel[data-view='thread'] .side,
+  .panel[data-view='list'] .main {
+    display: none;
+  }
+}

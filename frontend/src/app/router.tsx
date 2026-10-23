@@ -14,6 +14,8 @@ import {
   mapFocusPath,
   organizationManagePath,
   organizationPath,
+  messageThreadPath,
+  publicProfilePath,
 } from './routes';
 import {
   ProfilePage,
@@ -40,6 +42,8 @@ const AdminUsersPage = lazyPage(() => import('@/features/admin').then((m) => m.A
 const AdminActionsPage = lazyPage(() => import('@/features/admin').then((m) => m.AdminActionsPage));
 const AdminOrganizationsPage = lazyPage(() => import('@/features/admin').then((m) => m.AdminOrganizationsPage));
 const FriendsPage = lazyPage(() => import('@/features/friends').then((m) => m.FriendsPage));
+const MessagesPage = lazyPage(() => import('@/features/messages').then((m) => m.MessagesPage));
+
 const router = createBrowserRouter([
   {
     path: ROUTES.home,
@@ -114,6 +118,28 @@ const router = createBrowserRouter([
             element: <RequireAuth />,
             children: [
               { path: ROUTES.friends, element: <FriendsPage /> },
+              {
+                path: ROUTES.messages,
+                element: (
+                  <MessagesPage
+                    listPath={ROUTES.messages}
+                    threadPath={messageThreadPath}
+                    friendsPath={ROUTES.friends}
+                    profilePath={publicProfilePath}
+                  />
+                ),
+              },
+              {
+                path: ROUTES.messageThread,
+                element: (
+                  <MessagesPage
+                    listPath={ROUTES.messages}
+                    threadPath={messageThreadPath}
+                    friendsPath={ROUTES.friends}
+                    profilePath={publicProfilePath}
+                  />
+                ),
+              },
               { path: ROUTES.createAction, element: <CreateActionPage mapPath={ROUTES.map} /> },
               { path: ROUTES.editAction, element: <EditActionPage mapPath={ROUTES.map} /> },
 

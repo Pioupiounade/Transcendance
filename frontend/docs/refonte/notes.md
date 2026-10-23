@@ -43,8 +43,12 @@ Pioupiounades (nom, pin, structure des pages). L'espace admin garde son thème s
 - `Docs/DESIGN.md` et `frontend/CLAUDE.md` décrivent encore forêt + terracotta : à réécrire si la direction est adoptée.
 - Photos d'action (#148, LeNy) : le bandeau pastel est prévu pour accueillir la photo quand elle existe.
 - Recherche globale (`app/components/GlobalSearch.tsx`, Marie, 200 px) : elle garde ses 200 px jusqu'à 760 px ; sur
-  téléphone elle se rétracte (120 px min.) et prend la place du nom de la marque sous 480 px (600 px pour un admin,
+  téléphone elle se rétracte (120 px min.) et prend la place du nom de la marque sous 520 px (570 px pour un admin,
   qui a une pastille de plus), le pin reste.
+- Messagerie (`features/messages`, backend #155) : pastille à côté de la cloche (point citron = message non lu), page
+  `/messages` en un panneau blanc, amis à gauche, bulles noires / grises à droite, un volet à la fois sur téléphone.
+  Sondage toutes les 5 s sur le fil ouvert, 30 s pour la pastille (pas de temps réel : la branche socket.io du
+  coéquipier, #128, n'est pas fusionnée).
 
 ## Voir la branche
 

@@ -219,6 +219,15 @@ features/       1 domaine métier = 1 module ; interface = index.ts
                 useMyProfile), seul fichier à nous dans ce dossier.
   participations/ useMyParticipations (sur useResource ; visiteur : liste vide sans appel), fetchActionParticipants /
                 joinAction / leaveAction (#60), type MyParticipation
+  messages/     messagerie entre amis (backend #155, api_contract §18), discrète : pas d'entrée de nav, une pastille
+                MessagesButton `{ to }` dans l'en-tête (point citron = notifications `NEW_MESSAGE` non lues, relues toutes les
+                30 s et après l'événement fenêtre `messages:read`). MessagesPage `/messages[/:friendId]` `{ listPath, threadPath,
+                friendsPath, profilePath }` : ConversationList = mes amis actifs (`friendsApi.getMyFriends`, le backend ne liste
+                pas les fils), ThreadPane = bandeau + MessageThread (bulles par jour, défilement au dernier message) +
+                MessageComposer (Entrée envoie, 280 max, compteur dès 200) ; api/useThread = `GET /direct-messages/:friendId`
+                toutes les 5 s onglet visible, relu après `POST` ; errors.ts (403 = plus amis). Ouvrir un fil ou recevoir un
+                message marque lues les notifications de message (le backend ne dit pas de qui elles viennent). Sur téléphone
+                un volet à la fois (`data-view`).
   organizations/  #61 : OrganizationsPage `/organizations` (liste) et OrganizationPage `/organizations/:id` (fiche
                 publique + membres actifs) ; enums OrganizationStatus / RoleOrg / MemberStatus et libellés ; chemins
                 reçus en props (`organizationPath`, `listPath`).

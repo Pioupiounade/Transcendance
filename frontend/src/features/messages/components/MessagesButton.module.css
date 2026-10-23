@@ -1,0 +1,36 @@
+/* Pastille de l'en-tête, jumelle de la cloche (44 px, bord fin) ; noire sur la page des messages. */
+.button {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 1.5px solid var(--line);
+  border-radius: 50%;
+  background: var(--ground);
+  color: var(--ink);
+  text-decoration: none;
+  transition:
+    background-color var(--t-fast),
+    color var(--t-fast);
+}
+.button:hover {
+  background: var(--ground-hover);
+}
+.button[aria-current='page'] {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: var(--on-brand);
+}
+
+/* Point citron (attention, brief §3) : des messages non lus, visible sur fond blanc comme noir. */
+.dot {
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--ground);
+  border-radius: 50%;
+  background: var(--accent);
+}

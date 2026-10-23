@@ -1,5 +1,6 @@
 import { Link, NavLink, useLocation } from 'react-router';
 import { ROLE_APP, useAuth } from '@/features/auth';
+import { MessagesButton } from '@/features/messages';
 import { NotificationBell } from '@/features/notifications';
 import { Avatar, Button, ButtonLink, Icon } from '@/shared/ui';
 import { APP_LABELS } from '../labels';
@@ -42,6 +43,7 @@ export function AppHeader() {
             <span className={styles.adminLabel}>{APP_LABELS.admin}</span>
           </NavLink>
         )}
+        {status === 'authenticated' && <MessagesButton to={ROUTES.messages} />}
         {status === 'authenticated' && <NotificationBell />}
         {status === 'authenticated' && user && (
           <Link to={ROUTES.profile} className={styles.profileLink} aria-label={APP_LABELS.myProfile}>
