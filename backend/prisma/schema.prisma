@@ -67,7 +67,7 @@ model User {
 
   sent_messages     DirectMessage[] @relation("SentMessages")
   received_messages DirectMessage[] @relation("ReceivedMessages")
-  
+
   auth_sessions AuthSession[]
 }
 
@@ -355,12 +355,12 @@ model NotificationPreference {
 // --------------------------------------------------
 
 model DirectMessage {
-  message_id    BigInt    @id @default(autoincrement())
-  sender_id     BigInt
-  receiver_id   BigInt
-  content       String    @db.VarChar(280)
-  is_read       Boolean   @default(false)  // Can be optional, just here if needed
-  created_at    DateTime  @default(now())
+  message_id  BigInt   @id @default(autoincrement())
+  sender_id   BigInt
+  receiver_id BigInt
+  content     String   @db.VarChar(280)
+  is_read     Boolean  @default(false) // Can be optional, just here if needed
+  created_at  DateTime @default(now())
 
   sender   User @relation("SentMessages", fields: [sender_id], references: [user_id], onDelete: Cascade)
   receiver User @relation("ReceivedMessages", fields: [receiver_id], references: [user_id], onDelete: Cascade)
@@ -482,4 +482,8 @@ enum NotificationType {
   ACTION_STATUS_CHANGED
   NEW_MESSAGE
   ORGANIZATION_OWNERSHIP_TRANSFERRED
+  ORGANIZATION_JOIN_REQUEST_REJECTED
+  ORGANIZATION_MEMBER_BANNED
+  ORGANIZATION_MEMBERSHIP_ACTIVATED
+  ORGANIZATION_MEMBER_REMOVED
 }

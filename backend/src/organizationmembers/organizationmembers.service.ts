@@ -3,6 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { AccountStatus, RoleApp, RoleOrg, MemberStatus, OrganizationStatus, NotificationType } from '../../generated/prisma/client';
 import { PointtransactionService } from '../pointtransaction/pointtransaction.service';
 import { NotificationsService } from '../notifications/notifications.service';
+import { RealtimeGateway } from '../realtime/realtime.gateway';
 
 @Injectable()
 export class OrganizationmembersService {
@@ -10,6 +11,7 @@ export class OrganizationmembersService {
         private prisma: PrismaService,
         private pointtransactionService: PointtransactionService,
         private notificationsService: NotificationsService,
+        private realtimeGateway: RealtimeGateway,
 
     ) { }
 
@@ -389,6 +391,19 @@ export class OrganizationmembersService {
             throw new BadRequestException('Use leaveOrganization to leave the organization');
         }
 
+        const organization = await this.prisma.organization.findUnique({
+            where: {
+                organization_id: organizationId,
+            },
+            select: {
+                title: true,
+            },
+        });
+
+        if (!organization) {
+            throw new NotFoundException('Organization not found');
+        }
+
         const targetMembership =
             await this.prisma.organizationMember.findUnique({
                 where: {
@@ -455,6 +470,20 @@ export class OrganizationmembersService {
             },
         );
 
+        this.realtimeGateway.emitOrganizationMembershipChanged(
+            targetUserId,
+            organizationId,
+        );
+
+        await this.notificationsService.notifyUser({
+            userId: targetUserId,
+            type: NotificationType.ORGANIZATION_MEMBER_REMOVED,
+
+            title: 'You have been removed from an organization',
+            message: `You have been removed from "${organization.title}".`,
+            link: `/organizations/${organizationId.toString()}`,
+        });
+
         return removedMembership;
     }
 
@@ -470,6 +499,19 @@ export class OrganizationmembersService {
 
         if (requesterId === targetUserId) {
             throw new BadRequestException('You cannot ban yourself');
+        }
+
+        const organization = await this.prisma.organization.findUnique({
+            where: {
+                organization_id: organizationId,
+            },
+            select: {
+                title: true,
+            },
+        });
+
+        if (!organization) {
+            throw new NotFoundException('Organization not found');
         }
 
         const targetMembership = await this.prisma.organizationMember.findUnique({
@@ -520,6 +562,8 @@ export class OrganizationmembersService {
 
         const membershipCreatedAt = targetMembership.created_at;
 
+        const banEventKey = targetMembership.updated_at.toISOString();
+
         const bannedMembership = await this.prisma.$transaction(
             async (tx) => {
                 const updatedMembership = await tx.organizationMember.update({
@@ -539,6 +583,7 @@ export class OrganizationmembersService {
                     targetUserId,
                     membershipCreatedAt,
                     tx,
+                    banEventKey,
                 );
 
                 await this.pointtransactionService.penalizeBannedUser(
@@ -546,11 +591,25 @@ export class OrganizationmembersService {
                     targetUserId,
                     membershipCreatedAt,
                     tx,
+                    banEventKey,
                 );
 
                 return updatedMembership;
             },
         );
+
+        this.realtimeGateway.emitOrganizationMembershipChanged(
+            targetUserId,
+            organizationId,
+        );
+
+        await this.notificationsService.notifyUser({
+            userId: targetUserId,
+            type: NotificationType.ORGANIZATION_MEMBER_BANNED,
+            title: 'You have been banned from an organization',
+            message: `You have been banned from "${organization.title}".`,
+            link: `/organizations/${organizationId.toString()}`,
+        });
 
         return bannedMembership;
     }
@@ -727,21 +786,111 @@ export class OrganizationmembersService {
             },
         );
 
+        this.realtimeGateway.emitOrganizationMembershipChanged(
+            targetUserId,
+            organizationId,
+        );
+
         return updatedMembership;
     }
 
-    // Deny a membership request
-    async denyMembership(requesterId: bigint, organizationId: bigint, targetUserId: bigint) {
-        await this.checkCanManageMembers(
-            requesterId,
-            organizationId,
-        );
+    // Reactivate a rejected or banned membership
+    async reactivateMembership(
+        requesterId: bigint,
+        organizationId: bigint,
+        targetUserId: bigint,
+    ) {
+        await this.checkCanManageMembers(requesterId, organizationId);
 
         const membership = await this.prisma.organizationMember.findUnique({
             where: {
                 organization_id_user_id: {
                     organization_id: organizationId,
                     user_id: targetUserId,
+                },
+            },
+            include: {
+                user: {
+                    select: {
+                        account_status: true,
+                    },
+                },
+                organization: {
+                    select: {
+                        title: true,
+                    },
+                },
+            },
+        });
+
+        if (!membership) {
+            throw new NotFoundException('Membership not found');
+        }
+
+        if (
+            membership.status !== MemberStatus.REJECTED &&
+            membership.status !== MemberStatus.BANNED
+        ) {
+            throw new BadRequestException(
+                'Only rejected or banned memberships can be reactivated',
+            );
+        }
+
+        if (membership.user.account_status !== AccountStatus.ACTIVE) {
+            throw new BadRequestException('Target user is not active');
+        }
+
+        const updatedMembership = await this.prisma.organizationMember.update({
+            where: {
+                organization_id_user_id: {
+                    organization_id: organizationId,
+                    user_id: targetUserId,
+                },
+            },
+            data: {
+                status: MemberStatus.ACTIVE,
+                role: RoleOrg.MEMBER,
+                validated_by_org_man: true,
+                validated_at: new Date(),
+            },
+        });
+
+        await this.notificationsService.notifyUser({
+            userId: targetUserId,
+            type: NotificationType.ORGANIZATION_MEMBERSHIP_ACTIVATED,
+            title: 'Membership activated',
+            message: `Your membership in "${membership.organization.title}" has been activated. You can now participate in this organization again.`,
+            link: `/organizations/${organizationId.toString()}`,
+        });
+
+        this.realtimeGateway.emitOrganizationMembershipChanged(
+            targetUserId,
+            organizationId,
+        );
+
+        return updatedMembership;
+    }
+
+    // Deny a membership request
+    async denyMembership(
+        requesterId: bigint,
+        organizationId: bigint,
+        targetUserId: bigint,
+    ) {
+        await this.checkCanManageMembers(requesterId, organizationId);
+
+        const membership = await this.prisma.organizationMember.findUnique({
+            where: {
+                organization_id_user_id: {
+                    organization_id: organizationId,
+                    user_id: targetUserId,
+                },
+            },
+            include: {
+                organization: {
+                    select: {
+                        title: true,
+                    },
                 },
             },
         });
@@ -754,7 +903,7 @@ export class OrganizationmembersService {
             throw new BadRequestException('Membership request is not pending');
         }
 
-        return this.prisma.organizationMember.update({
+        const updatedMembership = await this.prisma.organizationMember.update({
             where: {
                 organization_id_user_id: {
                     organization_id: organizationId,
@@ -767,6 +916,21 @@ export class OrganizationmembersService {
                 validated_at: new Date(),
             },
         });
+
+        await this.notificationsService.notifyUser({
+            userId: targetUserId,
+            type: NotificationType.ORGANIZATION_JOIN_REQUEST_REJECTED,
+            title: 'Membership request declined',
+            message: `Your request to join "${membership.organization.title}" has been declined.`,
+            link: `/organizations/${organizationId.toString()}`,
+        });
+
+        this.realtimeGateway.emitOrganizationMembershipChanged(
+            targetUserId,
+            organizationId,
+        );
+
+        return updatedMembership;
     }
 
     // Leave an organization
@@ -842,6 +1006,11 @@ export class OrganizationmembersService {
 
                 return deletedMembership;
             },
+        );
+
+        this.realtimeGateway.emitOrganizationMembershipChanged(
+            userId,
+            organizationId,
         );
 
         return removedMembership;

@@ -15,12 +15,20 @@ type RequestsPanelProps = {
   onApprove: (member: OrganizationMember) => Promise<void>;
   /** Refuser est définitif : la page demande confirmation. */
   onDecline: (member: OrganizationMember) => void;
+  onReactivate: (member: OrganizationMember) => void;
 };
 
 const text = ORGANIZATIONS_LABELS.manage.requests;
 
 /** Demandes d'adhésion : en attente (approuver / refuser), puis les refusées en lecture seule. */
-export function RequestsPanel({ pending, declined, disabled, onApprove, onDecline }: RequestsPanelProps) {
+export function RequestsPanel({
+  pending,
+  declined,
+  disabled,
+  onApprove,
+  onDecline,
+  onReactivate,
+}: RequestsPanelProps) {
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -87,7 +95,30 @@ export function RequestsPanel({ pending, declined, disabled, onApprove, onDeclin
         <section className={styles.panel} aria-labelledby="requests-declined-title">
           <h2 id="requests-declined-title">{text.declinedTitle}</h2>
           <p className={styles.muted}>{text.declinedLead}</p>
-          <ReadOnlyRows members={declined} />
+                    <ul className={styles.rows}>
+                      {declined.map((member) => {
+                        const name = memberName(member);
+
+                        return (
+                          <li key={member.user_id} className={`${styles.row} ${styles.past}`}>
+                            <Avatar name={name} src={member.user.profile?.profile_picture ?? undefined} size={40} />
+                            <span className={styles.identity}>
+                              <span className={styles.name}>{name}</span>
+                              <span className={styles.meta}>{formatFullDate(member.updated_at)}</span>
+                            </span>
+                            <span className={styles.buttons}>
+                              <Button
+                                variant="secondary"
+                                disabled={disabled}
+                                onClick={() => onReactivate(member)}
+                              >
+                                {text.reactivate}
+                              </Button>
+                            </span>
+                          </li>
+                        );
+                      })}
+                    </ul>
         </section>
       )}
     </>

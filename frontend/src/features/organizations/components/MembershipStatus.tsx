@@ -40,6 +40,22 @@ export function MembershipStatus({ organizationId, role, membership }: Membershi
     );
   }
 
+  if (membership?.status === 'REJECTED') {
+    return (
+      <p className={styles.note} role="status">
+        {text.declined}
+      </p>
+    );
+  }
+
+  if (membership?.status === 'BANNED') {
+    return (
+      <p className={styles.note} role="status">
+        {text.banned}
+      </p>
+    );
+  }
+
   if (role) {
     return (
       <p className={styles.badge}>

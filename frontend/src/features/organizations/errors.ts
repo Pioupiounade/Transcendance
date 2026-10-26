@@ -35,8 +35,18 @@ export const toManageErrorMessage = (error: unknown): string => {
   return t.unknown;
 };
 
+export class CommentSubmissionError extends Error {
+  constructor(readonly code: string) {
+    super(code);
+    this.name = 'CommentSubmissionError';
+  }
+}
+
 /** Traduit une erreur d'envoi ou de suppression de commentaire en message affichable. */
 export const toCommentErrorMessage = (error: unknown): string => {
+  if (error instanceof CommentSubmissionError) {
+    return t.notAllowed;
+  }
   if (!isApiError(error)) return t.unknown;
   if (error.isNetwork) return t.network;
   if (error.status === 401) return t.signedOut;

@@ -134,6 +134,20 @@ export class OrganizationmembersController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Patch('organization/:organizationId/member/:targetUserId/reactivate')
+  reactivateMembership(
+    @Req() req: any,
+    @Param('organizationId') organizationId: string,
+    @Param('targetUserId') targetUserId: string,
+  ) {
+    return this.organizationMembersService.reactivateMembership(
+      BigInt(req.user.id),
+      this.toBigInt(organizationId, 'organizationId'),
+      this.toBigInt(targetUserId, 'targetUserId'),
+    );
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Patch('organization/:organizationId/member/:targetUserId/deny')
   denyMembership(
     @Req() req: any,

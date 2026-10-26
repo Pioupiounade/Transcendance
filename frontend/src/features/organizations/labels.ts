@@ -121,6 +121,15 @@ export const ORGANIZATIONS_LABELS = {
         confirm: 'Decline request',
         confirming: 'Declining…',
       },
+      reactivate: 'Reactivate',
+      reactivating: 'Reactivating…',
+      reactivated: (name: string) => `${name} is a member again.`,
+      reactivateConfirm: {
+        title: 'Reactivate this user?',
+        body: (name: string) => `${name} will become an active member of the organization.`,
+        confirm: 'Reactivate',
+        confirming: 'Reactivating…',
+      },
     },
     members: {
       active: 'Active members',
@@ -128,8 +137,7 @@ export const ORGANIZATIONS_LABELS = {
       manage: 'Manage',
       manageOf: (name: string) => `Manage ${name}`,
       bannedTitle: 'Banned',
-      bannedLead: 'Banned neighbours cannot join again. There is no way to lift a ban yet.',
-      dialogTitle: (name: string) => `Manage ${name}`,
+      bannedLead: 'Banned neighbours cannot join again unless a manager reactivates them.',      dialogTitle: (name: string) => `Manage ${name}`,
       choices: {
         promote: { label: 'Promote to manager', hint: 'Can review requests, remove and ban members.' },
         demote: { label: 'Back to member', hint: 'Loses the manager rights.' },

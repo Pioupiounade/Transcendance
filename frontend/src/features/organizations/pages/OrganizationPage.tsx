@@ -16,6 +16,7 @@ import { ORGANIZATIONS_LABELS, ORGANIZATION_STATUS_LABELS, ROLE_ORG_LABELS } fro
 import { managerLevel } from '../permissions';
 import { ORGANIZATION_STATUS } from '../types';
 import styles from './OrganizationPage.module.css';
+import { useEffect } from 'react';
 
 type OrganizationPageProps = {
   /** Chemin de la liste, pour le retour. */
@@ -59,6 +60,31 @@ export function OrganizationPage({ listPath, upcomingActionPath, managePath }: O
     id,
     status === 'authenticated' && organizationAvailable,
   );
+
+  useEffect(() => {
+    const handleMembershipChanged = (event: Event) => {
+      const detail = (
+        event as CustomEvent<{ organizationId: string }>
+      ).detail;
+
+      if (detail?.organizationId !== id) return;
+
+      members.reload();
+      membership.reload();
+    };
+
+    window.addEventListener(
+      'organization:membership-changed',
+      handleMembershipChanged,
+    );
+
+    return () => {
+      window.removeEventListener(
+        'organization:membership-changed',
+        handleMembershipChanged,
+      );
+    };
+  }, [id, members.reload, membership.reload]);
 
   // La liste publique ne contient que les membres actifs : m'y trouver = être membre.
   const myRole = members.members.find((member) => member.user_id === user?.user_id)?.role ?? null;
@@ -216,7 +242,11 @@ export function OrganizationPage({ listPath, upcomingActionPath, managePath }: O
             </section>
 
             <div className={styles.discussion}>
-              <OrganizationComments organizationId={organization.organization_id} creatorId={organization.creator_id} />
+              <OrganizationComments
+                organizationId={organization.organization_id}
+                creatorId={organization.creator_id}
+                canComment={membership.membership?.status === 'ACTIVE'}
+              />
             </div>
           </div>
         </>

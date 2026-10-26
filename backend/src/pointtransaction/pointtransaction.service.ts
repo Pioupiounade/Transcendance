@@ -382,7 +382,14 @@ export class PointtransactionService {
       );
   }
 
-  private async penalizeOwnerForMemberDeparture(organizationId: bigint, memberId: bigint, membershipCreatedAt: Date, reason: PointReason, tx?: Prisma.TransactionClient) {
+  private async penalizeOwnerForMemberDeparture(
+    organizationId: bigint,
+    memberId: bigint,
+    membershipCreatedAt: Date,
+    reason: PointReason,
+    tx?: Prisma.TransactionClient,
+    eventKeySuffix?: string,
+  ) {
  
     const ownerId = await this.findOrganizationOwner(
       organizationId,
@@ -413,7 +420,7 @@ export class PointtransactionService {
       ownerId,
       -5,
       reason,
-      `${reasonName}:${organizationId}:${memberId}:${membershipCreatedAt.toISOString()}`,
+        `${reasonName}:${organizationId}:${memberId}:${membershipCreatedAt.toISOString()}${eventKeySuffix ? `:${eventKeySuffix}` : ''}`,
       tx,
     );
   }
@@ -439,14 +446,20 @@ export class PointtransactionService {
     );
   }
 
-  async penalizeOwnerForMemberBan(organizationId: bigint, memberId: bigint, membershipCreatedAt: Date, tx?: Prisma.TransactionClient) {
-
+  async penalizeOwnerForMemberBan(
+    organizationId: bigint,
+    memberId: bigint,
+    membershipCreatedAt: Date,
+    tx?: Prisma.TransactionClient,
+    eventKeySuffix?: string,
+  ) {
     return this.penalizeOwnerForMemberDeparture(
       organizationId,
       memberId,
       membershipCreatedAt,
       PointReason.ORGANIZATION_MEMBER_BANNED,
       tx,
+      eventKeySuffix,
     );
   }
 
@@ -485,7 +498,7 @@ export class PointtransactionService {
     );
 }
 
-  async penalizeBannedUser(organizationId: bigint, userId: bigint, membershipCreatedAt: Date, tx?: Prisma.TransactionClient) {
+  async penalizeBannedUser(organizationId: bigint, userId: bigint, membershipCreatedAt: Date, tx?: Prisma.TransactionClient, eventKeySuffix?: string) {
     const db = tx ?? this.prisma;
 
     const user = await db.user.findUnique({
@@ -527,8 +540,7 @@ export class PointtransactionService {
       userId,
       -15,
       PointReason.USER_BANNED_FROM_ORGANIZATION,
-      `USER_BANNED_FROM_ORGANIZATION:${organizationId}:${userId}:${membershipCreatedAt.toISOString()}`,
-      tx,
+        `USER_BANNED_FROM_ORGANIZATION:${organizationId}:${userId}:${membershipCreatedAt.toISOString()}${eventKeySuffix ? `:${eventKeySuffix}` : ''}`,      tx,
     );
   }
 
