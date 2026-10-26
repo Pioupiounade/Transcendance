@@ -1,263 +1,126 @@
-import { useEffect, useState } from 'react';
-import { useParams, Navigate } from 'react-router';
+import { useCallback, useEffect, useState } from 'react';
+import { Navigate, useParams } from 'react-router';
 import { useAuth } from '@/features/auth';
-import {
-  getPublicProfile,
-  isUnavailablePublicProfile,
-} from '../api/profileApi';
+import { isApiError } from '@/shared/api';
+import { useResource } from '@/shared/hooks/useResource';
+import { pageTitle } from '@/shared/lib/pageTitle';
+import { ButtonLink, Icon } from '@/shared/ui';
+import { getFriendshipStatus, getPublicProfile, isUnavailablePublicProfile } from '../api/profileApi';
+import { FriendshipCTA } from '../components/FriendshipCTA';
+import { ProfileSkeleton } from '../components/ProfileSkeleton';
+import { ProfileUnavailable, type UnavailableReason } from '../components/ProfileUnavailable';
 import { ProfileView } from '../components/ProfileView';
-import type { FriendshipStatus, InterestCategory, UserProfile } from '../types';
-import { friendsApi } from '@/features/friends/api/friendsApi';
+import { PROFILE_LABELS } from '../labels';
+import type { FriendshipStatus, PublicProfile } from '../types';
+import styles from './ProfilePage.module.css';
 
-export function PublicProfilePage() {
-  const { userId } = useParams<{ userId: string }>();
+type PublicProfilePageProps = {
+  /** Mon propre profil : on y renvoie quand l'id est le mien. */
+  ownProfilePath: string;
+  /** Fil de messages avec ce voisin (ami seulement). */
+  messagePath: (userId: string) => string;
+};
+
+type PublicView =
+  | { kind: 'profile'; profile: PublicProfile; friendship: FriendshipStatus }
+  | { kind: 'unavailable'; reason: UnavailableReason };
+
+const text = PROFILE_LABELS;
+
+/** Un voisin peut aussi ne pas être visible pour moi : les 403 / 404 du profil sont un cas normal, pas une erreur. */
+const toView = async (userId: string, signedIn: boolean, signal: AbortSignal): Promise<PublicView> => {
+  try {
+    const data = await getPublicProfile(userId, signal);
+    if (isUnavailablePublicProfile(data)) return { kind: 'unavailable', reason: data.reason };
+    if (data.isPrivate || data.visibility === 'PRIVATE') return { kind: 'unavailable', reason: 'PRIVATE' };
+    const friendship = signedIn ? await getFriendshipStatus(userId, signal).catch((): FriendshipStatus => 'NONE') : 'NONE';
+    return { kind: 'profile', profile: data, friendship };
+  } catch (error) {
+    if (isApiError(error) && (error.status === 403 || error.status === 404)) {
+      return { kind: 'unavailable', reason: 'PRIVATE' };
+    }
+    throw error;
+  }
+};
+
+/** `/profiles/:userId` : la fiche publique d'un voisin, avec mon lien d'amitié et sa présence en direct. */
+export function PublicProfilePage({ ownProfilePath, messagePath }: PublicProfilePageProps) {
+  const { userId = '' } = useParams<{ userId: string }>();
   const { user } = useAuth();
-  const currentUserId = user?.user_id ? String(user.user_id) : null;
+  const currentUserId = user?.user_id ?? null;
 
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-  const [userInterests, setUserInterests] = useState<InterestCategory[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isPrivate, setIsPrivate] = useState(false);
-  const [error, setError] = useState(false);
+  const load = useCallback(
+    (signal: AbortSignal) => toView(userId, currentUserId !== null, signal),
+    [userId, currentUserId],
+  );
+  const view = useResource(load);
 
-  const [unavailableReason, setUnavailableReason] = useState<
-    | 'PROFILE_UNAVAILABLE'
-    | 'ACCOUNT_DEACTIVATED'
-    | 'ACCOUNT_SUSPENDED'
-    | null
-  >(null);
+  // Ce qui a changé depuis le chargement : mon lien d'amitié (boutons), sa présence (socket #164).
+  const [friendship, setFriendship] = useState<{ userId: string; status: FriendshipStatus } | null>(null);
+  const [presence, setPresence] = useState<{ userId: string; online: boolean } | null>(null);
 
   useEffect(() => {
-    let active = true;
-    setUnavailableReason(null);
-    setIsLoading(true);
-    setError(false);
-    setIsPrivate(false);
-    setUserProfile(null);
-    setUserInterests([]);
+    const onPresence = (event: Event) => {
+      const { userId: changed, isOnline } = (event as CustomEvent<{ userId: string; isOnline: boolean }>).detail;
+      setPresence({ userId: String(changed), online: isOnline });
+    };
+    window.addEventListener('presence:change', onPresence);
+    return () => window.removeEventListener('presence:change', onPresence);
+  }, []);
 
-    if (!userId) {
-      setError(true);
-      setIsLoading(false);
-      return;
-    }
+  if (currentUserId !== null && currentUserId === userId) return <Navigate to={ownProfilePath} replace />;
 
-    async function loadData() {
-      try {
-        // Le profil public est accessible même sans connexion.
-        const data = await getPublicProfile(userId!);
+  let content;
+  if (view.loading) {
+    content = <ProfileSkeleton />;
+  } else if (view.error || !view.data) {
+    content = <ProfileUnavailable reason="ERROR" onRetry={view.reload} />;
+  } else if (view.data.kind === 'unavailable') {
+    content = <ProfileUnavailable reason={view.data.reason} />;
+  } else {
+    const { profile } = view.data;
+    const status = friendship?.userId === userId ? friendship.status : view.data.friendship;
+    const online = presence?.userId === userId ? presence.online : profile.is_online;
 
-        if (!active) return;
-
-        if (isUnavailablePublicProfile(data)) {
-          setUnavailableReason(data.reason);
-          return;
-        }
-
-        if (
-          data.isPrivate ||
-          data.visibility === 'PRIVATE'
-        ) {
-          setIsPrivate(true);
-          return;
-        }
-
-        let friendshipStatus: FriendshipStatus = 'NONE';
-
-        // Les données d'amitié ne sont utiles que si l'utilisateur est connecté.
-        if (currentUserId) {
-          const [
-            friends,
-            sentRequests,
-            receivedRequests,
-            friendshipRelation,
-          ] = await Promise.all([
-            friendsApi.getMyFriends(),
-            friendsApi.getSentRequests(),
-            friendsApi.getReceivedRequests(),
-            friendsApi.getFriendshipStatus(userId!),
-          ]);
-
-          if (!active) return;
-
-          if (friendshipRelation.status === 'BLOCKED_BY_ME') {
-            friendshipStatus = 'BLOCKED';
-          } else if (friendshipRelation.status === 'BLOCKED_BY_OTHER') {
-            friendshipStatus = 'BLOCKED_BY_OTHER';
-          } else if (friendshipRelation.status === 'ACCEPTED') {
-            friendshipStatus = 'ACCEPTED';
-          } else if (
-            sentRequests.some(
-              (request: any) =>
-                String(request.addressee?.user_id) === String(userId),
-            )
-          ) {
-            friendshipStatus = 'PENDING_SENT';
-          } else if (
-            receivedRequests.some(
-              (request: any) =>
-                String(request.requester?.user_id) === String(userId),
-            )
-          ) {
-            friendshipStatus = 'PENDING_RECEIVED';
-          } else if (
-            friends.some(
-              (friend: any) =>
-                String(friend.user_id ?? friend.friend?.user_id) ===
-                String(userId),
-            )
-          ) {
-            friendshipStatus = 'ACCEPTED';
-          }
-        }
-
-        setUserProfile({
-          username: data.username,
-          description: data.description ?? undefined,
-          profilePicture:
-            (data as any).profile_picture ??
-            data.profilePicture ??
-            undefined,
-          commune: data.commune ?? null,
-          visibility: data.visibility ?? 'PUBLIC',
+    content = (
+      <ProfileView
+        profile={{
+          username: profile.username,
+          description: profile.description ?? undefined,
+          profilePicture: profile.profilePicture ?? undefined,
+          commune: profile.commune,
+          visibility: profile.visibility ?? 'PUBLIC',
           location: null,
-          friendshipStatus,
-          isOnline: data.is_online,
-        });
-
-        setUserInterests(data.interests ?? []);
-      } catch (err: any) {
-        if (!active) return;
-
-        if (err?.status === 403 || err?.status === 404) {
-          setIsPrivate(true);
-        } else {
-          setError(true);
+        }}
+        eyebrow={text.neighbour}
+        own={false}
+        interests={{ data: profile.interests, loading: false, error: null }}
+        online={online}
+        actions={
+          currentUserId !== null && (
+            <>
+              {status === 'ACCEPTED' && (
+                <ButtonLink to={messagePath(userId)}>
+                  <Icon name="chat" size={16} />
+                  {text.hero.message}
+                </ButtonLink>
+              )}
+              <FriendshipCTA
+                userId={userId}
+                status={status}
+                onStatusChange={(next) => setFriendship({ userId, status: next })}
+              />
+            </>
+          )
         }
-      } finally {
-        if (active) setIsLoading(false);
-      }
-    }
-
-
-    loadData();
-
-    return () => {
-      active = false;
-    };
-  }, [userId, currentUserId]);
-
-  useEffect(() => {
-    const handlePresenceChange = (event: Event) => {
-      const { userId: changedUserId, isOnline } = (
-        event as CustomEvent<{
-          userId: string;
-          isOnline: boolean;
-        }>
-      ).detail;
-
-      if (String(changedUserId) !== String(userId)) return;
-
-      setUserProfile((previous) =>
-        previous
-          ? {
-              ...previous,
-              isOnline,
-            }
-          : previous,
-      );
-    };
-
-    window.addEventListener('presence:change', handlePresenceChange);
-
-    return () => {
-      window.removeEventListener('presence:change', handlePresenceChange);
-    };
-  }, [userId]);
-
-  if (currentUserId && userId && currentUserId === String(userId)) {
-    return <Navigate to="/profile" replace />;
-  }
-
-  if (isLoading) {
-    return (
-      <div style={{ textAlign: 'center', padding: '4rem 1rem' }}>
-        <p className="help" style={{ justifyContent: 'center' }}>Loading profile...</p>
-      </div>
-    );
-  }
-
-  if (unavailableReason === 'ACCOUNT_DEACTIVATED') {
-    return (
-      <div style={{ textAlign: 'center', padding: '4rem 1rem' }}>
-        <h2>Profile deactivated</h2>
-        <p className="help" style={{ justifyContent: 'center' }}>
-          This account is no longer active.
-        </p>
-      </div>
-    );
-  }
-
-  if (unavailableReason === 'ACCOUNT_SUSPENDED') {
-    return (
-      <div style={{ textAlign: 'center', padding: '4rem 1rem' }}>
-        <h2>Profile unavailable</h2>
-        <p className="help" style={{ justifyContent: 'center' }}>
-          This account is currently unavailable.
-        </p>
-      </div>
-    );
-  }
-
-  if (unavailableReason === 'PROFILE_UNAVAILABLE') {
-    return (
-      <div style={{ textAlign: 'center', padding: '4rem 1rem' }}>
-        <h2>Profile not found</h2>
-        <p className="help" style={{ justifyContent: 'center' }}>
-          Public profile unavailable.
-        </p>
-      </div>
-    );
-  }
-
-  if (isPrivate) {
-    return (
-      <div style={{ textAlign: 'center', padding: '4rem 1rem' }}>
-        <h2>Profile unavailable</h2>
-        <p className="help" style={{ justifyContent: 'center' }}>
-          This profile does not exist or is not publicly accessible.
-        </p>
-      </div>
-    );
-  }
-
-  if (error || !userProfile) {
-    return (
-      <div style={{ textAlign: 'center', padding: '4rem 1rem' }}>
-        <h2>Profile not found</h2>
-        <p className="help help--error" style={{ justifyContent: 'center' }}>
-          Public profile unavailable.
-        </p>
-      </div>
+      />
     );
   }
 
   return (
-    <ProfileView
-      profile={userProfile}
-      userId={userId ?? ''}
-      isOwnProfile={false}
-      isAuthenticated={Boolean(currentUserId)}
-      onEdit={() => {}}
-      onFriendshipChange={(newStatus: FriendshipStatus) => {
-        setUserProfile((prev) => (prev ? { ...prev, friendshipStatus: newStatus } : null));
-      }}
-      interests={userInterests}
-      interestsLoading={false}
-      interestsError={null}
-      activity={null}
-      activityLoading={false}
-      activityError={null}
-    />
+    <section className={styles.page}>
+      <title>{pageTitle(view.data?.kind === 'profile' ? `@${view.data.profile.username}` : text.neighbour)}</title>
+      {content}
+    </section>
   );
 }

@@ -1,7 +1,6 @@
+/* Refonte : pied de page sans trait, texte discret ; à droite, la place de la bulle Messages (56 px + marges). */
 .footer {
-  padding: 18px 38px;
-  background: var(--ground);
-  border-top: 1px solid var(--line);
+  padding: 28px 104px 32px 38px;
   font-size: 12px;
   color: var(--muted);
 }
@@ -15,8 +14,8 @@
 }
 
 .brand {
-  color: var(--brand);
-  font-weight: 700;
+  color: var(--ink);
+  font-weight: 600;
 }
 
 .links {
@@ -27,7 +26,7 @@
 
 .links a {
   color: var(--ink);
-  font-weight: 600;
+  font-weight: 500;
   text-decoration: none;
 }
 .links a:hover {
@@ -35,8 +34,7 @@
   text-underline-offset: 3px;
 }
 
-/* Mobile : pas de pied de page, la barre basse occupe le bas de l'écran.
-   Les liens légaux seront repris dans l'écran Profil (réglages). */
+/* Mobile : pas de pied de page, la barre basse occupe le bas de l'écran. */
 @media (max-width: 760px) {
   .footer {
     display: none;

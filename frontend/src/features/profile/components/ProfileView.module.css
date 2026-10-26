@@ -1,0 +1,41 @@
+/* Corps de la fiche : « About » + intérêts à gauche, activité à droite (même rapport que la fiche organisation). */
+.body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 22px;
+  align-items: start;
+}
+
+/* Sans activité (profil d'un voisin) : « About » et intérêts côte à côte. */
+.bodySolo {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 22px;
+  align-items: start;
+}
+.bodySolo .column {
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+}
+
+.column {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 22px;
+  min-width: 0;
+}
+
+@media (max-width: 1100px) {
+  .body {
+    grid-template-columns: minmax(0, 1fr) 300px;
+    gap: 16px;
+  }
+}
+
+@media (max-width: 760px) {
+  .body,
+  .bodySolo .column,
+  .column {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+  }
+}

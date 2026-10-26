@@ -14,6 +14,8 @@ import {
   mapFocusPath,
   organizationManagePath,
   organizationPath,
+  messageThreadPath,
+  publicProfilePath,
 } from './routes';
 import {
   ProfilePage,
@@ -40,6 +42,8 @@ const AdminUsersPage = lazyPage(() => import('@/features/admin').then((m) => m.A
 const AdminActionsPage = lazyPage(() => import('@/features/admin').then((m) => m.AdminActionsPage));
 const AdminOrganizationsPage = lazyPage(() => import('@/features/admin').then((m) => m.AdminOrganizationsPage));
 const FriendsPage = lazyPage(() => import('@/features/friends').then((m) => m.FriendsPage));
+const MessagesPage = lazyPage(() => import('@/features/messages').then((m) => m.MessagesPage));
+
 const router = createBrowserRouter([
   {
     path: ROUTES.home,
@@ -70,7 +74,12 @@ const router = createBrowserRouter([
           {
             element: <RequireActiveAccount />,
             children: [
-              { path: ROUTES.profile, element: <ProfilePage /> },
+              {
+                path: ROUTES.profile,
+                element: (
+                  <ProfilePage organizationPath={organizationPath} actionPath={actionDetailPath} homePath={ROUTES.home} />
+                ),
+              },
             ],
           },
         ],
@@ -80,7 +89,7 @@ const router = createBrowserRouter([
     element: <RequireActiveAccount />,
     children: [
       {
-        element: <RequireProfile />,
+        element: <RequireProfile profilePath={ROUTES.profile} />,
         children: [
           { index: true, element: <HomePage /> },
           { path: ROUTES.actions, element: <ActionsListPage /> },
@@ -108,12 +117,37 @@ const router = createBrowserRouter([
           },
 
           { path: ROUTES.actionDetail, element: <ActionDetailPage editPath={editActionPath} /> },
-          { path: ROUTES.publicProfile, element: <PublicProfilePage /> },
+          {
+            path: ROUTES.publicProfile,
+            element: <PublicProfilePage ownProfilePath={ROUTES.profile} messagePath={messageThreadPath} />,
+          },
 
           {
             element: <RequireAuth />,
             children: [
               { path: ROUTES.friends, element: <FriendsPage /> },
+              {
+                path: ROUTES.messages,
+                element: (
+                  <MessagesPage
+                    listPath={ROUTES.messages}
+                    threadPath={messageThreadPath}
+                    friendsPath={ROUTES.friends}
+                    profilePath={publicProfilePath}
+                  />
+                ),
+              },
+              {
+                path: ROUTES.messageThread,
+                element: (
+                  <MessagesPage
+                    listPath={ROUTES.messages}
+                    threadPath={messageThreadPath}
+                    friendsPath={ROUTES.friends}
+                    profilePath={publicProfilePath}
+                  />
+                ),
+              },
               { path: ROUTES.createAction, element: <CreateActionPage mapPath={ROUTES.map} /> },
               { path: ROUTES.editAction, element: <EditActionPage mapPath={ROUTES.map} /> },
 

@@ -1,17 +1,18 @@
-/* DESIGN.md §6 : cercle, initiales, anneau blanc chaud. */
+/* Refonte : cercle sur fond sauge, initiales, fin anneau blanc. */
 .avatar {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex: none;
   overflow: hidden;
-  border: 3px solid var(--ground);
+  border: 2px solid var(--ground);
   border-radius: 50%;
   background: var(--avatar-bg);
   color: var(--avatar-ink);
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1;
   text-decoration: none;
+  box-shadow: var(--shadow);
 }
 
 .image {

@@ -35,6 +35,12 @@ export const APP_LABELS = {
       ctaJoin: 'Create an account',
       ctaExplore: 'Explore the map',
       trust: ['Local actions', 'Nearby neighbors', 'Verified organizers'],
+      photo: {
+        badge: (count: number) => `${count} open action${count === 1 ? '' : 's'}`,
+        kicker: 'Right now',
+        title: 'A square, a market, your neighbours.',
+        cta: 'See what is on',
+      },
       how: {
         eyebrow: 'How it works',
         title: 'Three quick steps',
@@ -115,6 +121,10 @@ export const APP_LABELS = {
         openMap: 'Open map',
       },
       suggest: 'Suggest an action',
+      gauge: {
+        label: 'On your agenda',
+        of: (total: number) => `of ${total} open nearby`,
+      },
     },
     terms: {
       title: 'Terms of Service',

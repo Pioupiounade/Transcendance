@@ -1,40 +1,33 @@
-/* DESIGN.md §6 « Action card », « Tag » */
+/* Refonte « Action card » : carte blanche sans trait, bandeau pastel en guise de photo, pilules, rond flèche noir. */
 .card {
+  position: relative;
   display: grid;
   align-content: start;
   height: 100%; /* rangées régulières dans une grille */
-  border: 1px solid var(--line);
+  overflow: hidden;
   border-radius: var(--r-action);
   background: var(--ground);
   color: var(--ink);
+  box-shadow: var(--shadow);
   transition:
-    border-color var(--t-base),
-    background-color var(--t-base);
+    box-shadow var(--t-base),
+    transform var(--t-base);
 }
 .card:hover {
-  border-color: var(--brand);
+  box-shadow: var(--shadow-float);
+  transform: translateY(-2px);
 }
-/* Teinte discrète par catégorie ; la sélection garde son propre fond et sa bordure forêt. */
-.environmentCard {
-  background: var(--card-environment-bg);
-}
-.socialCard {
-  background: var(--card-social-bg);
-}
-.culturalCard {
-  background: var(--card-culture-bg);
-}
-.selected,
-.selected:hover {
-  border: 1.5px solid var(--brand);
-  background: var(--card-selected-bg);
+.selected {
+  box-shadow:
+    0 0 0 2px var(--ink),
+    var(--shadow-float);
 }
 
 /* Le bouton porte tout le contenu ; le lien « Edit » vit à côté, jamais dedans (HTML interdit lien dans bouton). */
 .body {
   display: block;
   width: 100%;
-  padding: 17px;
+  padding: 0;
   border: 0;
   border-radius: inherit;
   background: none;
@@ -42,61 +35,99 @@
   text-align: left;
 }
 
-.edit {
-  justify-self: start;
-  height: 34px;
-  margin: -6px 17px 14px;
-  padding: 0 14px;
-  font-size: 13px;
-}
-
-.top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 10px;
-}
-
-.tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 4px 8px;
-  border-radius: var(--r-tag);
-  background: var(--tag-environment-bg);
+/* Bandeau : même rayon que la carte moins la marge, pastel chaud en dégradé (`--cover-*`), reflet doux en haut à
+   gauche, l'icône de la catégorie en filigrane. Pas de hachures ici (demande du 20/10/2026) : l'attente se lit
+   sur la pilule de statut. */
+.cover {
+  position: relative;
+  display: grid;
+  place-items: center;
+  height: 132px;
+  margin: 6px 6px 0;
+  border-radius: calc(var(--r-action) - 6px);
+  background: var(--cover-environment);
   color: var(--tag-environment-ink);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.3px;
+  overflow: hidden;
+}
+.cover::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 18% 12%, #ffffff8c, transparent 55%);
+  pointer-events: none;
 }
 .social {
-  background: var(--tag-social-bg);
+  background: var(--cover-social);
   color: var(--tag-social-ink);
 }
 .cultural {
-  background: var(--tag-culture-bg);
+  background: var(--cover-culture);
   color: var(--tag-culture-ink);
 }
+.coverIcon {
+  position: relative;
+  opacity: 0.5;
+}
 
+.tag,
 .status {
-  font-size: 12px;
-  color: var(--muted);
+  position: absolute;
+  top: 12px;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 11px;
+  border-radius: var(--r-tag);
+  background: var(--ground);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  box-shadow: var(--shadow);
+}
+.tag {
+  left: 12px;
+  color: var(--ink);
+}
+.status {
+  right: 12px;
+  color: var(--ink);
+}
+.status::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 1px #1c1c1c33;
+}
+.pendingStatus {
+  background-color: var(--pending-soft);
+  background-image: var(--hatch);
+  color: var(--pending);
+}
+.pendingStatus::before {
+  display: none;
+}
+
+.content {
+  display: grid;
+  gap: 4px;
+  padding: 14px 18px 18px;
 }
 
 .title {
   display: block;
-  margin-bottom: 6px;
   font-size: 17px;
-  font-weight: 700;
-  line-height: 1.35;
+  font-weight: 600;
+  line-height: 1.3;
   letter-spacing: -0.3px;
 }
 
-.meta,
-.description {
-  display: block;
-  margin-top: 4px;
+.meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   font-size: 13px;
   color: var(--muted);
 }
@@ -107,17 +138,19 @@
   -webkit-line-clamp: 2;
   line-clamp: 2;
   overflow: hidden;
+  margin-top: 2px;
+  font-size: 13px;
+  color: var(--muted);
 }
 
-/* Pied de carte (maquette « card-bottom ») : voisins inscrits, places restantes. */
+/* Pied de carte : voisins inscrits, places restantes, rond flèche. */
 .bottom {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  margin-top: 13px;
-  padding-top: 11px;
-  border-top: 1px solid #dde2d4;
+  gap: 10px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
   font-size: 12px;
 }
 
@@ -129,9 +162,32 @@
 }
 
 .seats {
-  color: var(--brand);
-  font-weight: 700;
+  margin-left: auto;
+  font-weight: 600;
 }
 .seatsFull {
   color: var(--muted);
+}
+
+.go {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--brand);
+  color: var(--on-brand);
+  transition: transform var(--t-base);
+}
+.card:hover .go {
+  transform: rotate(45deg);
+}
+
+.edit {
+  justify-self: start;
+  height: 36px;
+  margin: -6px 18px 16px;
+  padding: 0 16px;
+  font-size: 13px;
 }

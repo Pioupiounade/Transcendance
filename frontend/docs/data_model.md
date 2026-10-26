@@ -233,7 +233,7 @@ type AuthUser = { user_id, email, role, account_status, points, created_at, upda
 Caché : `api/authApi` (`login`, `register`, `getMe`, `logout`), démarrage (`session.exists` → `GET /auth/me`, sinon anonyme,
 sans flash de redirection), abonnement `session.onExpire`, `validation.ts` (e-mail, mot de passe ≥ 8 = DTO, consentement),
 `errors.ts` (401 → identifiants, 400 « Email is already used » → compte existant), `useReturnPath` (retour vers `state.from`),
-`AuthLayout` / `AuthHero` / `AuthBackdrop`, `labels.ts`. Ne connaît **pas** les tokens : `session.set(tokens, user_id)` et c'est tout.
+`AuthLayout` / `AuthHero` (le plan de quartier vient de `shared/ui/NeighbourhoodPlan`), `labels.ts`. Ne connaît **pas** les tokens : `session.set(tokens, user_id)` et c'est tout.
 
 ### 4.7 `features/actions` — actions, carte, création
 

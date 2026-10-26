@@ -14,23 +14,33 @@
   text-transform: uppercase;
 }
 
-/* Hero : la promesse sur le ciel, la rue en dessous (fond = haut du dégradé du ciel du SVG). */
+/* Hero (refonte) : la promesse à gauche, la photo de marché (`assets/actions.jpg`, 490 × 579, affichée à sa taille
+   pour rester nette) en carte arrondie à droite ; empilés sur mobile. */
 .hero {
   display: grid;
-  overflow: hidden;
-  background: #fdf6f1;
+  grid-template-columns: minmax(0, 1fr) 440px;
+  align-items: center;
+  gap: 48px;
+  width: 100%;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 48px 38px 0;
 }
-.heroScene {
-  height: 300px;
-  margin-top: 36px;
+.heroPhoto {
+  margin: 0;
+}
+.heroPhoto img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: var(--r-card);
+  box-shadow: var(--shadow-float);
 }
 .heroCopy {
   display: grid;
-  justify-items: center;
-  max-width: 640px;
-  margin: 0 auto;
-  padding: 64px 24px 0;
-  text-align: center;
+  justify-items: start;
+  max-width: 600px;
+  text-align: left;
 }
 .heroTitle {
   font-size: 46px;
@@ -47,8 +57,8 @@
 .trust {
   display: flex;
   flex-wrap: wrap;
-  justify-content: center;
-  gap: 8px 18px;
+  justify-content: flex-start;
+  gap: 8px 10px;
   margin-top: 22px;
   font-size: 13px;
   font-weight: 600;
@@ -59,7 +69,7 @@
   gap: 6px;
   padding: 6px 12px;
   border-radius: 999px;
-  background: #fffefacc;
+  background: var(--ground);
   color: var(--brand);
 }
 
@@ -129,6 +139,11 @@
   .section {
     padding: 0 24px;
   }
+  .hero {
+    grid-template-columns: minmax(0, 1fr) 360px;
+    gap: 32px;
+    padding: 40px 24px 0;
+  }
 }
 
 @media (max-width: 760px) {
@@ -136,12 +151,17 @@
     gap: 56px;
     padding-bottom: 56px;
   }
-  .heroScene {
-    height: 230px;
-    margin-top: 28px;
+  .hero {
+    grid-template-columns: 1fr;
+    gap: 28px;
+    padding: 28px 16px 0;
   }
   .heroCopy {
-    padding-top: 40px;
+    justify-items: center;
+    text-align: center;
+  }
+  .trust {
+    justify-content: center;
   }
   .heroTitle {
     font-size: 34px;

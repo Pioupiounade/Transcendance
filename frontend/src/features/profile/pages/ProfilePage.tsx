@@ -1,349 +1,244 @@
-import React, { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { useAuth } from '@/features/auth';
+import { isApiError } from '@/shared/api';
+import { useResource } from '@/shared/hooks/useResource';
+import { pageTitle } from '@/shared/lib/pageTitle';
+import { Button, Icon, Steps } from '@/shared/ui';
 import {
-  selectInterest,
-  removeInterest,
-  useProfile,
   createProfile,
-  updateProfile,
-  getProfileActivity,
-  getMyInterests,
   deactivateAccount,
+  getMyInterests,
+  getProfile,
+  getProfileActivity,
+  removeInterest,
+  selectInterest,
+  updateProfile,
 } from '../api/profileApi';
-import { ProfileView } from '../components/ProfileView';
 import { ProfileForm } from '../components/ProfileForm';
 import { ProfileSettingsPanel } from '../components/ProfileSettingsPanel';
+import { ProfileSkeleton } from '../components/ProfileSkeleton';
 import { ProfileTabs } from '../components/ProfileTabs';
+import { ProfileUnavailable } from '../components/ProfileUnavailable';
+import { ProfileView } from '../components/ProfileView';
+import { toProfileErrorMessage } from '../errors';
+import { PROFILE_LABELS } from '../labels';
 import { PROFILE_TABS, profilePanelId, profileTabId, type ProfileTabId } from '../profileTabIds';
-import type { ProfileActivity, UserProfile, InterestCategory } from '../types';
-import { useAuth } from '@/features/auth/hooks/useAuth';
-import { isApiError } from '@/shared/api';
+import type { InterestCategory, UserProfile } from '../types';
+import styles from './ProfilePage.module.css';
 
-export const ProfilePage: React.FC = () => {
+type ProfilePageProps = {
+  /** Fiches liées depuis l'activité ; `app/` connaît les chemins, la feature non. */
+  organizationPath: (id: string) => string;
+  actionPath: (id: string) => string;
+  /** Destination après la désactivation du compte. */
+  homePath: string;
+};
+
+type Mode = 'view' | 'edit' | 'create';
+
+const text = PROFILE_LABELS;
+
+/** `GET /profiles/me` : pas encore de profil = `null` (200 vide ou 404 selon la version du backend). */
+const loadProfile = async (signal: AbortSignal): Promise<UserProfile | null> => {
+  try {
+    return await getProfile(signal);
+  } catch (error) {
+    if (isApiError(error) && error.status === 404) return null;
+    throw error;
+  }
+};
+const loadInterests = (signal: AbortSignal) => getMyInterests(signal);
+const loadActivity = (signal: AbortSignal) => getProfileActivity(signal);
+
+const USERNAME_TAKEN = 'Username is already taken';
+
+/** Enregistre la différence d'intérêts puis relit la liste : le serveur a le dernier mot. */
+const syncInterests = async (current: readonly InterestCategory[], selected: readonly InterestCategory[]) => {
+  await Promise.allSettled([
+    ...selected.filter((interest) => !current.includes(interest)).map(selectInterest),
+    ...current.filter((interest) => !selected.includes(interest)).map(removeInterest),
+  ]);
+  return getMyInterests();
+};
+
+/**
+ * `/profile` : mon profil. Sans profil, l'accueil en trois étapes puis le formulaire ; sinon la fiche
+ * (onglet Overview) ou les réglages (onglet Settings), et l'édition en place.
+ */
+export function ProfilePage({ organizationPath, actionPath, homePath }: ProfilePageProps) {
   const { signOut } = useAuth();
-  const { profile, isLoading, error, setProfile } = useProfile();
-  const [activeTab, setActiveTab] = useState<ProfileTabId>('overview');
-  const [isEditing, setIsEditing] = useState(false);
-  const [isCreating, setIsCreating] = useState(false);
-  const [createError, setCreateError] = useState<string | null>(null);
-  const [updateError, setUpdateError] = useState<string | null>(null);
-  const [isSaving, setIsSaving] = useState(false);
-  const [activity, setActivity] = useState<ProfileActivity | null>(null);
-  const [activityLoading, setActivityLoading] = useState(true);
-  const [activityError, setActivityError] = useState<string | null>(null);
-  const [interests, setInterests] = useState<InterestCategory[]>([]);
-  const [interestsLoading, setInterestsLoading] = useState(true);
-  const [interestsError, setInterestsError] = useState<string | null>(null);
+  const loaded = useResource(loadProfile);
+  const loadedInterests = useResource(loadInterests);
+  const activity = useResource(loadActivity);
 
-  useEffect(() => {
-    let active = true;
+  // Ce que je viens d'enregistrer prime sur ce qui a été chargé : pas de rechargement ni de silhouette après un envoi.
+  const [saved, setSaved] = useState<{ profile: UserProfile; interests: InterestCategory[] } | null>(null);
+  const [tab, setTab] = useState<ProfileTabId>('overview');
+  const [mode, setMode] = useState<Mode>('view');
+  const [saving, setSaving] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
 
-    getMyInterests()
-      .then((data) => {
-        if (active) setInterests(data);
-      })
-      .catch(() => {
-        if (active) setInterestsError('Unable to load interests.');
-      })
-      .finally(() => {
-        if (active) setInterestsLoading(false);
-      });
+  const profile = saved?.profile ?? loaded.data;
+  const interests = saved?.interests ?? loadedInterests.data;
+  const interestsLoading = !saved && loadedInterests.loading;
+  const interestsError = !saved && loadedInterests.error ? text.interests.error : null;
 
-    return () => {
-      active = false;
-    };
-  }, []);
-
-  useEffect(() => {
-    let active = true;
-
-    getProfileActivity()
-      .then((data) => {
-        if (active) setActivity(data);
-      })
-      .catch(() => {
-        if (active) setActivityError('Unable to load profile activity.');
-      })
-      .finally(() => {
-        if (active) setActivityLoading(false);
-      });
-
-    return () => {
-      active = false;
-    };
-  }, []);
-
-  const handleCreate = async (
-    values: UserProfile,
-    selectedInterests: InterestCategory[],
-    avatar: File | null,
-  ) => {
-    if (isSaving) return;
-
-    setIsSaving(true);
-    setCreateError(null);
-
-    try {
-
-      const savedProfile = await createProfile(values, avatar);
-
-      setProfile(savedProfile);
-      setIsCreating(false);
-
-      const toSelect = selectedInterests.filter(
-        (interest) => !interests.includes(interest),
-      );
-      await Promise.allSettled(toSelect.map(selectInterest));
-
-      try {
-        setInterests(await getMyInterests());
-      } catch {
-        setInterestsError('Unable to reload interests. Please reload the page.');
-        return;
-      }
-
-    } catch (failure) {
-      if (
-        isApiError(failure) &&
-        failure.messages.some((message) => message === 'Username is already taken')
-      ) {
-        setCreateError('This username is already taken. Please choose another one.');
-      } else {
-        setCreateError(
-          isApiError(failure) && failure.messages.length > 0
-            ? failure.messages.join(' ')
-            : 'Unable to create your profile.',
-        );
-      }
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  if (isLoading) {
-    return (
-      <div style={{ textAlign: 'center', padding: '4rem 1rem' }}>
-        <p className="help" style={{ justifyContent: 'center' }}>Loading profile...</p>
-      </div>
-    );
-  }
-
-  if (isCreating) {
-    return (
-      <>
-        {createError && <p role="alert">{createError}</p>}
-        <ProfileForm
-          onSave={handleCreate}
-          onCancel={() => setIsCreating(false)}
-          isSaving={isSaving}
-          initialInterests={interests}
-        />
-      </>
-    );
-  }
-
-  if (!error && !profile) {
-    return (
-      <div style={{ textAlign: 'center', padding: '4rem 1rem' }}>
-        <h2>No profile yet</h2>
-        <p>Your account does not have a profile yet.</p>
-        <button
-          type="button"
-          onClick={() => setIsCreating(true)}
-          disabled={interestsLoading}
-        >
-          Create profile
-        </button>
-      </div>
-    );
-  }
-
-  if (!profile) {
-    return (
-      <div style={{ textAlign: 'center', padding: '4rem 1rem' }}>
-        <h2>Profile not found</h2>
-        <p className="help help--error" style={{ justifyContent: 'center' }}>
-          Unable to load profile data.
-        </p>
-      </div>
-    );
-  }
-
-  const handleSave = async (
-    updated: UserProfile,
-    selectedInterests: InterestCategory[],
-    avatar: File | null,
-  ) => {
-    if (isSaving) return;
-
-    if (interestsLoading || interestsError) {
-      setUpdateError('Interests are unavailable. Please reload the page.');
+  const save = async (values: UserProfile, selected: InterestCategory[], avatar: File | null) => {
+    if (saving) return;
+    if (interests === null) {
+      setFormError(text.form.interestsUnavailable);
       return;
     }
-
-    setIsSaving(true);
-    setUpdateError(null);
-
+    const creating = mode === 'create';
+    setSaving(true);
+    setFormError(null);
     try {
-      const savedProfile = await updateProfile(updated, avatar);
-      setProfile(savedProfile);
-
-      const changes = [
-        ...selectedInterests
-          .filter((interest) => !interests.includes(interest))
-          .map(selectInterest),
-        ...interests
-          .filter((interest) => !selectedInterests.includes(interest))
-          .map(removeInterest),
-      ];
-
-      await Promise.allSettled(changes);
-
+      const nextProfile = creating ? await createProfile(values, avatar) : await updateProfile(values, avatar);
       try {
-        setInterests(await getMyInterests());
+        setSaved({ profile: nextProfile, interests: await syncInterests(interests, selected) });
       } catch {
-        setInterestsError('Unable to reload interests. Please reload the page.');
-        throw new Error('Unable to reload interests.');
+        setSaved({ profile: nextProfile, interests });
+        setFormError(text.form.interestsReloadFailed);
+        return;
       }
-
-      setIsEditing(false);
+      setMode('view');
+      if (creating) activity.reload();
     } catch (failure) {
-      setUpdateError(
-        isApiError(failure) && failure.messages.length > 0
-          ? failure.messages.join(' ')
-          : 'Unable to save your profile or interests.',
+      const taken = isApiError(failure) && failure.messages.includes(USERNAME_TAKEN);
+      setFormError(
+        taken ? text.form.usernameTaken : toProfileErrorMessage(failure, creating ? text.form.createFailed : text.form.saveFailed),
       );
     } finally {
-      setIsSaving(false);
+      setSaving(false);
     }
   };
 
-  const handleDeactivate = async () => {
+  const deactivate = async () => {
     await deactivateAccount();
     try {
       await signOut();
     } catch {
-      // Ignorar fallo de sesión ya revocada en el backend
+      // Session déjà révoquée côté backend : on repart propre quand même.
     } finally {
       localStorage.clear();
       sessionStorage.clear();
-      window.location.href = '/';
+      window.location.assign(homePath);
     }
   };
 
-  if (isLoading) {
-    return (
-      <div style={{ textAlign: 'center', padding: '4rem 1rem' }}>
-        <p className="help" style={{ justifyContent: 'center' }}>Loading profile...</p>
-      </div>
-    );
-  }
+  const cancelEdit = () => {
+    setFormError(null);
+    setMode('view');
+  };
 
-  if (isCreating) {
-    return (
+  let content;
+  if (loaded.loading) {
+    content = <ProfileSkeleton />;
+  } else if (loaded.error) {
+    content = <ProfileUnavailable reason="ERROR" onRetry={loaded.reload} />;
+  } else if (!profile) {
+    content =
+      mode === 'create' ? (
+        <>
+          <header className={styles.intro}>
+            <p className={styles.eyebrow}>{text.form.createEyebrow}</p>
+            <h1>{text.form.createTitle}</h1>
+          </header>
+          <ProfileForm
+            initialInterests={interests ?? []}
+            onSave={save}
+            onCancel={cancelEdit}
+            isSaving={saving}
+            error={formError}
+          />
+        </>
+      ) : (
+        <section className={styles.onboarding} aria-labelledby="profile-onboarding-title">
+          <header className={styles.intro}>
+            <p className={styles.eyebrow}>{text.onboarding.eyebrow}</p>
+            <h1 id="profile-onboarding-title">{text.onboarding.title}</h1>
+            <p className={styles.lead}>{text.onboarding.lead}</p>
+          </header>
+          <Steps steps={text.onboarding.steps} />
+          <Button size="lg" className={styles.cta} onClick={() => setMode('create')} disabled={interestsLoading}>
+            {text.onboarding.cta}
+            <Icon name="arrow" size={18} />
+          </Button>
+        </section>
+      );
+  } else if (mode === 'edit') {
+    content = (
       <>
-        {createError && <p role="alert">{createError}</p>}
+        <header className={styles.intro}>
+          <p className={styles.eyebrow}>{text.form.editEyebrow}</p>
+          <h1>{text.form.editTitle}</h1>
+        </header>
         <ProfileForm
-          onSave={handleCreate}
-          onCancel={() => setIsCreating(false)}
-          isSaving={isSaving}
-          initialInterests={interests}
+          initialData={profile}
+          initialInterests={interests ?? []}
+          onSave={save}
+          onCancel={cancelEdit}
+          isSaving={saving}
+          error={formError}
         />
+      </>
+    );
+  } else {
+    content = (
+      <>
+        <div className={styles.tabsRow}>
+          <ProfileTabs tabs={PROFILE_TABS} value={tab} onChange={setTab} />
+        </div>
+        {tab === 'overview' && (
+          <div
+            role="tabpanel"
+            id={profilePanelId('overview')}
+            aria-labelledby={profileTabId('overview')}
+            className={styles.tabpanel}
+          >
+            <ProfileView
+              profile={profile}
+              eyebrow={text.eyebrow}
+              own
+              interests={{ data: interests, loading: interestsLoading, error: interestsError }}
+              activity={{
+                data: activity.data,
+                loading: activity.loading,
+                error: activity.error ? text.activity.error : null,
+                organizationPath,
+                actionPath,
+              }}
+              actions={
+                <Button variant="secondary" onClick={() => setMode('edit')} disabled={interests === null}>
+                  <Icon name="user" size={16} />
+                  {text.hero.edit}
+                </Button>
+              }
+            />
+          </div>
+        )}
+        {tab === 'settings' && (
+          <div
+            role="tabpanel"
+            id={profilePanelId('settings')}
+            aria-labelledby={profileTabId('settings')}
+            className={styles.tabpanel}
+          >
+            <header className={styles.intro}>
+              <p className={styles.eyebrow}>{text.eyebrow}</p>
+              <h1>{text.tabs.settings}</h1>
+            </header>
+            <ProfileSettingsPanel onDeactivateAccount={deactivate} />
+          </div>
+        )}
       </>
     );
   }
 
-  if (!error && !profile) {
-    return (
-      <div style={{ textAlign: 'center', padding: '4rem 1rem' }}>
-        <h2>No profile yet</h2>
-        <p>Your account does not have a profile yet.</p>
-        <button
-          type="button"
-          onClick={() => setIsCreating(true)}
-          disabled={interestsLoading}
-        >
-          Create profile
-        </button>
-      </div>
-    );
-  }
-
-  if (!profile) {
-    return (
-      <div style={{ textAlign: 'center', padding: '4rem 1rem' }}>
-        <h2>Profile not found</h2>
-        <p className="help help--error" style={{ justifyContent: 'center' }}>
-          Unable to load profile data.
-        </p>
-      </div>
-    );
-  }
-
-  const displayedProfile = {
-    ...profile,
-    isOnline: true,
-  };
-
   return (
-    <div style={{ maxWidth: '840px', margin: '0 auto', padding: '1rem' }}>
-      <div style={{ display: 'flex', justifyContent: 'center' }}>
-        <ProfileTabs
-          tabs={PROFILE_TABS}
-          value={activeTab}
-          onChange={(tab) => {
-            setIsEditing(false);
-            setActiveTab(tab);
-          }}
-        />
-      </div>
-
-      <div
-        role="tabpanel"
-        id={profilePanelId('overview')}
-        aria-labelledby={profileTabId('overview')}
-        hidden={activeTab !== 'overview'}
-        style={{ marginTop: '1.5rem' }}
-      >
-        {activeTab === 'overview' && (
-          isEditing ? (
-            <>
-              {updateError && <p role="alert">{updateError}</p>}
-              <ProfileForm
-                initialData={profile}
-                initialInterests={interests}
-                onSave={handleSave}
-                onCancel={() => setIsEditing(false)}
-                isSaving={isSaving}
-              />
-            </>
-          ) : (
-            <ProfileView
-              profile={displayedProfile}
-              isOwnProfile={true}
-              onEdit={() => setIsEditing(true)}
-              onFriendshipChange={() => { }}
-              activity={activity}
-              activityLoading={activityLoading}
-              activityError={activityError}
-              interests={interests}
-              interestsLoading={interestsLoading}
-              interestsError={interestsError}
-            />
-          )
-        )}
-      </div>
-
-      <div
-        role="tabpanel"
-        id={profilePanelId('settings')}
-        aria-labelledby={profileTabId('settings')}
-        hidden={activeTab !== 'settings'}
-        style={{ marginTop: '1.5rem' }}
-      >
-        {activeTab === 'settings' && (
-          <ProfileSettingsPanel onDeactivateAccount={handleDeactivate} />
-        )}
-      </div>
-    </div>
+    <section className={styles.page}>
+      <title>{pageTitle(text.eyebrow)}</title>
+      {content}
+    </section>
   );
-};
+}

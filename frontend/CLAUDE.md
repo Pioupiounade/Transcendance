@@ -215,10 +215,34 @@ features/       1 domaine métier = 1 module ; interface = index.ts
                 d'organisation de la feature (fiche, choix d'organisation dans ActionForm) : `features/organizations` importe déjà
                 `features/actions`, un import dans l'autre sens ferait un cycle ; seuls ses types viennent de son index. Carte (#60) :
                 seules les actions `PENDING` des autres non rejointes, clic sur un pin → fiche, plus de CTA « créer » (la dialog reste).
-  profile/      coéquipier (#38 en cours, mock) ; ajout #65 : api/myProfile.ts (`GET /profiles/me`, 404 → null,
-                useMyProfile), seul fichier à nous dans ce dossier.
+  profile/      mon profil `/profile` (ProfilePage `{ organizationPath, actionPath, homePath }`) et profil public
+                `/profiles/:userId` (PublicProfilePage `{ ownProfilePath, messagePath }`), refaits le 26/10/2026 dans la
+                grammaire de la refonte : ProfileHero (bandeau = plan du quartier 42, `NeighbourhoodPlan` de shared/ui, avatar,
+                pseudo, quartier, visibilité, présence, tuiles de chiffres), ProfileView = hero + AboutPanel +
+                InterestsPanel + ActivityPanel (ProfilePanels.module.css = grammaire commune), ProfileTabs (pilules),
+                ProfileForm (FloatingField, cartes radio de visibilité, InterestTag à bascule, NeighbourhoodPicker =
+                carte OSM propre à la feature : `actions` importe déjà `profile`, donc pas de `NeighborhoodMap` ici),
+                ProfileSettingsPanel (interrupteurs de notifications, désactivation via ConfirmDialog ; le droit de
+                désactiver vient de `ownsActiveOrganization`, sans importer `organizations`), ProfileUnavailable
+                `{ reason }`, ProfileSkeleton, RequireProfile `{ profilePath }` (garde : connecté sans profil →
+                `/profile`). Données via useResource ; ce qu'on vient d'enregistrer prime sur le chargement (pas de
+                rechargement après un envoi). Libellés dans labels.ts, familles d'intérêts dans interestLabels.ts
+                (libellés de catégorie répétés pour éviter le cycle). api/myProfile.ts (`useMyProfile`, 404 → null)
+                reste utilisé par le tableau de bord et l'annuaire.
   participations/ useMyParticipations (sur useResource ; visiteur : liste vide sans appel), fetchActionParticipants /
                 joinAction / leaveAction (#60), type MyParticipation
+  messages/     messagerie entre amis (backend #155, api_contract §18), discrète : pas d'entrée de nav, une pastille
+                MessagesButton `{ to, profilePath }` : pastille dans l'en-tête sur téléphone (→ page) ; dès 761 px
+                (`useMediaQuery`, même seuil que son CSS) bulle noire flottante en bas à droite qui ouvre MessagesDock, volet de
+                380 px en portail (liste des amis → fil avec retour, Échap ferme, lien vers la page) ; rien sur `/messages` ;
+                AppFooter lui réserve 104 px à droite (point citron = notifications `NEW_MESSAGE` non lues, relues toutes les
+                30 s et après l'événement fenêtre `messages:read`). MessagesPage `/messages[/:friendId]` `{ listPath, threadPath,
+                friendsPath, profilePath }` : ConversationList = mes amis actifs (`friendsApi.getMyFriends`, le backend ne liste
+                pas les fils), ThreadPane = bandeau + MessageThread (bulles par jour, défilement au dernier message) +
+                MessageComposer (Entrée envoie, 280 max, compteur dès 200) ; api/useThread = `GET /direct-messages/:friendId`
+                toutes les 5 s onglet visible, relu après `POST` ; errors.ts (403 = plus amis). Ouvrir un fil ou recevoir un
+                message marque lues les notifications de message (le backend ne dit pas de qui elles viennent). Sur téléphone
+                un volet à la fois (`data-view`).
   organizations/  #61 : OrganizationsPage `/organizations` (liste) et OrganizationPage `/organizations/:id` (fiche
                 publique + membres actifs) ; enums OrganizationStatus / RoleOrg / MemberStatus et libellés ; chemins
                 reçus en props (`organizationPath`, `listPath`).
@@ -303,6 +327,9 @@ shared/         zéro connaissance métier, réutilisable ailleurs
                 datetime-local), FloatingTextarea (même habillage, privé : FieldShell + fieldA11y), Checkbox (libellé
                 riche), Dialog (`<dialog>` natif : `{ open, onClose, title, closeLabel }`, enfants montés si ouvert),
                 StreetScene (illustration de rue de la maquette, décorative ; l'hôte fixe la hauteur : auth, landing),
+                NeighbourhoodPlan (plan OSM du quartier de 42 Paris, `neighbourhood42.ts` généré par
+                docs/refonte/osm/gen_neighbourhood.py ; `focusHeight` = bande centrée sur l'école : fond des pages
+                d'auth, bandeau du profil),
                 Steps (trois étapes numérotées sur cartes teintées `{ steps: Step[] }` : « How it works » de la landing et de
                 la page My Actions visiteur),
                 CommentThread (fil à plat `{ comments: ThreadComment[], mineLabel, deletion? }` : bouton de
@@ -334,7 +361,6 @@ assets/
 - Libellés d'enum : dans la feature propriétaire de l'enum (`features/actions/labels.ts`, réexporté par son index).
   Pas de dossier `constants` global.
 - `NeighborhoodMap` reste dans `features/actions` ; passe en `shared/ui` seulement quand un 2e domaine l'utilise.
-- Existant à migrer : `src/components/ProfileForm*`, `ProfileView.tsx`, `types/profile.ts` → `features/profile`.
 
 ### Modules deep de référence
 - `shared/api` : interface = `http.get/post/patch/delete/list(path, body?, { query, signal })`, `ApiError { status,

@@ -500,8 +500,23 @@ perd les notifications) :
 | `ORGANIZATION_COMMENT` | `POST /organizations/:id/comments` | `OWNER` / `MANAGER` actifs (comptes actifs), sauf l'auteur | « New organization comment » / « A new comment was posted on "O". » | `/organizations/:id` |
 | `ORGANIZATION_JOIN_REQUEST` | `POST /organization-members/organization/:id/join` | `OWNER` / `MANAGER` actifs | « New organization membership request » / « A user requested to join "O". » | `/organizations/:id` |
 | `FRIEND_REQUEST` | `PATCH /friend-requests/me/send` | destinataire | « New friend request » / « You received a new friend request. » | `null` |
-| `NEW_MESSAGE` | jamais (pas de messagerie) | — | — | — |
+| `NEW_MESSAGE` | `POST /direct-messages/:friendId` (§18) | destinataire | « New Direct Message » / le contenu, tronqué à 47 caractères + « ... » au-delà de 50 | `null` (**l'expéditeur n'est pas indiqué** : le front ne peut pas ouvrir le bon fil depuis la cloche) |
 
 Vérifié par sondes le 08/10/2026 : un commentaire du créateur crée une `ACTION_COMMENT` chez chaque participant (forme §3,
 `created_at` ISO), `read` passe à `true` et reste idempotent, 404 depuis un autre compte, préférences `[]` puis upsert,
 500 sur `type` invalide, body vide et id non numérique.
+
+## 18. Direct messages — `/direct-messages` (`directmessages.controller.ts`) — **nouveau (PR #155, lu le 2026-10-23)**
+
+Messages privés **entre amis actifs** (amitié `ACTIVE`, deux comptes `ACTIVE`), toutes routes JWT. Forme
+`DirectMessage` : `{ message_id, sender_id, receiver_id, content, is_read, created_at }` (ids en chaînes numériques).
+
+| Route | Body / retour | Erreurs et règles |
+|---|---|---|
+| `POST /direct-messages/:friendId` | body `CreateDirectMessageDto` : `content` (string non vide, ≤ 280) → 201 `DirectMessage` | 403 « You can only send messages to active friends. » ; 400 « Message content must not exceed 280 characters. », « content should not be empty ». **256 messages max par paire** : au-delà le plus ancien est supprimé (FIFO). **Notifie** le destinataire (`NEW_MESSAGE`, §17, sans `link` ni expéditeur) |
+| `GET /direct-messages/:friendId` | 200 `DirectMessage[]` du plus ancien au plus récent | 403 « You can only view messages with your active friends. » ; `:friendId` non numérique → 500. **Effet de bord** : marque `is_read: true` les messages reçus de cet ami |
+
+Pas de liste de conversations, pas de compteur de non-lus, pas de suppression : le front liste les amis
+(`GET /friendships/me`) et lit les notifications `NEW_MESSAGE` non lues pour sa pastille. **Purge** quotidienne
+(cron minuit) des messages de plus de 60 jours. Pas de temps réel sur `main` (la branche `128-add-online-status`
+ajoute une passerelle socket.io, non fusionnée).

@@ -1,9 +1,9 @@
 import type { ReactNode } from 'react';
 import { Link } from 'react-router';
 import { pageTitle } from '@/shared/lib/pageTitle';
-import { Icon, StreetScene } from '@/shared/ui';
+import { Icon, NeighbourhoodPlan } from '@/shared/ui';
+import loginPhoto from '@/assets/login.jpg';
 import { AUTH_LABELS } from '../labels';
-import { AuthBackdrop } from './AuthBackdrop';
 import styles from './AuthLayout.module.css';
 
 type AuthLayoutProps = {
@@ -19,7 +19,7 @@ type AuthLayoutProps = {
   children: ReactNode;
 };
 
-/** Hero (`StreetScene`) + carte centrée (DESIGN.md §6 « Auth card ») ; le formulaire est passé en enfant. */
+/** Hero photo (rue de quartier, refonte 20/10/2026) + carte centrée (DESIGN.md §6 « Auth card ») ; le formulaire est passé en enfant. */
 export function AuthLayout({
   pageName,
   title,
@@ -34,10 +34,10 @@ export function AuthLayout({
     <div className={styles.page}>
       <title>{pageTitle(pageName)}</title>
       <div className={styles.hero}>
-        <StreetScene />
+        <img className={styles.heroPhoto} src={loginPhoto} alt="" width={1800} height={900} />
       </div>
       <div className={styles.backdrop}>
-        <AuthBackdrop />
+        <NeighbourhoodPlan className={styles.backdropScene} />
       </div>
       <section className={styles.card} aria-labelledby="auth-title">
         <h1 id="auth-title" className={styles.title}>

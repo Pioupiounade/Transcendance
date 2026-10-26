@@ -1,9 +1,10 @@
 import { Link, NavLink, useLocation } from 'react-router';
 import { ROLE_APP, useAuth } from '@/features/auth';
+import { MessagesButton } from '@/features/messages';
 import { NotificationBell } from '@/features/notifications';
 import { Avatar, Button, ButtonLink, Icon } from '@/shared/ui';
 import { APP_LABELS } from '../labels';
-import { ROUTES } from '../routes';
+import { ROUTES, publicProfilePath } from '../routes';
 import { Brandmark } from './Brandmark';
 import { NAV_ITEMS } from './navItems';
 import { GlobalSearch } from '../components/GlobalSearch';
@@ -18,7 +19,7 @@ export function AppHeader() {
     <header className={styles.topbar}>
       <Link to={ROUTES.home} className={styles.wordmark}>
         <Brandmark />
-        <span className={styles.wordmarkText}>{APP_LABELS.brand}</span>
+        <span className={styles.brandName}>{APP_LABELS.brand}</span>
       </Link>
 
       <nav className={styles.nav} aria-label={APP_LABELS.mainNav}>
@@ -31,13 +32,18 @@ export function AppHeader() {
       </nav>
 
       <div className={styles.actions}>
-              {status === 'authenticated' && <GlobalSearch />}
+        {status === 'authenticated' && (
+          <div className={styles.search}>
+            <GlobalSearch />
+          </div>
+        )}
         {user?.role === ROLE_APP.ADMIN && (
           <NavLink to={ROUTES.admin} className={styles.adminLink}>
             <Icon name="shield" size={18} />
             <span className={styles.adminLabel}>{APP_LABELS.admin}</span>
           </NavLink>
         )}
+        {status === 'authenticated' && <MessagesButton to={ROUTES.messages} profilePath={publicProfilePath} />}
         {status === 'authenticated' && <NotificationBell />}
         {status === 'authenticated' && user && (
           <Link to={ROUTES.profile} className={styles.profileLink} aria-label={APP_LABELS.myProfile}>
@@ -45,8 +51,11 @@ export function AppHeader() {
           </Link>
         )}
         {status === 'authenticated' && (
-          <Button variant="secondary" className={styles.signOut} onClick={() => void signOut()}>
-            {APP_LABELS.signOut}
+          <Button variant="secondary" className={styles.signOut} onClick={() => void signOut()} title={APP_LABELS.signOut}>
+            <span className={styles.signOutIcon} aria-hidden="true">
+              <Icon name="logout" size={20} />
+            </span>
+            <span className={styles.signOutLabel}>{APP_LABELS.signOut}</span>
           </Button>
         )}
         {status === 'anonymous' && (
