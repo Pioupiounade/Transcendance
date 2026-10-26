@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationType } from '../../generated/prisma/client';
 import { RealtimeGateway } from '../realtime/realtime.gateway';
@@ -9,6 +9,8 @@ export class NotificationsService {
     private prisma: PrismaService,
     private realtimeGateway: RealtimeGateway,
   ) {}
+
+  private readonly logger = new Logger(NotificationsService.name);
 
   async findMine(userId: string) {
     const notifications = await this.prisma.notification.findMany({
@@ -97,7 +99,17 @@ export class NotificationsService {
 
       return serialized;
 
-    } catch {
+    } catch (error: unknown) {
+      const details =
+        error instanceof Error
+          ? error.stack ?? error.message
+          : String(error);
+
+      this.logger.error(
+        `Failed to create or broadcast notification for user ${params.userId} (type: ${params.type})`,
+        details,
+      );
+
       return null;
     }
   }

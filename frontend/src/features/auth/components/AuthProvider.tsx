@@ -77,6 +77,21 @@ export function AuthProvider({ children }: AuthProviderProps) {
       );
     };
 
+    const handleNewDirectMessage = (message: {
+      message_id: string;
+      sender_id: string;
+      receiver_id: string;
+      content: string;
+      created_at: string;
+      is_read: boolean;
+    }) => {
+      window.dispatchEvent(
+        new CustomEvent('direct-message:new', {
+          detail: message,
+        }),
+      );
+    };
+
     const unsubscribe = session.onTokensChanged(() => {
       if (!session.accessToken) return;
 
@@ -90,6 +105,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     socket.on('presence:online', handleOnline);
     socket.on('presence:offline', handleOffline);
     socket.on('organization:membership-changed', handleMembershipChanged);
+    socket.on('direct-message:new', handleNewDirectMessage);
 
     return () => {
       unsubscribe();

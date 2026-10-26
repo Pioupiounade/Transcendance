@@ -4,6 +4,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { CreateDirectMessageDto } from './dto/create-message.dto';
 import { NotificationType } from '../../generated/prisma/client';
+import { RealtimeGateway } from '../realtime/realtime.gateway';
 
 @Injectable()
 export class DirectMessagesService {
@@ -11,8 +12,9 @@ export class DirectMessagesService {
 
 	constructor(
 		private prisma: PrismaService,
-		private notifications: NotificationsService
-	) { }
+		private notifications: NotificationsService,
+		private readonly realtimeGateway: RealtimeGateway,
+	) {}
 
 	async sendMessage(senderId: bigint, receiverId: bigint, dto: CreateDirectMessageDto) {
 		// Check if the receiver exists
@@ -68,6 +70,15 @@ export class DirectMessagesService {
 				content: dto.content,
 			},
 		});
+
+		this.realtimeGateway.server
+			.to(`user:${receiverId.toString()}`)
+			.emit('direct-message:new', {
+				...message,
+				message_id: message.message_id.toString(),
+				sender_id: message.sender_id.toString(),
+				receiver_id: message.receiver_id.toString(),
+			});
 
 		// Create Notification
 		await this.notifications.notifyUser({
