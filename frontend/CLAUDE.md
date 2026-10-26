@@ -215,8 +215,20 @@ features/       1 domaine métier = 1 module ; interface = index.ts
                 d'organisation de la feature (fiche, choix d'organisation dans ActionForm) : `features/organizations` importe déjà
                 `features/actions`, un import dans l'autre sens ferait un cycle ; seuls ses types viennent de son index. Carte (#60) :
                 seules les actions `PENDING` des autres non rejointes, clic sur un pin → fiche, plus de CTA « créer » (la dialog reste).
-  profile/      coéquipier (#38 en cours, mock) ; ajout #65 : api/myProfile.ts (`GET /profiles/me`, 404 → null,
-                useMyProfile), seul fichier à nous dans ce dossier.
+  profile/      mon profil `/profile` (ProfilePage `{ organizationPath, actionPath, homePath }`) et profil public
+                `/profiles/:userId` (PublicProfilePage `{ ownProfilePath, messagePath }`), refaits le 26/10/2026 dans la
+                grammaire de la refonte : ProfileHero (bandeau teinté par la famille d'intérêts dominante, avatar,
+                pseudo, quartier, visibilité, présence, tuiles de chiffres), ProfileView = hero + AboutPanel +
+                InterestsPanel + ActivityPanel (ProfilePanels.module.css = grammaire commune), ProfileTabs (pilules),
+                ProfileForm (FloatingField, cartes radio de visibilité, InterestTag à bascule, NeighbourhoodPicker =
+                carte OSM propre à la feature : `actions` importe déjà `profile`, donc pas de `NeighborhoodMap` ici),
+                ProfileSettingsPanel (interrupteurs de notifications, désactivation via ConfirmDialog ; le droit de
+                désactiver vient de `ownsActiveOrganization`, sans importer `organizations`), ProfileUnavailable
+                `{ reason }`, ProfileSkeleton, RequireProfile `{ profilePath }` (garde : connecté sans profil →
+                `/profile`). Données via useResource ; ce qu'on vient d'enregistrer prime sur le chargement (pas de
+                rechargement après un envoi). Libellés dans labels.ts, familles d'intérêts dans interestLabels.ts
+                (libellés de catégorie répétés pour éviter le cycle). api/myProfile.ts (`useMyProfile`, 404 → null)
+                reste utilisé par le tableau de bord et l'annuaire.
   participations/ useMyParticipations (sur useResource ; visiteur : liste vide sans appel), fetchActionParticipants /
                 joinAction / leaveAction (#60), type MyParticipation
   messages/     messagerie entre amis (backend #155, api_contract §18), discrète : pas d'entrée de nav, une pastille
@@ -346,7 +358,6 @@ assets/
 - Libellés d'enum : dans la feature propriétaire de l'enum (`features/actions/labels.ts`, réexporté par son index).
   Pas de dossier `constants` global.
 - `NeighborhoodMap` reste dans `features/actions` ; passe en `shared/ui` seulement quand un 2e domaine l'utilise.
-- Existant à migrer : `src/components/ProfileForm*`, `ProfileView.tsx`, `types/profile.ts` → `features/profile`.
 
 ### Modules deep de référence
 - `shared/api` : interface = `http.get/post/patch/delete/list(path, body?, { query, signal })`, `ApiError { status,

@@ -51,6 +51,17 @@ Pioupiounades (nom, pin, structure des pages). L'espace admin garde son thème s
   `/messages` en un panneau blanc, amis à gauche, bulles noires / grises à droite, un volet à la fois sur téléphone.
   Sondage toutes les 5 s sur le fil ouvert, 30 s pour la pastille (pas de temps réel : la branche socket.io du
   coéquipier, #128, n'est pas fusionnée).
+- Profil (`features/profile`, 26/10/2026, à la demande du coéquipier propriétaire) : page refaite dans la grammaire
+  de la refonte. En-tête « identité » : bandeau pastel teinté par la famille d'intérêts dominante (pistache,
+  rose-lavande ou citron-abricot, comme les couvertures des cartes d'action), avatar à cheval, pseudo en display,
+  quartier, pastille de visibilité, trois tuiles points / organisations / actions. Onglets Overview / Settings en
+  pilules. Panneaux « About », intérêts (étiquettes sauge / lavande / citron par famille) et activité (liens vers les
+  fiches). Édition en place : photo, pseudo, présentation, visibilité en cartes radio, intérêts en chips, quartier à
+  poser d'un clic ou à glisser sur une carte OSM (« Use my position » en appoint). Réglages : interrupteurs de
+  notifications, désactivation du compte avec confirmation. Premier passage : accueil en trois étapes. Profil public :
+  même fiche, boutons d'amitié, « Send a message » entre amis (vers la messagerie), présence en direct. Sous le capot :
+  plus de CSS global (`form`, `label`, `input` fuyaient sur toutes les pages), plus d'imports internes entre features ni
+  de cycle `profile → organizations`, 18 erreurs ESLint à 0.
 
 ## Voir la branche
 
