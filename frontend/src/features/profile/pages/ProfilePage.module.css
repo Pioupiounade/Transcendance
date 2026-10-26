@@ -1,0 +1,75 @@
+/* Page profil (refonte) : même gabarit que la fiche organisation, en-tête bandeau puis panneaux. */
+.page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 24px 38px 28px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 22px;
+}
+
+.tabsRow {
+  display: flex;
+}
+
+.tabpanel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 22px;
+}
+
+.intro {
+  display: grid;
+  gap: 7px;
+}
+
+.eyebrow {
+  color: var(--terra);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1.8px;
+  text-transform: uppercase;
+}
+
+.lead {
+  max-width: 62ch;
+  color: var(--muted);
+  font-size: 15px;
+}
+
+/* Premier passage : la promesse en trois tuiles, puis le bouton. */
+.onboarding {
+  display: grid;
+  gap: 26px;
+  padding: 36px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-card);
+  background: var(--ground);
+}
+
+.cta {
+  justify-self: start;
+}
+
+@media (max-width: 1100px) {
+  .page {
+    padding: 24px;
+  }
+}
+
+@media (max-width: 760px) {
+  .page {
+    padding: 18px 16px 24px;
+    gap: 16px;
+  }
+  .tabpanel {
+    gap: 16px;
+  }
+  .onboarding {
+    padding: 22px 18px;
+    gap: 20px;
+  }
+  .cta {
+    justify-self: stretch;
+  }
+}

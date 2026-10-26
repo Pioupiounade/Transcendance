@@ -197,7 +197,7 @@
   align-items: center;
   gap: 12px;
   padding: 8px 0;
-  border-bottom: 1px solid #eceadf;
+  border-bottom: 1px solid var(--line);
 }
 .member:last-child {
   border-bottom: 0;

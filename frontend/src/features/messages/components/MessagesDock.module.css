@@ -1,0 +1,89 @@
+/* Volet de discussion flottant (≥ 761 px), au-dessus de la bulle : panneau blanc, barre (titre, page complète,
+   fermer), puis la liste des amis ou le fil ouvert. Hauteur bornée par la fenêtre. */
+.dock {
+  position: fixed;
+  right: 24px;
+  bottom: 92px;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  width: 380px;
+  height: min(600px, calc(100dvh - 116px));
+  border-radius: var(--r-panel);
+  background: var(--ground);
+  box-shadow: var(--shadow-float);
+  overflow: hidden;
+  animation: rise var(--t-base) ease-out;
+}
+.dock:focus-visible {
+  outline: none;
+}
+
+@media (max-width: 1319px) {
+  .dock {
+    right: 16px;
+    bottom: 84px;
+    height: min(600px, calc(100dvh - 108px));
+  }
+}
+
+.bar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 10px 10px 18px;
+  border-bottom: 1px solid var(--line);
+}
+
+.title {
+  flex: 1;
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.iconButton {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--ink);
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color var(--t-fast);
+}
+.iconButton:hover {
+  background: var(--ground-hover);
+}
+
+.body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.state {
+  margin: auto;
+  max-width: 280px;
+  padding: var(--s4);
+  color: var(--muted);
+  font-size: 14px;
+  text-align: center;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}

@@ -14,6 +14,7 @@ export { FloatingField } from './FloatingField/FloatingField';
 export { FloatingTextarea } from './FloatingField/FloatingTextarea';
 export { Icon } from './Icon/Icon';
 export { StreetScene } from './StreetScene/StreetScene';
+export { NeighbourhoodPlan } from './NeighbourhoodPlan/NeighbourhoodPlan';
 export { Steps } from './Steps/Steps';
 export type { Step } from './Steps/Steps';
 export { iconMarkup } from './Icon/iconMarkup';

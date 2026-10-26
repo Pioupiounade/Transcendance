@@ -1,21 +1,21 @@
-/* DESIGN.md §6 « Action card » adaptée : icône bâtiment, titre, adresse, description sur deux lignes. */
+/* Refonte : carte blanche sans trait, ombre douce, icône sur rond lavande, mon rôle en pilule citron. */
 .card {
   display: flex;
   gap: 14px;
   height: 100%;
-  padding: 18px;
-  border: 1px solid var(--line);
+  padding: 20px;
   border-radius: var(--r-action);
   background: var(--ground);
   color: var(--ink);
   text-decoration: none;
+  box-shadow: var(--shadow);
   transition:
-    border-color var(--t-base),
-    background-color var(--t-base);
+    box-shadow var(--t-base),
+    transform var(--t-base);
 }
 .card:hover {
-  border-color: var(--brand);
-  background: var(--card-selected-bg);
+  box-shadow: var(--shadow-float);
+  transform: translateY(-2px);
 }
 .inactive {
   opacity: 0.7;
@@ -25,11 +25,11 @@
   display: grid;
   place-items: center;
   flex: none;
-  width: 44px;
-  height: 44px;
-  border-radius: 14px;
-  background: var(--trust-soft);
-  color: var(--brand);
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--lavender-soft);
+  color: var(--lavender-ink);
 }
 
 .body {
@@ -52,7 +52,7 @@
 .title {
   min-width: 0;
   font-size: 17px;
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1.3;
   letter-spacing: -0.3px;
   overflow-wrap: anywhere;
@@ -60,12 +60,13 @@
 
 .status {
   flex: none;
-  padding: 3px 8px;
+  padding: 4px 10px;
   border-radius: var(--r-tag);
-  background: var(--note-bg);
-  color: var(--note-ink);
+  background: var(--pending-soft);
+  background-image: var(--hatch);
+  color: var(--pending);
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .address {
@@ -99,9 +100,9 @@
   align-items: center;
   justify-content: space-between;
   gap: 6px 10px;
-  margin-top: 5px;
+  margin-top: 8px;
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .distance {
@@ -116,8 +117,8 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 3px 8px;
+  padding: 4px 10px;
   border-radius: var(--r-tag);
-  background: var(--trust-soft);
-  color: var(--trust);
+  background: var(--accent-soft);
+  color: var(--tag-culture-ink);
 }

@@ -1,322 +1,313 @@
-import React, { useEffect, useState, useRef } from 'react';
-import type { UserProfile, InterestCategory } from '../types';
-import './ProfileForm.css';
-import { INTEREST_LABELS } from '../interestLabels';
+import { useCallback, useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'react';
+import { Avatar, Button, FloatingField, FloatingTextarea, Icon, type IconName } from '@/shared/ui';
 import { isUsernameAvailable } from '../api/profileApi';
+import {
+  INTEREST_FAMILIES,
+  INTEREST_FAMILY_ICONS,
+  INTEREST_FAMILY_LABELS,
+  INTERESTS_BY_FAMILY,
+} from '../interestLabels';
+import { PROFILE_LABELS } from '../labels';
+import type { InterestCategory, ProfileVisibility, UserProfile } from '../types';
+import { InterestTag } from './InterestTag';
+import { NeighbourhoodPicker, type PickedLocation } from './NeighbourhoodPicker';
+import panels from './ProfilePanels.module.css';
+import styles from './ProfileForm.module.css';
 
-interface ProfileFormProps {
+type ProfileFormProps = {
+  /** Sans `initialData` : création. */
   initialData?: UserProfile;
-  initialInterests?: InterestCategory[];
-  onSave: (updatedProfile: UserProfile, selectedInterests: InterestCategory[], avatar: File | null) => void;
+  initialInterests?: readonly InterestCategory[];
+  onSave: (profile: UserProfile, interests: InterestCategory[], avatar: File | null) => void;
   onCancel: () => void;
   isSaving?: boolean;
-}
+  /** Erreur renvoyée par l'enregistrement (la page la possède). */
+  error?: string | null;
+};
 
-export const ProfileForm: React.FC<ProfileFormProps> = ({
-  initialData,
-  initialInterests = [],
-  onSave,
-  onCancel,
-  isSaving = false,
-}) => {
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const previewUrlRef = useRef<string | null>(null);
-  const [geoLoading, setGeoLoading] = useState(false);
+const text = PROFILE_LABELS.form;
+const USERNAME_PATTERN = /^[a-z0-9_]{4,15}$/;
+const DESCRIPTION_MAX = 300;
+const AVATAR_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+const AVATAR_MAX_BYTES = 5 * 1024 * 1024;
+const VISIBILITIES: readonly ProfileVisibility[] = ['PUBLIC', 'FRIENDS_ONLY', 'PRIVATE'];
+const VISIBILITY_ICONS: Record<ProfileVisibility, IconName> = { PUBLIC: 'users', FRIENDS_ONLY: 'heart', PRIVATE: 'lock' };
+
+const EMPTY_PROFILE: UserProfile = { username: '', location: null, description: '', visibility: 'PUBLIC', profilePicture: '' };
+
+const toPicked = (location: UserProfile['location']): PickedLocation | null =>
+  location ? [location.latitude, location.longitude] : null;
+
+/**
+ * Créer ou modifier son profil : identité (photo, pseudo, présentation, visibilité, intérêts) à gauche,
+ * quartier sur la carte à droite. Validation miroir du backend ; les intérêts sont enregistrés par la page.
+ */
+export function ProfileForm({ initialData, initialInterests = [], onSave, onCancel, isSaving = false, error }: ProfileFormProps) {
+  const fileInput = useRef<HTMLInputElement>(null);
+  const previewUrl = useRef<string | null>(null);
+
+  const [formData, setFormData] = useState<UserProfile>(initialData ?? EMPTY_PROFILE);
+  const [interests, setInterests] = useState<InterestCategory[]>([...initialInterests]);
   const [avatar, setAvatar] = useState<File | null>(null);
-  const [selectedInterests, setSelectedInterests] =
-    useState<InterestCategory[]>(initialInterests);
-
-  // Field-specific validation errors
   const [avatarError, setAvatarError] = useState<string | null>(null);
   const [usernameError, setUsernameError] = useState<string | null>(null);
   const [locationError, setLocationError] = useState<string | null>(null);
+  const [locating, setLocating] = useState(false);
 
-  // Inicia con los datos recibidos o valores por defecto
-  const [formData, setFormData] = useState<UserProfile>(
-    initialData || {
-      username: '',
-      location: null,
-      description: '',
-      visibility: 'PUBLIC',
-      profilePicture: '',
-    }
+  useEffect(
+    () => () => {
+      if (previewUrl.current) URL.revokeObjectURL(previewUrl.current);
+    },
+    [],
   );
 
-  useEffect(() => () => {
-    if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
+  const onUsernameChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setUsernameError(null);
+    const username = event.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0, 15);
+    setFormData((current) => ({ ...current, username }));
+  };
+
+  const onDescriptionChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
+    const description = event.target.value.slice(0, DESCRIPTION_MAX);
+    setFormData((current) => ({ ...current, description }));
+  };
+
+  const onVisibilityChange = (visibility: ProfileVisibility) => setFormData((current) => ({ ...current, visibility }));
+
+  const onLocationChange = useCallback((picked: PickedLocation) => {
+    setLocationError(null);
+    setFormData((current) => ({ ...current, location: { latitude: picked[0], longitude: picked[1] } }));
   }, []);
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value } = e.target;
+  const toggleInterest = (interest: InterestCategory) =>
+    setInterests((current) =>
+      current.includes(interest) ? current.filter((item) => item !== interest) : [...current, interest],
+    );
 
-    let sanitizedValue = value;
-    if (name === 'username') {
-      setUsernameError(null);
-      sanitizedValue = value
-        .toLowerCase()
-        .replace(/[^a-z0-9_]/g, '')
-        .slice(0, 15);
-    }
-
-    setFormData({
-      ...formData,
-      [name]: sanitizedValue,
-    });
-  };
-
-  const handleDetectLocation = () => {
+  const locate = () => {
     setLocationError(null);
-
     if (!navigator.geolocation) {
-      setLocationError('Geolocation is not supported by your browser.');
+      setLocationError(text.geoUnsupported);
       return;
     }
-
-    setGeoLoading(true);
+    setLocating(true);
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        const { latitude, longitude } = position.coords;
-        setFormData((prev) => ({
-          ...prev,
-          location: { latitude, longitude },
-        }));
-        setGeoLoading(false);
+        onLocationChange([position.coords.latitude, position.coords.longitude]);
+        setLocating(false);
       },
-      (err) => {
-        setGeoLoading(false);
-        setLocationError(
-          err.code === 1
-            ? 'Please allow access to your location to find nearby initiatives.'
-            : 'Unable to retrieve location coordinates.'
-        );
+      (failure) => {
+        setLocating(false);
+        setLocationError(failure.code === failure.PERMISSION_DENIED ? text.geoDenied : text.geoFailed);
       },
-      { enableHighAccuracy: true, timeout: 10000 }
+      { enableHighAccuracy: true, timeout: 10_000 },
     );
   };
 
-  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const onAvatarChange = (event: ChangeEvent<HTMLInputElement>) => {
     setAvatarError(null);
-    const file = e.target.files?.[0];
+    const file = event.target.files?.[0];
+    event.target.value = '';
     if (!file) return;
 
-    e.target.value = '';
-
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
-    if (!allowedTypes.includes(file.type)) {
-      setAvatarError('Invalid file format. Only JPG, PNG, and WebP are allowed.');
+    if (!AVATAR_TYPES.includes(file.type)) {
+      setAvatarError(text.photoInvalidType);
+      return;
+    }
+    if (file.size > AVATAR_MAX_BYTES) {
+      setAvatarError(text.photoTooLarge);
       return;
     }
 
-    if (file.size > 5 * 1024 * 1024) {
-      setAvatarError('Image exceeds the 5 MB limit.');
-      return;
-    }
-
-    const previewUrl = URL.createObjectURL(file);
-    if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
-    previewUrlRef.current = previewUrl;
+    if (previewUrl.current) URL.revokeObjectURL(previewUrl.current);
+    previewUrl.current = URL.createObjectURL(file);
     setAvatar(file);
-    setFormData((prev) => ({
-      ...prev,
-      profilePicture: previewUrl,
-    }));
+    setFormData((current) => ({ ...current, profilePicture: previewUrl.current ?? undefined }));
   };
 
-  const toggleInterest = (interest: InterestCategory) => {
-    setSelectedInterests((current) =>
-      current.includes(interest)
-        ? current.filter((item) => item !== interest)
-        : [...current, interest],
-    );
-  };  
+  const onSubmit = async (event: FormEvent) => {
+    event.preventDefault();
+    if (isSaving) return;
 
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setUsernameError(null);
-    setLocationError(null);
-
-    let hasError = false;
-
-    if (!/^[a-z0-9_]{4,15}$/.test(formData.username)) {
-      setUsernameError('Username must be 4 to 15 characters (letters, numbers, _).');
-      hasError = true;
+    const usernameInvalid = !USERNAME_PATTERN.test(formData.username);
+    const locationMissing = !formData.location;
+    if (usernameInvalid) setUsernameError(text.usernameInvalid);
+    if (locationMissing) setLocationError(text.locationMissing);
+    if (usernameInvalid || locationMissing) {
+      document.getElementById(usernameInvalid ? 'username' : 'locate')?.focus();
+      return;
     }
-
-    if (!formData.location) {
-      setLocationError('Please set your neighborhood to find nearby initiatives.');
-      hasError = true;
-    }
-
-    if (hasError) return;
 
     try {
-      const available = await isUsernameAvailable(formData.username);
-
-      if (!available) {
-        setUsernameError('This username is already taken. Please choose another one.');
+      if (formData.username !== initialData?.username && !(await isUsernameAvailable(formData.username))) {
+        setUsernameError(text.usernameTaken);
+        document.getElementById('username')?.focus();
         return;
       }
-
-      onSave(formData, selectedInterests, avatar);
     } catch {
-      setUsernameError('Unable to verify username availability. Please try again.');
+      setUsernameError(text.usernameCheckFailed);
+      return;
     }
+
+    onSave(formData, interests, avatar);
   };
 
+  const creating = !initialData;
+  const descriptionLength = formData.description?.length ?? 0;
+
   return (
-    <main className="profile-page">
-      <div className="card panel edit-fields">
-        {/* Unified header: Avatar and title */}
-        <div className="header-actions">
-          <div
-            className="profile-avatar avatar"
-            onClick={() => fileInputRef.current?.click()}
-            title="Click to change photo"
-          >
-            {formData.profilePicture ? (
-              <img
-                src={formData.profilePicture}
-                alt="Profile preview"
-                className="scene"
-              />
-            ) : (
-              <span>{formData.username ? formData.username.slice(0, 2).toUpperCase() : 'AL'}</span>
-            )}
+    <form className={styles.form} onSubmit={onSubmit} noValidate aria-busy={isSaving || undefined}>
+      <div className={styles.columns}>
+        <section className={[panels.panel, styles.identity].join(' ')} aria-labelledby="profile-form-identity">
+          <h2 id="profile-form-identity">{text.identity}</h2>
+          <p className={panels.muted}>{text.required}</p>
+
+          <div className={styles.photo}>
+            <Avatar name={formData.username || '?'} src={formData.profilePicture} size={96} className={styles.photoAvatar} />
+            <div className={styles.photoText}>
+              <Button variant="secondary" onClick={() => fileInput.current?.click()} disabled={isSaving}>
+                <Icon name="plus" size={16} strokeWidth={2.2} />
+                {text.photo}
+              </Button>
+              <p className={[styles.hint, avatarError && styles.hintError].filter(Boolean).join(' ')} role={avatarError ? 'alert' : undefined}>
+                {avatarError && <Icon name="alert" size={14} strokeWidth={2.4} />}
+                {avatarError ?? text.photoHelp}
+              </p>
+            </div>
+            <input
+              ref={fileInput}
+              type="file"
+              accept={AVATAR_TYPES.join(', ')}
+              hidden
+              onChange={onAvatarChange}
+              aria-label={text.photo}
+            />
           </div>
 
-          <h1>Profile Settings</h1>
-        </div>
-
-        {avatarError && (
-          <div className="help help--error">
-            <span>{avatarError}</span>
-          </div>
-        )}
-
-        <input
-          type="file"
-          ref={fileInputRef}
-          onChange={handleAvatarChange}
-          accept="image/png, image/jpeg, image/webp"
-          hidden
-        />
-
-        <form onSubmit={handleSubmit} noValidate>
-          <p className="help">
-            Fields marked with * are required.
-          </p>
-
-          {/* Username */}
-          <label htmlFor="username">Username *</label>
-          <input
-            type="text"
+          <FloatingField
             id="username"
             name="username"
+            label={text.username}
             value={formData.username}
-            onChange={handleChange}
-            placeholder="e.g. lennox_92"
+            onChange={onUsernameChange}
+            error={usernameError}
+            help={text.usernameHelp}
+            autoComplete="username"
+            disabled={isSaving}
           />
-          {usernameError && (
-            <div className="help help--error">
-              <span>{usernameError}</span>
-            </div>
-          )}
 
-          {/* Location */}
-          <label htmlFor="neighborhood-btn">Neighborhood *</label>
-          <div>
-            <button
-              type="button"
-              id="neighborhood-btn"
-              className="btn btn--secondary"
-              onClick={handleDetectLocation}
-              disabled={geoLoading}
-            >
-              {geoLoading ? 'Finding your area...' : '📍 Set my neighborhood'}
-            </button>
-
-            {formData.location && (
-              <div className="form__ok">
-                <span>✓ Neighborhood set</span>
-              </div>
-            )}
-          </div>
-
-          {locationError && (
-            <div className="help help--error">
-              <span>{locationError}</span>
-            </div>
-          )}
-
-          {/* Visibility */}
-          <label htmlFor="visibility">Profile Visibility</label>
-          <select
-            id="visibility"
-            name="visibility"
-            value={formData.visibility}
-            onChange={handleChange}
-          >
-            <option value="PUBLIC">Public</option>
-            <option value="PRIVATE">Private</option>
-            <option value="FRIENDS_ONLY">Friends Only</option>
-          </select>
-
-          {/* Description */}
-          <label htmlFor="description">Description (Optional)</label>
-          <textarea
+          <FloatingTextarea
             id="description"
             name="description"
-            value={formData.description}
-            onChange={handleChange}
+            label={text.description}
+            value={formData.description ?? ''}
+            onChange={onDescriptionChange}
             rows={4}
-            maxLength={300}
-            placeholder="Tell us a little bit about yourself..."
+            maxLength={DESCRIPTION_MAX}
+            help={text.descriptionHelp(descriptionLength, DESCRIPTION_MAX)}
+            disabled={isSaving}
           />
-          <div className="help" style={{ justifyContent: 'flex-end' }}>
-            <span>{formData.description ? formData.description.length : 0} / 300</span>
-          </div>
-          <fieldset style={{ border: 0, padding: 0, margin: 0 }}>
-            <legend>Interests</legend>
 
-            {(Object.keys(INTEREST_LABELS) as InterestCategory[]).map((interest) => (
-              <label
-                key={interest}
-                style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '8px' }}
-              >
-                <input
-                  type="checkbox"
-                  checked={selectedInterests.includes(interest)}
-                  onChange={() => toggleInterest(interest)}
-                  disabled={isSaving}
-                />
-                {INTEREST_LABELS[interest]}
-              </label>
+          <fieldset className={styles.fieldset}>
+            <legend className={styles.legend}>{text.visibility}</legend>
+            <div className={styles.options}>
+              {VISIBILITIES.map((visibility) => (
+                <label key={visibility} className={styles.option}>
+                  <input
+                    type="radio"
+                    name="visibility"
+                    value={visibility}
+                    className={styles.radio}
+                    checked={formData.visibility === visibility}
+                    onChange={() => onVisibilityChange(visibility)}
+                    disabled={isSaving}
+                  />
+                  <span className={styles.optionIcon}>
+                    <Icon name={VISIBILITY_ICONS[visibility]} size={18} />
+                  </span>
+                  <span className={styles.optionText}>
+                    <strong>{PROFILE_LABELS.visibility[visibility].label}</strong>
+                    <span>{PROFILE_LABELS.visibility[visibility].body}</span>
+                  </span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
+
+          <fieldset className={styles.fieldset}>
+            <legend className={styles.legend}>{text.interests}</legend>
+            <p className={styles.hint}>{text.interestsHelp}</p>
+            {INTEREST_FAMILIES.map((family) => (
+              <div key={family} className={styles.family}>
+                <p className={panels.subhead}>
+                  <Icon name={INTEREST_FAMILY_ICONS[family]} size={14} />
+                  {INTEREST_FAMILY_LABELS[family]}
+                </p>
+                <div className={panels.tags}>
+                  {INTERESTS_BY_FAMILY[family].map((interest) => (
+                    <InterestTag
+                      key={interest}
+                      interest={interest}
+                      pressed={interests.includes(interest)}
+                      onToggle={toggleInterest}
+                      disabled={isSaving}
+                    />
+                  ))}
+                </div>
+              </div>
             ))}
           </fieldset>
-          <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
-            <button
-              type="button"
-              className="btn btn--secondary btn--block"
-              onClick={onCancel}
-              disabled={isSaving}
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="btn btn--primary btn--block"
-              disabled={isSaving}
-            >
-              {isSaving ? 'Saving...' : initialData ? 'Save Changes' : 'Create Profile'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </main>
-  );
-};
+        </section>
 
-export default ProfileForm;
+        <section className={[panels.panel, styles.place].join(' ')} aria-labelledby="profile-form-place">
+          <div className={panels.panelHead}>
+            <h2 id="profile-form-place">{text.neighbourhood}</h2>
+            {formData.location && (
+              <span className={styles.ok}>
+                <Icon name="check" size={14} strokeWidth={2.4} />
+                {text.neighbourhoodSet}
+              </span>
+            )}
+          </div>
+          <p className={panels.muted}>{text.neighbourhoodLead}</p>
+          <NeighbourhoodPicker location={toPicked(formData.location)} onChange={onLocationChange} label={text.neighbourhood} />
+          <div className={styles.placeActions}>
+            <Button
+              id="locate"
+              variant="secondary"
+              onClick={locate}
+              loading={locating}
+              loadingLabel={text.locating}
+              disabled={isSaving}
+              aria-describedby={locationError ? 'location-error' : undefined}
+            >
+              <Icon name="target" size={16} />
+              {text.locate}
+            </Button>
+          </div>
+          {locationError && (
+            <p id="location-error" className={[styles.hint, styles.hintError].join(' ')} role="alert">
+              <Icon name="alert" size={14} strokeWidth={2.4} />
+              {locationError}
+            </p>
+          )}
+        </section>
+      </div>
+
+      {error && (
+        <p className={[panels.state, panels.error].join(' ')} role="alert">
+          {error}
+        </p>
+      )}
+
+      <div className={styles.actions}>
+        <Button variant="secondary" onClick={onCancel} disabled={isSaving}>
+          {text.cancel}
+        </Button>
+        <Button type="submit" loading={isSaving} loadingLabel={creating ? text.creating : text.saving}>
+          {creating ? text.create : text.save}
+        </Button>
+      </div>
+    </form>
+  );
+}

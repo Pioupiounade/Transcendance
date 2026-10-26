@@ -1,0 +1,80 @@
+/* Volet du fil : bandeau (retour sur téléphone, avatar, nom, lien profil), messages, zone d'écriture. */
+.pane {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+}
+
+.bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--line);
+}
+
+.back {
+  display: none;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  margin-left: -8px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--ink);
+  text-decoration: none;
+  cursor: pointer;
+}
+.back:hover {
+  background: var(--ground-hover);
+}
+/* Dans le volet, le retour est le seul chemin vers la liste : toujours visible. */
+.backAlways {
+  display: grid;
+}
+
+.who {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.name {
+  margin: 0;
+  overflow: hidden;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profile {
+  color: var(--muted);
+  font-size: 13px;
+  text-decoration: none;
+}
+.profile:hover {
+  color: var(--ink);
+  text-decoration: underline;
+}
+
+.state {
+  margin: auto;
+  padding: var(--s4);
+  color: var(--muted);
+  font-size: 14px;
+  text-align: center;
+}
+
+@media (max-width: 760px) {
+  .bar {
+    padding: 10px 14px;
+  }
+  .back {
+    display: grid;
+  }
+}

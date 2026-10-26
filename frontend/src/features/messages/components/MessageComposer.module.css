@@ -1,0 +1,86 @@
+/* Zone d'écriture : champ pilule qui grandit jusqu'à 4 lignes, bouton rond noir, compteur à partir de 200 caractères. */
+.composer {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    'field send'
+    'meta meta';
+  align-items: end;
+  gap: 4px 10px;
+  padding: 12px 16px 12px;
+  border-top: 1px solid var(--line);
+}
+
+.field {
+  grid-area: field;
+  min-height: 46px;
+  max-height: 120px;
+  padding: 12px 18px;
+  border: 1px solid var(--line);
+  border-radius: 23px;
+  background: var(--field-bg);
+  color: var(--ink);
+  font: inherit;
+  font-size: 15px;
+  line-height: 1.4;
+  resize: none;
+}
+.field::placeholder {
+  color: var(--muted-soft);
+}
+.field:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: 2px;
+  border-radius: 23px;
+}
+
+.send {
+  grid-area: send;
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--brand);
+  color: var(--on-brand);
+  cursor: pointer;
+  transition:
+    background-color var(--t-fast),
+    transform var(--t-fast);
+}
+.send:hover {
+  background: var(--brand-hover);
+}
+.send:active {
+  transform: scale(0.96);
+}
+.send:disabled {
+  background: var(--disabled-bg);
+  color: var(--disabled-ink);
+  cursor: default;
+  transform: none;
+}
+
+.meta {
+  grid-area: meta;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 16px;
+  padding: 0 6px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.error {
+  margin: 0;
+  color: var(--danger);
+  font-size: 13px;
+}
+.counter {
+  margin-left: auto;
+}
+.counter[data-over='true'] {
+  color: var(--danger);
+  font-weight: 600;
+}

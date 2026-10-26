@@ -1,8 +1,9 @@
-/* Maquette « dashboard » : 38 px de marge, intro + puce de lieu, carte + panneau latéral, puis la grille des suggestions. */
+/* Tableau de bord (refonte) : salutation large et légère, jauge en pilule sauge, puces de catégorie,
+   carte + agenda, puis la grille des actions proches. */
 .page {
   max-width: 1800px;
   margin: 0 auto;
-  padding: 30px 38px 28px;
+  padding: 18px 38px 36px;
   display: grid;
   gap: 24px;
   /* Carte compacte : la page carte garde ses 570 px. */
@@ -17,43 +18,86 @@
   justify-content: space-between;
   gap: 24px;
 }
+.intro h1 {
+  font-size: 46px;
+}
 
 .eyebrow {
   margin-bottom: 8px;
-  color: var(--terra);
+  color: var(--muted);
   font-size: 12px;
-  font-weight: 800;
-  letter-spacing: 1.8px;
+  font-weight: 600;
+  letter-spacing: 1.6px;
   text-transform: uppercase;
 }
 
 .lead {
-  margin-top: 7px;
+  margin-top: 8px;
   color: var(--muted);
   font-size: 15px;
 }
 
-/* DESIGN.md §6 « Location chip » */
-.chip {
+/* Jauge : anneau, chiffre clé, rond « + » citron. */
+.gauge {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 16px;
   flex: none;
-  min-width: 220px;
-  padding: 10px 15px;
-  border: 1px solid var(--line);
-  border-radius: 15px;
-  background: var(--ground);
-  color: var(--brand);
+  min-width: 360px;
+  padding: 10px 10px 10px 18px;
+  border-radius: 999px;
+  background: var(--sage-soft);
+  color: var(--sage-ink);
 }
-.chip small {
-  display: block;
-  color: var(--muted);
-  font-size: 12px;
+
+.ring {
+  width: 60px;
+  height: 60px;
+  flex: none;
 }
-.chip strong {
+.track,
+.progress {
+  fill: none;
+  stroke-width: 5;
+}
+.track {
+  stroke: var(--ground);
+}
+.progress {
+  stroke: var(--ink);
+  stroke-linecap: round;
+  transition: stroke-dasharray 600ms ease-out;
+}
+
+.gaugeText {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+.gaugeText strong {
+  font-size: 26px;
+  font-weight: 500;
+  line-height: 1.1;
+  letter-spacing: -0.6px;
   color: var(--ink);
+}
+.gaugeText small {
   font-size: 14px;
+  font-weight: 500;
+  color: var(--sage-ink);
+}
+.gaugeText span {
+  font-size: 12px;
+  font-weight: 500;
+  opacity: 0.85;
+}
+
+.plus {
+  width: 54px;
+  height: 54px;
+  margin-left: auto;
+  padding: 0;
+  border-radius: 50%;
 }
 
 .layout {
@@ -74,6 +118,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
+  padding: 0 6px;
   font-size: 12px;
   color: var(--muted);
 }
@@ -92,7 +137,10 @@
 
 @media (max-width: 1100px) {
   .page {
-    padding: 24px;
+    padding: 16px 24px 32px;
+  }
+  .intro h1 {
+    font-size: 38px;
   }
   .layout {
     grid-template-columns: minmax(0, 1fr) 310px;
@@ -102,15 +150,18 @@
 
 @media (max-width: 760px) {
   .page {
-    padding: 24px 16px;
-    gap: 20px;
+    padding: 12px 16px 24px;
+    gap: 18px;
   }
   .intro {
     flex-direction: column;
     align-items: stretch;
     gap: 16px;
   }
-  .chip {
+  .intro h1 {
+    font-size: 34px;
+  }
+  .gauge {
     min-width: 0;
   }
   .layout {

@@ -21,7 +21,12 @@ export const ICONS = {
   shield: '<path d="M12 3 5 6v6c0 4.5 3 7.5 7 9 4-1.5 7-4.5 7-9V6l-7-3Z"/><path d="m9 12 2 2 4-4"/>',
   clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
   flag: '<path d="M5 21V4M5 4h12l-2 4 2 4H5"/>',
-  bell: '<path d="M6 10a6 6 0 0 1 12 0c0 5 2 7 2 7H4s2-2 2-7ZM10 20a2 2 0 0 0 4 0M12 2v2"/>',
+  arrow: '<path d="M7 17 17 7M8 7h9v9"/>',
+  bell: '<path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4l2-2ZM10 20a2 2 0 0 0 4 0"/>',
+  logout: '<path d="M10 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4M15 8l4 4-4 4M19 12H9"/>',
+  chat: '<path d="M4 6a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3h-6l-5 4v-4H7a3 3 0 0 1-3-3Z"/>',
+  send: '<path d="M4 12 20 4l-4 16-4-7Z"/><path d="m12 13 8-9"/>',
+  chevronLeft: '<path d="m14 6-6 6 6 6"/>',
 } as const;
 
 export type IconName = keyof typeof ICONS;

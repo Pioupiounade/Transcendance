@@ -1,7 +1,8 @@
 import { useId } from 'react';
 import { Link, useLocation } from 'react-router';
 import { AUTH_ROUTES, LoginForm } from '@/features/auth';
-import { Icon, Steps, StreetScene, type IconName } from '@/shared/ui';
+import { Icon, Steps, type IconName } from '@/shared/ui';
+import actionsPhoto from '@/assets/actions.jpg';
 import { ACTIONS_LABELS } from '../labels';
 import styles from './MyActionsSignIn.module.css';
 
@@ -10,8 +11,8 @@ const STEP_ICONS: IconName[] = ['map', 'users', 'calendar'];
 const TRUST_ICONS: IconName[] = ['users', 'lock', 'check'];
 
 /**
- * `/actions` pour un visiteur (#107), présenté comme l'accueil : la promesse sur la rue illustrée, les trois étapes
- * sur cartes, puis la connexion sur place. Une fois connecté, `useAuth` change de statut et la page affiche la
+ * `/actions` pour un visiteur (#107), présenté comme l'accueil : la promesse à côté d'une photo de marché (refonte,
+ * 20/10/2026), les trois étapes sur cartes, puis la connexion sur place. Une fois connecté, `useAuth` change de statut et la page affiche la
  * liste sans navigation.
  */
 export function MyActionsSignIn() {
@@ -38,9 +39,9 @@ export function MyActionsSignIn() {
             ))}
           </ul>
         </div>
-        <div className={styles.heroScene}>
-          <StreetScene />
-        </div>
+        <figure className={styles.heroPhoto}>
+          <img src={actionsPhoto} alt="" width={490} height={579} />
+        </figure>
       </section>
 
       <section className={styles.section} aria-labelledby={howId}>

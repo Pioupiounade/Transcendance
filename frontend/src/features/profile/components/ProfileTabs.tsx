@@ -1,6 +1,7 @@
 import type { KeyboardEvent } from 'react';
+import { PROFILE_LABELS } from '../labels';
 import { profilePanelId, profileTabId, type ProfileTabId } from '../profileTabIds';
-import styles from '@/features/organizations/components/ManageTabs.module.css';
+import styles from './ProfileTabs.module.css';
 
 type ProfileTabsProps = {
   tabs: readonly { id: ProfileTabId; label: string }[];
@@ -8,6 +9,7 @@ type ProfileTabsProps = {
   onChange: (id: ProfileTabId) => void;
 };
 
+/** Onglets du profil (motif ARIA, flèches gauche / droite) : pilules blanches, l'actif en noir comme la nav. */
 export function ProfileTabs({ tabs, value, onChange }: ProfileTabsProps) {
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     const step = event.key === 'ArrowRight' ? 1 : event.key === 'ArrowLeft' ? -1 : 0;
@@ -20,7 +22,7 @@ export function ProfileTabs({ tabs, value, onChange }: ProfileTabsProps) {
   };
 
   return (
-    <div className={styles.tabs} role="tablist" aria-label="Profile navigation" onKeyDown={onKeyDown}>
+    <div className={styles.tabs} role="tablist" aria-label={PROFILE_LABELS.tabs.nav} onKeyDown={onKeyDown}>
       {tabs.map((tab) => (
         <button
           key={tab.id}

@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import type { FriendshipStatus } from '../types';
+import { useState } from 'react';
+import { Button, Icon } from '@/shared/ui';
 import {
   acceptFriendRequest,
   cancelOrRemoveFriend,
@@ -7,182 +7,106 @@ import {
   sendFriendRequest,
   unblockUser,
 } from '../api/profileApi';
+import { PROFILE_LABELS } from '../labels';
+import type { FriendshipStatus } from '../types';
+import styles from './FriendshipCTA.module.css';
 
-interface FriendshipCTAProps {
+type FriendshipCTAProps = {
   userId: string;
+  /** Relation actuelle : le parent la possède et la met à jour via `onStatusChange`. */
   status: FriendshipStatus;
-  onStatusChange?: (newStatus: FriendshipStatus) => void;
-}
+  onStatusChange: (next: FriendshipStatus) => void;
+};
 
-export const FriendshipCTA: React.FC<FriendshipCTAProps> = ({
-  userId,
-  status: initialStatus,
-  onStatusChange,
-}) => {
-  const [currentStatus, setCurrentStatus] = useState<FriendshipStatus>(initialStatus);
-  const [isMutating, setIsMutating] = useState(false);
+const text = PROFILE_LABELS.friendship;
 
-  useEffect(() => {
-    setCurrentStatus(initialStatus);
-    setIsMutating(false);
-  }, [userId, initialStatus]);
+/** Mon lien avec ce voisin : ajouter, accepter / refuser, retirer, débloquer. Une seule action à la fois. */
+export function FriendshipCTA({ userId, status, onStatusChange }: FriendshipCTAProps) {
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSend = async () => {
-    setIsMutating(true);
+  const run = (action: (targetUserId: string) => Promise<FriendshipStatus>) => async () => {
+    setPending(true);
+    setError(null);
     try {
-      const next = await sendFriendRequest(userId);
-      setCurrentStatus(next);
-      onStatusChange?.(next);
-    } catch (err) {
-      console.error('Failed to send friend request:', err);
+      onStatusChange(await action(userId));
+    } catch {
+      setError(text.failed);
     } finally {
-      setIsMutating(false);
+      setPending(false);
     }
   };
 
-  const handleAccept = async () => {
-    setIsMutating(true);
-    try {
-      const next = await acceptFriendRequest(userId);
-      setCurrentStatus(next);
-      onStatusChange?.(next);
-    } catch (err) {
-      console.error('Failed to accept friend request:', err);
-    } finally {
-      setIsMutating(false);
-    }
-  };
-
-  const handleDecline = async () => {
-    setIsMutating(true);
-    try {
-      const next = await declineFriendRequest(userId);
-      setCurrentStatus(next);
-      onStatusChange?.(next);
-    } catch (err) {
-      console.error('Failed to decline friend request:', err);
-    } finally {
-      setIsMutating(false);
-    }
-  };
-
-  const handleUnfriend = async () => {
-    setIsMutating(true);
-    try {
-      const next = await cancelOrRemoveFriend(userId);
-      setCurrentStatus(next);
-      onStatusChange?.(next);
-    } catch (err) {
-      console.error('Failed to remove friend:', err);
-    } finally {
-      setIsMutating(false);
-    }
-  };
-
-  const handleUnblock = async () => {
-    setIsMutating(true);
-    try {
-      const next = await unblockUser(userId);
-      setCurrentStatus(next);
-      onStatusChange?.(next);
-    } catch (err) {
-      console.error('Failed to unblock user:', err);
-    } finally {
-      setIsMutating(false);
-    }
-  };
-
-  if (currentStatus === 'BLOCKED_BY_OTHER') {
-    return (
-      <span className="help">
-        Friendship unavailable
-      </span>
-    );
-  }
-
-  if (currentStatus === 'BLOCKED') {
-    return (
-      <div className="friendship-actions">
-        <span className="friendship-badge friendship-badge--blocked">
-          Blocked
+  let content;
+  switch (status) {
+    case 'BLOCKED_BY_OTHER':
+      content = <span className={styles.badge}>{text.unavailable}</span>;
+      break;
+    case 'BLOCKED':
+      content = (
+        <>
+          <span className={styles.badge}>
+            <Icon name="lock" size={14} />
+            {text.blocked}
+          </span>
+          <Button variant="secondary" onClick={run(unblockUser)} disabled={pending}>
+            {text.unblock}
+          </Button>
+        </>
+      );
+      break;
+    case 'PENDING_SENT':
+      content = (
+        <span className={styles.badge}>
+          <Icon name="clock" size={14} />
+          {text.sent}
         </span>
-        <button
-          type="button"
-          className="btn btn--secondary"
-          onClick={handleUnblock}
-          disabled={isMutating}
-        >
-          Unblock
-        </button>
-      </div>
-    );
+      );
+      break;
+    case 'PENDING_RECEIVED':
+      content = (
+        <>
+          <Button onClick={run(acceptFriendRequest)} disabled={pending}>
+            <Icon name="check" size={16} strokeWidth={2.2} />
+            {text.accept}
+          </Button>
+          <Button variant="secondary" onClick={run(declineFriendRequest)} disabled={pending}>
+            {text.decline}
+          </Button>
+        </>
+      );
+      break;
+    case 'ACCEPTED':
+      content = (
+        <>
+          <span className={[styles.badge, styles.friends].join(' ')}>
+            <Icon name="check" size={14} strokeWidth={2.4} />
+            {text.friends}
+          </span>
+          <Button variant="secondary" onClick={run(cancelOrRemoveFriend)} disabled={pending}>
+            {text.unfriend}
+          </Button>
+        </>
+      );
+      break;
+    default:
+      content = (
+        <Button onClick={run(sendFriendRequest)} disabled={pending}>
+          <Icon name="plus" size={16} strokeWidth={2.2} />
+          {text.add}
+        </Button>
+      );
   }
 
-  // Solicitud pendiente enviada: Badge informativa, sin botón Cancel
-  if (currentStatus === 'PENDING_SENT') {
-    return (
-      <div className="friendship-actions">
-        <span className="friendship-badge friendship-badge--pending">
-          Request Sent
-        </span>
-      </div>
-    );
-  }
-
-  // Solicitud recibida: Acciones de aceptar o rechazar
-  if (currentStatus === 'PENDING_RECEIVED') {
-    return (
-      <div className="friendship-actions">
-        <button
-          type="button"
-          className="btn btn--primary"
-          onClick={handleAccept}
-          disabled={isMutating}
-        >
-          Accept
-        </button>
-        <button
-          type="button"
-          className="btn btn--secondary"
-          onClick={handleDecline}
-          disabled={isMutating}
-        >
-          Decline
-        </button>
-      </div>
-    );
-  }
-
-  // Amistad activa: Badge confirmada y opción para deshacer amistad
-  if (currentStatus === 'ACCEPTED') {
-    return (
-      <div className="friendship-actions">
-        <span className="friendship-badge friendship-badge--friends">
-          Friends ✓
-        </span>
-        <button
-          type="button"
-          className="btn btn--secondary"
-          onClick={handleUnfriend}
-          disabled={isMutating}
-        >
-          Unfriend
-        </button>
-      </div>
-    );
-  }
-
-  // Sin relación: Botón para mandar solicitud
   return (
-    <div className="friendship-actions">
-      <button
-        type="button"
-        className="btn btn--primary"
-        onClick={handleSend}
-        disabled={isMutating}
-      >
-        Add Friend
-      </button>
+    <div className={styles.cta} aria-busy={pending || undefined}>
+      {content}
+      {error && (
+        <p className={styles.error} role="alert">
+          <Icon name="alert" size={14} strokeWidth={2.4} />
+          {error}
+        </p>
+      )}
     </div>
   );
-};
+}

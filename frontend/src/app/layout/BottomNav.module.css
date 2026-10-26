@@ -1,65 +1,63 @@
-/* Barre de navigation inférieure, mobile uniquement (≤ 760 px). Cinq entrées (une colonne chacune), la centrale mise en avant. */
+/* Barre de navigation inférieure, dès que la nav quitte l'en-tête (≤ 1319 px, voir AppHeader) : pilule flottante,
+   item courant = rond noir. Bornée à 480 px et centrée sur tablette, pleine largeur moins 14 px sur téléphone. */
 .bar {
   display: none;
 }
 
-@media (max-width: 760px) {
+@media (max-width: 1319px) {
   .bar {
     position: fixed;
-    inset: auto 0 0 0;
+    inset-inline: max(14px, calc(50% - 240px));
+    bottom: calc(12px + env(safe-area-inset-bottom));
     z-index: 10;
     display: grid;
     grid-auto-flow: column;
     grid-auto-columns: 1fr;
-    height: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom));
-    padding-bottom: env(safe-area-inset-bottom);
+    height: var(--bottom-nav-height);
+    padding: 6px;
+    border-radius: var(--r-btn);
     background: var(--ground);
-    border-top: 1px solid var(--line);
+    box-shadow: var(--shadow-float);
   }
 
   .item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 3px;
-    min-height: 44px;
+    display: grid;
+    place-items: center;
     color: var(--muted);
-    font-size: 11px;
-    font-weight: 600;
     text-decoration: none;
-    transition: color var(--t-fast);
-  }
-  .item[aria-current='page'] {
-    color: var(--brand);
+    border-radius: 50%;
   }
   .item:focus-visible {
     outline-offset: -3px;
-    border-radius: 12px;
   }
 
-  /* Entrée centrale : pastille forêt qui déborde de la barre. */
-  .primary {
-    gap: 6px;
-  }
-  .primaryIcon {
+  .icon {
     display: grid;
     place-items: center;
-    width: 56px;
-    height: 56px;
-    margin-top: -26px;
-    border: 4px solid var(--surface);
+    width: 52px;
+    height: 52px;
     border-radius: 50%;
+    transition:
+      background-color var(--t-fast),
+      color var(--t-fast),
+      transform var(--t-base);
+  }
+  .item[aria-current='page'] .icon {
     background: var(--brand);
     color: var(--on-brand);
-    box-shadow: var(--shadow);
-    transition: transform var(--t-base), background-color var(--t-fast);
   }
-  .primary[aria-current='page'] .primaryIcon {
-    background: var(--brand-press);
-    transform: scale(1.08);
+  .item:active .icon {
+    transform: scale(0.94);
   }
-  .primary:active .primaryIcon {
-    transform: scale(0.96);
+
+  /* Libellé lu par les lecteurs d'écran ; `title` au survol. */
+  .label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
   }
 }

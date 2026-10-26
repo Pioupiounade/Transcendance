@@ -1,6 +1,6 @@
 import styles from './Button.module.css';
 
-export type ButtonVariant = 'primary' | 'secondary' | 'text';
+export type ButtonVariant = 'primary' | 'secondary' | 'accent' | 'text';
 export type ButtonSize = 'md' | 'lg';
 
 export type ButtonStyleProps = {

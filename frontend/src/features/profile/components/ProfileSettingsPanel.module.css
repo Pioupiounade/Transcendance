@@ -1,68 +1,102 @@
-.section {
-  display: flex;
-  flex-direction: column;
-  gap: var(--s3, 16px);
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 22px;
+  align-items: start;
 }
 
-.title {
-  margin: 0;
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: var(--ink);
+.switches {
+  display: grid;
 }
 
-.titleDanger {
-  margin: 0;
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: var(--danger, #b93832);
-}
-
-.description {
-  margin: 0;
-  color: var(--muted);
-  font-size: var(--caption, 13px);
-}
-
-.optionsList {
-  display: flex;
-  flex-direction: column;
-  gap: var(--s2, 8px);
-}
-
-.optionItem {
+/* Interrupteur : ligne libellé + bascule ; la bascule devient noire une fois activée. */
+.switch {
   display: flex;
   align-items: center;
-  gap: var(--s2, 10px);
-  padding: 6px 0;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
   cursor: pointer;
-  user-select: none;
+}
+li:last-child > .switch {
+  border-bottom: 0;
 }
 
-.optionItem input[type='checkbox'] {
-  cursor: pointer;
-  accent-color: var(--brand);
-  width: 18px;
-  height: 18px;
+.switchLabel {
+  font-size: 15px;
+}
+
+.toggle {
+  position: relative;
+  flex: none;
+  width: 46px;
+  height: 26px;
   margin: 0;
+  appearance: none;
+  border-radius: 999px;
+  background: var(--line);
+  cursor: pointer;
+  transition: background-color var(--t-fast);
+}
+.toggle::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--ground);
+  box-shadow: 0 1px 3px #1c1c1c33;
+  transition: transform var(--t-fast);
+}
+.toggle:checked {
+  background: var(--brand);
+}
+.toggle:checked::after {
+  transform: translateX(20px);
+}
+.toggle:disabled {
+  cursor: wait;
+  opacity: 0.5;
+}
+.toggle:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
 }
 
-.divider {
-  border: 0;
-  border-top: 1px solid var(--line);
-  margin: var(--s4, 24px) 0;
+.account {
+  gap: 14px;
 }
 
-.dangerActions {
-  display: flex;
-  gap: var(--s2, 8px);
+.noteIcon {
+  vertical-align: -2px;
+  margin-right: 6px;
 }
 
-.btnDanger {
-  color: var(--danger, #b93832);
-  border-color: var(--danger, #b93832);
+.account .danger {
+  justify-self: start;
+  color: var(--danger);
+  border-color: var(--danger);
+}
+.account .danger:hover:not(:disabled) {
+  background: var(--danger-soft);
+}
+.account .danger:disabled {
+  color: var(--disabled-ink);
+  border-color: var(--line);
 }
 
-.btnDanger:hover {
-  background: var(--danger-soft, #fbedea);
+@media (max-width: 1100px) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr) 300px;
+    gap: 16px;
+  }
+}
+
+@media (max-width: 760px) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
