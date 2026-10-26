@@ -1,5 +1,4 @@
 import type { ReactNode } from 'react';
-import { dominantFamily } from '../interestLabels';
 import { PROFILE_LABELS } from '../labels';
 import type { InterestCategory, ProfileActivity, UserProfile } from '../types';
 import { AboutPanel } from './AboutPanel';
@@ -42,7 +41,6 @@ export function ProfileView({ profile, eyebrow, own, interests, activity, online
         avatarUrl={profile.profilePicture}
         commune={profile.commune}
         eyebrow={eyebrow}
-        family={dominantFamily(interests.data ?? [])}
         visibility={own ? profile.visibility : undefined}
         online={online}
         actions={actions}

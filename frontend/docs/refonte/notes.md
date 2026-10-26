@@ -28,8 +28,8 @@ Pioupiounades (nom, pin, structure des pages). L'espace admin garde son thème s
 - **Carte** : tuiles OSM dans leurs couleurs d'origine (choix de l'utilisateur, `refs/Screenshot from
   2026-10-20 12-02-42.png` ; le gris puis le voile sauge ont été essayés et écartés), pins pastel à icône noire.
 - **Pages d'auth** (login, register) : photo de rue (`refs/login.jpg` → `src/assets/login.jpg`, bande 2:1) à la
-  place du dessin, fondue vers le fond en bas ; derrière la carte, le plan réel du quartier de l'école 42 (`AuthBackdrop` +
-  `authNeighbourhood.ts`, opacité 0.45) remplace les pins : rues en sauge par largeur, voies ferrées en lavande
+  place du dessin, fondue vers le fond en bas ; derrière la carte, le plan réel du quartier de l'école 42 (`NeighbourhoodPlan` de
+  `shared/ui` + `neighbourhood42.ts`, opacité 0.45) remplace les pins : rues en sauge par largeur, voies ferrées en lavande
   pointillée, parcs pistache, eau glace, l'école en point citron à gauche de la carte. Données
   © OpenStreetMap contributors (ODbL), extrait Overpass `osm/paris42.json` autour du 96 bd Bessières (42 Paris),
   générées par `osm/gen_neighbourhood.py` (projection 1 px ≈ 1 m, viewBox 1440 × 1000). Pour un autre campus :
@@ -52,8 +52,8 @@ Pioupiounades (nom, pin, structure des pages). L'espace admin garde son thème s
   Sondage toutes les 5 s sur le fil ouvert, 30 s pour la pastille (pas de temps réel : la branche socket.io du
   coéquipier, #128, n'est pas fusionnée).
 - Profil (`features/profile`, 26/10/2026, à la demande du coéquipier propriétaire) : page refaite dans la grammaire
-  de la refonte. En-tête « identité » : bandeau pastel teinté par la famille d'intérêts dominante (pistache,
-  rose-lavande ou citron-abricot, comme les couvertures des cartes d'action), avatar à cheval, pseudo en display,
+  de la refonte. En-tête « identité » : en bandeau, le plan du quartier de l'école 42 des pages login / register
+  (`NeighbourhoodPlan`, centré sur le point citron de l'école), avatar à cheval, pseudo en display,
   quartier, pastille de visibilité, trois tuiles points / organisations / actions. Onglets Overview / Settings en
   pilules. Panneaux « About », intérêts (étiquettes sauge / lavande / citron par famille) et activité (liens vers les
   fiches). Édition en place : photo, pseudo, présentation, visibilité en cartes radio, intérêts en chips, quartier à

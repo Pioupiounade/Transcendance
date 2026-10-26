@@ -1,4 +1,4 @@
-"""Génère frontend/src/features/auth/components/authNeighbourhood.ts à partir d'une extraction Overpass.
+"""Génère frontend/src/shared/ui/NeighbourhoodPlan/neighbourhood42.ts à partir d'une extraction Overpass.
 Usage : python3 -I gen_neighbourhood.py <overpass.json> <school_lat> <school_lon> <school_svg_x> <school_svg_y> <out.ts>
 Projection équirectangulaire centrée sur l'école, 1 px ≈ 1 m, viewBox 1440 × 1000 (y vers le sud)."""
 import json, math, sys
@@ -51,7 +51,7 @@ for e in json.load(open(src))['elements']:
 ts = ["// Plan du quartier de l'école 42 (données © OpenStreetMap contributors, ODbL), généré par",
       "// docs/refonte/osm/gen_neighbourhood.py : rues par largeur, voies ferrées, parcs et plans d'eau, projection",
       "// équirectangulaire 1 px ≈ 1 m, l'école placée en (%d, %d) d'un viewBox 1440 × 1000. Ne pas éditer à la main." % (sx, sy),
-      "export const AUTH_NEIGHBOURHOOD = {",
+      "export const NEIGHBOURHOOD_42 = {",
       "  roads: [" ]
 for w in sorted(roads, reverse=True):
     ts.append("    { w: %d, d: '%s' }," % (w, ''.join(roads[w])))

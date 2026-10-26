@@ -217,7 +217,7 @@ features/       1 domaine métier = 1 module ; interface = index.ts
                 seules les actions `PENDING` des autres non rejointes, clic sur un pin → fiche, plus de CTA « créer » (la dialog reste).
   profile/      mon profil `/profile` (ProfilePage `{ organizationPath, actionPath, homePath }`) et profil public
                 `/profiles/:userId` (PublicProfilePage `{ ownProfilePath, messagePath }`), refaits le 26/10/2026 dans la
-                grammaire de la refonte : ProfileHero (bandeau teinté par la famille d'intérêts dominante, avatar,
+                grammaire de la refonte : ProfileHero (bandeau = plan du quartier 42, `NeighbourhoodPlan` de shared/ui, avatar,
                 pseudo, quartier, visibilité, présence, tuiles de chiffres), ProfileView = hero + AboutPanel +
                 InterestsPanel + ActivityPanel (ProfilePanels.module.css = grammaire commune), ProfileTabs (pilules),
                 ProfileForm (FloatingField, cartes radio de visibilité, InterestTag à bascule, NeighbourhoodPicker =
@@ -327,6 +327,9 @@ shared/         zéro connaissance métier, réutilisable ailleurs
                 datetime-local), FloatingTextarea (même habillage, privé : FieldShell + fieldA11y), Checkbox (libellé
                 riche), Dialog (`<dialog>` natif : `{ open, onClose, title, closeLabel }`, enfants montés si ouvert),
                 StreetScene (illustration de rue de la maquette, décorative ; l'hôte fixe la hauteur : auth, landing),
+                NeighbourhoodPlan (plan OSM du quartier de 42 Paris, `neighbourhood42.ts` généré par
+                docs/refonte/osm/gen_neighbourhood.py ; `focusHeight` = bande centrée sur l'école : fond des pages
+                d'auth, bandeau du profil),
                 Steps (trois étapes numérotées sur cartes teintées `{ steps: Step[] }` : « How it works » de la landing et de
                 la page My Actions visiteur),
                 CommentThread (fil à plat `{ comments: ThreadComment[], mineLabel, deletion? }` : bouton de

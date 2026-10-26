@@ -1,7 +1,6 @@
 import type { ReactNode } from 'react';
 import { useMediaQuery } from '@/shared/hooks/useMediaQuery';
-import { Avatar, Icon, type IconName } from '@/shared/ui';
-import { INTEREST_FAMILY_ICONS, type InterestFamily } from '../interestLabels';
+import { Avatar, Icon, NeighbourhoodPlan, type IconName } from '@/shared/ui';
 import { PROFILE_LABELS } from '../labels';
 import type { ProfileVisibility } from '../types';
 import styles from './ProfileHero.module.css';
@@ -13,8 +12,6 @@ type ProfileHeroProps = {
   avatarUrl?: string | null;
   commune?: string | null;
   eyebrow: string;
-  /** Teinte du bandeau : la famille d'intérêts dominante. */
-  family: InterestFamily;
   /** Mon profil : la visibilité choisie, en pastille. */
   visibility?: ProfileVisibility;
   /** Profil d'un voisin : présence en ligne (socket #164). */
@@ -33,13 +30,15 @@ const VISIBILITY_ICONS: Record<ProfileVisibility, IconName> = {
 
 const text = PROFILE_LABELS.hero;
 
-/** En-tête du profil : bandeau pastel, avatar à cheval, pseudo en grand, quartier et présence, actions, chiffres. */
+/* Bande du plan montrée dans le bandeau, en unités du plan (≈ mètres), centrée sur l'école 42. */
+const COVER_BAND = 240;
+
+/** En-tête du profil : plan du quartier en bandeau, avatar à cheval, pseudo en grand, quartier, présence, actions, chiffres. */
 export function ProfileHero({
   username,
   avatarUrl,
   commune,
   eyebrow,
-  family,
   visibility,
   online,
   actions,
@@ -48,9 +47,9 @@ export function ProfileHero({
   const phone = useMediaQuery('(max-width: 760px)');
 
   return (
-    <header className={[styles.hero, styles[family]].join(' ')}>
+    <header className={styles.hero}>
       <div className={styles.cover} aria-hidden="true">
-        <Icon name={INTEREST_FAMILY_ICONS[family]} size={170} strokeWidth={1.1} className={styles.watermark} />
+        <NeighbourhoodPlan focusHeight={COVER_BAND} />
       </div>
 
       <div className={styles.identity}>

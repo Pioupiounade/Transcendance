@@ -36,7 +36,7 @@
   height: 100%;
 }
 
-/* Plan de quartier pastel (`AuthBackdrop`) sous la photo, derrière la carte. Il déborde sous le pied de page
+/* Plan de quartier pastel (`NeighbourhoodPlan`, shared/ui) sous la photo, derrière la carte. Il déborde sous le pied de page
    (transparent) pour aller jusqu'en bas de l'écran, et passe sous tout le reste (`z-index: -1`). */
 .backdrop {
   position: absolute;

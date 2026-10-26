@@ -49,10 +49,3 @@ export const INTERESTS_BY_FAMILY: Record<InterestFamily, readonly InterestCatego
   social: ['SOCIAL_SHARE', 'SOCIAL_MEET', 'SOCIAL_DO'],
   cultural: ['CULTURAL_LEARN', 'CULTURAL_CREATE', 'CULTURAL_DO'],
 };
-
-/** Famille la plus représentée dans les intérêts (teinte du bandeau du profil) ; sauge par défaut. */
-export function dominantFamily(interests: readonly InterestCategory[]): InterestFamily {
-  const counts: Record<InterestFamily, number> = { environment: 0, social: 0, cultural: 0 };
-  for (const interest of interests) counts[INTEREST_FAMILY[interest]] += 1;
-  return INTEREST_FAMILIES.reduce((best, family) => (counts[family] > counts[best] ? family : best), 'environment');
-}

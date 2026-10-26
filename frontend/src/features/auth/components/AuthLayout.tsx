@@ -1,10 +1,9 @@
 import type { ReactNode } from 'react';
 import { Link } from 'react-router';
 import { pageTitle } from '@/shared/lib/pageTitle';
-import { Icon } from '@/shared/ui';
+import { Icon, NeighbourhoodPlan } from '@/shared/ui';
 import loginPhoto from '@/assets/login.jpg';
 import { AUTH_LABELS } from '../labels';
-import { AuthBackdrop } from './AuthBackdrop';
 import styles from './AuthLayout.module.css';
 
 type AuthLayoutProps = {
@@ -38,7 +37,7 @@ export function AuthLayout({
         <img className={styles.heroPhoto} src={loginPhoto} alt="" width={1800} height={900} />
       </div>
       <div className={styles.backdrop}>
-        <AuthBackdrop />
+        <NeighbourhoodPlan className={styles.backdropScene} />
       </div>
       <section className={styles.card} aria-labelledby="auth-title">
         <h1 id="auth-title" className={styles.title}>
