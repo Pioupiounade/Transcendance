@@ -65,6 +65,18 @@ export function AuthProvider({ children }: AuthProviderProps) {
       );
     };
 
+    const handleMembershipChanged = ({
+      organizationId,
+    }: {
+      organizationId: string;
+    }) => {
+      window.dispatchEvent(
+        new CustomEvent('organization:membership-changed', {
+          detail: { organizationId },
+        }),
+      );
+    };
+
     const unsubscribe = session.onTokensChanged(() => {
       if (!session.accessToken) return;
 
@@ -77,11 +89,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     socket.on('presence:online', handleOnline);
     socket.on('presence:offline', handleOffline);
+    socket.on('organization:membership-changed', handleMembershipChanged);
 
     return () => {
       unsubscribe();
       socket.off('presence:online', handleOnline);
       socket.off('presence:offline', handleOffline);
+      socket.off('organization:membership-changed', handleMembershipChanged);
       socket.disconnect();
     };
   }, [snapshot.status]);

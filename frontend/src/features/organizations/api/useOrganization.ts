@@ -36,12 +36,13 @@ export function useOrganizationMembers(
     [id, enabled],
   );
 
-  const { data, loading, error } = useResource(load);
+  const { data, loading, error, reload } = useResource(load);
 
   return {
     members: data ?? [],
     loading: enabled && loading,
     error: enabled ? error : null,
+    reload,
   };
 }
 
@@ -54,11 +55,12 @@ export function useMyOrganizationMembership(id: string, enabled: boolean) {
     [id, enabled],
   );
 
-  const { data, loading, error } = useResource(load);
+  const { data, loading, error, reload } = useResource(load);
 
   return {
     membership: data ?? null,
     loading: enabled ? loading : false,
     error: enabled ? error : null,
+    reload,
   };
 }

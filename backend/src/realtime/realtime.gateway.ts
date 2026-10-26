@@ -28,6 +28,17 @@ export class RealtimeGateway
     return (this.server.sockets.adapter.rooms.get(room)?.size ?? 0) > 0;
   }
 
+  emitOrganizationMembershipChanged(
+    userId: bigint,
+    organizationId: bigint,
+  ): void {
+    this.server
+      .to(`user:${userId.toString()}`)
+      .emit('organization:membership-changed', {
+        organizationId: organizationId.toString(),
+      });
+  }
+
   constructor(
     private readonly jwtService: JwtService,
     private readonly prisma: PrismaService,

@@ -130,7 +130,6 @@ export class OrganizationsService {
     }));
   }
 
-
   //6. creer une nouvelle organisation
   async create(currentUserId: string, data: CreateOrganizationDto) {
     const creator = await this.prisma.user.findUnique({
@@ -292,7 +291,6 @@ export class OrganizationsService {
     };
   }
 
-
   //9. desactiver une organisation
   async deactivate(id: string, currentUserId: string) {
     const organization = await this.prisma.organization.findUnique({
@@ -446,7 +444,6 @@ export class OrganizationsService {
   }
 
   // Comments
-
   async addComment(organizationId: bigint, userId: bigint, comment: string) {
     const org = await this.prisma.organization.findUnique({
       where: { organization_id: organizationId },
@@ -454,6 +451,38 @@ export class OrganizationsService {
 
     if (!org) {
       throw new NotFoundException('Organization not found');
+    }
+
+    const membership = await this.prisma.organizationMember.findUnique({
+      where: {
+        organization_id_user_id: {
+          organization_id: organizationId,
+          user_id: userId,
+        },
+      },
+      include: {
+        user: {
+          select: {
+            account_status: true,
+          },
+        },
+      },
+    });
+
+    if (!membership || membership.status !== MemberStatus.ACTIVE) {
+      return {
+        success: false as const,
+        code: 'NOT_ACTIVE_MEMBER' as const,
+        message: 'You must be an active member of this organization to comment',
+      };
+    }
+
+    if (membership.user.account_status !== AccountStatus.ACTIVE) {
+      return {
+        success: false as const,
+        code: 'ACCOUNT_NOT_ACTIVE' as const,
+        message: 'Your account must be active to comment',
+      };
     }
 
     for (let attempt = 0; attempt < 3; attempt += 1) {

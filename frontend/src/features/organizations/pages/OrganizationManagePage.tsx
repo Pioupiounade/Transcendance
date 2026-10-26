@@ -13,6 +13,7 @@ import {
   promoteMember,
   removeMember,
   transferOwnership,
+  reactivateMembership,
 } from '../api/organizationsApi';
 import { useOrganization, useOrganizationMembers } from '../api/useOrganization';
 import { ManageTabs, type ManageTab } from '../components/ManageTabs';
@@ -191,6 +192,22 @@ function Dashboard({ loaded }: { loaded: Organization }) {
     });
   };
 
+  const reactivate = (member: OrganizationMember) => {
+    const name = memberName(member);
+    const copy = text.requests.reactivateConfirm;
+
+    setConfirmation({
+      title: copy.title,
+      body: copy.body(name),
+      confirmLabel: copy.confirm,
+      confirmingLabel: copy.confirming,
+      run: async () => {
+        apply(await reactivateMembership(id, member.user_id));
+        setNotice(text.requests.reactivated(name));
+      },
+    });
+  };
+
   // Chaque action sur un membre : sa confirmation, sa requête, son effet local et son message.
   const choose = (kind: MemberActionKind, member: OrganizationMember) => {
     const name = memberName(member);
@@ -312,6 +329,7 @@ function Dashboard({ loaded }: { loaded: Organization }) {
             disabled={inactive}
             onApprove={approve}
             onDecline={decline}
+            onReactivate={reactivate}
           />
         )}
         {tab === 'members' && (
@@ -322,6 +340,7 @@ function Dashboard({ loaded }: { loaded: Organization }) {
             selfId={selfId}
             disabled={inactive}
             onManage={setManaging}
+            onReactivate={reactivate}
           />
         )}
         {tab === 'settings' && (

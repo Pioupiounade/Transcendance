@@ -69,6 +69,10 @@ export const approveMembership = (organizationId: string, userId: string) =>
 export const denyMembership = (organizationId: string, userId: string) =>
   http.patch<Membership>(`${memberPath(organizationId, userId)}/deny`);
 
+/** Réactive une adhésion `REJECTED` ou `BANNED` (`ACTIVE`, rôle `MEMBER`). */
+export const reactivateMembership = (organizationId: string, userId: string) =>
+  http.patch<Membership>(`${memberPath(organizationId, userId)}/reactivate`);
+
 /** Retire un membre actif (adhésion supprimée, −5 points au owner). Un manager ne retire que des `MEMBER`. */
 export const removeMember = (organizationId: string, userId: string) =>
   http.delete<Membership>(`${memberPath(organizationId, userId)}/remove`);
@@ -125,9 +129,23 @@ export const reopenOrganization = (id: string) => http.patch<Organization>(`/org
 export const fetchOrganizationComments = (organizationId: string, signal?: AbortSignal) =>
   http.get<OrganizationComment[]>(`/organizations/${organizationId}/comments`, { signal });
 
-/** Poste un commentaire (JWT). Le DTO attend `comment` (≠ `content` des actions) ; l'API renvoie le commentaire avec son auteur. */
-export const postOrganizationComment = (organizationId: string, content: string) =>
-  http.post<OrganizationComment>(`/organizations/${organizationId}/comments`, { comment: content });
+export type OrganizationCommentPostResult =
+  | OrganizationComment
+  | {
+      success: false;
+      code: 'NOT_ACTIVE_MEMBER' | 'ACCOUNT_NOT_ACTIVE';
+      message: string;
+    };
+
+/** Poste un commentaire ou renvoie un refus métier explicite. */
+export const postOrganizationComment = (
+  organizationId: string,
+  content: string,
+) =>
+  http.post<OrganizationCommentPostResult>(
+    `/organizations/${organizationId}/comments`,
+    { comment: content },
+  );
 
 /** Supprime un commentaire (JWT) : son auteur ou le créateur de l'organisation, 403 sinon. */
 export const deleteOrganizationComment = (commentId: string) =>

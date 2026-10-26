@@ -4,7 +4,7 @@ import { AUTH_ROUTES, useAuth } from '@/features/auth';
 import { Button, CommentComposer, CommentThread, type ThreadComment } from '@/shared/ui';
 import { postOrganizationComment } from '../api/organizationsApi';
 import { useOrganizationComments } from '../api/useOrganizationComments';
-import { toCommentErrorMessage } from '../errors';
+import { toCommentErrorMessage, CommentSubmissionError } from '../errors';
 import { ORGANIZATIONS_LABELS } from '../labels';
 import type { OrganizationComment } from '../types';
 import { COMMENT_MAX_LENGTH, validateComment } from '../validation';
@@ -15,6 +15,7 @@ type OrganizationCommentsProps = {
   organizationId: string;
   /** Créateur de l'organisation : il peut supprimer n'importe quel commentaire (règle du backend). */
   creatorId: string;
+  canComment: boolean;
 };
 
 const text = ORGANIZATIONS_LABELS.comments;
@@ -32,7 +33,7 @@ const readCooldownUntil = (organizationId: string): number => {
  * Discussion publique d'une organisation (Epic 4, #71) : lecture pour tous, écriture connecté (lien de connexion
  * sinon), plus récent en premier. Suppression par l'auteur ou le créateur de l'organisation, après confirmation.
  */
-export function OrganizationComments({ organizationId, creatorId }: OrganizationCommentsProps) {
+export function OrganizationComments({ organizationId, creatorId, canComment }: OrganizationCommentsProps) {
   const titleId = useId();
   const { status, user } = useAuth();
   const location = useLocation();
@@ -62,8 +63,13 @@ export function OrganizationComments({ organizationId, creatorId }: Organization
   const ready = !loading && error === null;
 
   const submit = async (content: string) => {
-    const comment = await postOrganizationComment(organizationId, content);
-    prepend(comment);
+    const result = await postOrganizationComment(organizationId, content);
+
+    if ('success' in result && result.success === false) {
+      throw new CommentSubmissionError(result.code);
+    }
+
+    prepend(result);
 
     const until = Date.now() + COMMENT_COOLDOWN_MS;
     window.sessionStorage.setItem(cooldownKey(organizationId), String(until));
@@ -79,7 +85,7 @@ export function OrganizationComments({ organizationId, creatorId }: Organization
         {ready && <span className={styles.count}>{items.length}</span>}
       </div>
 
-      {status === 'authenticated' && (
+      {status === 'authenticated' && canComment && (
         <CommentComposer
           label={text.label}
           maxLength={COMMENT_MAX_LENGTH}

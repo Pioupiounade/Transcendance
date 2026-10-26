@@ -31,11 +31,32 @@ export function MembershipStatus({ organizationId, role, membership }: Membershi
   const location = useLocation();
   const [request, setRequest] = useState<Request>({ state: 'idle' });
 
+  // Reset local state if membership changes via props
+  useEffect(() => {
+    setRequest({ state: 'idle' });
+  }, [membership, organizationId]);
+
   if (membership?.status === 'PENDING') {
     return (
       <p className={styles.note} role="status">
         <Icon name="check" size={16} strokeWidth={2.4} />
         {text.sent}
+      </p>
+    );
+  }
+
+  if (membership?.status === 'REJECTED') {
+    return (
+      <p className={styles.note} role="status">
+        {text.declined}
+      </p>
+    );
+  }
+
+  if (membership?.status === 'BANNED') {
+    return (
+      <p className={styles.note} role="status">
+        {text.banned}
       </p>
     );
   }
