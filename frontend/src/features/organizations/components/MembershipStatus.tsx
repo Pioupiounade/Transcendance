@@ -31,6 +31,11 @@ export function MembershipStatus({ organizationId, role, membership }: Membershi
   const location = useLocation();
   const [request, setRequest] = useState<Request>({ state: 'idle' });
 
+  // Reset local state if membership changes via props
+  useEffect(() => {
+    setRequest({ state: 'idle' });
+  }, [membership, organizationId]);
+
   if (membership?.status === 'PENDING') {
     return (
       <p className={styles.note} role="status">

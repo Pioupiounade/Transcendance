@@ -562,7 +562,8 @@ export class OrganizationmembersService {
 
         const membershipCreatedAt = targetMembership.created_at;
 
-        const banEventKey = targetMembership.updated_at.toISOString();
+        // Create a unique key for the ban event
+        const banEventKey = new Date().toISOString(); // Use current timestamp as a unique key for the ban event
 
         const bannedMembership = await this.prisma.$transaction(
             async (tx) => {
