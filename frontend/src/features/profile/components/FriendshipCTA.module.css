@@ -1,0 +1,45 @@
+.cta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+/* État de la relation : pilule neutre ; « Friends » en sauge. */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 46px;
+  padding: 0 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-btn);
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 600;
+}
+.friends {
+  border-color: transparent;
+  background: var(--sage-soft);
+  color: var(--sage-ink);
+}
+
+.error {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-basis: 100%;
+  justify-content: flex-end;
+  font-size: var(--caption);
+  font-weight: 600;
+  color: var(--danger);
+}
+
+@media (max-width: 760px) {
+  .cta,
+  .error {
+    justify-content: flex-start;
+  }
+}

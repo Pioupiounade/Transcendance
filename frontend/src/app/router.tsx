@@ -74,7 +74,12 @@ const router = createBrowserRouter([
           {
             element: <RequireActiveAccount />,
             children: [
-              { path: ROUTES.profile, element: <ProfilePage /> },
+              {
+                path: ROUTES.profile,
+                element: (
+                  <ProfilePage organizationPath={organizationPath} actionPath={actionDetailPath} homePath={ROUTES.home} />
+                ),
+              },
             ],
           },
         ],
@@ -84,7 +89,7 @@ const router = createBrowserRouter([
     element: <RequireActiveAccount />,
     children: [
       {
-        element: <RequireProfile />,
+        element: <RequireProfile profilePath={ROUTES.profile} />,
         children: [
           { index: true, element: <HomePage /> },
           { path: ROUTES.actions, element: <ActionsListPage /> },
@@ -112,7 +117,10 @@ const router = createBrowserRouter([
           },
 
           { path: ROUTES.actionDetail, element: <ActionDetailPage editPath={editActionPath} /> },
-          { path: ROUTES.publicProfile, element: <PublicProfilePage /> },
+          {
+            path: ROUTES.publicProfile,
+            element: <PublicProfilePage ownProfilePath={ROUTES.profile} messagePath={messageThreadPath} />,
+          },
 
           {
             element: <RequireAuth />,

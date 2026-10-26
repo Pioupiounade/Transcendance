@@ -31,8 +31,8 @@ export const NOTIFICATION_LABELS: Record<NotificationType, string> = {
   ORGANIZATION_OWNERSHIP_TRANSFERRED: 'Organization ownership transferred to you',
 };
 
-export async function getNotificationPreferences(): Promise<NotificationPreference[]> {
-  return http.get<NotificationPreference[]>('/notifications/preferences');
+export async function getNotificationPreferences(signal?: AbortSignal): Promise<NotificationPreference[]> {
+  return http.get<NotificationPreference[]>('/notifications/preferences', { signal });
 }
 
 export async function updateNotificationPreference(

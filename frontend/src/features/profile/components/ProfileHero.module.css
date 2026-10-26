@@ -1,0 +1,233 @@
+/* En-tête du profil (refonte) : bandeau pastel en dégradé (même grammaire que les couvertures d'ActionCard),
+   avatar à cheval sur le bandeau, pseudo en display léger, chiffres en tuiles. */
+.hero {
+  position: relative;
+  display: grid;
+  border: 1px solid var(--line);
+  border-radius: var(--r-card);
+  background: var(--ground);
+  overflow: hidden;
+}
+
+.cover {
+  position: relative;
+  height: 168px;
+  background: var(--cover-environment);
+  color: var(--tag-environment-ink);
+  overflow: hidden;
+}
+.cover::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 18% 12%, #ffffff8c, transparent 55%);
+  pointer-events: none;
+}
+.social .cover {
+  background: var(--cover-social);
+  color: var(--tag-social-ink);
+}
+.cultural .cover {
+  background: var(--cover-culture);
+  color: var(--tag-culture-ink);
+}
+
+/* L'icône de la famille en filigrane, à demi sortie du bandeau. */
+.watermark {
+  position: absolute;
+  right: 34px;
+  bottom: -30px;
+  opacity: 0.32;
+}
+
+/* Au-dessus du bandeau (positionné) pour que l'avatar le chevauche. */
+.identity {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 22px;
+  padding: 0 28px 24px;
+}
+
+.identity .avatar {
+  margin-top: -56px;
+  border-width: 5px;
+  box-shadow: var(--shadow-float);
+}
+
+.headText {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+  padding-top: 14px;
+}
+
+.eyebrow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  color: var(--terra);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1.8px;
+  text-transform: uppercase;
+}
+
+.visibility {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-tag);
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.name {
+  overflow-wrap: anywhere;
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 18px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.place {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.place > svg {
+  flex: none;
+}
+
+/* Présence : point + libellé, jamais la couleur seule. */
+.presence {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-weight: 600;
+}
+.dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--muted-soft);
+}
+.online {
+  color: var(--sage-ink);
+}
+.online .dot {
+  background: var(--logo-pin);
+  box-shadow: 0 0 0 3px var(--sage-soft);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 14px;
+}
+
+/* Chiffres : trois tuiles, la première (points) en citron pâle. */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 0 28px 28px;
+}
+
+.stat {
+  display: grid;
+  gap: 2px;
+  padding: 16px 18px;
+  border-radius: 20px;
+  background: var(--surface);
+}
+.stat:first-child {
+  background: var(--accent-soft);
+  color: var(--tag-culture-ink);
+}
+.stat dt {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.stat:first-child dt {
+  color: inherit;
+  opacity: 0.8;
+}
+.stat dd {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 500;
+  line-height: 1.1;
+  letter-spacing: -0.6px;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 760px) {
+  .cover {
+    height: 120px;
+  }
+  .watermark {
+    right: 18px;
+    bottom: -40px;
+  }
+  /* Empilé : l'avatar seul à cheval sur le bandeau, puis le pseudo en pleine largeur. */
+  .identity {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+    padding: 0 18px 18px;
+  }
+  .identity .avatar {
+    margin-top: -44px;
+    border-width: 4px;
+  }
+  .headText {
+    padding-top: 0;
+  }
+  .name {
+    font-size: 30px;
+  }
+  .actions {
+    justify-content: flex-start;
+    padding-top: 6px;
+  }
+  /* Deux colonnes : les points en pleine largeur, puis organisations et actions côte à côte. */
+  .stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    padding: 0 18px 18px;
+  }
+  .stat {
+    padding: 12px 14px;
+  }
+  .stat:first-child {
+    grid-column: 1 / -1;
+  }
+  .stat dt {
+    font-size: 10px;
+    letter-spacing: 0.8px;
+    overflow-wrap: normal;
+  }
+  .stat dd {
+    font-size: 22px;
+  }
+}

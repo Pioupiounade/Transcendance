@@ -1,0 +1,33 @@
+.wrap {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  max-width: 520px;
+  margin: 24px auto;
+  padding: 40px 28px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-card);
+  background: var(--ground);
+  text-align: center;
+}
+
+.icon {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 20px;
+  background: var(--trust-soft);
+  color: var(--brand);
+}
+
+.title {
+  font-size: 26px;
+  letter-spacing: -0.5px;
+}
+
+.body {
+  max-width: 40ch;
+  color: var(--muted);
+  font-size: 15px;
+}

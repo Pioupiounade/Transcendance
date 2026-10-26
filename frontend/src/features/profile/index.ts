@@ -1,11 +1,8 @@
+// Interface de la feature profile : mon profil, le profil public d'un voisin, la garde « profil créé ».
 export * from './types';
 export * from './api/profileApi';
-export * from './pages/ProfilePage';
-export * from './pages/PublicProfilePage';
 export * from './api/myProfile';
 export * from './api/notificationsApi';
+export { ProfilePage } from './pages/ProfilePage';
+export { PublicProfilePage } from './pages/PublicProfilePage';
 export { RequireProfile } from './components/RequireProfile';
-export {
-  getPublicProfile,
-  isUnavailablePublicProfile,
-} from './api/profileApi';
