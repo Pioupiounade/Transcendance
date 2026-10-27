@@ -179,10 +179,14 @@
   .topbar:has(.search) .brandName {
     display: none;
   }
-  /* 70 % de la colonne du milieu, 240 px max : l'air restant se répartit à égalité des deux côtés. */
+  /* 82 % de la colonne du milieu, 280 px max : l'air restant se répartit à égalité des deux côtés. Le champ
+     monte à 42 px, entre la cloche (44) et l'avatar (46). */
   .search {
     justify-self: center;
-    width: clamp(120px, 70%, 240px);
+    width: clamp(140px, 82%, 280px);
+  }
+  .search input {
+    height: 42px;
   }
   .actions {
     gap: 8px;
