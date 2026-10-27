@@ -709,6 +709,11 @@ export class OrganizationmembersService {
         });
 
         for (const manager of managers) {
+            this.realtimeGateway.emitOrganizationMembershipChanged(
+                manager.user_id,
+                organizationId,
+            );
+
             await this.notificationsService.notifyUser({
                 userId: manager.user_id,
                 type: NotificationType.ORGANIZATION_JOIN_REQUEST,
@@ -790,6 +795,14 @@ export class OrganizationmembersService {
             targetUserId,
             organizationId,
         );
+
+        await this.notificationsService.notifyUser({
+            userId: targetUserId,
+            type: NotificationType.ORGANIZATION_MEMBERSHIP_ACTIVATED,
+            title: 'Membership approved',
+            message: 'Your request to join the organization has been approved.',
+            link: `/organizations/${organizationId.toString()}`,
+        });
 
         return updatedMembership;
     }

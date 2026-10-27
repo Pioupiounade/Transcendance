@@ -39,6 +39,12 @@ export class RealtimeGateway
       });
   }
 
+  emitFriendshipChanged(recipientId: string, userId: string): void {
+    this.server
+      .to(`user:${recipientId}`)
+      .emit('friendship:changed', { userId });
+  }
+
   emitProfileUpdated(userId: string): void {
     void this.getFriendIds(userId)
       .then((friendIds) => {

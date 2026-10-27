@@ -85,6 +85,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
       );
     };
 
+    const handleFriendshipChanged = ({ userId }: { userId: string }) => {
+      window.dispatchEvent(
+        new CustomEvent('friendship:changed', {
+          detail: { userId },
+        }),
+      );
+    };
+
     const handleNewDirectMessage = (message: {
       message_id: string;
       sender_id: string;
@@ -124,6 +132,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     socket.on('direct-message:new', handleNewDirectMessage);
     socket.on('notification:new', handleNewNotification);
     socket.on('profile:updated', handleProfileUpdated);
+    socket.on('friendship:changed', handleFriendshipChanged);
 
     return () => {
       unsubscribe();
@@ -133,6 +142,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       socket.off('direct-message:new', handleNewDirectMessage);
       socket.off('notification:new', handleNewNotification);
       socket.off('profile:updated', handleProfileUpdated);
+      socket.off('friendship:changed', handleFriendshipChanged);
       socket.disconnect();
     };
   }, [snapshot.status]);

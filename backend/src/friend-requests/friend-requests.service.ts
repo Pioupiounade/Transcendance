@@ -3,12 +3,14 @@ import { PrismaService } from '../prisma/prisma.service';
 import { SendFriendRequestDto } from './dto/send-friend-request.dto';
 import { FriendRequestStatus, FriendshipStatus, AccountStatus, Prisma, NotificationType } from '../../generated/prisma/client';
 import { NotificationsService } from '../notifications/notifications.service';
+import { RealtimeGateway } from '../realtime/realtime.gateway';
 
 @Injectable()
 export class FriendRequestsService {
     constructor(
     private prisma: PrismaService,
     private notificationsService: NotificationsService,
+    private realtimeGateway: RealtimeGateway,
     ) {}
 
 private async getActiveUser(userId: string) {
@@ -140,6 +142,11 @@ private async getActiveUser(userId: string) {
             },
         );
 
+        this.realtimeGateway.emitFriendshipChanged(
+            sentRequest.addressee_id.toString(),
+            sentRequest.requester_id.toString(),
+        );
+
         await this.notificationsService.notifyUser({
            userId: sentRequest.addressee_id,
            type: NotificationType.FRIEND_REQUEST,
@@ -264,6 +271,20 @@ async acceptFriendRequest(currentUserId: string, requestId: string) {
 
     throw error;
     }
+
+    this.realtimeGateway.emitFriendshipChanged(
+        request.requester_id.toString(),
+        currentUserId,
+    );
+
+    await this.notificationsService.notifyUser({
+        userId: request.requester_id,
+        type: NotificationType.FRIEND_REQUEST,
+        title: 'Friend request accepted',
+        message: 'Your friend request has been accepted.',
+        link: `/profiles/${currentUserId}`,
+    });
+
     return {
     ...updatedRequest,
     friend_request_id: updatedRequest.friend_request_id.toString(),
@@ -304,6 +325,11 @@ async rejectFriendRequest(currentUserId: string, requestId: string) {
         },
     });
 
+    this.realtimeGateway.emitFriendshipChanged(
+        request.requester_id.toString(),
+        currentUserId,
+    );
+
     return {
         ...updatedRequest,
         friend_request_id: updatedRequest.friend_request_id.toString(),
@@ -314,37 +340,42 @@ async rejectFriendRequest(currentUserId: string, requestId: string) {
 
 // Annuler une demande d'ami envoyée
 async cancelFriendRequest(currentUserId: string, requestId: string) {
-  const user = await this.getActiveUser(currentUserId);
+    const user = await this.getActiveUser(currentUserId);
 
-  const request = await this.prisma.friendRequest.findUnique({
-    where: {
-      friend_request_id: BigInt(requestId),
-    },
-  });
+    const request = await this.prisma.friendRequest.findUnique({
+        where: {
+        friend_request_id: BigInt(requestId),
+        },
+    });
 
-  if (!request) {
-    throw new NotFoundException('Friend request not found');
-  }
+    if (!request) {
+        throw new NotFoundException('Friend request not found');
+    }
 
-  if (request.status !== FriendRequestStatus.PENDING) {
-    throw new BadRequestException(
-      'This friend request can no longer be cancelled',
+    if (request.status !== FriendRequestStatus.PENDING) {
+        throw new BadRequestException(
+        'This friend request can no longer be cancelled',
+        );
+    }
+
+    if (request.requester_id !== user.user_id) {
+        throw new ForbiddenException(
+        'Only the sender can cancel this friend request',
+        );
+    }
+
+    await this.prisma.friendRequest.delete({
+        where: {
+        friend_request_id: BigInt(requestId),
+        },
+    });
+
+    this.realtimeGateway.emitFriendshipChanged(
+        request.addressee_id.toString(),
+        currentUserId,
     );
-  }
 
-  if (request.requester_id !== user.user_id) {
-    throw new ForbiddenException(
-      'Only the sender can cancel this friend request',
-    );
-  }
-
-  await this.prisma.friendRequest.delete({
-    where: {
-      friend_request_id: BigInt(requestId),
-    },
-  });
-
-  return { success: true };
+    return { success: true };
 }
 
 //Voir mes demandes d'ami envoyees

@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router';
 import { ROLE_APP, useAuth } from '@/features/auth';
 import { useResource } from '@/shared/hooks/useResource';
@@ -126,6 +126,32 @@ function Dashboard({ loaded }: { loaded: Organization }) {
 
   // Réponses du backend depuis le chargement : adhésion modifiée, ou `null` quand le membre a été retiré.
   const [changes, setChanges] = useState<Record<string, Membership | null>>({});
+
+  useEffect(() => {
+    const handleMembershipChanged = (event: Event) => {
+      const { organizationId } = (
+        event as CustomEvent<{ organizationId: string }>
+      ).detail;
+
+      if (String(organizationId) !== id) return;
+
+      setChanges({});
+      void memberships.reload();
+    };
+
+    window.addEventListener(
+      'organization:membership-changed',
+      handleMembershipChanged,
+    );
+
+    return () => {
+      window.removeEventListener(
+        'organization:membership-changed',
+        handleMembershipChanged,
+      );
+    };
+  }, [id, memberships.reload]);
+
   const [edited, setEdited] = useState<Organization | null>(null);
   const [managing, setManaging] = useState<OrganizationMember | null>(null);
   const [confirmation, setConfirmation] = useState<Confirmation | null>(null);
