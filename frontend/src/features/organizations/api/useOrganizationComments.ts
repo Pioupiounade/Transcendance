@@ -36,7 +36,12 @@ export function useOrganizationComments(organizationId: string) {
   }, [organizationId, reloadResource]);
 
   const current = local.organizationId === organizationId ? local : null;
-  const all = data === null ? [] : current && current.added.length > 0 ? [...current.added, ...data] : data;
+  const added = current?.added ?? [];
+  const addedIds = new Set(added.map((comment) => comment.comment_id));
+
+  const all = data === null
+    ? []
+    : [...added, ...data.filter((comment) => !addedIds.has(comment.comment_id))];
   const comments =
     current && current.removed.length > 0 ? all.filter((comment) => !current.removed.includes(comment.comment_id)) : all;
   return { comments, loading, error, reload, prepend, remove };

@@ -1,8 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ApiError } from '@/shared/api';
 import type { DirectMessage } from '../types';
-import { fetchThread, sendDirectMessage } from './messagesApi';
-
+import {
+  MESSAGES_READ_EVENT,
+  fetchThread,
+  sendDirectMessage,
+} from './messagesApi';
 const POLL_INTERVAL_MS = 5_000;
 
 type Snapshot = { friendId: string; messages: DirectMessage[] };
@@ -25,6 +28,7 @@ export function useThread(friendId: string) {
         if (controller.signal.aborted) return;
         setSnapshot({ friendId, messages });
         setError(null);
+        window.dispatchEvent(new Event(MESSAGES_READ_EVENT));
       })
       .catch((cause: unknown) => {
         if (!controller.signal.aborted) setError(toApiError(cause));

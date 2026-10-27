@@ -27,6 +27,11 @@ export class DirectMessagesController {
 		};
 	}
 
+	@Get('unread-count')
+	async getUnreadCount(@Req() req: any) {
+		return this.dmService.countUnreadMessages(BigInt(req.user.id));
+	}
+
 	@Get(':friendId')
 	async getMessages(
 		@Req() req: any,

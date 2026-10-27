@@ -170,6 +170,18 @@ export function AuthProvider({ children }: AuthProviderProps) {
       );
     };
 
+    const handleOrganizationCommentsChanged = ({
+      organizationId,
+    }: {
+      organizationId: string;
+    }) => {
+      window.dispatchEvent(
+        new CustomEvent('organization:comments-changed', {
+          detail: { organizationId },
+        }),
+      );
+    };
+
     socket.on('presence:online', handleOnline);
     socket.on('presence:offline', handleOffline);
     socket.on('organization:membership-changed', handleMembershipChanged);
@@ -181,6 +193,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     socket.on('action:participants-changed', handleActionParticipantsChanged);
     socket.on('action:comments-changed', handleActionCommentsChanged);
     socket.on('action:updated', handleActionUpdated);
+    socket.on('organization:comments-changed', handleOrganizationCommentsChanged);
 
     return () => {
       unsubscribe();
@@ -195,6 +208,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       socket.off('action:participants-changed', handleActionParticipantsChanged);
       socket.off('action:comments-changed', handleActionCommentsChanged);
       socket.off('action:updated', handleActionUpdated);
+      socket.off('organization:comments-changed', handleOrganizationCommentsChanged);
       socket.disconnect();
     };
   }, [snapshot.status]);

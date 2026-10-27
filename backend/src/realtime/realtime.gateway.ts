@@ -75,6 +75,10 @@ export class RealtimeGateway
     this.server.emit('action:updated', { actionId });
   }
 
+  emitOrganizationCommentsChanged(organizationId: string): void {
+    this.server.emit('organization:comments-changed', { organizationId });
+  }
+
   constructor(
     private readonly jwtService: JwtService,
     private readonly prisma: PrismaService,

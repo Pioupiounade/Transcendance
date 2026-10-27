@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { MESSAGES_READ_EVENT, fetchUnreadMessageNotifications } from './messagesApi';
+import { MESSAGES_READ_EVENT, fetchUnreadMessageCount } from './messagesApi';
 
 const POLL_INTERVAL_MS = 30_000;
 
@@ -14,9 +14,9 @@ export function useUnreadMessages(): number {
       latestRequest.current?.abort();
       const controller = new AbortController();
       latestRequest.current = controller;
-      fetchUnreadMessageNotifications(controller.signal)
-        .then((unread) => {
-          if (!disposed && !controller.signal.aborted) setCount(unread.length);
+      fetchUnreadMessageCount(controller.signal)
+        .then(({ count }) => {
+          if (!disposed && !controller.signal.aborted) setCount(count);
         })
         .catch(() => undefined);
     };

@@ -480,6 +480,8 @@ export class ActionsService {
       );
     }
 
+    this.realtimeGateway.emitActionUpdated(id);
+
     // 5. Formatage de la réponse pour le frontend
     return {
       ...updatedAction,
@@ -1005,6 +1007,8 @@ export class ActionsService {
       },
     });
 
+    this.realtimeGateway.emitActionUpdated(id);
+
     return this.serializeAction(updatedAction);
   }
 
@@ -1038,6 +1042,9 @@ export class ActionsService {
         }
       },
     });
+
+    this.realtimeGateway.emitActionUpdated(id);
+    
     return this.serializeAction(updatedAction);
   }
 

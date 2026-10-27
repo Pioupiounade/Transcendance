@@ -31,11 +31,18 @@
   position: absolute;
   top: 1px;
   right: 1px;
-  width: 12px;
-  height: 12px;
+  display: grid;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 3px;
   border: 2px solid var(--ground);
-  border-radius: 50%;
+  border-radius: 999px;
   background: var(--accent);
+  color: var(--ink);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
 }
 
 /* Hors téléphone (≥ 761 px) : la pastille quitte l'en-tête pour une bulle noire flottante en bas à droite, façon

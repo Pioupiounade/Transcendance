@@ -1,6 +1,10 @@
 import { http } from '@/shared/api';
 import type { DirectMessage } from '../types';
 
+
+export const fetchUnreadMessageCount = (signal?: AbortSignal) =>
+  http.get<{ count: number }>('/direct-messages/unread-count', { signal });
+
 /** Le fil avec un ami, du plus ancien au plus récent ; le backend marque lus les messages reçus (§18). */
 export const fetchThread = (friendId: string, signal?: AbortSignal) =>
   http.get<DirectMessage[]>(`/direct-messages/${friendId}`, { signal });

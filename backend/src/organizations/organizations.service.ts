@@ -684,6 +684,10 @@ export class OrganizationsService {
           return createdComment;
         }
 
+        this.realtimeGateway.emitOrganizationCommentsChanged(
+          organizationId.toString(),
+        );
+
         const managers = await this.prisma.organizationMember.findMany({
           where: {
             organization_id: organizationId,
@@ -782,6 +786,10 @@ export class OrganizationsService {
     await this.prisma.organizationComment.delete({
       where: { comment_id: commentId },
     });
+
+    this.realtimeGateway.emitOrganizationCommentsChanged(
+      comment.organization_id.toString(),
+    );
 
     return { message: 'Comment deleted successfully' };
   }

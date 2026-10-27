@@ -161,4 +161,15 @@ export class DirectMessagesService {
 			this.logger.error('Error occurred while purging old direct messages:', error);
 		}
 	}
+
+	async countUnreadMessages(userId: bigint) {
+		const count = await this.prisma.directMessage.count({
+			where: {
+			receiver_id: userId,
+			is_read: false,
+			},
+		});
+
+		return { count };
+	}
 }
