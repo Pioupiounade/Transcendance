@@ -148,7 +148,7 @@ export type OrganizationCommentPostResult =
   | OrganizationComment
   | {
       success: false;
-      code: 'NOT_ACTIVE_MEMBER' | 'ACCOUNT_NOT_ACTIVE';
+      code: 'NOT_ACTIVE_MEMBER' | 'ACCOUNT_NOT_ACTIVE' | 'ORGANIZATION_INACTIVE';
       message: string;
     };
 

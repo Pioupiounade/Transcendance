@@ -63,6 +63,18 @@ export class RealtimeGateway
     this.server.emit('organization:updated', { organizationId });
   }
 
+  emitActionParticipantsChanged(actionId: string): void {
+    this.server.emit('action:participants-changed', { actionId });
+  }
+
+  emitActionCommentsChanged(actionId: string): void {
+    this.server.emit('action:comments-changed', { actionId });
+  }
+
+  emitActionUpdated(actionId: string): void {
+    this.server.emit('action:updated', { actionId });
+  }
+
   constructor(
     private readonly jwtService: JwtService,
     private readonly prisma: PrismaService,

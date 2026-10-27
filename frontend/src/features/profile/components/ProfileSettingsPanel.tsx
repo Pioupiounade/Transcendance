@@ -32,6 +32,7 @@ const NOTIFICATION_TYPES: readonly NotificationType[] = [
   'ORGANIZATION_OWNERSHIP_TRANSFERRED',
   'ORGANIZATION_MEMBER_LEFT',
   'ORGANIZATION_ROLE_CHANGED',
+  'ACTION_PARTICIPATION_CHANGED',
 ];
 
 type Preferences = Partial<Record<NotificationType, boolean>>;

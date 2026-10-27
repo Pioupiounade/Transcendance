@@ -12,7 +12,8 @@ export type NotificationType =
   | 'NEW_MESSAGE'
   | 'ORGANIZATION_OWNERSHIP_TRANSFERRED'
   | 'ORGANIZATION_MEMBER_LEFT'
-  | 'ORGANIZATION_ROLE_CHANGED';
+  | 'ORGANIZATION_ROLE_CHANGED'
+  | 'ACTION_PARTICIPATION_CHANGED';
 
 export interface NotificationPreference {
   user_id: string;
@@ -33,6 +34,8 @@ export const NOTIFICATION_LABELS: Record<NotificationType, string> = {
   ORGANIZATION_OWNERSHIP_TRANSFERRED: 'Organization ownership transferred to you',
   ORGANIZATION_MEMBER_LEFT: 'Members leaving organizations',
   ORGANIZATION_ROLE_CHANGED: 'Organization role changes',
+  ACTION_PARTICIPATION_CHANGED: 'Action participation changes',
+  
 };
 
 export async function getNotificationPreferences(signal?: AbortSignal): Promise<NotificationPreference[]> {

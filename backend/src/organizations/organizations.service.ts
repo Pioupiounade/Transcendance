@@ -286,6 +286,8 @@ export class OrganizationsService {
       },
     });
 
+    this.realtimeGateway.emitOrganizationUpdated(id);
+
     return {
       ...updatedOrganization,
       organization_id: updatedOrganization.organization_id.toString(),
@@ -356,6 +358,8 @@ export class OrganizationsService {
         organization_status: OrganizationStatus.CLOSED,
       },
     });
+
+    this.realtimeGateway.emitOrganizationUpdated(id);
 
     return {
       ...updatedOrganization,
@@ -451,6 +455,8 @@ export class OrganizationsService {
         organization_status: OrganizationStatus.ACTIVE,
       },
     });
+
+    this.realtimeGateway.emitOrganizationUpdated(id);
 
     return {
       ...updatedOrganization,
@@ -618,6 +624,22 @@ export class OrganizationsService {
       try {
         const createdComment = await this.prisma.$transaction(
           async (tx) => {
+            const currentOrganization = await tx.organization.findUnique({
+              where: { organization_id: organizationId },
+              select: { organization_status: true },
+            });
+
+            if (!currentOrganization) {
+              throw new NotFoundException('Organization not found');
+            }
+
+            if (currentOrganization.organization_status !== OrganizationStatus.ACTIVE) {
+              return {
+                success: false as const,
+                code: 'ORGANIZATION_INACTIVE' as const,
+                message: 'Comments are disabled while the organization is inactive.',
+              };
+            }
             const lastComment = await tx.organizationComment.findFirst({
               where: { user_id: userId },
               orderBy: { created_at: 'desc' },
@@ -657,6 +679,10 @@ export class OrganizationsService {
           },
           { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
         );
+
+        if ('success' in createdComment) {
+          return createdComment;
+        }
 
         const managers = await this.prisma.organizationMember.findMany({
           where: {

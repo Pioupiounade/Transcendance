@@ -279,8 +279,9 @@ export function OrganizationPage({ listPath, upcomingActionPath, managePath }: O
               <OrganizationComments
                 organizationId={organization.organization_id}
                 creatorId={organization.creator_id}
-                canComment={membership.membership?.status === 'ACTIVE'}
-              />
+                canComment={
+                  !inactive && membership.membership?.status === 'ACTIVE'
+                }              />
             </div>
           </div>
         </>

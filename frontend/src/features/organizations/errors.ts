@@ -50,6 +50,12 @@ export const toCommentErrorMessage = (error: unknown): string => {
   if (error instanceof CommentSubmissionError) {
     return t.notAllowed;
   }
+  if (
+    error instanceof CommentSubmissionError &&
+    error.code === 'ORGANIZATION_INACTIVE'
+  ) {
+    return 'Comments are disabled while the organization is inactive.';
+  }
   if (!isApiError(error)) return t.unknown;
   if (error.isNetwork) return t.network;
   if (error.status === 401) return t.signedOut;

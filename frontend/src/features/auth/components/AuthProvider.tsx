@@ -138,6 +138,38 @@ export function AuthProvider({ children }: AuthProviderProps) {
       );
     };
 
+    const handleActionParticipantsChanged = ({
+      actionId,
+    }: {
+      actionId: string;
+    }) => {
+      window.dispatchEvent(
+        new CustomEvent('action:participants-changed', {
+          detail: { actionId },
+        }),
+      );
+    };
+
+    const handleActionCommentsChanged = ({
+      actionId,
+    }: {
+      actionId: string;
+    }) => {
+      window.dispatchEvent(
+        new CustomEvent('action:comments-changed', {
+          detail: { actionId },
+        }),
+      );
+    };
+
+    const handleActionUpdated = ({ actionId }: { actionId: string }) => {
+      window.dispatchEvent(
+        new CustomEvent('action:updated', {
+          detail: { actionId },
+        }),
+      );
+    };
+
     socket.on('presence:online', handleOnline);
     socket.on('presence:offline', handleOffline);
     socket.on('organization:membership-changed', handleMembershipChanged);
@@ -146,6 +178,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
     socket.on('profile:updated', handleProfileUpdated);
     socket.on('friendship:changed', handleFriendshipChanged);
     socket.on('organization:updated', handleOrganizationUpdated);
+    socket.on('action:participants-changed', handleActionParticipantsChanged);
+    socket.on('action:comments-changed', handleActionCommentsChanged);
+    socket.on('action:updated', handleActionUpdated);
 
     return () => {
       unsubscribe();
@@ -157,6 +192,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
       socket.off('profile:updated', handleProfileUpdated);
       socket.off('friendship:changed', handleFriendshipChanged);
       socket.off('organization:updated', handleOrganizationUpdated);
+      socket.off('action:participants-changed', handleActionParticipantsChanged);
+      socket.off('action:comments-changed', handleActionCommentsChanged);
+      socket.off('action:updated', handleActionUpdated);
       socket.disconnect();
     };
   }, [snapshot.status]);
