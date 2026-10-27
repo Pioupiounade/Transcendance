@@ -126,6 +126,18 @@ export function AuthProvider({ children }: AuthProviderProps) {
       socket.connect();
     });
 
+    const handleOrganizationUpdated = ({
+      organizationId,
+    }: {
+      organizationId: string;
+    }) => {
+      window.dispatchEvent(
+        new CustomEvent('organization:updated', {
+          detail: { organizationId },
+        }),
+      );
+    };
+
     socket.on('presence:online', handleOnline);
     socket.on('presence:offline', handleOffline);
     socket.on('organization:membership-changed', handleMembershipChanged);
@@ -133,6 +145,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     socket.on('notification:new', handleNewNotification);
     socket.on('profile:updated', handleProfileUpdated);
     socket.on('friendship:changed', handleFriendshipChanged);
+    socket.on('organization:updated', handleOrganizationUpdated);
 
     return () => {
       unsubscribe();
@@ -143,6 +156,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       socket.off('notification:new', handleNewNotification);
       socket.off('profile:updated', handleProfileUpdated);
       socket.off('friendship:changed', handleFriendshipChanged);
+      socket.off('organization:updated', handleOrganizationUpdated);
       socket.disconnect();
     };
   }, [snapshot.status]);

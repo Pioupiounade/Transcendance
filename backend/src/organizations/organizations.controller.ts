@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Param, Patch, Query, Req, UseGuards, Delete } from '@nestjs/common';
+import { Body, Controller, Get, Post, Param, Patch, Query, Req, UseGuards, Delete, BadRequestException } from '@nestjs/common';
 import { OrganizationsService } from './organizations.service';
 import { CreateOrganizationDto } from './dto/create-organization.dto';
 import { UpdateOrganizationDto } from './dto/update-organization.dto';
@@ -133,4 +133,27 @@ export class OrganizationsController {
   ) {
     return this.organizationsService.deleteComment(BigInt(commentId), BigInt(req.user.id));
   }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch(':id/reopen-with-owner')
+  reopenWithOwner(
+    @Param('id') id: string,
+    @Body() body: { newOwnerId?: unknown },
+    @Req() req: any,
+  ) {
+    if (
+      !/^[1-9]\d*$/.test(id) ||
+      typeof body?.newOwnerId !== 'string' ||
+      !/^[1-9]\d*$/.test(body.newOwnerId)
+    ) {
+      throw new BadRequestException('Invalid organization or user ID');
+    }
+
+    return this.organizationsService.reopenWithOwner(
+      id,
+      req.user.id,
+      body.newOwnerId,
+    );
+  }
+
 }

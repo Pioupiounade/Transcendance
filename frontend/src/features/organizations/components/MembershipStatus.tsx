@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useLocation } from 'react-router';
 import { AUTH_ROUTES, useAuth } from '@/features/auth';
 import { Button, ButtonLink, Icon } from '@/shared/ui';
-import { joinOrganization } from '../api/organizationsApi';
+import { joinOrganization, leaveOrganization } from '../api/organizationsApi';
 import { toJoinFailure, type JoinFailure } from '../errors';
 import { ORGANIZATIONS_LABELS } from '../labels';
 import type { MemberStatus, RoleOrg } from '../types';
@@ -15,6 +15,9 @@ type MembershipStatusProps = {
     status: MemberStatus;
     role: RoleOrg;
   } | null;
+  canLeave: boolean;
+  hasOtherMembers: boolean;
+  onLeft: (organizationClosed: boolean) => void;
 };
 
 type Request = { state: 'idle' | 'sending' | 'sent' } | JoinFailure;
@@ -26,11 +29,51 @@ const text = ORGANIZATIONS_LABELS.membership;
  * Le backend ne laisse pas un demandeur lire sa demande : après un rechargement le bouton revient, et c'est la
  * réponse au second clic (409) qui dit « en attente », « refusée » ou « déjà membre ».
  */
-export function MembershipStatus({ organizationId, role, membership }: MembershipStatusProps) {
+export function MembershipStatus({
+    organizationId,
+    role,
+    membership,
+    canLeave,
+    hasOtherMembers,
+    onLeft,
+  }: MembershipStatusProps) {
   const { status } = useAuth();
   const location = useLocation();
   const [request, setRequest] = useState<Request>({ state: 'idle' });
+  const [leaving, setLeaving] = useState(false);
+  const [leaveError, setLeaveError] = useState<string | null>(null);
+ 
+  const leave = async () => {
+    setLeaveError(null);
 
+    if (role === 'OWNER' && hasOtherMembers) {
+      setLeaveError(
+        'Transfer ownership to another member before leaving.',
+      );
+      return;
+    }
+
+    const message =
+      role === 'OWNER'
+        ? 'You are the last member. Leaving will close this organization. Continue?'
+        : 'Are you sure you want to leave this organization?';
+
+    if (!window.confirm(message)) return;
+
+    setLeaving(true);
+
+    try {
+      const result = await leaveOrganization(organizationId);
+      setRequest({ state: 'idle' });
+      onLeft(result.organizationClosed);
+    } catch {
+      setLeaveError(
+        'Unable to leave the organization. Its membership may have changed; refresh and try again.',
+      );
+    } finally {
+      setLeaving(false);
+    }
+  };
   if (membership?.status === 'PENDING') {
     return (
       <p className={styles.note} role="status">
@@ -58,10 +101,28 @@ export function MembershipStatus({ organizationId, role, membership }: Membershi
 
   if (role) {
     return (
-      <p className={styles.badge}>
-        <Icon name="check" size={16} strokeWidth={2.4} />
-        {text.roles[role]}
-      </p>
+      <div className={styles.join}>
+        <p className={styles.badge}>
+          <Icon name="check" size={16} strokeWidth={2.4} />
+          {text.roles[role]}
+        </p>
+
+        {canLeave && (
+          <Button
+            variant="secondary"
+            onClick={() => void leave()}
+            disabled={leaving}
+          >
+            {leaving ? 'Leaving…' : 'Leave organization'}
+          </Button>
+        )}
+
+        {leaveError && (
+          <p className={styles.error} role="alert">
+            {leaveError}
+          </p>
+        )}
+      </div>
     );
   }
   if (status === 'loading') return null;

@@ -62,9 +62,7 @@ const byRoleThenName = (a: OrganizationMember, b: OrganizationMember) =>
 export function OrganizationManagePage({ organizationPath }: OrganizationManagePageProps) {
   const { id = '' } = useParams<{ id: string }>();
   const { user } = useAuth();
-
   const loaded = useOrganization(id);
-
   const organizationAvailable =
     !loaded.loading &&
     loaded.organization != null &&
@@ -75,6 +73,30 @@ export function OrganizationManagePage({ organizationPath }: OrganizationManageP
     id,
     organizationAvailable,
   );
+
+  useEffect(() => {
+    const handleMembershipChanged = (event: Event) => {
+      const { organizationId } = (
+        event as CustomEvent<{ organizationId: string }>
+      ).detail;
+
+      if (organizationId !== id) return;
+
+      members.reload();
+    };
+
+    window.addEventListener(
+      'organization:membership-changed',
+      handleMembershipChanged,
+    );
+
+    return () => {
+      window.removeEventListener(
+        'organization:membership-changed',
+        handleMembershipChanged,
+      );
+    };
+  }, [id, members.reload]);
 
   const backTo = organizationPath(id);
   const myRole = members.members.find((member) => member.user_id === user?.user_id)?.role ?? null;
@@ -126,32 +148,6 @@ function Dashboard({ loaded }: { loaded: Organization }) {
 
   // Réponses du backend depuis le chargement : adhésion modifiée, ou `null` quand le membre a été retiré.
   const [changes, setChanges] = useState<Record<string, Membership | null>>({});
-
-  useEffect(() => {
-    const handleMembershipChanged = (event: Event) => {
-      const { organizationId } = (
-        event as CustomEvent<{ organizationId: string }>
-      ).detail;
-
-      if (String(organizationId) !== id) return;
-
-      setChanges({});
-      void memberships.reload();
-    };
-
-    window.addEventListener(
-      'organization:membership-changed',
-      handleMembershipChanged,
-    );
-
-    return () => {
-      window.removeEventListener(
-        'organization:membership-changed',
-        handleMembershipChanged,
-      );
-    };
-  }, [id, memberships.reload]);
-
   const [edited, setEdited] = useState<Organization | null>(null);
   const [managing, setManaging] = useState<OrganizationMember | null>(null);
   const [confirmation, setConfirmation] = useState<Confirmation | null>(null);

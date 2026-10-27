@@ -59,6 +59,10 @@ export class RealtimeGateway
       });
   }
 
+  emitOrganizationUpdated(organizationId: string): void {
+    this.server.emit('organization:updated', { organizationId });
+  }
+
   constructor(
     private readonly jwtService: JwtService,
     private readonly prisma: PrismaService,

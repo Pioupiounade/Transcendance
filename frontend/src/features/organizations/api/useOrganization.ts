@@ -11,7 +11,7 @@ export function useOrganization(id: string) {
     [id],
   );
 
-  const { data, loading, error } = useResource(load);
+  const { data, loading, error, reload } = useResource(load);
 
   return {
     organization: data,
@@ -20,6 +20,7 @@ export function useOrganization(id: string) {
       !loading &&
       (data == null || error?.status === 404),
     error: error && error.status !== 404 ? error : null,
+    reload,
   };
 }
 

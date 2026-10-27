@@ -1,9 +1,10 @@
-import { Injectable, NotFoundException, BadRequestException, ForbiddenException, HttpException, HttpStatus } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ForbiddenException, HttpException, HttpStatus, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateOrganizationDto } from './dto/create-organization.dto';
 import { UpdateOrganizationDto } from './dto/update-organization.dto';
 import { AccountStatus, RoleApp, RoleOrg, MemberStatus, OrganizationStatus, Prisma, NotificationType } from '../../generated/prisma/client';
 import { NotificationsService } from '../notifications/notifications.service';
+import { RealtimeGateway } from '../realtime/realtime.gateway';
 
 @Injectable()
 export class OrganizationsService {
@@ -11,6 +12,7 @@ export class OrganizationsService {
   constructor(
     private prisma: PrismaService,
     private notificationsService: NotificationsService,
+    private realtimeGateway: RealtimeGateway,
   ) { }
 
   //1. recuperer toutes les organisations
@@ -414,6 +416,20 @@ export class OrganizationsService {
     }
 
     else if (organization.organization_status === OrganizationStatus.CLOSED) {
+      const activeOwner = await this.prisma.organizationMember.findFirst({
+        where: {
+          organization_id: BigInt(id),
+          status: MemberStatus.ACTIVE,
+          role: RoleOrg.OWNER,
+        },
+      });
+
+      if (!activeOwner) {
+        throw new ConflictException(
+          'An organization without an owner requires administrator reassignment',
+        );
+      }
+
       if (!isAdmin && !isCreator && !isManagerOrOwner) {
         throw new ForbiddenException(
           'You are not allowed to reactivate this organization',
@@ -441,6 +457,119 @@ export class OrganizationsService {
       organization_id: updatedOrganization.organization_id.toString(),
       creator_id: updatedOrganization.creator_id.toString(),
     };
+  }
+
+  async reopenWithOwner(
+    organizationId: string,
+    adminId: string,
+    newOwnerId: string,
+  ) {
+    try {
+      const result = await this.prisma.$transaction(
+        async (tx) => {
+          const admin = await tx.user.findUnique({
+            where: { user_id: BigInt(adminId) },
+          });
+
+          if (
+            !admin ||
+            admin.account_status !== AccountStatus.ACTIVE ||
+            admin.role !== RoleApp.ADMIN
+          ) {
+            throw new ForbiddenException(
+              'Only an active administrator can perform this action',
+            );
+          }
+
+          const organization = await tx.organization.findUnique({
+            where: { organization_id: BigInt(organizationId) },
+          });
+
+          if (!organization) {
+            throw new NotFoundException('Organization not found');
+          }
+
+          if (organization.organization_status !== OrganizationStatus.CLOSED) {
+            throw new BadRequestException('Organization is not closed');
+          }
+
+          const existingOwner = await tx.organizationMember.findFirst({
+            where: {
+              organization_id: BigInt(organizationId),
+              status: MemberStatus.ACTIVE,
+              role: RoleOrg.OWNER,
+            },
+          });
+
+          if (existingOwner) {
+            throw new ConflictException(
+              'This organization already has an active owner',
+            );
+          }
+
+          const newOwner = await tx.user.findUnique({
+            where: { user_id: BigInt(newOwnerId) },
+          });
+
+          if (!newOwner || newOwner.account_status !== AccountStatus.ACTIVE) {
+            throw new BadRequestException(
+              'The new owner must be an active user',
+            );
+          }
+
+          const existingMembership = await tx.organizationMember.findUnique({
+            where: {
+              organization_id_user_id: {
+                organization_id: BigInt(organizationId),
+                user_id: BigInt(newOwnerId),
+              },
+            },
+          });
+
+          if (existingMembership) {
+            throw new ConflictException(
+              'The selected user already has a membership in this organization',
+            );
+          }
+
+          await tx.organizationMember.create({
+            data: {
+              organization_id: BigInt(organizationId),
+              user_id: BigInt(newOwnerId),
+              role: RoleOrg.OWNER,
+              status: MemberStatus.ACTIVE,
+              validated_by_org_man: true,
+              validated_at: new Date(),
+            },
+          });
+
+          await tx.organization.update({
+            where: { organization_id: BigInt(organizationId) },
+            data: { organization_status: OrganizationStatus.ACTIVE },
+          });
+
+          return { success: true };
+        },
+        {
+          isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+        },
+      );
+
+      this.realtimeGateway.emitOrganizationUpdated(organizationId);
+        return result;
+
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2034'
+      ) {
+        throw new ConflictException(
+          'The organization changed. Please refresh and try again.',
+        );
+      }
+
+      throw error;
+    }
   }
 
   // Comments
