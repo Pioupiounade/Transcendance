@@ -12,15 +12,23 @@ import { NAV_ITEMS } from './navItems';
 import { GlobalSearch } from '../components/GlobalSearch';
 import styles from './AppHeader.module.css';
 
-/** Même seuil que `AppHeader.module.css` : en dessous, le menu du compte remplace les pastilles de droite. */
+/** Mêmes seuils que `AppHeader.module.css` : sous 1320 px la recherche prend la colonne du milieu (la nav est dans la
+ * barre basse) ; sous 761 px le menu du compte remplace les pastilles de droite. */
+const COMPACT_QUERY = '(max-width: 1319px)';
 const PHONE_QUERY = '(max-width: 760px)';
 
 export function AppHeader() {
   const { status, user, signOut } = useAuth();
   const location = useLocation();
+  const compact = useMediaQuery(COMPACT_QUERY);
   const phone = useMediaQuery(PHONE_QUERY);
   const links = NAV_ITEMS.filter((item) => item.to !== ROUTES.profile);
   const admin = user?.role === ROLE_APP.ADMIN;
+  const search = status === 'authenticated' && (
+    <div className={styles.search}>
+      <GlobalSearch />
+    </div>
+  );
 
   return (
     <header className={styles.topbar}>
@@ -38,12 +46,11 @@ export function AppHeader() {
         ))}
       </nav>
 
+      {/* Sous 1320 px : la recherche quitte le bloc de droite pour la colonne centrale, entourée d'air. */}
+      {compact && search}
+
       <div className={styles.actions}>
-        {status === 'authenticated' && (
-          <div className={styles.search}>
-            <GlobalSearch />
-          </div>
-        )}
+        {!compact && search}
         {status === 'authenticated' && !phone && admin && (
           <NavLink to={ROUTES.admin} className={styles.adminLink}>
             <Icon name="shield" size={18} />
