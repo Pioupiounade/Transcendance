@@ -65,11 +65,22 @@ const send = async (method: Method, path: string, body: Body | undefined, option
   }
 };
 
-// Un seul refresh à la fois : les 401 concurrents attendent la même promesse.
+// Le backend fait tourner le refresh token à chaque refresh : deux refreshs simultanés, et le second est
+// refusé (déconnexion). Dans l'onglet, un seul refresh à la fois : les 401 concurrents attendent la même
+// promesse. Entre onglets, un verrou Web Locks (absent hors contexte sécurisé : on garde la file locale).
+const REFRESH_LOCK = 'pioupiounades.refresh';
 let refreshing: Promise<boolean> | null = null;
 
+const withRefreshLock = (task: () => Promise<boolean>): Promise<boolean> => {
+  if (typeof navigator === 'undefined' || !navigator.locks) return task();
+  // `task` ne rejette jamais : un rejet vient du gestionnaire de verrous lui-même (iframe sandbox, origine opaque).
+  return navigator.locks.request(REFRESH_LOCK, task).catch(() => task());
+};
+
 const refreshSession = (): Promise<boolean> => {
-  refreshing ??= (async () => {
+  refreshing ??= withRefreshLock(async () => {
+    // Le verrou obtenu, un autre onglet a pu rafraîchir pendant l'attente : on repart de son token.
+    session.syncFromStorage();
     const refreshToken = session.refreshToken;
     if (refreshToken === null) return false;
     try {
@@ -80,10 +91,10 @@ const refreshSession = (): Promise<boolean> => {
       return true;
     } catch {
       return false;
-    } finally {
-      refreshing = null;
     }
-  })();
+  }).finally(() => {
+    refreshing = null;
+  });
   return refreshing;
 };
 
@@ -93,9 +104,9 @@ const NO_REFRESH = new Set([`${AUTH_PREFIX}/login`, `${AUTH_PREFIX}/register`, `
 const request = async <T>(method: Method, path: string, body: Body | undefined, options: RequestOptions): Promise<T> => {
   const refreshable = session.exists && !NO_REFRESH.has(path);
 
-  // Access token perdu (rechargement de la page) : on le regagne avant d'appeler, plutôt que
-  // d'encaisser un 401 que le navigateur afficherait en erreur console.
-  if (refreshable && session.accessToken === null && !(await refreshSession())) {
+  // Access token perdu (rechargement de la page) ou sur le point d'expirer : on le renouvelle avant d'appeler,
+  // plutôt que d'encaisser un 401 que le navigateur afficherait en erreur console.
+  if (refreshable && session.accessTokenStale && !(await refreshSession())) {
     session.expire();
     throw new ApiError(401, []);
   }

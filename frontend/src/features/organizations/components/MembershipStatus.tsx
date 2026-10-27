@@ -42,6 +42,15 @@ export function MembershipStatus({
   const [request, setRequest] = useState<Request>({ state: 'idle' });
   const [leaving, setLeaving] = useState(false);
   const [leaveError, setLeaveError] = useState<string | null>(null);
+  
+  // Ma relation vient de changer côté serveur (retiré, réactivé…) : la demande locale ne vaut plus.
+  // Ajustement pendant le rendu, sans effet (règle react-hooks/set-state-in-effect).
+  const membershipKey = `${organizationId}:${membership?.status ?? 'none'}:${membership?.role ?? 'none'}`;
+  const [seenMembershipKey, setSeenMembershipKey] = useState(membershipKey);
+  if (seenMembershipKey !== membershipKey) {
+    setSeenMembershipKey(membershipKey);
+    setRequest({ state: 'idle' });
+  }
  
   const leave = async () => {
     setLeaveError(null);
@@ -74,6 +83,7 @@ export function MembershipStatus({
       setLeaving(false);
     }
   };
+  
   if (membership?.status === 'PENDING') {
     return (
       <p className={styles.note} role="status">
@@ -84,6 +94,22 @@ export function MembershipStatus({
   }
 
   if (membership?.status === 'REJECTED') {
+    return (
+      <p className={styles.note} role="status">
+        {text.declined}
+      </p>
+    );
+  }
+
+  if (membership?.status === 'BANNED') {
+    return (
+      <p className={styles.note} role="status">
+        {text.banned}
+      </p>
+    );
+  }
+
+  if (role) {
     return (
       <p className={styles.note} role="status">
         {text.declined}

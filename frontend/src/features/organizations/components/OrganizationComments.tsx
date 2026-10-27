@@ -90,6 +90,7 @@ export function OrganizationComments({ organizationId, creatorId, canComment }: 
   const submit = async (content: string) => {
     const result = await postOrganizationComment(organizationId, content);
 
+    // Refus métier (membre inactif, compte suspendu) : seul ce cas porte `success`.
     if ('success' in result) {
       throw new CommentSubmissionError(result.code);
     }

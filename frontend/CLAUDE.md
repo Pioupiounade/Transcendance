@@ -124,7 +124,8 @@ Ce fichier est chargé automatiquement quand la session démarre dans `frontend/
 - Un seul client HTTP (wrapper `fetch`) : JSON, header `Authorization: Bearer <access_token>`, erreurs normalisées
   depuis `{ statusCode, message, error }` (`message` peut être un tableau), 401 → un essai de `POST /auth/refresh`
   puis rejeu, sinon déconnexion. Seuls `/auth/login`, `/auth/register` et `/auth/refresh` sont exempts ; sans access
-  token en mémoire (rechargement) le client rafraîchit **avant** le premier appel (un 401 serait une erreur console).
+  token en mémoire (rechargement), ou à moins de 30 s de son expiration (`exp - iat` du JWT), le client rafraîchit
+  **avant** l'appel (un 401 serait une erreur console).
 - L'identité vient du JWT : jamais d'id utilisateur dans une query ou un body pour dire « qui je suis »
   (`creator_id` n'existe plus dans les DTO ; l'envoyer provoque un 400).
 - Les listes filtrées renvoient 404 quand elles sont vides (`GET /actions?…`, `GET /organizations?creator_id=`) :
@@ -134,6 +135,9 @@ Ce fichier est chargé automatiquement quand la session démarre dans `frontend/
   par `environment:` dans le compose, ticket). Pas de contournement navigateur.
 - Tokens : `access_token` (15 min) en mémoire ; `refresh_token` (7 jours) persisté côté client car le backend l'attend
   dans le body de `/auth/refresh` ; à revoir si le backend passe aux cookies httpOnly.
+  Le backend fait tourner le refresh token à chaque refresh : un seul refresh à la fois dans le navigateur (verrou
+  Web Locks `pioupiounades.refresh`, relecture du storage avant l'envoi) et écoute de l'événement `storage` (token
+  qui a tourné dans un autre onglet → repris ; session effacée ailleurs → l'onglet se déconnecte aussi).
 - Libellés UI des enums (maquette, à traduire en anglais) : `ENVIRONMENT` → « Environment », `SOCIAL` → « Mutual aid »,
   `CULTURAL` → « Culture & sharing ». Un seul endroit pour ce mapping, jamais de chaîne d'enum en dur dans le JSX.
 
@@ -168,8 +172,10 @@ Inspirée de bulletproof-react et feature-sliced, réduite à ce que le projet j
 app/            composition root : seul endroit qui connaît tout
   main.tsx, App.tsx, router.tsx (AppRouter), routes.ts (ROUTES), labels.ts, lazyPage.ts
   layout/       PageShell (Suspense des pages paresseuses), AppHeader, BottomNav (mobile), AppFooter, navItems.ts
-                (en-tête : Home, My Actions (libellé #60), Map, Organizations, Friends ; barre mobile : 5 entrées, Friends
-                `desktopOnly` et Profile à la place ; décision du 25/09/2026)
+                (en-tête : Home, My Actions (libellé #60), Map, Organizations, Friends ; barre mobile : 5 cases, Friends
+                `desktopOnly` ; depuis le 27/10/2026 la case Profile est un bouton (BottomNavMenu, motif disclosure) qui
+                déplie Profile et Friends au-dessus de la pilule ; même jour, sur téléphone l'avatar de l'en-tête est HeaderMenu et
+                déplie Messages, Admin et Sign out : plus de pastilles Messages / admin / déconnexion sous 761 px)
   pages/        pages sans domaine : Legal (CGU, confidentialité), NotFound, Placeholder ;
                 home/ (#65) : HomePage bascule selon la session → Landing (visiteur : hero StreetScene + promesse,
                 « How it works », carte vivante des actions ouvertes + 3 prochaines, catégories, bandeau
@@ -232,7 +238,8 @@ features/       1 domaine métier = 1 module ; interface = index.ts
   participations/ useMyParticipations (sur useResource ; visiteur : liste vide sans appel), fetchActionParticipants /
                 joinAction / leaveAction (#60), type MyParticipation
   messages/     messagerie entre amis (backend #155, api_contract §18), discrète : pas d'entrée de nav, une pastille
-                MessagesButton `{ to, profilePath }` : pastille dans l'en-tête sur téléphone (→ page) ; dès 761 px
+                MessagesButton `{ to, profilePath }` : hors téléphone seulement (sur téléphone, entrée « Messages » du menu du
+                compte HeaderMenu de app/, sur `useUnreadMessages` exporté par l'index) ; dès 761 px
                 (`useMediaQuery`, même seuil que son CSS) bulle noire flottante en bas à droite qui ouvre MessagesDock, volet de
                 380 px en portail (liste des amis → fil avec retour, Échap ferme, lien vers la page) ; rien sur `/messages` ;
                 AppFooter lui réserve 104 px à droite (point citron = notifications `NEW_MESSAGE` non lues, relues toutes les
@@ -336,7 +343,8 @@ shared/         zéro connaissance métier, réutilisable ailleurs
                 suppression sur les commentaires `canDelete`, la confirmation reste chez l'appelant) et CommentComposer (zone de texte +
                 compteur + bouton : `{ label, maxLength, submitLabel, submittingLabel, validate, onSubmit, describeError }`)
   hooks/        hooks React sans métier, pas de barrel : useForm (valeurs, erreurs après blur/soumission, erreur
-                serveur via un mapper fourni, focus du 1er champ invalide dont l'`id` = son nom) ; useResource
+                serveur via un mapper fourni, focus du 1er champ invalide dont l'`id` = son nom) ; useDisclosure (bouton qui déplie
+                un panneau : Échap, tap dehors, focus de retour ; menus de la barre basse et de l'en-tête) ; useResource
                 (`load` stable → `{ data, loading, error, reload }`, annulation, utilisé par organizations ;
                 candidat pour remplacer les hooks maison de actions/participations)
   lib/          fonctions pures, pas de barrel (test de suppression négatif) : pageTitle, formatDate, prefersReducedMotion
@@ -364,8 +372,9 @@ assets/
 
 ### Modules deep de référence
 - `shared/api` : interface = `http.get/post/patch/delete/list(path, body?, { query, signal })`, `ApiError { status,
-  messages, isNetwork }`, `session.set/clear/onExpire/userId`. Caché : base URL, Bearer, 401 →
-  refresh (dédupliqué) → rejeu, `http.list` traduit le 404 en `[]`, `message` tableau normalisé, réseau → `status 0`.
+  messages, isNetwork }`, `session.set/clear/onExpire/userId`. Caché : base URL, Bearer, refresh anticipé (30 s avant
+  `exp`) ou sur 401 (dédupliqué, verrou Web Locks entre onglets, synchro `storage`) → rejeu, `http.list` traduit le 404
+  en `[]`, `message` tableau normalisé, réseau → `status 0`.
   Les tokens vivent ici ; `features/auth` appelle seulement `session.set(tokens, userId)`.
 - `features/auth` : interface = `AuthProvider`, `useAuth() → { status, user, signIn, signUp, signOut }`, `RequireAuth`,
   `LoginPage`, `RegisterPage` (reçoit les chemins des pages légales en props : une feature n'importe pas `app/`).

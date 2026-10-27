@@ -10,7 +10,7 @@ export type NavItem = {
   end?: boolean;
   /** Entrée mise en avant au centre de la barre mobile. */
   primary?: boolean;
-  /** Présente dans l'en-tête seulement : la barre mobile garde cinq entrées. */
+  /** Pas de case à elle dans la barre mobile (cinq cases) : Friends y vit dans le menu de la case Profile. */
   desktopOnly?: boolean;
 };
 
