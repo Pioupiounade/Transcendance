@@ -36,8 +36,11 @@ export const toManageErrorMessage = (error: unknown): string => {
 };
 
 export class CommentSubmissionError extends Error {
-  constructor(readonly code: string) {
+  readonly code: string;
+
+  constructor(code: string) {
     super(code);
+    this.code = code;
     this.name = 'CommentSubmissionError';
   }
 }

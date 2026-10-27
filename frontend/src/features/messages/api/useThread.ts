@@ -7,12 +7,9 @@ const POLL_INTERVAL_MS = 5_000;
 
 type Snapshot = { friendId: string; messages: DirectMessage[] };
 
-const toApiError = (error: unknown): ApiError => (error instanceof ApiError ? error : new ApiError(0, []));
+const toApiError = (error: unknown): ApiError =>
+  error instanceof ApiError ? error : new ApiError(0, []);
 
-/**
- * Fil avec un ami : lu à l'ouverture puis toutes les 5 s (onglet visible), relu après chaque envoi.
- * `messages` vaut `null` tant que le fil demandé n'est pas arrivé ; une relecture annule la précédente.
- */
 export function useThread(friendId: string) {
   const [snapshot, setSnapshot] = useState<Snapshot | null>(null);
   const [error, setError] = useState<ApiError | null>(null);
@@ -22,6 +19,7 @@ export function useThread(friendId: string) {
     latestRequest.current?.abort();
     const controller = new AbortController();
     latestRequest.current = controller;
+
     return fetchThread(friendId, controller.signal)
       .then((messages) => {
         if (controller.signal.aborted) return;
@@ -35,16 +33,37 @@ export function useThread(friendId: string) {
 
   useEffect(() => {
     void refresh();
+
+    const handleNewMessage = (event: Event) => {
+      const message = (
+        event as CustomEvent<{
+          sender_id: string;
+          receiver_id: string;
+        }>
+      ).detail;
+
+      if (
+        message &&
+        (message.sender_id === friendId ||
+          message.receiver_id === friendId)
+      ) {
+        void refresh();
+      }
+    };
+
     const timer = window.setInterval(() => {
       if (document.visibilityState === 'visible') void refresh();
     }, POLL_INTERVAL_MS);
+
+    window.addEventListener('direct-message:new', handleNewMessage);
+
     return () => {
       latestRequest.current?.abort();
       window.clearInterval(timer);
+      window.removeEventListener('direct-message:new', handleNewMessage);
     };
-  }, [refresh]);
+  }, [friendId, refresh]);
 
-  // L'envoi est suivi d'une relecture : le fil montre l'état du serveur (id, date, ordre).
   const send = useCallback(
     (content: string) => sendDirectMessage(friendId, content).then(() => refresh()),
     [friendId, refresh],

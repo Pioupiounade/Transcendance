@@ -68,6 +68,24 @@ export function PublicProfilePage({ ownProfilePath, messagePath }: PublicProfile
     return () => window.removeEventListener('presence:change', onPresence);
   }, []);
 
+  useEffect(() => {
+    const onProfileUpdated = (event: Event) => {
+      const { userId: changedUserId } = (
+        event as CustomEvent<{ userId: string }>
+      ).detail;
+
+      if (String(changedUserId) === userId) {
+        void view.reload();
+      }
+    };
+
+    window.addEventListener('profile:updated', onProfileUpdated);
+
+    return () => {
+      window.removeEventListener('profile:updated', onProfileUpdated);
+    };
+  }, [userId, view.reload]);
+
   if (currentUserId !== null && currentUserId === userId) return <Navigate to={ownProfilePath} replace />;
 
   let content;

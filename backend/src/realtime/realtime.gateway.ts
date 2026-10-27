@@ -39,6 +39,20 @@ export class RealtimeGateway
       });
   }
 
+  emitProfileUpdated(userId: string): void {
+    void this.getFriendIds(userId)
+      .then((friendIds) => {
+        for (const friendId of friendIds) {
+          this.server
+            .to(`user:${friendId}`)
+            .emit('profile:updated', { userId });
+        }
+      })
+      .catch((error: unknown) => {
+        console.error('Failed to broadcast profile update:', error);
+      });
+  }
+
   constructor(
     private readonly jwtService: JwtService,
     private readonly prisma: PrismaService,

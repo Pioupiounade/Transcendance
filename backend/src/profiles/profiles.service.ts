@@ -364,6 +364,8 @@ export class ProfilesService {
       },
     });
 
+    this.realtimeGateway.emitProfileUpdated(currentUserId);
+
     const { location, ...safeProfile } = updatedProfile;
 
     return {

@@ -25,11 +25,13 @@ export function useUnreadMessages(): number {
       if (document.visibilityState === 'visible') refresh();
     }, POLL_INTERVAL_MS);
     window.addEventListener(MESSAGES_READ_EVENT, refresh);
+    window.addEventListener('direct-message:new', refresh);
     return () => {
       disposed = true;
       latestRequest.current?.abort();
       window.clearInterval(timer);
       window.removeEventListener(MESSAGES_READ_EVENT, refresh);
+      window.removeEventListener('direct-message:new', refresh);
     };
   }, []);
 

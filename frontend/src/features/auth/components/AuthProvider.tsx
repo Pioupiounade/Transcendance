@@ -77,6 +77,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
       );
     };
 
+    const handleProfileUpdated = ({ userId }: { userId: string }) => {
+      window.dispatchEvent(
+        new CustomEvent('profile:updated', {
+          detail: { userId },
+        }),
+      );
+    };
+
     const handleNewDirectMessage = (message: {
       message_id: string;
       sender_id: string;
@@ -88,6 +96,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
       window.dispatchEvent(
         new CustomEvent('direct-message:new', {
           detail: message,
+        }),
+      );
+    };
+
+    const handleNewNotification = (notification: unknown) => {
+      window.dispatchEvent(
+        new CustomEvent('notification:new', {
+          detail: notification,
         }),
       );
     };
@@ -106,12 +122,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
     socket.on('presence:offline', handleOffline);
     socket.on('organization:membership-changed', handleMembershipChanged);
     socket.on('direct-message:new', handleNewDirectMessage);
+    socket.on('notification:new', handleNewNotification);
+    socket.on('profile:updated', handleProfileUpdated);
 
     return () => {
       unsubscribe();
       socket.off('presence:online', handleOnline);
       socket.off('presence:offline', handleOffline);
       socket.off('organization:membership-changed', handleMembershipChanged);
+      socket.off('direct-message:new', handleNewDirectMessage);
+      socket.off('notification:new', handleNewNotification);
+      socket.off('profile:updated', handleProfileUpdated);
       socket.disconnect();
     };
   }, [snapshot.status]);

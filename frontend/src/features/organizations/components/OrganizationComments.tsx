@@ -65,7 +65,7 @@ export function OrganizationComments({ organizationId, creatorId, canComment }: 
   const submit = async (content: string) => {
     const result = await postOrganizationComment(organizationId, content);
 
-    if ('success' in result && result.success === false) {
+    if ('success' in result) {
       throw new CommentSubmissionError(result.code);
     }
 
