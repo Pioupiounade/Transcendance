@@ -31,10 +31,14 @@ export function MembershipStatus({ organizationId, role, membership }: Membershi
   const location = useLocation();
   const [request, setRequest] = useState<Request>({ state: 'idle' });
 
-  // Reset local state if membership changes via props
-  useEffect(() => {
+  // Ma relation vient de changer côté serveur (retiré, réactivé…) : la demande locale ne vaut plus.
+  // Ajustement pendant le rendu, sans effet (règle react-hooks/set-state-in-effect).
+  const membershipKey = `${organizationId}:${membership?.status ?? 'none'}:${membership?.role ?? 'none'}`;
+  const [seenMembershipKey, setSeenMembershipKey] = useState(membershipKey);
+  if (seenMembershipKey !== membershipKey) {
+    setSeenMembershipKey(membershipKey);
     setRequest({ state: 'idle' });
-  }, [membership, organizationId]);
+  }
 
   if (membership?.status === 'PENDING') {
     return (
