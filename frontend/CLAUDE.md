@@ -124,7 +124,8 @@ Ce fichier est chargé automatiquement quand la session démarre dans `frontend/
 - Un seul client HTTP (wrapper `fetch`) : JSON, header `Authorization: Bearer <access_token>`, erreurs normalisées
   depuis `{ statusCode, message, error }` (`message` peut être un tableau), 401 → un essai de `POST /auth/refresh`
   puis rejeu, sinon déconnexion. Seuls `/auth/login`, `/auth/register` et `/auth/refresh` sont exempts ; sans access
-  token en mémoire (rechargement) le client rafraîchit **avant** le premier appel (un 401 serait une erreur console).
+  token en mémoire (rechargement), ou à moins de 30 s de son expiration (`exp - iat` du JWT), le client rafraîchit
+  **avant** l'appel (un 401 serait une erreur console).
 - L'identité vient du JWT : jamais d'id utilisateur dans une query ou un body pour dire « qui je suis »
   (`creator_id` n'existe plus dans les DTO ; l'envoyer provoque un 400).
 - Les listes filtrées renvoient 404 quand elles sont vides (`GET /actions?…`, `GET /organizations?creator_id=`) :
@@ -134,6 +135,9 @@ Ce fichier est chargé automatiquement quand la session démarre dans `frontend/
   par `environment:` dans le compose, ticket). Pas de contournement navigateur.
 - Tokens : `access_token` (15 min) en mémoire ; `refresh_token` (7 jours) persisté côté client car le backend l'attend
   dans le body de `/auth/refresh` ; à revoir si le backend passe aux cookies httpOnly.
+  Le backend fait tourner le refresh token à chaque refresh : un seul refresh à la fois dans le navigateur (verrou
+  Web Locks `pioupiounades.refresh`, relecture du storage avant l'envoi) et écoute de l'événement `storage` (token
+  qui a tourné dans un autre onglet → repris ; session effacée ailleurs → l'onglet se déconnecte aussi).
 - Libellés UI des enums (maquette, à traduire en anglais) : `ENVIRONMENT` → « Environment », `SOCIAL` → « Mutual aid »,
   `CULTURAL` → « Culture & sharing ». Un seul endroit pour ce mapping, jamais de chaîne d'enum en dur dans le JSX.
 
@@ -364,8 +368,9 @@ assets/
 
 ### Modules deep de référence
 - `shared/api` : interface = `http.get/post/patch/delete/list(path, body?, { query, signal })`, `ApiError { status,
-  messages, isNetwork }`, `session.set/clear/onExpire/userId`. Caché : base URL, Bearer, 401 →
-  refresh (dédupliqué) → rejeu, `http.list` traduit le 404 en `[]`, `message` tableau normalisé, réseau → `status 0`.
+  messages, isNetwork }`, `session.set/clear/onExpire/userId`. Caché : base URL, Bearer, refresh anticipé (30 s avant
+  `exp`) ou sur 401 (dédupliqué, verrou Web Locks entre onglets, synchro `storage`) → rejeu, `http.list` traduit le 404
+  en `[]`, `message` tableau normalisé, réseau → `status 0`.
   Les tokens vivent ici ; `features/auth` appelle seulement `session.set(tokens, userId)`.
 - `features/auth` : interface = `AuthProvider`, `useAuth() → { status, user, signIn, signUp, signOut }`, `RequireAuth`,
   `LoginPage`, `RegisterPage` (reçoit les chemins des pages légales en props : une feature n'importe pas `app/`).
