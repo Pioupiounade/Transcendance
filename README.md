@@ -156,21 +156,23 @@ Managed via Prisma ORM over PostgreSQL to model civic participation, organizatio
 ## Modules
 
 ### Module Overview & Point Calculation
-The project implements a total of **17 points** (exceeding the required minimum of 14 points) across the official 42 module categories:
+
+The project implements a total of **17 points** across the module categories:
 
 | Category | Module Name | Type | Points | Assigned Member(s) |
 | :--- | :--- | :--- | :--- | :--- |
 | **Web** | Web Frameworks | Major | 2 pts | mlelu, thodavid, qupollet, lellanos |
-| **Web** | ORM for Database | Minor | 1 pt | mlelu |
-| **User Management** | Standard User Management | Major | 2 pts | mlelu, lellanos, thodavid |
 | **Web** | Real-time Features | Major | 2 pts | qupollet, thodavid |
-| **Web** | User Interaction System | Major | 2 pts | qupollet, lellanos, thodavid |
+| **Web** | Allow users to interact with other users | Major | 2 pts | qupollet, lellanos, thodavid |
+| **Web** | ORM for Database | Minor | 1 pt | mlelu |
 | **Web** | Notification System | Minor | 1 pt | mlelu, qupollet, lellanos |
+| **Web** | Advanced Search & Filters | Minor | 1 pt | thodavid, qupollet |
 | **Web** | File Upload & Management | Minor | 1 pt | qupollet, lellanos |
-| **Web** | Advanced Search & Filters | Minor | 1 pt | thodavid, lellanos |
+| **Accessibility and Internationalization** | Support for Additional Browsers | Minor | 1 pt | lellanos |
+| **User Management** | Standard User Management | Major | 2 pts | mlelu, lellanos, thodavid |
+| **User Management** | Advanced permissions system | Major | 2 pts | mlelu, thodavid |
 | **User Management** | Organization System | Major | 2 pts | mlelu, thodavid |
-| **Accessibility & Internationalization** | Support for additional browsers | Minor | 1 pt | lellanos |
-| **Total Points** | | | **17 pts** | *(Minimum Required: 14 pts)* |
+| **Total Points** | | | **17 pts** |
 
 ---
 
@@ -178,63 +180,102 @@ The project implements a total of **17 points** (exceeding the required minimum 
 
 #### 1. Web Frameworks (Major – 2 pts)
 - **Members:** mlelu, thodavid, qupollet, lellanos
-- **Justification:** Decoupled architecture separating client presentation from business logic and database persistence.
 - **Implementation:** React frontend with TypeScript, NestJS backend REST API, and modular Single Page Application (SPA) routing via React Router.
 
-#### 2. ORM for Database (Minor – 1 pt)
-- **Member:** mlelu
-- **Justification:** Guarantees data integrity, versioned schema migrations, and type-safe database queries.
+#### 2. Real-time Features (Major – 2 pts)
+- **Members:** qupollet, thodavid
+- **Implementation:** Delivering real-time direct chat messages, live notifications.
+
+#### 3. Allow users to interact with other users (Major – 2 pts)
+- **Members:** qupollet, lellanos, thodavid
+- **Implementation:** Public user profiles, friend request lifecycle, public action comments and private 1-to-1 direct messaging, 
+
+#### 4. ORM for Database (Minor – 1 pt)
+- **Member:** mlelu, qupollet
 - **Implementation:** PostgreSQL database managed with Prisma ORM, handling declarative models, relations, migrations, and automated database seeding.
 
-#### 3. Standard User Management (Major – 2 pts)
-- **Members:** mlelu, lellanos, thodavid
-- **Justification:** Manages platform identities, secure session lifecycles, and user privacy tiers.
-- **Implementation:** Email and salted/hashed password authentication with JWT sessions, profile customization, multi-tier privacy settings (PUBLIC, FRIENDS_ONLY, PRIVATE), and account deactivation/deletion.
-
-#### 4. Real-time Features (Major – 2 pts)
-- **Members:** qupollet, thodavid
-- **Justification:** Provides live coordination for neighborhood initiatives and chat without manual page reloads.
-- **Implementation:** WebSocket gateways via Socket.IO in NestJS delivering real-time direct chat messages, live notifications, and action state updates.
-
-#### 5. User Interaction System (Major – 2 pts)
-- **Members:** qupollet, lellanos, thodavid
-- **Justification:** Connects neighbors to organize mutual aid, build local networks, and communicate.
-- **Implementation:** Private 1-to-1 direct messaging (280 chars), public user profiles, friend request lifecycle (PENDING_SENT, ACCEPTED, BLOCKED), and public action comments.
-
-#### 6. Notification System (Minor – 1 pt)
+#### 5. Notification System (Minor – 1 pt)
 - **Members:** mlelu, qupollet, lellanos
-- **Justification:** Keeps users alerted regarding participant limits, new messages, and status updates.
-- **Implementation:** Automated event alerts triggered on new messages, comments, status changes, and participation thresholds, paired with granular user notification toggles.
+- **Implementation:** Automated event alerts triggered on new messages, comments, status changes.
+
+#### 6. Advanced Search & Filters (Minor – 1 pt)
+- **Members:** thodavid, qupollet
+- **Implementation:** Multi-entity search across citizen actions, users, and organizations with keyword queries, category and status filtering, geospatial map search via Leaflet/OpenStreetMap.
 
 #### 7. File Upload & Management (Minor – 1 pt)
 - **Members:** qupollet, lellanos
-- **Justification:** Enables personal identification and visual documentation for completed initiatives.
 - **Implementation:** Multi-part file upload endpoints handling image validation, storage, profile avatars, and before/after action galleries.
 
-#### 8. Advanced Search & Filters (Minor – 1 pt)
-- **Members:** thodavid, lellanos
-- **Justification:** Allows citizens to locate nearby initiatives by theme, distance, and status.
-- **Implementation:** Combined textual and geospatial search with Leaflet/OpenStreetMap, category filtering (ENVIRONMENT, SOCIAL, CULTURAL), status filters, and paginated lists.
-
-#### 9. Organization System (Major – 2 pts)
-- **Members:** mlelu, thodavid
-- **Justification:** Empowers local associations and collectives to manage team members and publish community actions.
-- **Implementation:** Organization CRUD, role-based member management (OWNER, MANAGER, MEMBER), join requests approval workflow, and public organization pages.
-
-#### 10. Support for Additional Browsers (Minor – 1 pt)
+#### 8. Support for Additional Browsers (Minor – 1 pt)
 - **Member:** lellanos
-- **Justification:** Ensures broad platform accessibility and uniform user experience across different web engines.
-- **Implementation:** Tested and verified complete functional parity, clean console logs (zero uncaught errors), and identical UI rendering across Google Chrome, Mozilla Firefox, and Brave.
+- **Implementation:** Tested and verified functionality across Google Chrome, Mozilla Firefox, and Brave.
+
+#### 9. Standard User Management (Major – 2 pts)
+- **Members:** mlelu, lellanos, thodavid
+- **Implementation:** Email and salted/hashed password authentication with JWT sessions, profile customization, multi-tier privacy settings (PUBLIC, FRIENDS_ONLY, PRIVATE), and account deactivation/deletion.
+
+#### 10. Advanced permissions system (Major – 2 pts)
+- **Members:** mlelu, thodavid
+- **Implementation:** User role management (`USER`, `ADMIN`), user status lifecycle controls (active, suspended, deactivated), and protected administration routes (`/admin`) with dedicated views for accounts, citizen action validation, and organization governance.
+
+#### 11. Organization System (Major – 2 pts)
+- **Members:** mlelu, thodavid
+- **Implementation:** Organization , role-based member management (OWNER, MANAGER, MEMBER), join requests approval workflow, and public organization pages.
 
 ## Individual Contributions
 
 ### thodavid
-
+- **Tasks, features, modules, or components implemented:**
+  - Choose the artistic direction
+  - Make the mockups
+  - Design the frontend code base
+  - Build the shared modules
+  - Build the frontend pages and respect the design system
+  - **Design system:** `shared/ui` (`Button`, `Dialog`, `ConfirmDialog`, `FloatingField`, `Chip`, `Avatar`, `Icon`, `Steps`, `CommentThread`, `StreetScene`), CSS tokens, light/dark admin theme
+  - **App shell:** Header, footer, bottom nav (mobile), routing, lazy pages
+  - **Home:** Landing for visitors, adaptive dashboard for logged users (compact map, my actions, nearby actions)
+  - **Map:** Actions on a map, geolocation on demand, create an action from a point on the map
+  - **Actions:** List, detail, create, edit, cancel, comments
+  - **Organizations:** Directory (search, sort, filters, paging, URL state), detail page with the constellation graph, create organization (map picker + form), join / manage members, comments
+  - **Participations:** Join / leave an action, my participations
+  - **Admin:** Users (block / unblock), actions moderation (approve / hide), organizations (suspend / close / reactivate), shared admin table and list hook
+  - **Auth UI:** Login / register forms, "My Actions" sign-in card for visitors
+- **Challenges faced and how he overcome:**
+  - *Keep track of the complexity of the code base:* Organized one folder per feature with strict import rules.
+  - *Make good decisions with the team:* Checked every backend change, kept the API contract up to date, and wrote questions down before coding.
+  - *Have an overview of all the code:* Performed regular checkups of `main` (build, lint, routes in a headless browser) and delivered small, focused PRs.
 
 ### qupollet
-
+- **Tasks, features, modules, or components implemented:**
+  - Pull Request Review (checking all code modifications)
+  - Backend developer (implementing features)
+  - Bug fixing (at the same time)
+  - Token-based Authentication
+  - Image uploading and compression (Avatar + Action Pictures)
+  - Direct Messages
+  - Comments on Actions and Organizations
+  - Added new modules in the Prisma schema
+- **Challenges faced and how he overcome:**
+  - *Learning how to use Git (GitHub) in a team:* Leveraged Git documentation and AI assistance.
+  - *Working with HTML/CSS/TS:* Studied documentation, web references, and AI tools.
+  - *Working in a bigger team:* Maintained continuous communication with team members.
 
 ### mlelu
-
+- **Tasks, features, modules, or components implemented:**
+  - Database & Prisma
+  - Database Seeding 
+  - Fullstack developer
+  - Backend API Endpoints:
+  - Bug Fixing & Integration
+- **Challenges faced and how she overcome:**
+  
 
 ### lellanos
+- **Tasks, features, modules, or components implemented:**
+  - User Profile & Settings
+  - Social Interactions & Friendship
+  - Action Details UI
+  - **Quality Assurance & Testing:** Built QA testing checklists (`docs/QA_TEST_CHECKLIST.md`), conducted systematic cross-browser testing across Google Chrome, Mozilla Firefox, and Brave, enforcing a strict zero-console-warning policy.
+- **Challenges faced and how she overcome:**
+  - *Sprint coordination and Gitflow as PM:* Standardized PR conventions (`Closes #<id>`), managed backlog boards in GitHub Projects.
+  - *Lifecycle of github tickets:* Send message to the team telling them how we should handle them. 
