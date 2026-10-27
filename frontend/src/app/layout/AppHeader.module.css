@@ -167,6 +167,14 @@
   .topbar:not(:has(.search)) {
     grid-template-columns: 1fr auto;
   }
+  /* Au centre de l'écran, la recherche s'élargit : 280 px dès 1273 px, 200 px au plus serré (un admin a une pastille
+     de plus à droite et tout doit tenir à 761 px) ; champ de 42 px, entre la cloche (44) et l'avatar (46). */
+  .search {
+    width: clamp(200px, 22vw, 280px);
+  }
+  .search input {
+    height: 42px;
+  }
 }
 
 @media (max-width: 760px) {
@@ -179,14 +187,10 @@
   .topbar:has(.search) .brandName {
     display: none;
   }
-  /* 82 % de la colonne du milieu, 280 px max : l'air restant se répartit à égalité des deux côtés. Le champ
-     monte à 42 px, entre la cloche (44) et l'avatar (46). */
+  /* 82 % de la colonne du milieu, 280 px max : l'air restant se répartit à égalité des deux côtés. */
   .search {
     justify-self: center;
     width: clamp(140px, 82%, 280px);
-  }
-  .search input {
-    height: 42px;
   }
   .actions {
     gap: 8px;
