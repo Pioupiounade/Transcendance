@@ -19,6 +19,8 @@ export const APP_LABELS = {
     organizations: 'Organizations',
     friends: 'Friends',
     profile: 'Profile',
+    /** Bouton de la barre mobile qui déplie Profile et Friends. */
+    profileMenu: 'Profile and friends',
   },
   pages: {
     home: {

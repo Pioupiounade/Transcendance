@@ -168,8 +168,9 @@ Inspirée de bulletproof-react et feature-sliced, réduite à ce que le projet j
 app/            composition root : seul endroit qui connaît tout
   main.tsx, App.tsx, router.tsx (AppRouter), routes.ts (ROUTES), labels.ts, lazyPage.ts
   layout/       PageShell (Suspense des pages paresseuses), AppHeader, BottomNav (mobile), AppFooter, navItems.ts
-                (en-tête : Home, My Actions (libellé #60), Map, Organizations, Friends ; barre mobile : 5 entrées, Friends
-                `desktopOnly` et Profile à la place ; décision du 25/09/2026)
+                (en-tête : Home, My Actions (libellé #60), Map, Organizations, Friends ; barre mobile : 5 cases, Friends
+                `desktopOnly` ; depuis le 27/10/2026 la case Profile est un bouton (BottomNavMenu, motif disclosure) qui
+                déplie Profile et Friends au-dessus de la pilule)
   pages/        pages sans domaine : Legal (CGU, confidentialité), NotFound, Placeholder ;
                 home/ (#65) : HomePage bascule selon la session → Landing (visiteur : hero StreetScene + promesse,
                 « How it works », carte vivante des actions ouvertes + 3 prochaines, catégories, bandeau
