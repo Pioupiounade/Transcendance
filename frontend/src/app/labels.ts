@@ -12,6 +12,12 @@ export const APP_LABELS = {
   signOut: 'Sign out',
   myProfile: 'My profile',
   admin: 'Admin',
+  /** Menu du compte sur téléphone : l'avatar de l'en-tête déplie Messages, Admin et Sign out. */
+  accountMenu: {
+    label: 'Account menu',
+    labelUnread: (count: number) => `Account menu, ${count} new message${count > 1 ? 's' : ''}`,
+    messages: 'Messages',
+  },
   nav: {
     home: 'Home',
     actions: 'My Actions',

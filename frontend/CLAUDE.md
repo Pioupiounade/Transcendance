@@ -170,7 +170,8 @@ app/            composition root : seul endroit qui connaît tout
   layout/       PageShell (Suspense des pages paresseuses), AppHeader, BottomNav (mobile), AppFooter, navItems.ts
                 (en-tête : Home, My Actions (libellé #60), Map, Organizations, Friends ; barre mobile : 5 cases, Friends
                 `desktopOnly` ; depuis le 27/10/2026 la case Profile est un bouton (BottomNavMenu, motif disclosure) qui
-                déplie Profile et Friends au-dessus de la pilule)
+                déplie Profile et Friends au-dessus de la pilule ; même jour, sur téléphone l'avatar de l'en-tête est HeaderMenu et
+                déplie Messages, Admin et Sign out : plus de pastilles Messages / admin / déconnexion sous 761 px)
   pages/        pages sans domaine : Legal (CGU, confidentialité), NotFound, Placeholder ;
                 home/ (#65) : HomePage bascule selon la session → Landing (visiteur : hero StreetScene + promesse,
                 « How it works », carte vivante des actions ouvertes + 3 prochaines, catégories, bandeau
@@ -233,7 +234,8 @@ features/       1 domaine métier = 1 module ; interface = index.ts
   participations/ useMyParticipations (sur useResource ; visiteur : liste vide sans appel), fetchActionParticipants /
                 joinAction / leaveAction (#60), type MyParticipation
   messages/     messagerie entre amis (backend #155, api_contract §18), discrète : pas d'entrée de nav, une pastille
-                MessagesButton `{ to, profilePath }` : pastille dans l'en-tête sur téléphone (→ page) ; dès 761 px
+                MessagesButton `{ to, profilePath }` : hors téléphone seulement (sur téléphone, entrée « Messages » du menu du
+                compte HeaderMenu de app/, sur `useUnreadMessages` exporté par l'index) ; dès 761 px
                 (`useMediaQuery`, même seuil que son CSS) bulle noire flottante en bas à droite qui ouvre MessagesDock, volet de
                 380 px en portail (liste des amis → fil avec retour, Échap ferme, lien vers la page) ; rien sur `/messages` ;
                 AppFooter lui réserve 104 px à droite (point citron = notifications `NEW_MESSAGE` non lues, relues toutes les
@@ -337,7 +339,8 @@ shared/         zéro connaissance métier, réutilisable ailleurs
                 suppression sur les commentaires `canDelete`, la confirmation reste chez l'appelant) et CommentComposer (zone de texte +
                 compteur + bouton : `{ label, maxLength, submitLabel, submittingLabel, validate, onSubmit, describeError }`)
   hooks/        hooks React sans métier, pas de barrel : useForm (valeurs, erreurs après blur/soumission, erreur
-                serveur via un mapper fourni, focus du 1er champ invalide dont l'`id` = son nom) ; useResource
+                serveur via un mapper fourni, focus du 1er champ invalide dont l'`id` = son nom) ; useDisclosure (bouton qui déplie
+                un panneau : Échap, tap dehors, focus de retour ; menus de la barre basse et de l'en-tête) ; useResource
                 (`load` stable → `{ data, loading, error, reload }`, annulation, utilisé par organizations ;
                 candidat pour remplacer les hooks maison de actions/participations)
   lib/          fonctions pures, pas de barrel (test de suppression négatif) : pageTitle, formatDate, prefersReducedMotion

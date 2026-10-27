@@ -1,12 +1,12 @@
 /* Refonte : en-tête aéré sans trait, nav en pilules, entrée admin et avatar en pastilles blanches.
    Trois modes, calés sur la largeur réelle des blocs (marque 195 px, nav 612 px, actions 417 px membre / 534 px admin :
-   recherche + cloche + avatar + déconnexion ; la pastille Messages n'est dans l'en-tête que sur téléphone, ailleurs c'est
-   une bulle flottante en bas à droite, hors flux) :
+   recherche + cloche + avatar + déconnexion ; la bulle Messages flotte en bas à droite, hors flux, et n'existe pas sur téléphone) :
    - large, ≥ 1320 px : marque | nav en pilules, jamais comprimée | actions, sur une grille 1fr auto 1fr
      (1366 px avec barre de défilement reste large ; admin en icône seule sous 1440 px) ;
    - compact, 761–1319 px : la nav passe dans la barre basse flottante (BottomNav), l'en-tête garde marque + actions ;
-   - téléphone, ≤ 760 px : en-tête de 72 px, pastille Messages, déconnexion en pastille icône, recherche rétractable,
-     avatar masqué (Profile est dans la barre basse). Le nom de la marque reste jusqu'à 520 px (570 px pour un admin). */
+   - téléphone, ≤ 760 px : en-tête de 72 px, recherche rétractable, cloche, puis l'avatar qui déplie Messages, Admin et
+     Sign out (HeaderMenu) ; pastilles Messages, admin et déconnexion non rendues (AppHeader, media query JS au même
+     seuil). Le nom de la marque reste jusqu'à 520 px. */
 .topbar {
   /* Gouttière de l'en-tête, lue aussi par GlobalSearch pour aligner ses résultats sur téléphone. */
   --header-gutter: 38px;
@@ -122,12 +122,9 @@
   color: var(--on-brand);
 }
 
-/* Déconnexion : texte en large et compact, icône seule en pastille sur téléphone. */
+/* Déconnexion : bouton texte ; sur téléphone elle vit dans le menu du compte. */
 .signOut {
   flex-shrink: 0;
-}
-.signOutIcon {
-  display: none;
 }
 
 /* Jusqu'à 1535 px la ligne est juste : gouttières et pilules resserrées. */
@@ -176,9 +173,6 @@
     height: 72px;
     gap: 8px;
   }
-  .profileLink {
-    display: none;
-  }
   .actions {
     flex: 1;
     justify-content: flex-end;
@@ -193,32 +187,9 @@
     flex: 0 1 200px;
     min-width: 120px;
   }
-  /* Déconnexion en pastille icône, comme la cloche et les messages. */
-  .signOut {
-    width: 46px;
-    padding: 0;
-  }
-  .signOutIcon {
-    display: grid;
-    place-items: center;
-  }
-  .signOutLabel {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0 0 0 0);
-    white-space: nowrap;
-  }
 }
 
-/* Téléphone connecté : pin seul, la recherche prend la place du nom ; un admin a une pastille de plus, donc plus tôt. */
-@media (max-width: 570px) {
-  .topbar:has(.adminLink) .brandName {
-    display: none;
-  }
-}
+/* Téléphone connecté : pin seul, la recherche prend la place du nom. */
 @media (max-width: 520px) {
   .topbar:has(.search) .brandName {
     display: none;

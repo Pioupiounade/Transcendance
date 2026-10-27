@@ -1,5 +1,6 @@
-import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react';
+import { useId } from 'react';
 import { NavLink, useLocation } from 'react-router';
+import { useDisclosure } from '@/shared/hooks/useDisclosure';
 import { Icon, type IconName } from '@/shared/ui';
 import type { NavItem } from './navItems';
 import styles from './BottomNav.module.css';
@@ -16,31 +17,13 @@ const isCurrent = (item: NavItem, pathname: string) => (item.end ? pathname === 
 
 /**
  * Dernière case de la barre mobile : un bouton qui déplie, au-dessus de la pilule, les entrées qui n'y tiennent pas
- * (Profile, Friends). Motif « disclosure » : Tab entre dans le menu, Échap le referme, un tap ailleurs aussi.
+ * (Profile, Friends). Motif « disclosure » (useDisclosure) : Tab entre dans le menu, Échap et un tap ailleurs le referment.
  */
 export function BottomNavMenu({ label, icon, items }: BottomNavMenuProps) {
-  const [open, setOpen] = useState(false);
-  const root = useRef<HTMLDivElement>(null);
-  const trigger = useRef<HTMLButtonElement>(null);
+  const { open, toggle, close, root, trigger, onKeyDown } = useDisclosure();
   const menuId = useId();
   const { pathname } = useLocation();
   const current = items.some((item) => isCurrent(item, pathname));
-
-  useEffect(() => {
-    if (!open) return;
-    const onPointerDown = (event: PointerEvent) => {
-      if (!root.current?.contains(event.target as Node)) setOpen(false);
-    };
-    document.addEventListener('pointerdown', onPointerDown);
-    return () => document.removeEventListener('pointerdown', onPointerDown);
-  }, [open]);
-
-  const onKeyDown = (event: KeyboardEvent) => {
-    if (event.key !== 'Escape' || !open) return;
-    event.preventDefault();
-    setOpen(false);
-    trigger.current?.focus();
-  };
 
   return (
     <div ref={root} className={styles.menuRoot} onKeyDown={onKeyDown}>
@@ -52,7 +35,7 @@ export function BottomNavMenu({ label, icon, items }: BottomNavMenuProps) {
         aria-controls={menuId}
         data-current={current || undefined}
         title={label}
-        onClick={() => setOpen((value) => !value)}
+        onClick={toggle}
       >
         <span className={styles.icon}>
           <Icon name={icon} size={22} />
@@ -63,7 +46,7 @@ export function BottomNavMenu({ label, icon, items }: BottomNavMenuProps) {
         <ul id={menuId} className={styles.menu} aria-label={label}>
           {items.map((item) => (
             <li key={item.to}>
-              <NavLink to={item.to} end={item.end} className={styles.menuLink} onClick={() => setOpen(false)}>
+              <NavLink to={item.to} end={item.end} className={styles.menuLink} onClick={close}>
                 <Icon name={item.icon} size={18} />
                 {item.label}
               </NavLink>
