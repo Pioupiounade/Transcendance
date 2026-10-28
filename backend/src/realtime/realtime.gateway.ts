@@ -79,6 +79,18 @@ export class RealtimeGateway
     this.server.emit('organization:comments-changed', { organizationId });
   }
 
+  emitAccountStatusChanged(
+    userId: string,
+    accountStatus: 'ACTIVE' | 'SUSPENDED',
+  ): void {
+    this.server
+      .to(`user:${userId}`)
+      .emit('account:status-changed', {
+        userId,
+        accountStatus,
+      });
+  }
+
   constructor(
     private readonly jwtService: JwtService,
     private readonly prisma: PrismaService,
