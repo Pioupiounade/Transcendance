@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router';
 import {
   CategoryFilter,
   DEFAULT_CENTER,
-  FOCUS_PARAM,
   NeighborhoodMap,
   OPEN_STATUSES,
   distanceMeters,
@@ -17,7 +16,7 @@ import { useMyProfile } from '@/features/profile';
 import { pageTitle } from '@/shared/lib/pageTitle';
 import { ButtonLink, Icon } from '@/shared/ui';
 import { APP_LABELS } from '../../labels';
-import { ROUTES, editActionPath } from '../../routes';
+import { ROUTES, actionDetailPath, editActionPath } from '../../routes';
 import { MyActionsPanel, type AgendaItem } from './MyActionsPanel';
 import { NearbyActions, type NearbyAction } from './NearbyActions';
 import styles from './Dashboard.module.css';
@@ -28,8 +27,6 @@ const text = APP_LABELS.pages.dashboard;
 const NEARBY_LIMIT = 6;
 /* Anneau de la jauge : rayon 20 dans une boîte de 48. */
 const RING = 2 * Math.PI * 20;
-
-const mapFocusPath = (id: string) => `${ROUTES.map}?${FOCUS_PARAM}=${id}`;
 
 /** Tableau de bord du quartier (refonte) : salutation, jauge d'engagement, filtres, carte, agenda, actions proches. */
 export function Dashboard({ user }: DashboardProps) {
@@ -81,7 +78,7 @@ export function Dashboard({ user }: DashboardProps) {
         status: participation.status,
         scheduledAt: participation.scheduled_at,
         role: 'participant',
-        to: mapFocusPath(participation.action_id),
+        to: actionDetailPath(participation.action_id),
       }));
     return [...organised, ...joined].sort((a, b) => a.scheduledAt.localeCompare(b.scheduledAt));
   }, [openAll, participationsState.participations, user.user_id]);
@@ -160,13 +157,11 @@ export function Dashboard({ user }: DashboardProps) {
         />
       </div>
 
+      {/* Une carte ouvre la fiche de l'action ; la carte du quartier (au-dessus) reste le lieu de la sélection. */}
       <NearbyActions
         items={nearby}
         selectedId={selectedId}
-        onSelect={(id) => {
-          setSelectedId(id);
-          navigate(mapFocusPath(id));
-        }}
+        onSelect={(id) => navigate(actionDetailPath(id))}
         loading={actionsState.loading}
         error={actionsState.error !== null}
         onRetry={actionsState.reload}

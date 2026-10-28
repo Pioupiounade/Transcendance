@@ -53,6 +53,7 @@
   display: inline-flex;
   align-items: center;
   gap: 7px;
+  max-width: 100%;
   padding: 10px 16px;
   border: 1px solid var(--line);
   border-radius: var(--r-chip);
@@ -68,6 +69,10 @@
 }
 .option:hover {
   border-color: var(--brand);
+}
+/* Un titre d'organisation long se replie dans la puce ; l'icône garde sa taille. */
+.option > svg {
+  flex: none;
 }
 /* Le bouton radio reste dans l'arbre (clavier, lecteurs d'écran) mais la puce porte le visuel. */
 .option input {

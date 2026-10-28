@@ -13,13 +13,18 @@ export const fetchActionOrganization = (id: string, signal?: AbortSignal) =>
 const MANAGING_ROLES: readonly RoleOrg[] = ['OWNER', 'MANAGER'];
 
 /**
- * Organisations pour lesquelles l'utilisateur peut créer une action : ses adhésions actives en `OWNER` ou `MANAGER`,
- * en une requête (`GET /organization-members/user/:id/organizations`, §13 : adhésions `ACTIVE` seulement).
+ * Organisations pour lesquelles l'utilisateur peut créer une action : ses adhésions actives en `OWNER` ou `MANAGER`
+ * dans une organisation encore `ACTIVE`, en une requête (`GET /organization-members/user/:id/organizations`, §13).
+ * La route ne filtre que l'adhésion : fermer ou suspendre une organisation laisse ses membres `ACTIVE`, alors que
+ * `POST /actions` refuse une organisation inactive (400). On l'écarte donc ici plutôt que de la proposer.
  */
 export const fetchManageableOrganizations = async (userId: string, signal?: AbortSignal): Promise<Organization[]> => {
   const memberships = await http.list<MembershipWithOrganization>(
     `/organization-members/user/${userId}/organizations`,
     { signal },
   );
-  return memberships.filter((membership) => MANAGING_ROLES.includes(membership.role)).map((m) => m.organization);
+  return memberships
+    .filter((membership) => MANAGING_ROLES.includes(membership.role))
+    .map((membership) => membership.organization)
+    .filter((organization) => organization.organization_status === 'ACTIVE');
 };

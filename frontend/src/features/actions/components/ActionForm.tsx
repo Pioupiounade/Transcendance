@@ -197,25 +197,38 @@ export function ActionForm({ location, action, onSaved, onCancel }: ActionFormPr
         )}
       </fieldset>
 
+      {/* Création seulement : en mon nom ou pour une organisation que je gère. Des puces plutôt qu'un menu
+          déroulant : rien ne dépasse de l'écran sur téléphone, et le choix est visible d'un coup d'œil. */}
       {!action && organizations.length > 0 && (
-        <label>
-          Create as
-          <select
-            value={organizationId}
-            onChange={(event) => setOrganizationId(event.target.value)}
-          >
-            <option value="">Myself</option>
-
+        <fieldset className={styles.group}>
+          <legend className={styles.legend}>{text.createAs}</legend>
+          <div className={styles.options}>
+            <label className={styles.option}>
+              <input
+                type="radio"
+                name="organization"
+                value=""
+                checked={organizationId === ''}
+                onChange={() => setOrganizationId('')}
+              />
+              <Icon name="user" size={18} />
+              {text.myself}
+            </label>
             {organizations.map((organization) => (
-              <option
-                key={organization.organization_id}
-                value={organization.organization_id}
-              >
+              <label key={organization.organization_id} className={styles.option}>
+                <input
+                  type="radio"
+                  name="organization"
+                  value={organization.organization_id}
+                  checked={organizationId === organization.organization_id}
+                  onChange={() => setOrganizationId(organization.organization_id)}
+                />
+                <Icon name="building" size={18} />
                 {organization.title}
-              </option>
+              </label>
             ))}
-          </select>
-        </label>
+          </div>
+        </fieldset>
       )}
 
       <div className={styles.row}>

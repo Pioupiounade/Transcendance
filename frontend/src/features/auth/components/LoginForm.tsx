@@ -3,7 +3,7 @@ import { Button, FloatingField } from '@/shared/ui';
 import { toAuthErrorMessage } from '../errors';
 import { useAuth } from '../hooks/useAuth';
 import { AUTH_LABELS } from '../labels';
-import { validateEmail, validatePassword } from '../validation';
+import { EMAIL_MAX_LENGTH, PASSWORD_MAX_LENGTH, validateEmail, validatePassword } from '../validation';
 import styles from './AuthForm.module.css';
 
 const fields = AUTH_LABELS.fields;
@@ -38,6 +38,7 @@ export function LoginForm({ onSignedIn }: LoginFormProps) {
         label={fields.email}
         autoComplete="email"
         inputMode="email"
+        maxLength={EMAIL_MAX_LENGTH}
         value={form.values.email}
         onChange={(event) => form.setValue('email', event.target.value)}
         onBlur={() => form.touch('email')}
@@ -48,6 +49,7 @@ export function LoginForm({ onSignedIn }: LoginFormProps) {
         type="password"
         label={fields.password}
         autoComplete="current-password"
+        maxLength={PASSWORD_MAX_LENGTH}
         revealLabels={{ show: fields.show, hide: fields.hide }}
         value={form.values.password}
         onChange={(event) => form.setValue('password', event.target.value)}

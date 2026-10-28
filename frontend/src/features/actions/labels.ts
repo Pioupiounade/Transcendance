@@ -92,6 +92,8 @@ export const ACTIONS_LABELS = {
     title: 'Title',
     description: 'What will you do together?',
     category: 'Category',
+    createAs: 'Create as',
+    myself: 'Myself',
     scheduledAt: 'When?',
     maxParticipants: 'Max participants (optional)',
     maxParticipantsHelp: (min: number) =>
