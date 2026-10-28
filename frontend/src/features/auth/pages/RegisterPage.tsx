@@ -7,7 +7,14 @@ import { useReturnPath } from '../hooks/useReturnPath';
 import { toAuthErrorMessage } from '../errors';
 import { AUTH_LABELS } from '../labels';
 import { AUTH_ROUTES } from '../routes';
-import { PASSWORD_MIN_LENGTH, validateConsent, validateEmail, validateNewPassword } from '../validation';
+import {
+  EMAIL_MAX_LENGTH,
+  PASSWORD_MAX_LENGTH,
+  PASSWORD_MIN_LENGTH,
+  validateConsent,
+  validateEmail,
+  validateNewPassword,
+} from '../validation';
 import styles from '../components/AuthForm.module.css';
 
 type RegisterPageProps = {
@@ -50,6 +57,7 @@ export function RegisterPage({ termsPath, privacyPath }: RegisterPageProps) {
           label={fields.email}
           autoComplete="email"
           inputMode="email"
+          maxLength={EMAIL_MAX_LENGTH}
           value={form.values.email}
           onChange={(event) => form.setValue('email', event.target.value)}
           onBlur={() => form.touch('email')}
@@ -59,8 +67,9 @@ export function RegisterPage({ termsPath, privacyPath }: RegisterPageProps) {
           id="password"
           type="password"
           label={fields.password}
-          help={fields.passwordHelp(PASSWORD_MIN_LENGTH)}
+          help={fields.passwordHelp(PASSWORD_MIN_LENGTH, PASSWORD_MAX_LENGTH)}
           autoComplete="new-password"
+          maxLength={PASSWORD_MAX_LENGTH}
           revealLabels={{ show: fields.show, hide: fields.hide }}
           value={form.values.password}
           onChange={(event) => form.setValue('password', event.target.value)}

@@ -112,7 +112,9 @@ Ce fichier est chargé automatiquement quand la session démarre dans `frontend/
   d'un autre : calculer pendant le rendu ou utiliser `useMemo`.
 - Formulaires : composants contrôlés, validation côté client miroir des DTO backend (e-mail valide, mot de passe ≥ 8
   caractères, `location` = 2 nombres, champs obligatoires listés dans `docs/api_contract.md`). Le sujet impose la
-  validation des deux côtés.
+  validation des deux côtés. Auth, plus strict que le DTO depuis le 28/10/2026 (`features/auth/validation.ts`) : mot de
+  passe 8 à 64 caractères ASCII imprimables (ni espace, ni accent, ni emoji), e-mail sans espace, 254 au plus et 64
+  avant le `@` (limites de `@IsEmail()`, sinon 400 = erreur console) ; `maxLength` posé sur les champs.
 - Accessibilité (`../Docs/DESIGN.md` §5 et sujet) : label visible pour chaque champ, erreur reliée par `aria-describedby`,
   focus visible, `prefers-reduced-motion` respecté, la couleur ne porte jamais seule une information (icône + libellé).
 - Chaque écran gère explicitement ses états : chargement, vide, erreur (les 404 de listes vides compris).
