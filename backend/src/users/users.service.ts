@@ -14,6 +14,7 @@ import {
   OrganizationStatus,
 } from '../../generated/prisma/client';
 import { PointtransactionService } from '../pointtransaction/pointtransaction.service';
+import { RealtimeGateway } from '../realtime/realtime.gateway';
 
 @Injectable()
 export class UsersService {
@@ -21,6 +22,7 @@ export class UsersService {
   constructor(
     private prisma: PrismaService,
     private pointtransactionService: PointtransactionService,
+    private realtimeGateway: RealtimeGateway,
   ) {}
 
 // Utllise this.prisma pour recuperer les Users dans PostgreSQL. Cette methode metier accede reellement a la BDD via Prisma
@@ -360,6 +362,11 @@ export class UsersService {
           { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
         );
 
+        this.realtimeGateway.emitAccountStatusChanged(
+          targetUserId,
+          'SUSPENDED',
+        );
+
         const {
           password_hash: _,
           refresh_token: __,
@@ -423,6 +430,11 @@ export class UsersService {
         account_status: AccountStatus.ACTIVE,
       },
     });
+
+    this.realtimeGateway.emitAccountStatusChanged(
+      targetUserId,
+      'ACTIVE',
+    );
 
     const {
       password_hash: _,

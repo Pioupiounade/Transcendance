@@ -49,6 +49,39 @@ export function AuthProvider({ children }: AuthProviderProps) {
       auth: (cb) => cb({ token: session.accessToken }),
     });
 
+    let accountCheck: AbortController | null = null;
+
+    const handleConnect = () => {
+      accountCheck?.abort();
+
+      const controller = new AbortController();
+      accountCheck = controller;
+
+      void getMe(controller.signal)
+        .then((user) => {
+          if (controller.signal.aborted) return;
+
+          setSnapshot((previous) => {
+            if (
+              previous.status !== 'authenticated' ||
+              previous.user?.user_id !== user.user_id
+            ) {
+              return previous;
+            }
+
+            return { status: 'authenticated', user };
+          });
+        })
+        .catch(() => {
+          // Une coupure réseau ne doit pas effacer la session.
+          // L'expiration de session reste gérée par le client HTTP.
+        });
+    };
+
+    const handleDisconnect = () => {
+      accountCheck?.abort();
+    };
+
     const handleOnline = ({ userId }: { userId: string }) => {
       window.dispatchEvent(
         new CustomEvent('presence:change', {
@@ -182,6 +215,29 @@ export function AuthProvider({ children }: AuthProviderProps) {
       );
     };
 
+    const handleAccountStatusChanged = ({
+      userId,
+      accountStatus,
+    }: {
+      userId: string;
+      accountStatus: 'ACTIVE' | 'SUSPENDED';
+    }) => {
+      accountCheck?.abort();
+      setSnapshot((previous) => {
+        if (!previous.user || previous.user.user_id !== userId) {
+          return previous;
+        }
+
+        return {
+          ...previous,
+          user: {
+            ...previous.user,
+            account_status: accountStatus,
+          },
+        };
+      });
+    };
+
     socket.on('presence:online', handleOnline);
     socket.on('presence:offline', handleOffline);
     socket.on('organization:membership-changed', handleMembershipChanged);
@@ -194,6 +250,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
     socket.on('action:comments-changed', handleActionCommentsChanged);
     socket.on('action:updated', handleActionUpdated);
     socket.on('organization:comments-changed', handleOrganizationCommentsChanged);
+    socket.on('account:status-changed', handleAccountStatusChanged);
+    socket.on('connect', handleConnect);
+    socket.on('disconnect', handleDisconnect);
 
     return () => {
       unsubscribe();
@@ -209,6 +268,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
       socket.off('action:comments-changed', handleActionCommentsChanged);
       socket.off('action:updated', handleActionUpdated);
       socket.off('organization:comments-changed', handleOrganizationCommentsChanged);
+      socket.off('account:status-changed', handleAccountStatusChanged);
+      accountCheck?.abort();
+      socket.off('connect', handleConnect);
+      socket.off('disconnect', handleDisconnect);
       socket.disconnect();
     };
   }, [snapshot.status]);
