@@ -111,17 +111,28 @@ export function MembershipStatus({
 
   if (role) {
     return (
-      <p className={styles.note} role="status">
-        {text.declined}
-      </p>
-    );
-  }
+      <div className={styles.join}>
+        <p className={styles.badge}>
+          <Icon name="check" size={16} strokeWidth={2.4} />
+          {text.roles[role]}
+        </p>
 
-  if (membership?.status === 'BANNED') {
-    return (
-      <p className={styles.note} role="status">
-        {text.banned}
-      </p>
+        {canLeave && (
+          <Button
+            variant="secondary"
+            onClick={() => void leave()}
+            disabled={leaving}
+          >
+            {leaving ? 'Leaving…' : 'Leave organization'}
+          </Button>
+        )}
+
+        {leaveError && (
+          <p className={styles.error} role="alert">
+            {leaveError}
+          </p>
+        )}
+      </div>
     );
   }
 
