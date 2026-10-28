@@ -791,6 +791,16 @@ export class OrganizationsService {
       comment.organization_id.toString(),
     );
 
+    if (comment.user_id !== currentUserId) {
+      await this.notificationsService.notifyUser({
+        userId: comment.user_id,
+        type: NotificationType.ORGANIZATION_COMMENT_DELETED,
+        title: 'Your comment was removed',
+        message: `Your comment on "${comment.organization.title}" was removed.`,
+        link: `/organizations/${comment.organization_id.toString()}`,
+      });
+    }
+
     return { message: 'Comment deleted successfully' };
   }
 }

@@ -111,22 +111,6 @@ export function MembershipStatus({
 
   if (role) {
     return (
-      <p className={styles.note} role="status">
-        {text.declined}
-      </p>
-    );
-  }
-
-  if (membership?.status === 'BANNED') {
-    return (
-      <p className={styles.note} role="status">
-        {text.banned}
-      </p>
-    );
-  }
-
-  if (role) {
-    return (
       <div className={styles.join}>
         <p className={styles.badge}>
           <Icon name="check" size={16} strokeWidth={2.4} />
