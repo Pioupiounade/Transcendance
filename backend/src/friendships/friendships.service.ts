@@ -1,28 +1,32 @@
 import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { FriendshipStatus, AccountStatus } from '../../generated/prisma/client';
+import { RealtimeGateway } from '../realtime/realtime.gateway';
 
 @Injectable()
 export class FriendshipsService {
-    constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private realtimeGateway: RealtimeGateway,
+  ) {}
 
-private async getActiveUser(userId: string) {
-  const user = await this.prisma.user.findUnique({
-    where: {
-      user_id: BigInt(userId),
-    },
-  });
+  private async getActiveUser(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: {
+        user_id: BigInt(userId),
+      },
+    });
 
-  if (!user) {
-    throw new NotFoundException('User not found');
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    if (user.account_status !== AccountStatus.ACTIVE) {
+      throw new BadRequestException('User is not active');
+    }
+
+    return user;
   }
-
-  if (user.account_status !== AccountStatus.ACTIVE) {
-    throw new BadRequestException('User is not active');
-  }
-
-  return user;
-}
 
 private async findFriendshipBetweenUsers(currentUserId: string, friendUserId: string) {
   return this.prisma.friendship.findFirst({
@@ -166,6 +170,8 @@ async blockFriend( currentUserId: string, friendUserId: string) {
     },
     });
 
+    this.realtimeGateway.emitFriendshipChanged(friendUserId, currentUserId);
+
     return {
         ...blockedFriendship,
         user1_id: blockedFriendship.user1_id.toString(),
@@ -210,6 +216,8 @@ async unblockFriend(currentUserId: string, friendUserId: string) {
     },
     });
 
+    this.realtimeGateway.emitFriendshipChanged(friendUserId, currentUserId);
+
     return {
         ...unblockedFriendship,
         user1_id: unblockedFriendship.user1_id.toString(),
@@ -244,6 +252,8 @@ async removeFriend(currentUserId: string, friendUserId: string) {
         },
     },
     });
+
+    this.realtimeGateway.emitFriendshipChanged(friendUserId, currentUserId);
 
     return {
         ...removedFriendship,

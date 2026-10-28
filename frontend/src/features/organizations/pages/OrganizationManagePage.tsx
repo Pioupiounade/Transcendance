@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router';
 import { ROLE_APP, useAuth } from '@/features/auth';
 import { useResource } from '@/shared/hooks/useResource';
@@ -62,9 +62,7 @@ const byRoleThenName = (a: OrganizationMember, b: OrganizationMember) =>
 export function OrganizationManagePage({ organizationPath }: OrganizationManagePageProps) {
   const { id = '' } = useParams<{ id: string }>();
   const { user } = useAuth();
-
   const loaded = useOrganization(id);
-
   const organizationAvailable =
     !loaded.loading &&
     loaded.organization != null &&
@@ -75,6 +73,30 @@ export function OrganizationManagePage({ organizationPath }: OrganizationManageP
     id,
     organizationAvailable,
   );
+
+  useEffect(() => {
+    const handleMembershipChanged = (event: Event) => {
+      const { organizationId } = (
+        event as CustomEvent<{ organizationId: string }>
+      ).detail;
+
+      if (organizationId !== id) return;
+
+      members.reload();
+    };
+
+    window.addEventListener(
+      'organization:membership-changed',
+      handleMembershipChanged,
+    );
+
+    return () => {
+      window.removeEventListener(
+        'organization:membership-changed',
+        handleMembershipChanged,
+      );
+    };
+  }, [id, members.reload]);
 
   const backTo = organizationPath(id);
   const myRole = members.members.find((member) => member.user_id === user?.user_id)?.role ?? null;

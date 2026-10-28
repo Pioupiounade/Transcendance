@@ -28,6 +28,9 @@ export function useActionComments(actionId: string) {
   }, [actionId, reloadResource]);
 
   const fresh = posted.actionId === actionId ? posted.items : [];
-  const comments = data === null ? [] : fresh.length === 0 ? data : [...fresh, ...data];
+  const freshIds = new Set(fresh.map((comment) => comment.comment_id));
+  const comments = data === null
+    ? []
+    : [...fresh, ...data.filter((comment) => !freshIds.has(comment.comment_id))];
   return { comments, loading, notFound: error?.status === 404, error, reload, prepend };
 }

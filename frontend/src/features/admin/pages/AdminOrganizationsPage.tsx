@@ -6,6 +6,8 @@ import {
   reopenOrganization,
   suspendOrganization,
   useOrganizations,
+  fetchMemberships,
+  reopenOrganizationWithOwner,
   type Organization,
 } from '@/features/organizations';
 import { pageTitle } from '@/shared/lib/pageTitle';
@@ -16,6 +18,8 @@ import { useAdminList } from '../hooks/useAdminList';
 import { ADMIN_LABELS } from '../labels';
 import type { OrganizationModerationKind } from '../types';
 import styles from './AdminPage.module.css';
+import type { AuthUser } from '@/features/auth';
+import { fetchUsers } from '../api/adminUsersApi';
 
 type AdminOrganizationsPageProps = {
   /** Fiche publique d'une organisation (`/organizations/:id`). */
@@ -50,6 +54,73 @@ export function AdminOrganizationsPage({ organizationPath }: AdminOrganizationsP
   const [confirmation, setConfirmation] = useState<Confirmation | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
 
+const [ownerSelection, setOwnerSelection] = useState<Organization | null>(null);
+const [availableUsers, setAvailableUsers] = useState<AuthUser[]>([]);
+const [selectedOwnerId, setSelectedOwnerId] = useState('');
+const [ownerSelectionError, setOwnerSelectionError] = useState<string | null>(null);
+const [ownerSelectionLoading, setOwnerSelectionLoading] = useState(false);
+
+const prepareReopen = async (organization: Organization) => {
+  setOwnerSelectionLoading(true);
+  setOwnerSelectionError(null);
+  setNotice(null);
+
+    try {
+      const memberships = await fetchMemberships(organization.organization_id);
+      const hasOwner = memberships.some(
+        (member) => member.status === 'ACTIVE' && member.role === 'OWNER',
+      );
+
+      if (hasOwner) {
+        ask('reactivate', organization);
+        return;
+      }
+
+      const users = await fetchUsers();
+      const existingUserIds = new Set(memberships.map((member) => member.user_id));
+
+      setAvailableUsers(
+        users.filter(
+          (user) =>
+            user.account_status === 'ACTIVE' &&
+            !existingUserIds.has(user.user_id),
+        ),
+      );
+      setSelectedOwnerId('');
+      setOwnerSelection(organization);
+    } catch {
+      setOwnerSelectionError(
+        'Unable to prepare reopening. Please try again.',
+      );
+    } finally {
+      setOwnerSelectionLoading(false);
+    }
+  };
+
+  const reopenWithSelectedOwner = async () => {
+    if (!ownerSelection || !selectedOwnerId) return;
+
+    setOwnerSelectionLoading(true);
+    setOwnerSelectionError(null);
+
+    try {
+      await reopenOrganizationWithOwner(
+        ownerSelection.organization_id,
+        selectedOwnerId,
+      );
+
+      setNotice(`${ownerSelection.title} is active again.`);
+      setOwnerSelection(null);
+      list.reset();
+      reload();
+    } catch {
+      setOwnerSelectionError(
+        'Unable to reopen this organization. Check the selected user and try again.',
+      );
+    } finally {
+      setOwnerSelectionLoading(false);
+    }
+  };
   const ask = (kind: OrganizationModerationKind, organization: Organization) => {
     const copy = DIALOGS[kind];
     setConfirmation({
@@ -129,7 +200,21 @@ export function AdminOrganizationsPage({ organizationPath }: AdminOrganizationsP
       )}
 
       {list.rows.length > 0 && (
-        <OrganizationsTable organizations={list.rows} organizationPath={organizationPath} onModerate={ask} />
+      <OrganizationsTable
+        organizations={list.rows}
+        organizationPath={organizationPath}
+        onModerate={(kind, organization) => {
+          if (
+            kind === 'reactivate' &&
+            organization.organization_status === 'CLOSED'
+          ) {
+            void prepareReopen(organization);
+            return;
+          }
+
+          ask(kind, organization);
+        }}
+      />
       )}
       {list.hidden > 0 && (
         <div className={styles.more}>
@@ -138,7 +223,62 @@ export function AdminOrganizationsPage({ organizationPath }: AdminOrganizationsP
           </Button>
         </div>
       )}
+      {ownerSelectionError && (
+        <p className={styles.state} role="alert">
+          {ownerSelectionError}
+        </p>
+      )}
 
+      {ownerSelection && (
+        <div className={styles.state}>
+          <h2>Choose a new owner</h2>
+
+          <p>
+            {ownerSelection.title} has no active owner. Select an active user
+            before reopening it.
+          </p>
+
+          {availableUsers.length === 0 ? (
+            <p>No eligible user is available.</p>
+          ) : (
+            <label>
+              New owner
+              <select
+                value={selectedOwnerId}
+                onChange={(event) => setSelectedOwnerId(event.target.value)}
+                disabled={ownerSelectionLoading}
+              >
+                <option value="">Select a user</option>
+                {availableUsers.map((user) => (
+                  <option key={user.user_id} value={user.user_id}>
+                    {user.email}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
+
+          <div>
+            <Button
+              onClick={() => void reopenWithSelectedOwner()}
+              disabled={!selectedOwnerId || ownerSelectionLoading}
+            >
+              Reopen organization
+            </Button>
+
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setOwnerSelection(null);
+                setOwnerSelectionError(null);
+              }}
+              disabled={ownerSelectionLoading}
+            >
+              Cancel
+            </Button>
+          </div>
+        </div>
+      )}
       <ConfirmDialog
         confirmation={confirmation}
         onClose={() => setConfirmation(null)}

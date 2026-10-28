@@ -51,6 +51,11 @@ export const fetchMyOrganizationMembership = (id: string, signal?: AbortSignal) 
 export const joinOrganization = (id: string) =>
   http.post<Membership>(`/organization-members/organization/${id}/join`);
 
+export const leaveOrganization = (id: string) =>
+  http.delete<{ success: boolean; organizationClosed: boolean }>(
+    `/organization-members/organization/${id}/leave`,
+  );
+
 // --- Gestion (#62). Routes réservées aux gestionnaires (membre actif MANAGER ou OWNER) et aux ADMIN ; celles de
 // rôles (promote, demote, transfer) au OWNER et aux ADMIN. Toutes refusent une organisation inactive (400).
 
@@ -125,6 +130,16 @@ export const suspendOrganization = (id: string) => http.patch<Organization>(`/or
 /** Rouvre une organisation `CLOSED` ; une organisation `SUSPENDED` ne peut l'être que par un ADMIN. */
 export const reopenOrganization = (id: string) => http.patch<Organization>(`/organizations/${id}/reactivate`);
 
+/** Rouvre une organisation sans propriétaire en lui attribuant un nouveau owner. */
+export const reopenOrganizationWithOwner = (
+  organizationId: string,
+  newOwnerId: string,
+) =>
+  http.patch<{ success: boolean }>(
+    `/organizations/${organizationId}/reopen-with-owner`,
+    { newOwnerId },
+  );
+
 /** Commentaires d'une organisation, du plus récent au plus ancien (route publique). 404 → organisation inconnue. */
 export const fetchOrganizationComments = (organizationId: string, signal?: AbortSignal) =>
   http.get<OrganizationComment[]>(`/organizations/${organizationId}/comments`, { signal });
@@ -133,7 +148,7 @@ export type OrganizationCommentPostResult =
   | OrganizationComment
   | {
       success: false;
-      code: 'NOT_ACTIVE_MEMBER' | 'ACCOUNT_NOT_ACTIVE';
+      code: 'NOT_ACTIVE_MEMBER' | 'ACCOUNT_NOT_ACTIVE' | 'ORGANIZATION_INACTIVE';
       message: string;
     };
 

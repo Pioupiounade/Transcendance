@@ -30,8 +30,11 @@ export function MessagesButton({ to, profilePath }: MessagesButtonProps) {
 
   const active = pathname === to || pathname.startsWith(`${to}/`);
   const label = unread > 0 ? MESSAGES_LABELS.entryUnread(unread) : MESSAGES_LABELS.entry;
-  const dot = unread > 0 && <span className={styles.dot} aria-hidden="true" />;
-
+  const dot = unread > 0 && (
+    <span className={styles.dot} aria-hidden="true">
+      {unread > 99 ? '99+' : unread}
+    </span>
+  );
   if (!desktop) {
     return (
       <Link to={to} className={styles.button} aria-label={label} title={label} aria-current={active ? 'page' : undefined}>

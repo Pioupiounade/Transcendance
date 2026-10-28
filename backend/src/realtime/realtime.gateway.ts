@@ -39,6 +39,46 @@ export class RealtimeGateway
       });
   }
 
+  emitFriendshipChanged(recipientId: string, userId: string): void {
+    this.server
+      .to(`user:${recipientId}`)
+      .emit('friendship:changed', { userId });
+  }
+
+  emitProfileUpdated(userId: string): void {
+    void this.getFriendIds(userId)
+      .then((friendIds) => {
+        for (const friendId of friendIds) {
+          this.server
+            .to(`user:${friendId}`)
+            .emit('profile:updated', { userId });
+        }
+      })
+      .catch((error: unknown) => {
+        console.error('Failed to broadcast profile update:', error);
+      });
+  }
+
+  emitOrganizationUpdated(organizationId: string): void {
+    this.server.emit('organization:updated', { organizationId });
+  }
+
+  emitActionParticipantsChanged(actionId: string): void {
+    this.server.emit('action:participants-changed', { actionId });
+  }
+
+  emitActionCommentsChanged(actionId: string): void {
+    this.server.emit('action:comments-changed', { actionId });
+  }
+
+  emitActionUpdated(actionId: string): void {
+    this.server.emit('action:updated', { actionId });
+  }
+
+  emitOrganizationCommentsChanged(organizationId: string): void {
+    this.server.emit('organization:comments-changed', { organizationId });
+  }
+
   constructor(
     private readonly jwtService: JwtService,
     private readonly prisma: PrismaService,

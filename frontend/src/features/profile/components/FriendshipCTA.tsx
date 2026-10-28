@@ -57,10 +57,19 @@ export function FriendshipCTA({ userId, status, onStatusChange }: FriendshipCTAP
       break;
     case 'PENDING_SENT':
       content = (
-        <span className={styles.badge}>
-          <Icon name="clock" size={14} />
-          {text.sent}
-        </span>
+        <>
+          <span className={styles.badge}>
+            <Icon name="clock" size={14} />
+            {text.sent}
+          </span>
+          <Button
+            variant="secondary"
+            onClick={run(cancelOrRemoveFriend)}
+            disabled={pending}
+          >
+            Cancel request
+          </Button>
+        </>
       );
       break;
     case 'PENDING_RECEIVED':

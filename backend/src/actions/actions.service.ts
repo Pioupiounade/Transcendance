@@ -7,6 +7,7 @@ import { Category } from '../../generated/prisma/client';
 import { ActionStatus, OrganizationStatus, RoleApp, RoleOrg, MemberStatus, AccountStatus, Prisma, NotificationType } from '../../generated/prisma/client';
 import { PointtransactionService } from '../pointtransaction/pointtransaction.service';
 import { NotificationsService } from '../notifications/notifications.service';
+import { RealtimeGateway } from '../realtime/realtime.gateway';
 
 @Injectable()
 export class ActionsService {
@@ -15,6 +16,7 @@ export class ActionsService {
     private prisma: PrismaService,
     private pointtransactionService: PointtransactionService,
     private notificationsService: NotificationsService,
+    private realtimeGateway: RealtimeGateway,
   ) { }
 
   //1. recuperer toutes les actions
@@ -52,13 +54,12 @@ export class ActionsService {
       },
     });
 
-    const remainingSeats =
-      action.max_participants === null
-        ? null
-        : Math.max(action.max_participants - participantCount, 0);
-
+    const effectiveMaximum = Math.min(action.max_participants ?? 100, 100);
+    const remainingSeats = Math.max(effectiveMaximum - participantCount, 0);
+    
     return {
       ...action,
+      max_participants: effectiveMaximum,
       action_id: action.action_id.toString(),
       creator_id: action.creator_id.toString(),
       organization_id: action.organization_id?.toString() ?? null,
@@ -179,17 +180,17 @@ export class ActionsService {
       },
     });
 
+    const effectiveMaximum = Math.min(action.max_participants ?? 100, 100);
+
     return {
       ...action,
+      max_participants: effectiveMaximum,
       action_id: action.action_id.toString(),
       creator_id: action.creator_id.toString(),
       organization_id: action.organization_id?.toString() ?? null,
       validated_by_user_id: action.validated_by_user_id?.toString() ?? null,
       participant_count: participantCount,
-      remaining_seats:
-        action.max_participants === null
-          ? null
-          : Math.max(action.max_participants - participantCount, 0),
+      remaining_seats: Math.max(effectiveMaximum - participantCount, 0),
     };
   }
 
@@ -300,7 +301,7 @@ export class ActionsService {
         images_before: data.images_before ?? [],
         images_after: data.images_after ?? [],
         organization_id: organizationId,
-        max_participants: data.max_participants,
+        max_participants: data.max_participants ?? 100,
         creator_id: BigInt(currentUserId),
       },
     });
@@ -479,6 +480,8 @@ export class ActionsService {
       );
     }
 
+    this.realtimeGateway.emitActionUpdated(id);
+
     // 5. Formatage de la réponse pour le frontend
     return {
       ...updatedAction,
@@ -579,6 +582,8 @@ export class ActionsService {
       },
     });
 
+    this.realtimeGateway.emitActionUpdated(id);
+
     const participations = await this.prisma.participation.findMany({
       where: {
         action_id: BigInt(id),
@@ -677,6 +682,8 @@ export class ActionsService {
         status: ActionStatus.CANCELLED,
       },
     });
+
+    this.realtimeGateway.emitActionUpdated(id);
 
     await this.notifyActionStatus(updatedAction, 'cancelled');
 
@@ -812,6 +819,8 @@ export class ActionsService {
       },
     );
 
+    this.realtimeGateway.emitActionUpdated(id);
+
     await this.notifyActionStatus(updatedAction, 'completed');
 
     return {
@@ -825,7 +834,7 @@ export class ActionsService {
 
   async addComment(actionId: bigint, userId: bigint, dto: CreateCommentDto) {
     const action = await this.prisma.action.findUnique({
-      where: { action_id: actionId }
+      where: { action_id: actionId },
     });
 
     if (!action) {
@@ -846,17 +855,37 @@ export class ActionsService {
     const isParticipant = participation !== null;
 
     if (!isCreator && !isParticipant) {
-      throw new ForbiddenException('Only the creator or participants of the action can comment');
+      throw new ForbiddenException(
+        'Only the creator or participants of the action can comment',
+      );
     }
 
     const comment = await this.prisma.$transaction(async (tx) => {
+      const [currentAction] = await tx.$queryRaw<{ status: ActionStatus }[]>`
+        SELECT status
+        FROM "Action"
+        WHERE action_id = ${actionId}
+        FOR UPDATE
+      `;
+
+      if (!currentAction) {
+        throw new NotFoundException('Action not found');
+      }
+
+      if (currentAction.status === ActionStatus.CANCELLED) {
+        throw new BadRequestException(
+          'Comments cannot be added to a cancelled action',
+        );
+      }
+
       const lastComment = await tx.actionComment.findFirst({
         where: { user_id: userId },
         orderBy: { created_at: 'desc' },
       });
 
       if (lastComment) {
-        const diffTime = (Date.now() - lastComment.created_at.getTime()) / 1000;
+        const diffTime =
+          (Date.now() - lastComment.created_at.getTime()) / 1000;
 
         if (diffTime < 15) {
           throw new HttpException(
@@ -888,13 +917,11 @@ export class ActionsService {
       });
     });
 
+    this.realtimeGateway.emitActionCommentsChanged(actionId.toString());
+
     const participations = await this.prisma.participation.findMany({
-      where: {
-        action_id: actionId,
-      },
-      select: {
-        user_id: true,
-      },
+      where: { action_id: actionId },
+      select: { user_id: true },
     });
 
     const recipientIds = new Set<bigint>();
@@ -903,9 +930,9 @@ export class ActionsService {
       recipientIds.add(action.creator_id);
     }
 
-    for (const participation of participations) {
-      if (participation.user_id !== userId) {
-        recipientIds.add(participation.user_id);
+    for (const participant of participations) {
+      if (participant.user_id !== userId) {
+        recipientIds.add(participant.user_id);
       }
     }
 
@@ -918,6 +945,7 @@ export class ActionsService {
         link: `/actions/${action.action_id.toString()}`,
       });
     }
+
     return comment;
   }
 
@@ -979,6 +1007,8 @@ export class ActionsService {
       },
     });
 
+    this.realtimeGateway.emitActionUpdated(id);
+
     return this.serializeAction(updatedAction);
   }
 
@@ -1012,6 +1042,9 @@ export class ActionsService {
         }
       },
     });
+
+    this.realtimeGateway.emitActionUpdated(id);
+    
     return this.serializeAction(updatedAction);
   }
 

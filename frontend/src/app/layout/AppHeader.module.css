@@ -85,7 +85,7 @@
   flex: none;
   width: 200px;
 }
-.search > * {
+.actions .search > * {
   width: 100%;
 }
 
@@ -124,9 +124,12 @@
   color: var(--on-brand);
 }
 
-/* Déconnexion : bouton texte ; sur téléphone elle vit dans le menu du compte. */
+/* Déconnexion : texte en large et compact, icône seule en pastille sur téléphone. */
 .signOut {
   flex-shrink: 0;
+}
+.signOutIcon {
+  display: none;
 }
 
 /* Jusqu'à 1535 px la ligne est juste : gouttières et pilules resserrées. */
@@ -160,20 +163,12 @@
 
 /* Compact : la nav descend dans la barre basse, l'en-tête n'a plus que la marque et les actions. */
 @media (max-width: 1319px) {
+  .topbar {
+    display: flex;
+    justify-content: space-between;
+  }
   .nav {
     display: none;
-  }
-  /* Visiteur : pas de recherche, marque à gauche et « Sign in » à droite. */
-  .topbar:not(:has(.search)) {
-    grid-template-columns: 1fr auto;
-  }
-  /* Au centre de l'écran, la recherche s'élargit : 280 px dès 1273 px, 200 px au plus serré (un admin a une pastille
-     de plus à droite et tout doit tenir à 761 px) ; champ de 42 px, entre la cloche (44) et l'avatar (46). */
-  .search {
-    width: clamp(200px, 22vw, 280px);
-  }
-  .search input {
-    height: 42px;
   }
 }
 
@@ -181,24 +176,63 @@
   .topbar {
     --header-gutter: 18px;
     height: 72px;
-    grid-template-columns: auto 1fr auto;
-    gap: 12px;
+    gap: 8px;
   }
-  .topbar:has(.search) .brandName {
+  .profileLink {
     display: none;
   }
-  /* 82 % de la colonne du milieu, 280 px max : l'air restant se répartit à égalité des deux côtés. */
-  .search {
-    justify-self: center;
-    width: clamp(140px, 82%, 280px);
-  }
   .actions {
+    flex: 1;
+    justify-content: flex-end;
     gap: 8px;
+    min-width: 0;
+  }
+  /* Seule la recherche cède de la place ; les pastilles gardent leur rond. */
+  .actions > * {
+    flex-shrink: 0;
+  }
+  .search {
+    flex: 0 1 200px;
+    min-width: 120px;
+  }
+  /* Déconnexion en pastille icône, comme la cloche et les messages. */
+  .signOut {
+    width: 46px;
+    padding: 0;
+  }
+  .signOutIcon {
+    display: grid;
+    place-items: center;
+  }
+  .signOutLabel {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+}
+
+/* Téléphone connecté : pin seul, la recherche prend la place du nom ; un admin a une pastille de plus, donc plus tôt. */
+@media (max-width: 570px) {
+  .topbar:has(.adminLink) .brandName {
+    display: none;
+  }
+}
+@media (max-width: 520px) {
+  .topbar:has(.search) .brandName {
+    display: none;
   }
 }
 
 @media (max-width: 400px) {
   .topbar {
     --header-gutter: 12px;
+    gap: 6px;
+  }
+  .actions {
+    gap: 6px;
   }
 }

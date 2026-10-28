@@ -40,8 +40,8 @@ export class CommentSubmissionError extends Error {
 
   constructor(code: string) {
     super(code);
-    this.name = 'CommentSubmissionError';
     this.code = code;
+    this.name = 'CommentSubmissionError';
   }
 }
 
@@ -49,6 +49,12 @@ export class CommentSubmissionError extends Error {
 export const toCommentErrorMessage = (error: unknown): string => {
   if (error instanceof CommentSubmissionError) {
     return t.notAllowed;
+  }
+  if (
+    error instanceof CommentSubmissionError &&
+    error.code === 'ORGANIZATION_INACTIVE'
+  ) {
+    return 'Comments are disabled while the organization is inactive.';
   }
   if (!isApiError(error)) return t.unknown;
   if (error.isNetwork) return t.network;

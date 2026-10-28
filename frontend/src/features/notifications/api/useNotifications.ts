@@ -35,6 +35,7 @@ export function useNotifications() {
     disposed.current = false;
     void refresh();
 
+    window.addEventListener('notification:new', refresh);
     const timer = window.setInterval(() => {
       if (document.visibilityState === 'visible') void refresh();
     }, POLL_INTERVAL_MS);
@@ -50,6 +51,7 @@ export function useNotifications() {
       latestRequest.current?.abort();
       window.clearInterval(timer);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('notification:new', refresh);
     };
   }, [refresh]);
 

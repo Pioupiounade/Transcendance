@@ -118,17 +118,42 @@ export const ActionDetailPage: React.FC<ActionDetailPageProps> = ({ editPath }) 
   const currentUserId = status === 'authenticated' ? (user?.user_id ?? null) : null;
   const navigate = useNavigate();
   const [loaded, setLoaded] = useState<Loaded | null>(null);
+  const [refreshVersion, setRefreshVersion] = useState(0);
+
+  useEffect(() => {
+    const handleParticipantsChanged = (event: Event) => {
+      const { actionId } = (
+        event as CustomEvent<{ actionId: string }>
+      ).detail;
+
+      if (actionId !== id) return;
+
+      setRefreshVersion((version) => version + 1);
+    };
+
+    window.addEventListener('action:participants-changed', handleParticipantsChanged);
+    window.addEventListener('action:updated', handleParticipantsChanged);
+
+    return () => {
+      window.removeEventListener('action:participants-changed', handleParticipantsChanged);
+      window.removeEventListener('action:updated', handleParticipantsChanged);
+    };
+  }, [id]);
 
   useEffect(() => {
     if (!id) return;
     const controller = new AbortController();
     loadDetail(id, controller.signal)
-      .then((detail) => setLoaded({ id, detail }))
+      .then((detail) => {
+        if (!controller.signal.aborted) {
+          setLoaded({ id, detail });
+        }
+      })
       .catch(() => {
         if (!controller.signal.aborted) setLoaded({ id, detail: null });
       });
     return () => controller.abort();
-  }, [id]);
+  }, [id, refreshVersion]);
 
   const current = loaded !== null && loaded.id === id ? loaded : null;
   const isLoading = id !== undefined && current === null;
@@ -229,7 +254,8 @@ export const ActionDetailPage: React.FC<ActionDetailPageProps> = ({ editPath }) 
   
   const canComplete = isCreator && action.status === 'APPROVED';
   
-  const canComment = currentUserId !== null &&
+  const canComment = action.status !== 'CANCELLED' &&
+  currentUserId !== null &&
   (
     action.creator_id === currentUserId ||
     participants.some(

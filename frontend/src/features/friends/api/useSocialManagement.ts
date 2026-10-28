@@ -33,7 +33,17 @@ export function useSocialManagement() {
   }, []);
 
   useEffect(() => {
-    fetchAll();
+    void fetchAll();
+
+    const handleFriendshipChanged = () => {
+      void fetchAll();
+    };
+
+    window.addEventListener('friendship:changed', handleFriendshipChanged);
+
+    return () => {
+      window.removeEventListener('friendship:changed', handleFriendshipChanged);
+    };
   }, [fetchAll]);
 
   const handleAcceptRequest = async (requestId: string) => {
@@ -53,14 +63,12 @@ export function useSocialManagement() {
 
   const handleBlockFriend = async (friendUserId: string) => {
     await friendsApi.blockFriend(friendUserId);
-    setFriends((prev) => prev.filter((f) => f.user_id !== friendUserId));
+    await fetchAll();
   };
 
   const handleUnblockFriend = async (friendUserId: string) => {
     await friendsApi.unblockFriend(friendUserId);
-    setBlockedFriends((prev) =>
-      prev.filter((f) => f.user_id !== friendUserId),
-    );
+    await fetchAll();
   };
 
   return {

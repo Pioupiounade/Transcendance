@@ -68,6 +68,43 @@ export function PublicProfilePage({ ownProfilePath, messagePath }: PublicProfile
     return () => window.removeEventListener('presence:change', onPresence);
   }, []);
 
+  useEffect(() => {
+    const onProfileUpdated = (event: Event) => {
+      const { userId: changedUserId } = (
+        event as CustomEvent<{ userId: string }>
+      ).detail;
+
+      if (String(changedUserId) === userId) {
+        void view.reload();
+      }
+    };
+
+    window.addEventListener('profile:updated', onProfileUpdated);
+
+    return () => {
+      window.removeEventListener('profile:updated', onProfileUpdated);
+    };
+  }, [userId, view.reload]);
+
+  useEffect(() => {
+    const onFriendshipChanged = (event: Event) => {
+      const { userId: changedUserId } = (
+        event as CustomEvent<{ userId: string }>
+      ).detail;
+
+      if (String(changedUserId) === userId) {
+        setFriendship(null);
+        void view.reload();
+      }
+    };
+
+    window.addEventListener('friendship:changed', onFriendshipChanged);
+
+    return () => {
+      window.removeEventListener('friendship:changed', onFriendshipChanged);
+    };
+  }, [userId, view.reload]);
+
   if (currentUserId !== null && currentUserId === userId) return <Navigate to={ownProfilePath} replace />;
 
   let content;

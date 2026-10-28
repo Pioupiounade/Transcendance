@@ -14,6 +14,7 @@ import { ACTION_STATUS, CATEGORY, type ActionRecord, type LatLng } from '../type
 import {
   DESCRIPTION_MAX_LENGTH,
   MAX_PARTICIPANTS_MIN,
+  MAX_PARTICIPANTS_LIMIT,
   TITLE_MAX_LENGTH,
   isCategory,
   localDateTimeNow,
@@ -233,6 +234,7 @@ export function ActionForm({ location, action, onSaved, onCancel }: ActionFormPr
           type="number"
           inputMode="numeric"
           min={MAX_PARTICIPANTS_MIN}
+          max={MAX_PARTICIPANTS_LIMIT}
           step={1}
           label={text.maxParticipants}
           help={text.maxParticipantsHelp(MAX_PARTICIPANTS_MIN)}

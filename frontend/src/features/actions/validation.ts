@@ -6,6 +6,7 @@ export const TITLE_MAX_LENGTH = 80;
 export const DESCRIPTION_MAX_LENGTH = 600;
 /** Le backend refuse `max_participants` sous 3. */
 export const MAX_PARTICIPANTS_MIN = 3;
+export const MAX_PARTICIPANTS_LIMIT = 100;
 
 const t = ACTIONS_LABELS.validation;
 
@@ -63,8 +64,17 @@ export const validateScheduledAt = (value: string): string | null => {
 /** Optionnel ; sinon entier ≥ 3. */
 export const validateMaxParticipants = (value: string): string | null => {
   if (value.trim() === '') return null;
+
   const count = Number(value);
-  if (!Number.isInteger(count) || count < MAX_PARTICIPANTS_MIN) return t.maxParticipantsInvalid(MAX_PARTICIPANTS_MIN);
+
+  if (
+    !Number.isInteger(count) ||
+    count < MAX_PARTICIPANTS_MIN ||
+    count > MAX_PARTICIPANTS_LIMIT
+  ) {
+    return t.maxParticipantsInvalid(MAX_PARTICIPANTS_MIN);
+  }
+
   return null;
 };
 

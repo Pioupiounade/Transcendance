@@ -2,12 +2,15 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { PrismaService } from '../prisma/prisma.service';
 import { AccountStatus, ActionStatus, Prisma, NotificationType } from '../../generated/prisma/client';
 import { NotificationsService } from '../notifications/notifications.service';
+import { RealtimeGateway } from '../realtime/realtime.gateway';
 
 @Injectable()
 export class ParticipationsService {
   constructor(
   private prisma: PrismaService,
   private notificationsService: NotificationsService,
+  private realtimeGateway: RealtimeGateway,
+
 ) {}
 
 //participer a une action
@@ -74,10 +77,9 @@ export class ParticipationsService {
               },
             });
 
-            if (
-              action.max_participants !== null &&
-              beforeCount >= action.max_participants
-            ) {
+            const effectiveMaximum = Math.min(action.max_participants ?? 100, 100);
+
+            if (beforeCount >= effectiveMaximum) {
               throw new BadRequestException(
                 'Maximum number of participants reached',
               );
@@ -109,6 +111,16 @@ export class ParticipationsService {
           beforeCount,
           afterCount,
         } = result;
+
+        this.realtimeGateway.emitActionParticipantsChanged(actionId);
+
+        await this.notificationsService.notifyUser({
+          userId: action.creator_id,
+          type: NotificationType.ACTION_PARTICIPATION_CHANGED,
+          title: 'New participant',
+          message: `Someone joined your action "${action.title}".`,
+          link: `/actions/${action.action_id.toString()}`,
+        });
 
         if (
           beforeCount < action.min_participants &&
@@ -171,7 +183,7 @@ export class ParticipationsService {
 
     for (let attempt = 0; attempt < 3; attempt++) {
       try {
-        const participation = await this.prisma.$transaction(
+        const { participation, action } = await this.prisma.$transaction(
           async (tx) => {
             const user = await tx.user.findUnique({
               where: {
@@ -223,13 +235,26 @@ export class ParticipationsService {
               },
             });
 
-            return existingParticipation;
+            return {
+              participation: existingParticipation,
+              action,
+            };
           },
           {
             isolationLevel:
               Prisma.TransactionIsolationLevel.Serializable,
           },
         );
+
+        this.realtimeGateway.emitActionParticipantsChanged(actionId);
+
+        await this.notificationsService.notifyUser({
+          userId: action.creator_id,
+          type: NotificationType.ACTION_PARTICIPATION_CHANGED,
+          title: 'Participant left',
+          message: `Someone left your action "${action.title}".`,
+          link: `/actions/${action.action_id.toString()}`,
+        });
 
         return {
           ...participation,

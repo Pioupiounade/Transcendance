@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { MESSAGES_READ_EVENT, fetchUnreadMessageNotifications } from './messagesApi';
+import { MESSAGES_READ_EVENT, fetchUnreadMessageCount } from './messagesApi';
 
 const POLL_INTERVAL_MS = 30_000;
 
@@ -14,9 +14,9 @@ export function useUnreadMessages(): number {
       latestRequest.current?.abort();
       const controller = new AbortController();
       latestRequest.current = controller;
-      fetchUnreadMessageNotifications(controller.signal)
-        .then((unread) => {
-          if (!disposed && !controller.signal.aborted) setCount(unread.length);
+      fetchUnreadMessageCount(controller.signal)
+        .then(({ count }) => {
+          if (!disposed && !controller.signal.aborted) setCount(count);
         })
         .catch(() => undefined);
     };
@@ -25,11 +25,13 @@ export function useUnreadMessages(): number {
       if (document.visibilityState === 'visible') refresh();
     }, POLL_INTERVAL_MS);
     window.addEventListener(MESSAGES_READ_EVENT, refresh);
+    window.addEventListener('direct-message:new', refresh);
     return () => {
       disposed = true;
       latestRequest.current?.abort();
       window.clearInterval(timer);
       window.removeEventListener(MESSAGES_READ_EVENT, refresh);
+      window.removeEventListener('direct-message:new', refresh);
     };
   }, []);
 

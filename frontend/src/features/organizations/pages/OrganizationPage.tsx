@@ -1,4 +1,4 @@
-import { Link, useParams } from 'react-router';
+import { Link, useParams, useNavigate } from 'react-router';
 import { PlaceMap } from '@/features/actions';
 import { ROLE_APP, useAuth } from '@/features/auth';
 import { formatDayMonth } from '@/shared/lib/formatDate';
@@ -43,7 +43,8 @@ const sinceLabel = (iso: string): string => {
 export function OrganizationPage({ listPath, upcomingActionPath, managePath }: OrganizationPageProps) {
   const { id = '' } = useParams<{ id: string }>();
   const { status, user } = useAuth();
-  const { organization, loading, notFound, error } = useOrganization(id);
+  const { organization, loading, notFound, error, reload: reloadOrganization } =
+    useOrganization(id);
 
   const organizationAvailable =
     !loading &&
@@ -86,11 +87,31 @@ export function OrganizationPage({ listPath, upcomingActionPath, managePath }: O
     };
   }, [id, members.reload, membership.reload]);
 
+  useEffect(() => {
+    const handleOrganizationUpdated = (event: Event) => {
+      const { organizationId } = (
+        event as CustomEvent<{ organizationId: string }>
+      ).detail;
+
+      if (organizationId !== id) return;
+
+      reloadOrganization();
+    };
+
+    window.addEventListener('organization:updated', handleOrganizationUpdated);
+
+    return () => {
+      window.removeEventListener('organization:updated', handleOrganizationUpdated);
+    };
+  }, [id, reloadOrganization]);
+
   // La liste publique ne contient que les membres actifs : m'y trouver = être membre.
   const myRole = members.members.find((member) => member.user_id === user?.user_id)?.role ?? null;
   const canManage = managerLevel(myRole, user?.role === ROLE_APP.ADMIN) !== null;
 
   const inactive = organization !== null && organization.organization_status !== ORGANIZATION_STATUS.ACTIVE;
+
+  const navigate = useNavigate();
 
   return (
     <section className={styles.page}>
@@ -155,6 +176,19 @@ export function OrganizationPage({ listPath, upcomingActionPath, managePath }: O
                     organizationId={organization.organization_id}
                     role={myRole}
                     membership={membership.membership}
+                    canLeave={!inactive}
+                    hasOtherMembers={members.members.some(
+                      (member) => member.user_id !== user?.user_id,
+                    )}
+                    onLeft={(organizationClosed) => {
+                      if (organizationClosed) {
+                        navigate(listPath);
+                        return;
+                      }
+
+                      members.reload();
+                      membership.reload();
+                    }}
                   />
                 )}
                 {canManage && (
@@ -245,8 +279,9 @@ export function OrganizationPage({ listPath, upcomingActionPath, managePath }: O
               <OrganizationComments
                 organizationId={organization.organization_id}
                 creatorId={organization.creator_id}
-                canComment={membership.membership?.status === 'ACTIVE'}
-              />
+                canComment={
+                  !inactive && membership.membership?.status === 'ACTIVE'
+                }              />
             </div>
           </div>
         </>

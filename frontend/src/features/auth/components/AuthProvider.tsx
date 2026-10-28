@@ -77,6 +77,45 @@ export function AuthProvider({ children }: AuthProviderProps) {
       );
     };
 
+    const handleProfileUpdated = ({ userId }: { userId: string }) => {
+      window.dispatchEvent(
+        new CustomEvent('profile:updated', {
+          detail: { userId },
+        }),
+      );
+    };
+
+    const handleFriendshipChanged = ({ userId }: { userId: string }) => {
+      window.dispatchEvent(
+        new CustomEvent('friendship:changed', {
+          detail: { userId },
+        }),
+      );
+    };
+
+    const handleNewDirectMessage = (message: {
+      message_id: string;
+      sender_id: string;
+      receiver_id: string;
+      content: string;
+      created_at: string;
+      is_read: boolean;
+    }) => {
+      window.dispatchEvent(
+        new CustomEvent('direct-message:new', {
+          detail: message,
+        }),
+      );
+    };
+
+    const handleNewNotification = (notification: unknown) => {
+      window.dispatchEvent(
+        new CustomEvent('notification:new', {
+          detail: notification,
+        }),
+      );
+    };
+
     const unsubscribe = session.onTokensChanged(() => {
       if (!session.accessToken) return;
 
@@ -87,15 +126,89 @@ export function AuthProvider({ children }: AuthProviderProps) {
       socket.connect();
     });
 
+    const handleOrganizationUpdated = ({
+      organizationId,
+    }: {
+      organizationId: string;
+    }) => {
+      window.dispatchEvent(
+        new CustomEvent('organization:updated', {
+          detail: { organizationId },
+        }),
+      );
+    };
+
+    const handleActionParticipantsChanged = ({
+      actionId,
+    }: {
+      actionId: string;
+    }) => {
+      window.dispatchEvent(
+        new CustomEvent('action:participants-changed', {
+          detail: { actionId },
+        }),
+      );
+    };
+
+    const handleActionCommentsChanged = ({
+      actionId,
+    }: {
+      actionId: string;
+    }) => {
+      window.dispatchEvent(
+        new CustomEvent('action:comments-changed', {
+          detail: { actionId },
+        }),
+      );
+    };
+
+    const handleActionUpdated = ({ actionId }: { actionId: string }) => {
+      window.dispatchEvent(
+        new CustomEvent('action:updated', {
+          detail: { actionId },
+        }),
+      );
+    };
+
+    const handleOrganizationCommentsChanged = ({
+      organizationId,
+    }: {
+      organizationId: string;
+    }) => {
+      window.dispatchEvent(
+        new CustomEvent('organization:comments-changed', {
+          detail: { organizationId },
+        }),
+      );
+    };
+
     socket.on('presence:online', handleOnline);
     socket.on('presence:offline', handleOffline);
     socket.on('organization:membership-changed', handleMembershipChanged);
+    socket.on('direct-message:new', handleNewDirectMessage);
+    socket.on('notification:new', handleNewNotification);
+    socket.on('profile:updated', handleProfileUpdated);
+    socket.on('friendship:changed', handleFriendshipChanged);
+    socket.on('organization:updated', handleOrganizationUpdated);
+    socket.on('action:participants-changed', handleActionParticipantsChanged);
+    socket.on('action:comments-changed', handleActionCommentsChanged);
+    socket.on('action:updated', handleActionUpdated);
+    socket.on('organization:comments-changed', handleOrganizationCommentsChanged);
 
     return () => {
       unsubscribe();
       socket.off('presence:online', handleOnline);
       socket.off('presence:offline', handleOffline);
       socket.off('organization:membership-changed', handleMembershipChanged);
+      socket.off('direct-message:new', handleNewDirectMessage);
+      socket.off('notification:new', handleNewNotification);
+      socket.off('profile:updated', handleProfileUpdated);
+      socket.off('friendship:changed', handleFriendshipChanged);
+      socket.off('organization:updated', handleOrganizationUpdated);
+      socket.off('action:participants-changed', handleActionParticipantsChanged);
+      socket.off('action:comments-changed', handleActionCommentsChanged);
+      socket.off('action:updated', handleActionUpdated);
+      socket.off('organization:comments-changed', handleOrganizationCommentsChanged);
       socket.disconnect();
     };
   }, [snapshot.status]);

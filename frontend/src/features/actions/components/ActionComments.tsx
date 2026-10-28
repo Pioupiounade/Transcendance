@@ -47,6 +47,28 @@ export function ActionComments({ actionId, canComment }: ActionCommentsProps) {
   const { status, user } = useAuth();
   const location = useLocation();
   const { comments, loading, notFound, error, reload, prepend } = useActionComments(actionId);
+
+  useEffect(() => {
+    const handleCommentsChanged = (event: Event) => {
+      const { actionId: changedActionId } = (
+        event as CustomEvent<{ actionId: string }>
+      ).detail;
+
+      if (changedActionId !== actionId) return;
+
+      reload();
+    };
+
+    window.addEventListener('action:comments-changed', handleCommentsChanged);
+
+    return () => {
+      window.removeEventListener(
+        'action:comments-changed',
+        handleCommentsChanged,
+      );
+    };
+  }, [actionId, reload]);
+
   const postComment = usePostComment();
 
   const [cooldownUntil, setCooldownUntil] = useState(() => readCooldownUntil(actionId));

@@ -1,6 +1,14 @@
 import { Injectable, NotFoundException, BadRequestException, ForbiddenException, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { AccountStatus, RoleApp, RoleOrg, MemberStatus, OrganizationStatus, NotificationType } from '../../generated/prisma/client';
+import {
+    AccountStatus,
+    RoleApp,
+    RoleOrg,
+    MemberStatus,
+    OrganizationStatus,
+    NotificationType,
+    Prisma,
+} from '../../generated/prisma/client';
 import { PointtransactionService } from '../pointtransaction/pointtransaction.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { RealtimeGateway } from '../realtime/realtime.gateway';
@@ -562,8 +570,7 @@ export class OrganizationmembersService {
 
         const membershipCreatedAt = targetMembership.created_at;
 
-        // Create a unique key for the ban event
-        const banEventKey = new Date().toISOString(); // Use current timestamp as a unique key for the ban event
+        const banEventKey = targetMembership.updated_at.toISOString();
 
         const bannedMembership = await this.prisma.$transaction(
             async (tx) => {
@@ -710,6 +717,11 @@ export class OrganizationmembersService {
         });
 
         for (const manager of managers) {
+            this.realtimeGateway.emitOrganizationMembershipChanged(
+                manager.user_id,
+                organizationId,
+            );
+
             await this.notificationsService.notifyUser({
                 userId: manager.user_id,
                 type: NotificationType.ORGANIZATION_JOIN_REQUEST,
@@ -791,6 +803,14 @@ export class OrganizationmembersService {
             targetUserId,
             organizationId,
         );
+
+        await this.notificationsService.notifyUser({
+            userId: targetUserId,
+            type: NotificationType.ORGANIZATION_MEMBERSHIP_ACTIVATED,
+            title: 'Membership approved',
+            message: 'Your request to join the organization has been approved.',
+            link: `/organizations/${organizationId.toString()}`,
+        });
 
         return updatedMembership;
     }
@@ -888,6 +908,83 @@ export class OrganizationmembersService {
                 },
             },
             include: {
+              user: {
+                select: {
+                    account_status: true,
+                },
+              },
+              organization: {
+                select: {
+                    title: true,
+                },
+              },
+            },
+        });
+
+        if (!membership) {
+            throw new NotFoundException('Membership not found');
+        }
+
+        if (
+            membership.status !== MemberStatus.REJECTED &&
+            membership.status !== MemberStatus.BANNED
+        ) {
+            throw new BadRequestException(
+                'Only rejected or banned memberships can be reactivated',
+            );
+        }
+
+        if (membership.user.account_status !== AccountStatus.ACTIVE) {
+            throw new BadRequestException('Target user is not active');
+        }
+
+        const updatedMembership = await this.prisma.organizationMember.update({
+            where: {
+                organization_id_user_id: {
+                    organization_id: organizationId,
+                    user_id: targetUserId,
+                },
+            },
+            data: {
+                status: MemberStatus.ACTIVE,
+                role: RoleOrg.MEMBER,
+                validated_by_org_man: true,
+                validated_at: new Date(),
+            },
+        });
+
+        await this.notificationsService.notifyUser({
+            userId: targetUserId,
+            type: NotificationType.ORGANIZATION_JOIN_REQUEST_REJECTED,
+            title: 'Membership request declined',
+            message: `Your request to join "${membership.organization.title}" has been declined.`,
+            link: `/organizations/${organizationId.toString()}`,
+        });
+
+        this.realtimeGateway.emitOrganizationMembershipChanged(
+            targetUserId,
+            organizationId,
+        );
+
+        return updatedMembership;
+    }
+
+    // Deny a membership request
+    async denyMembership(
+        requesterId: bigint,
+        organizationId: bigint,
+        targetUserId: bigint,
+    ) {
+        await this.checkCanManageMembers(requesterId, organizationId);
+
+        const membership = await this.prisma.organizationMember.findUnique({
+            where: {
+                organization_id_user_id: {
+                    organization_id: organizationId,
+                    user_id: targetUserId,
+                },
+            },
+            include: {
                 organization: {
                     select: {
                         title: true,
@@ -936,85 +1033,163 @@ export class OrganizationmembersService {
 
     // Leave an organization
     async leaveOrganization(userId: bigint, organizationId: bigint) {
-        const user = await this.prisma.user.findUnique({
-            where: {
-                user_id: userId,
-            },
-        });
+        let organizationClosed: boolean;
 
-        if (!user) {
-            throw new NotFoundException('User not found');
-        }
+        try {
+            organizationClosed = await this.prisma.$transaction(
+                async (tx) => {
+                    const user = await tx.user.findUnique({
+                        where: { user_id: userId },
+                    });
 
-        if (user.account_status !== AccountStatus.ACTIVE) {
-            throw new ForbiddenException('Only active users can leave an organization');
-        }
+                    if (!user) {
+                        throw new NotFoundException('User not found');
+                    }
 
-        const organization = await this.prisma.organization.findUnique({
-            where: {
-                organization_id: organizationId,
-            },
-        });
+                    if (user.account_status !== AccountStatus.ACTIVE) {
+                        throw new ForbiddenException(
+                            'Only active users can leave an organization',
+                        );
+                    }
 
-        if (!organization) {
-            throw new NotFoundException('Organization not found');
-        }
+                    const organization = await tx.organization.findUnique({
+                        where: { organization_id: organizationId },
+                    });
 
-        if (organization.organization_status !== OrganizationStatus.ACTIVE) {
-            throw new BadRequestException('Organization is not active');
-        }
+                    if (!organization) {
+                        throw new NotFoundException('Organization not found');
+                    }
 
-        const membership = await this.prisma.organizationMember.findUnique({
-            where: {
-                organization_id_user_id: {
-                    organization_id: organizationId,
-                    user_id: userId,
-                },
-            },
-        });
+                    if (organization.organization_status !== OrganizationStatus.ACTIVE) {
+                        throw new BadRequestException('Organization is not active');
+                    }
 
-        if (!membership) {
-            throw new NotFoundException('You are not a member of this organization');
-        }
-
-        if (membership.status !== MemberStatus.ACTIVE) {
-            throw new BadRequestException('Membership is not active');
-        }
-
-        if (membership.role === RoleOrg.OWNER) {
-            throw new ForbiddenException('The owner must transfer ownership before leaving the organization');
-        }
-
-        const membershipCreatedAt = membership.created_at;
-
-        const removedMembership = await this.prisma.$transaction(
-            async (tx) => {
-                const deletedMembership = await tx.organizationMember.delete({
-                    where: {
-                        organization_id_user_id: {
-                            organization_id: organizationId,
-                            user_id: userId,
+                    const membership = await tx.organizationMember.findUnique({
+                        where: {
+                            organization_id_user_id: {
+                                organization_id: organizationId,
+                                user_id: userId,
+                            },
                         },
-                    },
-                });
+                    });
 
-                await this.pointtransactionService.penalizeOwnerForMemberLeaving(
-                    organizationId,
-                    userId,
-                    membershipCreatedAt,
-                    tx,
+                    if (!membership || membership.status !== MemberStatus.ACTIVE) {
+                        throw new BadRequestException(
+                            'You are not an active member of this organization',
+                        );
+                    }
+
+                    if (membership.role === RoleOrg.OWNER) {
+                        const otherActiveMembers = await tx.organizationMember.count({
+                            where: {
+                                organization_id: organizationId,
+                                status: MemberStatus.ACTIVE,
+                                user_id: { not: userId },
+                            },
+                        });
+
+                        if (otherActiveMembers > 0) {
+                            throw new ConflictException(
+                                'Transfer ownership before leaving the organization',
+                            );
+                        }
+
+                        await tx.organization.update({
+                            where: { organization_id: organizationId },
+                            data: { organization_status: OrganizationStatus.CLOSED },
+                        });
+
+                        await tx.organizationMember.delete({
+                            where: {
+                                organization_id_user_id: {
+                                    organization_id: organizationId,
+                                    user_id: userId,
+                                },
+                            },
+                        });
+
+                        return true;
+                    }
+
+                    await tx.organizationMember.delete({
+                        where: {
+                            organization_id_user_id: {
+                                organization_id: organizationId,
+                                user_id: userId,
+                            },
+                        },
+                    });
+
+                    await this.pointtransactionService.penalizeOwnerForMemberLeaving(
+                        organizationId,
+                        userId,
+                        membership.created_at,
+                        tx,
+                    );
+
+                    return false;
+                },
+                {
+                    isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+                },
+            );
+        } catch (error) {
+            if (
+                error instanceof Prisma.PrismaClientKnownRequestError &&
+                error.code === 'P2034'
+            ) {
+                throw new ConflictException(
+                    'The organization changed. Please refresh and try again.',
                 );
+            }
 
-                return deletedMembership;
-            },
-        );
+            throw error;
+        }
+
+        if (organizationClosed) {
+            this.realtimeGateway.emitOrganizationUpdated(
+                organizationId.toString(),
+            );
+        }
 
         this.realtimeGateway.emitOrganizationMembershipChanged(
             userId,
             organizationId,
         );
 
-        return removedMembership;
+        if (!organizationClosed) {
+            const managers = await this.prisma.organizationMember.findMany({
+                where: {
+                    organization_id: organizationId,
+                    status: MemberStatus.ACTIVE,
+                    role: {
+                        in: [RoleOrg.OWNER, RoleOrg.MANAGER],
+                    },
+                    user: {
+                        account_status: AccountStatus.ACTIVE,
+                    },
+                },
+                select: {
+                    user_id: true,
+                },
+            });
+
+            for (const manager of managers) {
+                this.realtimeGateway.emitOrganizationMembershipChanged(
+                    manager.user_id,
+                    organizationId,
+                );
+                await this.notificationsService.notifyUser({
+                    userId: manager.user_id,
+                    type: NotificationType.ORGANIZATION_MEMBER_LEFT,
+                    title: 'A member left your organization',
+                    message: 'A member has left your organization.',
+                    link: `/organizations/${organizationId.toString()}`,
+                });
+            }
+        }
+
+        return { success: true, organizationClosed };
     }
 
     // Helper pour checker que c'est le owner ou l'admin
@@ -1087,7 +1262,7 @@ export class OrganizationmembersService {
             throw new BadRequestException('Only a member can be promoted to manager');
         }
 
-        return this.prisma.organizationMember.update({
+        const updatedMembership = await this.prisma.organizationMember.update({
             where: {
                 organization_id_user_id: {
                     organization_id: organizationId,
@@ -1098,6 +1273,21 @@ export class OrganizationmembersService {
                 role: RoleOrg.MANAGER,
             },
         });
+
+        this.realtimeGateway.emitOrganizationMembershipChanged(
+            targetUserId,
+            organizationId,
+        );
+
+        await this.notificationsService.notifyUser({
+            userId: targetUserId,
+            type: NotificationType.ORGANIZATION_ROLE_CHANGED,
+            title: 'You are now a manager',
+            message: 'You have been promoted to manager in an organization.',
+            link: `/organizations/${organizationId.toString()}`,
+        });
+
+        return updatedMembership;
     }
 
     // Demote a manager to member
@@ -1139,7 +1329,7 @@ export class OrganizationmembersService {
             throw new BadRequestException('Only a manager can be demoted to member');
         }
 
-        return this.prisma.organizationMember.update({
+        const updatedMembership = await this.prisma.organizationMember.update({
             where: {
                 organization_id_user_id: {
                     organization_id: organizationId,
@@ -1150,6 +1340,21 @@ export class OrganizationmembersService {
                 role: RoleOrg.MEMBER,
             },
         });
+
+        this.realtimeGateway.emitOrganizationMembershipChanged(
+            targetUserId,
+            organizationId,
+        );
+
+        await this.notificationsService.notifyUser({
+            userId: targetUserId,
+            type: NotificationType.ORGANIZATION_ROLE_CHANGED,
+            title: 'Your organization role has changed',
+            message: 'You are now a member of the organization.',
+            link: `/organizations/${organizationId.toString()}`,
+        });
+
+        return updatedMembership;
     }
 
     // Transfer ownership

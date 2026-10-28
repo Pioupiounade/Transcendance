@@ -38,6 +38,31 @@ export function OrganizationComments({ organizationId, creatorId, canComment }: 
   const { status, user } = useAuth();
   const location = useLocation();
   const { comments, loading, error, reload, prepend, remove } = useOrganizationComments(organizationId);
+
+  useEffect(() => {
+    const handleCommentsChanged = (event: Event) => {
+      const { organizationId: changedOrganizationId } = (
+        event as CustomEvent<{ organizationId: string }>
+      ).detail;
+
+      if (changedOrganizationId !== organizationId) return;
+
+      reload();
+    };
+
+    window.addEventListener(
+      'organization:comments-changed',
+      handleCommentsChanged,
+    );
+
+    return () => {
+      window.removeEventListener(
+        'organization:comments-changed',
+        handleCommentsChanged,
+      );
+    };
+  }, [organizationId, reload]);
+
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [cooldownUntil, setCooldownUntil] = useState(() => readCooldownUntil(organizationId));
   const isCoolingDown = cooldownUntil !== 0;

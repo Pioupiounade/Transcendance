@@ -94,8 +94,8 @@ export const ACTIONS_LABELS = {
     category: 'Category',
     scheduledAt: 'When?',
     maxParticipants: 'Max participants (optional)',
-    maxParticipantsHelp: (min: number) => `Leave empty for no limit, otherwise at least ${min}.`,
-    pickSpot: 'Tap the map to choose a spot.',
+    maxParticipantsHelp: (min: number) =>
+    `Leave empty for 100 participants, or choose a number between ${min} and 100.`,    pickSpot: 'Tap the map to choose a spot.',
     spotMissing: 'Choose a spot on the map first.',
     submit: 'Submit for review',
     submitting: 'Submitting…',
@@ -172,8 +172,8 @@ export const ACTIONS_LABELS = {
     dateInvalid: 'Enter a valid date and time.',
     datePast: 'Choose a date in the future.',
     commentRequired: 'Write something first.',
-    maxParticipantsInvalid: (min: number) => `Enter a whole number of at least ${min}, or leave it empty.`,
-    photoType: 'Only JPG, PNG and WebP photos are allowed.',
+    maxParticipantsInvalid: (min: number) =>
+     `Enter a whole number between ${min} and 100, or leave it empty.`,    photoType: 'Only JPG, PNG and WebP photos are allowed.',
     photoTooLarge: (maxMb: number) => `Each photo must be ${maxMb} MB or less.`,
     photoTooMany: (max: number) => `Up to ${max} photos are allowed.`,
   },

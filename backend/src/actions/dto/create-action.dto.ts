@@ -1,4 +1,4 @@
-import { IsString, IsArray, ArrayMinSize, ArrayMaxSize, IsNumber, IsInt, IsDateString, IsOptional, IsEnum } from 'class-validator';
+import { IsString, IsArray, ArrayMinSize, ArrayMaxSize, IsNumber, IsInt, IsDateString, IsOptional, IsEnum, Max } from 'class-validator';
 import { Category } from '../../../generated/prisma/client';
 
 export class CreateActionDto {
@@ -33,6 +33,7 @@ export class CreateActionDto {
 
   @IsOptional()
   @IsInt()
+  @Max(100)
   max_participants?: number;
 
   @IsDateString()
