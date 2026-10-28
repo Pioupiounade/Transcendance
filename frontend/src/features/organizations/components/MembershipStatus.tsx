@@ -135,6 +135,33 @@ export function MembershipStatus({
       </div>
     );
   }
+
+  if (role) {
+    return (
+      <div className={styles.join}>
+        <p className={styles.badge}>
+          <Icon name="check" size={16} strokeWidth={2.4} />
+          {text.roles[role]}
+        </p>
+
+        {canLeave && (
+          <Button
+            variant="secondary"
+            onClick={() => void leave()}
+            disabled={leaving}
+          >
+            {leaving ? 'Leaving…' : 'Leave organization'}
+          </Button>
+        )}
+
+        {leaveError && (
+          <p className={styles.error} role="alert">
+            {leaveError}
+          </p>
+        )}
+      </div>
+    );
+  }
   if (status === 'loading') return null;
   if (status === 'anonymous') {
     return (
