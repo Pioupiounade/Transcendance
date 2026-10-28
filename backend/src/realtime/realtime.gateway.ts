@@ -154,7 +154,7 @@ export class RealtimeGateway
       const connectionCount =
         this.server.sockets.adapter.rooms.get(room)?.size ?? 0;
 
-      await this.prisma.user.update({
+      await this.prisma.user.updateMany({
         where: {
           user_id: BigInt(payload.id),
         },
@@ -181,7 +181,7 @@ export class RealtimeGateway
     if (!userId) return;
 
     try {
-      await this.prisma.user.update({
+      await this.prisma.user.updateMany({
         where: {
           user_id: BigInt(userId),
         },
