@@ -37,6 +37,7 @@ export class ProfilesService {
       return {
         available: false as const,
         reason: 'PROFILE_UNAVAILABLE' as const,
+        user_id: userId,
       };
     }
 
@@ -61,6 +62,7 @@ export class ProfilesService {
       return {
         available: false as const,
         reason: 'PROFILE_UNAVAILABLE' as const,
+        user_id: userId,
       };
     }
 

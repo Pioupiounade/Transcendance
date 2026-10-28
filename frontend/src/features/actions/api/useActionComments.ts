@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 import { useResource } from '@/shared/hooks/useResource';
 import type { ActionComment } from '../types';
 import { fetchComments } from './commentsApi';
@@ -26,6 +26,14 @@ export function useActionComments(actionId: string) {
     setPosted({ actionId, items: [] });
     reloadResource();
   }, [actionId, reloadResource]);
+
+  useEffect(() => {
+    window.addEventListener('user:deleted', reload);
+
+    return () => {
+      window.removeEventListener('user:deleted', reload);
+    };
+  }, [reload]);
 
   const fresh = posted.actionId === actionId ? posted.items : [];
   const freshIds = new Set(fresh.map((comment) => comment.comment_id));

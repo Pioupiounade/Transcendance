@@ -19,7 +19,11 @@ export function useResource<T>(load: Loader<T>) {
   useEffect(() => {
     const controller = new AbortController();
     load(controller.signal)
-      .then((data) => setResult({ load, attempt, data, error: null }))
+      .then((data) => {
+        if (!controller.signal.aborted) {
+          setResult({ load, attempt, data, error: null });
+        }
+      })
       .catch((error: unknown) => {
         if (controller.signal.aborted) return;
         setResult({ load, attempt, data: null, error: toApiError(error) });
@@ -28,6 +32,15 @@ export function useResource<T>(load: Loader<T>) {
   }, [load, attempt]);
 
   const reload = useCallback(() => setAttempt((n) => n + 1), []);
+  
+  useEffect(() => {
+    window.addEventListener('user:deleted', reload);
+
+    return () => {
+      window.removeEventListener('user:deleted', reload);
+    };
+  }, [reload]);
+  
   const loading = result === null || result.load !== load || result.attempt !== attempt;
   return {
     data: loading ? null : result.data,

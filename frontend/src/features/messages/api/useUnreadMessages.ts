@@ -26,12 +26,14 @@ export function useUnreadMessages(): number {
     }, POLL_INTERVAL_MS);
     window.addEventListener(MESSAGES_READ_EVENT, refresh);
     window.addEventListener('direct-message:new', refresh);
+    window.addEventListener('user:deleted', refresh);
     return () => {
       disposed = true;
       latestRequest.current?.abort();
       window.clearInterval(timer);
       window.removeEventListener(MESSAGES_READ_EVENT, refresh);
       window.removeEventListener('direct-message:new', refresh);
+      window.removeEventListener('user:deleted', refresh);
     };
   }, []);
 

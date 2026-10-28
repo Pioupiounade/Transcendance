@@ -468,7 +468,7 @@ export class UsersService {
 
     for (let attempt = 0; attempt < 3; attempt += 1) {
       try {
-        await this.prisma.$transaction(
+        const affected = await this.prisma.$transaction(
           async (tx) => {
             const requester = await tx.user.findUnique({
               where: { user_id: adminId },
@@ -529,7 +529,30 @@ export class UsersService {
                 'Transfer organization ownership before deleting this account',
               );
             }
-
+            // Récupérer les contenus concernés avant de supprimer leurs relations.
+            const [actions, organizations] = await Promise.all([
+              tx.action.findMany({
+                where: {
+                  OR: [
+                    { creator_id: targetId },
+                    { validated_by_user_id: targetId },
+                    { participation: { some: { user_id: targetId } } },
+                    { comments: { some: { user_id: targetId } } },
+                  ],
+                },
+                select: { action_id: true },
+              }),
+              tx.organization.findMany({
+                where: {
+                  OR: [
+                    { creator_id: targetId },
+                    { members: { some: { user_id: targetId } } },
+                    { comments: { some: { user_id: targetId } } },
+                  ],
+                },
+                select: { organization_id: true },
+              }),
+            ]);
             await tx.friendRequest.deleteMany({
               where: {
                 OR: [
@@ -572,6 +595,7 @@ export class UsersService {
             await tx.user.delete({
               where: { user_id: targetId },
             });
+            return { actions, organizations };
           },
           {
             isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
@@ -580,6 +604,20 @@ export class UsersService {
 
         this.realtimeGateway.emitAccountDeleted(targetUserId);
         this.realtimeGateway.emitProfileUpdated(targetUserId);
+
+        for (const { action_id } of affected.actions) {
+          const actionId = action_id.toString();
+
+          this.realtimeGateway.emitActionUpdated(actionId);
+          this.realtimeGateway.emitActionCommentsChanged(actionId);
+        }
+
+        for (const { organization_id } of affected.organizations) {
+          const organizationId = organization_id.toString();
+
+          this.realtimeGateway.emitOrganizationUpdated(organizationId);
+          this.realtimeGateway.emitOrganizationCommentsChanged(organizationId);
+        }
 
         return { deleted: true, user_id: targetUserId };
       } catch (error) {

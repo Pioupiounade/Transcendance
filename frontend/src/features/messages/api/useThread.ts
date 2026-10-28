@@ -17,8 +17,12 @@ export function useThread(friendId: string) {
   const [snapshot, setSnapshot] = useState<Snapshot | null>(null);
   const [error, setError] = useState<ApiError | null>(null);
   const latestRequest = useRef<AbortController | null>(null);
+  const deletedPeers = useRef(new Set<string>());
 
   const refresh = useCallback(() => {
+    if (deletedPeers.current.has(friendId)) {
+      return Promise.resolve();
+    }
     latestRequest.current?.abort();
     const controller = new AbortController();
     latestRequest.current = controller;
@@ -59,12 +63,27 @@ export function useThread(friendId: string) {
       if (document.visibilityState === 'visible') void refresh();
     }, POLL_INTERVAL_MS);
 
+    const handleUserDeleted = (event: Event) => {
+      const { userId } = (
+        event as CustomEvent<{ userId: string }>
+      ).detail;
+
+      if (userId !== friendId) return;
+
+      deletedPeers.current.add(userId);
+      latestRequest.current?.abort();
+      setSnapshot({ friendId, messages: [] });
+      setError(null);
+    };
+
+    window.addEventListener('user:deleted', handleUserDeleted);
     window.addEventListener('direct-message:new', handleNewMessage);
 
     return () => {
       latestRequest.current?.abort();
       window.clearInterval(timer);
       window.removeEventListener('direct-message:new', handleNewMessage);
+      window.removeEventListener('user:deleted', handleUserDeleted);
     };
   }, [friendId, refresh]);
 

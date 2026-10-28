@@ -9,6 +9,7 @@ import styles from './GlobalSearch.module.css';
 
 export function GlobalSearch() {
   const [query, setQuery] = useState('');
+  const [deletionVersion, setDeletionVersion] = useState(0);
   const [results, setResults] = useState<GlobalSearchResults>({
     users: [],
     organizations: [],
@@ -32,7 +33,11 @@ export function GlobalSearch() {
       setLoading(true);
 
       globalSearch(trimmed, controller.signal)
-        .then(setResults)
+        .then((next) => {
+          if (!controller.signal.aborted) {
+            setResults(next);
+          }
+        })
         .catch(() => {
           if (!controller.signal.aborted) {
             setResults({
@@ -48,11 +53,32 @@ export function GlobalSearch() {
         });
     }, 250);
 
+    useEffect(() => {
+      const handleUserDeleted = (event: Event) => {
+        const { userId } = (
+          event as CustomEvent<{ userId: string }>
+        ).detail;
+
+        setResults((current) => ({
+          ...current,
+          users: current.users.filter((user) => user.user_id !== userId),
+        }));
+
+        setDeletionVersion((version) => version + 1);
+      };
+
+      window.addEventListener('user:deleted', handleUserDeleted);
+
+      return () => {
+        window.removeEventListener('user:deleted', handleUserDeleted);
+      };
+    }, []);
+  
     return () => {
       window.clearTimeout(timeout);
       controller.abort();
     };
-  }, [query]);
+  }, [query, deletionVersion]);
 
   const showResults = query.trim().length >= 2;
 

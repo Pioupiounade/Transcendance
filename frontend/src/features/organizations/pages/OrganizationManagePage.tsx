@@ -153,6 +153,20 @@ function Dashboard({ loaded }: { loaded: Organization }) {
   const [confirmation, setConfirmation] = useState<Confirmation | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
 
+  useEffect(() => {
+    const handleUserDeleted = () => {
+      setChanges({});
+      setManaging(null);
+      setConfirmation(null);
+    };
+
+    window.addEventListener('user:deleted', handleUserDeleted);
+
+    return () => {
+      window.removeEventListener('user:deleted', handleUserDeleted);
+    };
+  }, []);
+
   const organization = edited ?? loaded;
   const selfId = user?.user_id ?? '';
   const isAdmin = user?.role === ROLE_APP.ADMIN;

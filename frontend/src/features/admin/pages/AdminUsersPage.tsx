@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ACCOUNT_STATUS, useAuth, type AuthUser } from '@/features/auth';
 import { useResource } from '@/shared/hooks/useResource';
 import { pageTitle } from '@/shared/lib/pageTitle';
@@ -78,6 +78,25 @@ export function AdminUsersPage() {
     list.reset();
     reload();
   };
+
+  useEffect(() => {
+    const handleUserDeleted = (event: Event) => {
+      const { userId } = (
+        event as CustomEvent<{ userId: string }>
+      ).detail;
+
+      setEditingUser((current) =>
+        current?.user_id === userId ? null : current,
+      );
+      setConfirmation(null);
+    };
+
+    window.addEventListener('user:deleted', handleUserDeleted);
+
+    return () => {
+      window.removeEventListener('user:deleted', handleUserDeleted);
+    };
+  }, []);
 
   return (
     <section className={styles.page}>

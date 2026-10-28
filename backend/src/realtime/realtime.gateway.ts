@@ -84,7 +84,12 @@ export class RealtimeGateway
   emitAccountDeleted(userId: string): void {
     const room = `user:${userId}`;
 
+    // Déconnecter les sessions du compte supprimé.
     this.server.to(room).emit('account:deleted', { userId });
+
+    // Prévenir les autres utilisateurs connectés.
+    this.server.except(room).emit('user:deleted', { userId });
+
     this.server.in(room).disconnectSockets(true);
   }
 

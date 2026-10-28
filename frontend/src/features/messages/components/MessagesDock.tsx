@@ -37,6 +37,24 @@ export function MessagesDock({ id, fullPagePath, profilePath, onClose }: Message
     panel.current?.focus();
   }, []);
 
+  useEffect(() => {
+    const handleUserDeleted = (event: Event) => {
+      const { userId } = (
+        event as CustomEvent<{ userId: string }>
+      ).detail;
+
+      setFriend((current) =>
+        current?.user_id === userId ? null : current,
+      );
+    };
+
+    window.addEventListener('user:deleted', handleUserDeleted);
+
+    return () => {
+      window.removeEventListener('user:deleted', handleUserDeleted);
+    };
+  }, []);
+
   const handleKeyDown = (event: KeyboardEvent<HTMLElement>) => {
     if (event.key !== 'Escape') return;
     event.stopPropagation();
