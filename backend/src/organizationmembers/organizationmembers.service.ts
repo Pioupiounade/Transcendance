@@ -171,6 +171,9 @@ export class OrganizationmembersService {
         return this.prisma.organizationMember.findMany({
             where: {
                 organization_id: organizationId,
+                user: {
+                    account_status: AccountStatus.ACTIVE,
+                },
             },
             include: {
                 user: {

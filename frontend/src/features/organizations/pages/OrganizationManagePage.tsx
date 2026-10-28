@@ -145,7 +145,29 @@ function Dashboard({ loaded }: { loaded: Organization }) {
   const [params, setParams] = useSearchParams();
   const load = useCallback((signal: AbortSignal) => fetchMemberships(id, signal), [id]);
   const memberships = useResource(load);
+  useEffect(() => {
+    const handleOrganizationUpdated = (event: Event) => {
+      const { organizationId } = (
+        event as CustomEvent<{ organizationId: string }>
+      ).detail;
 
+      if (organizationId !== id) return;
+
+      memberships.reload();
+    };
+
+    window.addEventListener(
+      'organization:updated',
+      handleOrganizationUpdated,
+    );
+
+    return () => {
+      window.removeEventListener(
+        'organization:updated',
+        handleOrganizationUpdated,
+      );
+    };
+  }, [id, memberships.reload]);
   // Réponses du backend depuis le chargement : adhésion modifiée, ou `null` quand le membre a été retiré.
   const [changes, setChanges] = useState<Record<string, Membership | null>>({});
   const [edited, setEdited] = useState<Organization | null>(null);
