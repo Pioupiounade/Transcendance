@@ -214,6 +214,7 @@ export class UsersService {
 //6. desactiver un utilisateur
   async deactivate(id: string) {
     const userId = BigInt(id);
+    const affectedOrganizationIds = new Set<bigint>();
 
     const user = await this.prisma.$transaction(async (tx) => {
       const existingUser = await tx.user.findUnique({
@@ -239,6 +240,15 @@ export class UsersService {
         throw new BadRequestException(
           'Transfer organization ownership before deactivating your account',
         );
+      }
+
+      const memberships = await tx.organizationMember.findMany({
+        where: { user_id: userId },
+        select: { organization_id: true },
+      });
+
+      for (const membership of memberships) {
+        affectedOrganizationIds.add(membership.organization_id);
       }
 
       await tx.organizationMember.deleteMany({
@@ -293,6 +303,12 @@ export class UsersService {
       });
     });
 
+    for (const organizationId of affectedOrganizationIds) {
+      this.realtimeGateway.emitOrganizationUpdated(
+        organizationId.toString(),
+      );
+    }
+  
     const {
       password_hash: _,
       refresh_token: __,
