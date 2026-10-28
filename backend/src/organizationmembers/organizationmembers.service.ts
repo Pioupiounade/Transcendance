@@ -224,7 +224,7 @@ export class OrganizationmembersService {
             organization: {
                 ...membership.organization,
                 organization_id: membership.organization.organization_id.toString(),
-                creator_id: membership.organization.creator_id.toString(),
+                creator_id: membership.organization.creator_id?.toString() ?? null,
             },
         }));
     }

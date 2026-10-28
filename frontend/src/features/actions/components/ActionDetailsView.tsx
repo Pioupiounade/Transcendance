@@ -185,24 +185,40 @@ export const ActionDetailsView: React.FC<ActionDetailsViewProps> = ({
         )}
         <h2>{title}</h2>
         <div className="organizer" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <Link
-            to={
-              currentUserId && String(currentUserId) === String(organizer.userId)
-                ? '/profile'
-                : `/profiles/${organizer.userId}`
-            }
-            style={{
-              textDecoration: 'none',
-              color: 'inherit',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '12px',
-            }}
-          >
-            <Avatar src={organizer.avatarUrl} name={organizer.name} size={42} />
-            <span className="organizer-label">@{organizer.name}</span>
-          </Link>
-
+          {organizer.userId !== null ? (
+            <Link
+              to={
+                currentUserId === organizer.userId
+                  ? '/profile'
+                  : `/profiles/${organizer.userId}`
+              }
+              style={{
+                textDecoration: 'none',
+                color: 'inherit',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+              }}
+            >
+              <Avatar
+                src={organizer.avatarUrl}
+                name={organizer.name}
+                size={42}
+              />
+              <span className="organizer-label">@{organizer.name}</span>
+            </Link>
+          ) : (
+            <span
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+              }}
+            >
+              <Avatar name="Utilisateur supprimé" size={42} />
+              <span className="organizer-label">Utilisateur supprimé</span>
+            </span>
+          )}
           {organizer.organizationTitle && organizer.organizationId && (
             <div className="organizer-info" style={{ marginLeft: 'auto' }}>
               <Link

@@ -238,6 +238,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
       });
     };
 
+    const handleAccountDeleted = ({ userId }: { userId: string }) => {
+      if (userId !== snapshot.user?.user_id) return;
+
+      accountCheck?.abort();
+      session.clear();
+      setSnapshot(ANONYMOUS);
+      socket.disconnect();
+    };
+
     socket.on('presence:online', handleOnline);
     socket.on('presence:offline', handleOffline);
     socket.on('organization:membership-changed', handleMembershipChanged);
@@ -253,6 +262,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     socket.on('account:status-changed', handleAccountStatusChanged);
     socket.on('connect', handleConnect);
     socket.on('disconnect', handleDisconnect);
+    socket.on('account:deleted', handleAccountDeleted);
 
     return () => {
       unsubscribe();
@@ -272,6 +282,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       accountCheck?.abort();
       socket.off('connect', handleConnect);
       socket.off('disconnect', handleDisconnect);
+      socket.off('account:deleted', handleAccountDeleted);
       socket.disconnect();
     };
   }, [snapshot.status]);

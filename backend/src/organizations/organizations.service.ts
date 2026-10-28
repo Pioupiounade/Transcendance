@@ -22,7 +22,7 @@ export class OrganizationsService {
     return organizations.map((organization) => ({
       ...organization,
       organization_id: organization.organization_id.toString(),
-      creator_id: organization.creator_id.toString(),
+      creator_id: organization.creator_id?.toString() ?? null,
     }));
   }
 
@@ -45,7 +45,7 @@ export class OrganizationsService {
     return {
       ...organization,
       organization_id: organization.organization_id.toString(),
-      creator_id: organization.creator_id.toString(),
+      creator_id: organization.creator_id?.toString() ?? null,
     };
   }
 
@@ -64,7 +64,7 @@ export class OrganizationsService {
     return organizations.map((organization) => ({
       ...organization,
       organization_id: organization.organization_id.toString(),
-      creator_id: organization.creator_id.toString(),
+      creator_id: organization.creator_id?.toString() ?? null,
     }));
   }
 
@@ -88,7 +88,7 @@ export class OrganizationsService {
     return nearbyOrganizations.map((organization) => ({
       ...organization,
       organization_id: organization.organization_id.toString(),
-      creator_id: organization.creator_id.toString(),
+      creator_id: organization.creator_id?.toString() ?? null,
     }));
   }
 
@@ -128,7 +128,7 @@ export class OrganizationsService {
     return organizations.map((organization) => ({
       ...organization,
       organization_id: organization.organization_id.toString(),
-      creator_id: organization.creator_id.toString(),
+      creator_id: organization.creator_id?.toString() ?? null,
     }));
   }
 
@@ -177,7 +177,7 @@ export class OrganizationsService {
     return {
       ...createdOrganization,
       organization_id: createdOrganization.organization_id.toString(),
-      creator_id: createdOrganization.creator_id.toString(),
+      creator_id: createdOrganization.creator_id?.toString() ?? null,
     };
   }
 
@@ -243,7 +243,7 @@ export class OrganizationsService {
     return {
       ...updatedOrganization,
       organization_id: updatedOrganization.organization_id.toString(),
-      creator_id: updatedOrganization.creator_id.toString(),
+      creator_id: updatedOrganization.creator_id?.toString() ?? null,
     };
   }
 
@@ -291,7 +291,7 @@ export class OrganizationsService {
     return {
       ...updatedOrganization,
       organization_id: updatedOrganization.organization_id.toString(),
-      creator_id: updatedOrganization.creator_id.toString(),
+      creator_id: updatedOrganization.creator_id?.toString() ?? null,
     };
   }
 
@@ -364,7 +364,7 @@ export class OrganizationsService {
     return {
       ...updatedOrganization,
       organization_id: updatedOrganization.organization_id.toString(),
-      creator_id: updatedOrganization.creator_id.toString(),
+      creator_id: updatedOrganization.creator_id?.toString() ?? null,
     };
   }
 
@@ -461,7 +461,7 @@ export class OrganizationsService {
     return {
       ...updatedOrganization,
       organization_id: updatedOrganization.organization_id.toString(),
-      creator_id: updatedOrganization.creator_id.toString(),
+      creator_id: updatedOrganization.creator_id?.toString() ?? null,
     };
   }
 
@@ -791,7 +791,10 @@ export class OrganizationsService {
       comment.organization_id.toString(),
     );
 
-    if (comment.user_id !== currentUserId) {
+    if (
+      comment.user_id !== null &&
+      comment.user_id !== currentUserId
+    ) {
       await this.notificationsService.notifyUser({
         userId: comment.user_id,
         type: NotificationType.ORGANIZATION_COMMENT_DELETED,

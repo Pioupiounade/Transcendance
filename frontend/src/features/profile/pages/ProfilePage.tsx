@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuth } from '@/features/auth';
 import { isApiError } from '@/shared/api';
 import { useResource } from '@/shared/hooks/useResource';
@@ -66,7 +66,7 @@ const syncInterests = async (current: readonly InterestCategory[], selected: rea
  * (onglet Overview) ou les réglages (onglet Settings), et l'édition en place.
  */
 export function ProfilePage({ organizationPath, actionPath, homePath }: ProfilePageProps) {
-  const { signOut } = useAuth();
+  const { signOut, user } = useAuth();
   const loaded = useResource(loadProfile);
   const loadedInterests = useResource(loadInterests);
   const activity = useResource(loadActivity);
@@ -77,7 +77,28 @@ export function ProfilePage({ organizationPath, actionPath, homePath }: ProfileP
   const [mode, setMode] = useState<Mode>('view');
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  
+  useEffect(() => {
+  const handleProfileUpdated = (event: Event) => {
+    const { userId } = (
+      event as CustomEvent<{ userId: string }>
+    ).detail;
 
+    if (userId !== user?.user_id) return;
+
+    // Retirer la copie locale pour afficher les données relues.
+    setSaved(null);
+    loaded.reload();
+    loadedInterests.reload();
+  };
+
+  window.addEventListener('profile:updated', handleProfileUpdated);
+
+  return () => {
+    window.removeEventListener('profile:updated', handleProfileUpdated);
+  };
+
+}, [user?.user_id, loaded.reload, loadedInterests.reload]);
   const profile = saved?.profile ?? loaded.data;
   const interests = saved?.interests ?? loadedInterests.data;
   const interestsLoading = !saved && loadedInterests.loading;

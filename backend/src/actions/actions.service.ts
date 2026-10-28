@@ -61,7 +61,7 @@ export class ActionsService {
       ...action,
       max_participants: effectiveMaximum,
       action_id: action.action_id.toString(),
-      creator_id: action.creator_id.toString(),
+      creator_id: action.creator_id?.toString() ?? null,
       organization_id: action.organization_id?.toString() ?? null,
       validated_by_user_id: action.validated_by_user_id?.toString() ?? null,
       participant_count: participantCount,
@@ -186,7 +186,7 @@ export class ActionsService {
       ...action,
       max_participants: effectiveMaximum,
       action_id: action.action_id.toString(),
-      creator_id: action.creator_id.toString(),
+      creator_id: action.creator_id?.toString() ?? null,
       organization_id: action.organization_id?.toString() ?? null,
       validated_by_user_id: action.validated_by_user_id?.toString() ?? null,
       participant_count: participantCount,
@@ -486,7 +486,7 @@ export class ActionsService {
     return {
       ...updatedAction,
       action_id: updatedAction.action_id.toString(),
-      creator_id: updatedAction.creator_id.toString(),
+      creator_id: updatedAction.creator_id?.toString() ?? null,
       organization_id: updatedAction.organization_id?.toString() ?? null,
       validated_by_user_id: updatedAction.validated_by_user_id?.toString() ?? null,
     };
@@ -561,9 +561,9 @@ export class ActionsService {
     const participantCount = await this.prisma.participation.count({
       where: {
         action_id: BigInt(id),
-        user_id: {
-          not: action.creator_id,
-        },
+        ...(action.creator_id !== null
+          ? { user_id: { not: action.creator_id } }
+          : {}),
       },
     });
 
@@ -606,7 +606,7 @@ export class ActionsService {
     return {
       ...updatedAction,
       action_id: updatedAction.action_id.toString(),
-      creator_id: updatedAction.creator_id.toString(),
+      creator_id: updatedAction.creator_id?.toString() ?? null,
       organization_id: updatedAction.organization_id?.toString() ?? null,
       validated_by_user_id: updatedAction.validated_by_user_id?.toString() ?? null,
     };
@@ -690,7 +690,7 @@ export class ActionsService {
     return {
       ...updatedAction,
       action_id: updatedAction.action_id.toString(),
-      creator_id: updatedAction.creator_id.toString(),
+      creator_id: updatedAction.creator_id?.toString() ?? null,
       organization_id: updatedAction.organization_id?.toString() ?? null,
       validated_by_user_id: updatedAction.validated_by_user_id?.toString() ?? null,
     };
@@ -772,9 +772,9 @@ export class ActionsService {
         const participantCount = await tx.participation.count({
           where: {
             action_id: BigInt(id),
-            user_id: {
-              not: action.creator_id,
-            },
+            ...(action.creator_id !== null
+              ? { user_id: { not: action.creator_id } }
+              : {}),
           },
         });
 
@@ -826,7 +826,7 @@ export class ActionsService {
     return {
       ...updatedAction,
       action_id: updatedAction.action_id.toString(),
-      creator_id: updatedAction.creator_id.toString(),
+      creator_id: updatedAction.creator_id?.toString() ?? null,
       organization_id: updatedAction.organization_id?.toString() ?? null,
       validated_by_user_id: updatedAction.validated_by_user_id?.toString() ?? null,
     };
@@ -926,7 +926,7 @@ export class ActionsService {
 
     const recipientIds = new Set<bigint>();
 
-    if (action.creator_id !== userId) {
+    if (action.creator_id !== null && action.creator_id !== userId) {
       recipientIds.add(action.creator_id);
     }
 
@@ -1049,7 +1049,11 @@ export class ActionsService {
   }
 
   private async notifyActionStatus(
-    action: { action_id: bigint; creator_id: bigint; title: string },
+    action: {
+      action_id: bigint;
+      creator_id: bigint | null;
+      title: string;
+    },
     status: string,
   ) {
     try {
@@ -1057,7 +1061,14 @@ export class ActionsService {
         where: { action_id: action.action_id },
         select: { user_id: true },
       });
-      const recipientIds = new Set<bigint>([action.creator_id, ...participations.map((item) => item.user_id)]);
+
+      const recipientIds = new Set<bigint>(
+        participations.map((item) => item.user_id),
+      );
+
+      if (action.creator_id !== null) {
+        recipientIds.add(action.creator_id);
+      }
 
       for (const recipientId of recipientIds) {
         await this.notificationsService.notifyUser({
@@ -1078,7 +1089,7 @@ export class ActionsService {
     return {
       ...action,
       action_id: action.action_id.toString(),
-      creator_id: action.creator_id.toString(),
+      creator_id: action.creator_id?.toString() ?? null,
       organization_id: action.organization_id ? action.organization_id.toString() : null,
       validated_by_user_id: action.validated_by_user_id ? action.validated_by_user_id.toString() : null,
     };

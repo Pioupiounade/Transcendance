@@ -1,8 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateProfileDto } from './dto/create-profile.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
-import { ProfileVisibility, AccountStatus, FriendshipStatus } from '../../generated/prisma/client';
+import { ProfileVisibility, AccountStatus, FriendshipStatus, RoleApp } from '../../generated/prisma/client';
 import { findCommune } from './find-commune';
 import { RealtimeGateway } from '../realtime/realtime.gateway';
 
@@ -303,24 +303,37 @@ export class ProfilesService {
   }
 
   //Mettre a jour un profil
-  async updateProfile(currentUserId: string, data: UpdateProfileDto) {
-    const user = await this.prisma.user.findUnique({
+  async updateProfile(
+    currentUserId: string,
+    data: UpdateProfileDto,
+    targetUserId: string = currentUserId,
+  ) {
+    const requester = await this.prisma.user.findUnique({
       where: {
         user_id: BigInt(currentUserId),
       },
     });
 
-    if (!user) {
+    if (!requester) {
       throw new NotFoundException('User not found');
     }
 
-    if (user.account_status !== AccountStatus.ACTIVE) {
-      throw new BadRequestException('Only an active user can change a profile');
+    if (requester.account_status !== AccountStatus.ACTIVE) {
+      throw new ForbiddenException('Your account is not active');
+    }
+
+    if (
+      currentUserId !== targetUserId &&
+      requester.role !== RoleApp.ADMIN
+    ) {
+      throw new ForbiddenException(
+        'Only an admin can edit another user profile',
+      );
     }
 
     const existingProfile = await this.prisma.profile.findUnique({
       where: {
-        user_id: BigInt(currentUserId),
+        user_id: BigInt(targetUserId),
       },
     });
 
@@ -337,7 +350,7 @@ export class ProfilesService {
 
       if (
         existingUsername &&
-        existingUsername.user_id !== BigInt(currentUserId)
+        existingUsername.user_id !== BigInt(targetUserId)
       ) {
         throw new BadRequestException(
           'Username is already taken',
@@ -352,7 +365,7 @@ export class ProfilesService {
 
     const updatedProfile = await this.prisma.profile.update({
       where: {
-        user_id: BigInt(currentUserId),
+        user_id: BigInt(targetUserId),
       },
       data: {
         username: data.username,
@@ -364,7 +377,7 @@ export class ProfilesService {
       },
     });
 
-    this.realtimeGateway.emitProfileUpdated(currentUserId);
+    this.realtimeGateway.emitProfileUpdated(targetUserId);
 
     const { location, ...safeProfile } = updatedProfile;
 
@@ -379,6 +392,37 @@ export class ProfilesService {
     const profile = await this.prisma.profile.findUnique({
       where: {
         user_id: BigInt(currentUserId),
+      },
+    });
+
+    if (!profile) {
+      return null;
+    }
+
+    return {
+      ...profile,
+      user_id: profile.user_id.toString(),
+    };
+  }
+
+  async findProfileForAdmin(requesterId: string, targetUserId: string) {
+    const requester = await this.prisma.user.findUnique({
+      where: {
+        user_id: BigInt(requesterId),
+      },
+    });
+
+    if (
+      !requester ||
+      requester.account_status !== AccountStatus.ACTIVE ||
+      requester.role !== RoleApp.ADMIN
+    ) {
+      throw new ForbiddenException('An active admin account is required');
+    }
+
+    const profile = await this.prisma.profile.findUnique({
+      where: {
+        user_id: BigInt(targetUserId),
       },
     });
 

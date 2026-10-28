@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ForbiddenException, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -367,6 +367,8 @@ export class UsersService {
           'SUSPENDED',
         );
 
+        this.realtimeGateway.emitProfileUpdated(targetUserId);
+
         const {
           password_hash: _,
           refresh_token: __,
@@ -404,8 +406,13 @@ export class UsersService {
       throw new NotFoundException('User not found');
     }
 
-    if (currentUser.role !== RoleApp.ADMIN) {
-      throw new ForbiddenException('Only an admin can reactivate a user');
+    if (
+      currentUser.role !== RoleApp.ADMIN ||
+      currentUser.account_status !== AccountStatus.ACTIVE
+    ) {
+      throw new ForbiddenException(
+        'Only an active admin can reactivate a user',
+      );
     }
 
     const targetUser = await this.prisma.user.findUnique({
@@ -418,8 +425,13 @@ export class UsersService {
       throw new NotFoundException('User not found');
     }
 
-    if (targetUser.account_status !== AccountStatus.SUSPENDED) {
-      throw new BadRequestException('Only a suspended account can be reactivated');
+    if (
+      targetUser.account_status !== AccountStatus.SUSPENDED &&
+      targetUser.account_status !== AccountStatus.DEACTIVATED
+    ) {
+      throw new BadRequestException(
+        'Only a suspended or deactivated account can be reactivated',
+      );
     }
 
     const updatedUser = await this.prisma.user.update({
@@ -436,6 +448,8 @@ export class UsersService {
       'ACTIVE',
     );
 
+    this.realtimeGateway.emitProfileUpdated(targetUserId);
+
     const {
       password_hash: _,
       refresh_token: __,
@@ -446,5 +460,142 @@ export class UsersService {
       ...safeUser,
       user_id: safeUser.user_id.toString(),
     };
+  }
+
+  async deleteUser(targetUserId: string, requesterId: string) {
+    const targetId = BigInt(targetUserId);
+    const adminId = BigInt(requesterId);
+
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      try {
+        await this.prisma.$transaction(
+          async (tx) => {
+            const requester = await tx.user.findUnique({
+              where: { user_id: adminId },
+            });
+
+            if (
+              !requester ||
+              requester.role !== RoleApp.ADMIN ||
+              requester.account_status !== AccountStatus.ACTIVE
+            ) {
+              throw new ForbiddenException(
+                'Only an active admin can delete a user',
+              );
+            }
+
+            if (targetId === adminId) {
+              throw new BadRequestException(
+                'You cannot delete your own account from the admin panel',
+              );
+            }
+
+            const target = await tx.user.findUnique({
+              where: { user_id: targetId },
+            });
+
+            if (!target) {
+              throw new NotFoundException('User not found');
+            }
+
+            if (
+              target.role === RoleApp.ADMIN &&
+              target.account_status === AccountStatus.ACTIVE
+            ) {
+              const activeAdmins = await tx.user.count({
+                where: {
+                  role: RoleApp.ADMIN,
+                  account_status: AccountStatus.ACTIVE,
+                },
+              });
+
+              if (activeAdmins <= 1) {
+                throw new ConflictException(
+                  'The last active admin cannot be deleted',
+                );
+              }
+            }
+
+            const ownership = await tx.organizationMember.findFirst({
+              where: {
+                user_id: targetId,
+                role: RoleOrg.OWNER,
+                status: MemberStatus.ACTIVE,
+              },
+            });
+
+            if (ownership) {
+              throw new ConflictException(
+                'Transfer organization ownership before deleting this account',
+              );
+            }
+
+            await tx.friendRequest.deleteMany({
+              where: {
+                OR: [
+                  { requester_id: targetId },
+                  { addressee_id: targetId },
+                ],
+              },
+            });
+
+            await tx.friendship.deleteMany({
+              where: {
+                OR: [
+                  { user1_id: targetId },
+                  { user2_id: targetId },
+                ],
+              },
+            });
+
+            // Nettoyer aussi une éventuelle référence de blocage restante.
+            await tx.friendship.updateMany({
+              where: { blocked_by_user_id: targetId },
+              data: { blocked_by_user_id: null },
+            });
+
+            await tx.participation.deleteMany({
+              where: { user_id: targetId },
+            });
+
+            await tx.organizationMember.deleteMany({
+              where: { user_id: targetId },
+            });
+
+            await tx.pointTransaction.deleteMany({
+              where: { user_id: targetId },
+            });
+
+            // Les relations Cascade suppriment notamment le profil,
+            // les sessions, messages, intérêts et notifications.
+            // Les relations SetNull conservent les contenus.
+            await tx.user.delete({
+              where: { user_id: targetId },
+            });
+          },
+          {
+            isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+          },
+        );
+
+        this.realtimeGateway.emitAccountDeleted(targetUserId);
+        this.realtimeGateway.emitProfileUpdated(targetUserId);
+
+        return { deleted: true, user_id: targetUserId };
+      } catch (error) {
+        if (
+          error instanceof Prisma.PrismaClientKnownRequestError &&
+          error.code === 'P2034'
+        ) {
+          if (attempt < 2) continue;
+
+          throw new ConflictException(
+            'Another update conflicted with the deletion. Please try again.',
+          );
+        }
+
+        throw error;
+      }
+    }
   }
 }

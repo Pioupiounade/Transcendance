@@ -11,6 +11,8 @@ type UsersTableProps = {
   /** Compte de l'admin connecté : affiché, jamais actionnable (on ne se bloque pas soi-même). */
   currentUserId: string;
   onAction: (kind: AccountActionKind, user: AuthUser) => void;
+  onEditProfile: (user: AuthUser) => void;
+  onDeleteUser: (user: AuthUser) => void;
 };
 
 const text = ADMIN_LABELS.users;
@@ -26,7 +28,7 @@ const STATUS_CLASSES: Record<AccountStatus, string> = {
  * Tableau des comptes. Sous 760 px chaque ligne devient une carte (CSS) ; les rôles ARIA explicites gardent
  * la sémantique de tableau quand `display` change.
  */
-export function UsersTable({ users, currentUserId, onAction }: UsersTableProps) {
+export function UsersTable({ users, currentUserId, onAction, onEditProfile, onDeleteUser }: UsersTableProps) {
   return (
     <table className={table.table} role="table">
       <caption className={table.caption}>{text.caption}</caption>
@@ -87,9 +89,32 @@ export function UsersTable({ users, currentUserId, onAction }: UsersTableProps) 
             <td role="cell" data-label={text.columns.since}>
               {formatFullDate(user.created_at)}
             </td>
-            <td role="cell" className={table.action}>
-              <RowAction user={user} own={user.user_id === currentUserId} onAction={onAction} />
-            </td>
+              <td role="cell" className={table.action}>
+                <Button
+                  variant="secondary"
+                  aria-label={`Edit profile: ${user.email}`}
+                  onClick={() => onEditProfile(user)}
+                >
+                  Edit profile
+                </Button>
+
+                <RowAction
+                  user={user}
+                  own={user.user_id === currentUserId}
+                  onAction={onAction}
+                />
+
+                {user.user_id !== currentUserId && (
+                  <Button
+                    variant="secondary"
+                    className={table.danger}
+                    aria-label={`Delete account: ${user.email}`}
+                    onClick={() => onDeleteUser(user)}
+                  >
+                    Delete account
+                  </Button>
+                )}
+              </td>
           </tr>
         ))}
       </tbody>
@@ -115,7 +140,10 @@ function RowAction({ user, own, onAction }: RowActionProps) {
       </span>
     );
   }
-  if (user.account_status === ACCOUNT_STATUS.SUSPENDED) {
+  if (
+      user.account_status === ACCOUNT_STATUS.SUSPENDED ||
+      user.account_status === ACCOUNT_STATUS.DEACTIVATED
+    ) {
     return (
       <span className={table.buttons}>
         <Button variant="secondary" aria-label={text.unblockAccount(user.email)} onClick={() => onAction('unblock', user)}>

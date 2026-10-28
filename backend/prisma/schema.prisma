@@ -132,12 +132,12 @@ model Organization {
   address  String
   location Float[]
 
-  creator_id BigInt
+  creator_id BigInt?
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
   // 2. Champs de relation Prisma
-  creator  User                  @relation("OrganizationCreator", fields: [creator_id], references: [user_id])
+  creator User? @relation("OrganizationCreator", fields: [creator_id], references: [user_id], onDelete: SetNull)
   members  OrganizationMember[]
   actions  Action[]
   comments OrganizationComment[]
@@ -179,7 +179,7 @@ model Action {
   title       String
   description String
 
-  creator_id      BigInt
+  creator_id BigInt?
   organization_id BigInt?
 
   min_participants Int          @default(3)
@@ -199,9 +199,9 @@ model Action {
   updated_at DateTime @updatedAt
 
   // 2. Champs de relation Prisma
-  creator User @relation("ActionCreator", fields: [creator_id], references: [user_id])
+  creator User? @relation("ActionCreator", fields: [creator_id], references: [user_id], onDelete: SetNull)
 
-  validator User? @relation("ActionValidator", fields: [validated_by_user_id], references: [user_id])
+  validator User? @relation("ActionValidator", fields: [validated_by_user_id], references: [user_id], onDelete: SetNull)
 
   organization Organization? @relation(fields: [organization_id], references: [organization_id])
 
@@ -222,10 +222,10 @@ model ActionComment {
   updated_at DateTime @updatedAt
 
   // 2. Champs de relation Prisma
-  user_id   BigInt
+  user_id BigInt?
   action_id BigInt
 
-  user   User   @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+  user User? @relation(fields: [user_id], references: [user_id], onDelete: SetNull)
   action Action @relation(fields: [action_id], references: [action_id], onDelete: Cascade)
 
   @@map("action_comments")
@@ -239,10 +239,10 @@ model OrganizationComment {
   updated_at DateTime @updatedAt
 
   // 2. Champs de relation Prisma
-  user_id         BigInt
+  user_id BigInt?
   organization_id BigInt
 
-  user         User         @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+  user User? @relation(fields: [user_id], references: [user_id], onDelete: SetNull)
   organization Organization @relation(fields: [organization_id], references: [organization_id], onDelete: Cascade)
 
   @@map("organization_comments")

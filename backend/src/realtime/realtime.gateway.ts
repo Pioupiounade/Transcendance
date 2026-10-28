@@ -46,17 +46,7 @@ export class RealtimeGateway
   }
 
   emitProfileUpdated(userId: string): void {
-    void this.getFriendIds(userId)
-      .then((friendIds) => {
-        for (const friendId of friendIds) {
-          this.server
-            .to(`user:${friendId}`)
-            .emit('profile:updated', { userId });
-        }
-      })
-      .catch((error: unknown) => {
-        console.error('Failed to broadcast profile update:', error);
-      });
+    this.server.emit('profile:updated', { userId });
   }
 
   emitOrganizationUpdated(organizationId: string): void {
@@ -89,6 +79,13 @@ export class RealtimeGateway
         userId,
         accountStatus,
       });
+  }
+
+  emitAccountDeleted(userId: string): void {
+    const room = `user:${userId}`;
+
+    this.server.to(room).emit('account:deleted', { userId });
+    this.server.in(room).disconnectSockets(true);
   }
 
   constructor(
@@ -143,9 +140,35 @@ export class RealtimeGateway
     try {
       const payload = await this.jwtService.verifyAsync<{
         id: string;
+        sessionId: string;
       }>(token, {
         secret: this.configService.get<string>('JWT_SECRET') || 'fallback-secret',
       });
+
+      if (
+        typeof payload.id !== 'string' ||
+        !/^[1-9]\d*$/.test(payload.id) ||
+        typeof payload.sessionId !== 'string' ||
+        !payload.sessionId
+      ) {
+        client.disconnect();
+        return;
+      }
+
+      const session = await this.prisma.authSession.findUnique({
+        where: {
+          session_id: payload.sessionId,
+        },
+      });
+
+      if (
+        !session ||
+        session.user_id !== BigInt(payload.id) ||
+        session.expires_at <= new Date()
+      ) {
+        client.disconnect();
+        return;
+      }
 
       client.data.userId = payload.id;
       client.join(`user:${payload.id}`);

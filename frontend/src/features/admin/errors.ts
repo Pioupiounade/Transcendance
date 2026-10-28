@@ -10,7 +10,12 @@ const describe = (error: unknown, notFound: string): string => {
   if (error.status === 403) return t.notAllowed;
   if (error.status === 404) return notFound;
   // 400 : règle métier (déjà bloqué, trop peu de participants, organisation inactive) ; le backend explique en anglais.
-  if (error.status === 400 && error.messages.length > 0) return t.rejected(error.messages.join(' '));
+  if (
+    (error.status === 400 || error.status === 409) &&
+    error.messages.length > 0
+  ) {
+    return t.rejected(error.messages.join(' '));
+  }
   return t.unknown;
 };
 

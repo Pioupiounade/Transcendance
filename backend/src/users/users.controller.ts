@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Param, Patch, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, Param, Patch, Req, UseGuards, Delete, BadRequestException } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -90,5 +90,18 @@ export class UsersController {
       id,
       req.user.id,
     );
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete(':id')
+  deleteUser(
+    @Req() req: any,
+    @Param('id') id: string,
+  ) {
+    if (!/^[1-9]\d*$/.test(id)) {
+      throw new BadRequestException('Invalid user ID');
+    }
+
+    return this.usersService.deleteUser(id, req.user.id);
   }
 }

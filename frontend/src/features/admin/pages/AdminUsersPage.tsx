@@ -3,13 +3,14 @@ import { ACCOUNT_STATUS, useAuth, type AuthUser } from '@/features/auth';
 import { useResource } from '@/shared/hooks/useResource';
 import { pageTitle } from '@/shared/lib/pageTitle';
 import { Button, Chip, ConfirmDialog, FloatingField, Icon, type Confirmation } from '@/shared/ui';
-import { blockUser, fetchUsers, unblockUser } from '../api/adminUsersApi';
+import { blockUser, fetchUsers, unblockUser, deleteUserAccount } from '../api/adminUsersApi';
 import { UsersTable } from '../components/UsersTable';
 import { toAccountErrorMessage } from '../errors';
 import { useAdminList } from '../hooks/useAdminList';
 import { ACCOUNT_STATUS_LABELS, ADMIN_LABELS } from '../labels';
 import type { AccountActionKind } from '../types';
 import styles from './AdminPage.module.css';
+import { AdminProfileEditor } from '../components/AdminProfileEditor';
 
 const text = ADMIN_LABELS.users;
 const common = ADMIN_LABELS.list;
@@ -29,7 +30,7 @@ export function AdminUsersPage() {
   const list = useAdminList(data ?? NO_USERS, LIST);
   const [confirmation, setConfirmation] = useState<Confirmation | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
-
+  const [editingUser, setEditingUser] = useState<AuthUser | null>(null);
   // Le blocage coûte 50 points au compte : jamais en un clic.
   const ask = (kind: AccountActionKind, user: AuthUser) => {
     const copy = ADMIN_LABELS.dialog[kind];
@@ -44,6 +45,32 @@ export function AdminUsersPage() {
         const account = await REQUESTS[kind](user.user_id);
         list.replace(account);
         setNotice(kind === 'block' ? text.blocked(account.email) : text.unblocked(account.email));
+      },
+    });
+  };
+  const askDelete = (account: AuthUser) => {
+    setConfirmation({
+      title: 'Permanently delete this account?',
+      body: `${account.email} will be permanently deleted.`,
+      effects: [
+        'This cannot be undone.',
+        'The profile, sessions and private messages will be deleted.',
+        'Actions and comments will remain with a deleted author.',
+        'Organization ownership must be transferred first.',
+      ],
+      confirmLabel: 'Delete account permanently',
+      confirmingLabel: 'Deleting…',
+      danger: true,
+      run: async () => {
+        await deleteUserAccount(account.user_id);
+
+        if (editingUser?.user_id === account.user_id) {
+          setEditingUser(null);
+        }
+
+        list.reset();
+        reload();
+        setNotice('Account permanently deleted.');
       },
     });
   };
@@ -109,7 +136,24 @@ export function AdminUsersPage() {
         <p className={styles.state}>{list.total === 0 ? text.empty : text.noMatch}</p>
       )}
 
-      {list.rows.length > 0 && <UsersTable users={list.rows} currentUserId={me?.user_id ?? ''} onAction={ask} />}
+      {editingUser && (
+        <AdminProfileEditor
+          key={editingUser.user_id}
+          userId={editingUser.user_id}
+          email={editingUser.email}
+          onClose={() => setEditingUser(null)}
+        />
+      )}
+
+      {list.rows.length > 0 && (
+        <UsersTable
+          users={list.rows}
+          currentUserId={me?.user_id ?? ''}
+          onAction={ask}
+          onEditProfile={setEditingUser}
+          onDeleteUser={askDelete}
+        />
+      )}
       {list.hidden > 0 && (
         <div className={styles.more}>
           <Button variant="secondary" onClick={list.showMore}>

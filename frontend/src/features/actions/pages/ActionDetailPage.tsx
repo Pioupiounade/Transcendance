@@ -41,7 +41,9 @@ currentUserId: string | null): ActionDetailData => ({
 
   organizer: {
     userId: action.creator_id,
-    name: creatorProfile?.username ?? `user-${action.creator_id}`,
+    name: action.creator_id === null
+      ? 'Utilisateur supprimé'
+      : creatorProfile?.username ?? `user-${action.creator_id}`,
     avatarUrl: creatorProfile?.profilePicture ?? undefined,
     organizationTitle: organization?.title,
     organizationId: action.organization_id ?? undefined,
@@ -88,13 +90,15 @@ const loadDetail = async (
   const [participantRows, creatorProfileResult, organization] =
     await Promise.all([
       fetchActionParticipants(id, signal),
-      getPublicProfile(action.creator_id).catch(() => null),
-      action.organization_id === null
-        ? null
-        : fetchActionOrganization(
-            action.organization_id,
-            signal,
-          ).catch(() => null),
+        action.creator_id === null
+          ? null
+          : getPublicProfile(action.creator_id).catch(() => null),
+        action.organization_id === null
+          ? null
+          : fetchActionOrganization(
+              action.organization_id,
+              signal,
+            ).catch(() => null),
     ]);
 
   const creatorProfile =
