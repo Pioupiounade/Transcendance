@@ -969,67 +969,6 @@ export class OrganizationmembersService {
         return updatedMembership;
     }
 
-    // Deny a membership request
-    async denyMembership(
-        requesterId: bigint,
-        organizationId: bigint,
-        targetUserId: bigint,
-    ) {
-        await this.checkCanManageMembers(requesterId, organizationId);
-
-        const membership = await this.prisma.organizationMember.findUnique({
-            where: {
-                organization_id_user_id: {
-                    organization_id: organizationId,
-                    user_id: targetUserId,
-                },
-            },
-            include: {
-                organization: {
-                    select: {
-                        title: true,
-                    },
-                },
-            },
-        });
-
-        if (!membership) {
-            throw new NotFoundException('Membership request not found');
-        }
-
-        if (membership.status !== MemberStatus.PENDING) {
-            throw new BadRequestException('Membership request is not pending');
-        }
-
-        const updatedMembership = await this.prisma.organizationMember.update({
-            where: {
-                organization_id_user_id: {
-                    organization_id: organizationId,
-                    user_id: targetUserId,
-                },
-            },
-            data: {
-                status: MemberStatus.REJECTED,
-                validated_by_org_man: false,
-                validated_at: new Date(),
-            },
-        });
-
-        await this.notificationsService.notifyUser({
-            userId: targetUserId,
-            type: NotificationType.ORGANIZATION_JOIN_REQUEST_REJECTED,
-            title: 'Membership request declined',
-            message: `Your request to join "${membership.organization.title}" has been declined.`,
-            link: `/organizations/${organizationId.toString()}`,
-        });
-
-        this.realtimeGateway.emitOrganizationMembershipChanged(
-            targetUserId,
-            organizationId,
-        );
-
-        return updatedMembership;
-    }
 
     // Leave an organization
     async leaveOrganization(userId: bigint, organizationId: bigint) {
