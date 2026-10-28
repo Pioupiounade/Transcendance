@@ -268,7 +268,8 @@ The project implements a total of **17 points** across the module categories:
   - Backend API Endpoints:
   - Bug Fixing & Integration
 - **Challenges faced and how she overcome:**
-  
+  - *Keeping in mind the details of the features:* Often went back reading the documentation written when creating the project.
+  - *Lack of knowledge, lot of new concepts:* AI and research helped me understand the main concepts. I also did elearning especially for TypeScript.
 
 ### lellanos
 - **Tasks, features, modules, or components implemented:**
