@@ -5,7 +5,6 @@ import {
   CATEGORY,
   CATEGORY_ICONS,
   CATEGORY_LABELS,
-  FOCUS_PARAM,
   NeighborhoodMap,
   OPEN_STATUSES,
   useActions,
@@ -14,7 +13,7 @@ import { pageTitle } from '@/shared/lib/pageTitle';
 import { Button, ButtonLink, Icon, Steps, type IconName } from '@/shared/ui';
 import quartier from '@/assets/quartier.jpg';
 import { APP_LABELS } from '../../labels';
-import { ROUTES } from '../../routes';
+import { ROUTES, actionDetailPath } from '../../routes';
 import styles from './Landing.module.css';
 
 const text = APP_LABELS.pages.landing;
@@ -34,10 +33,8 @@ export function Landing() {
     [open],
   );
 
-  const openOnMap = (id: string) => {
-    setSelectedId(id);
-    navigate(`${ROUTES.map}?${FOCUS_PARAM}=${id}`);
-  };
+  // Une carte ouvre la fiche de l'action ; la carte du quartier garde la sélection.
+  const openAction = (id: string) => navigate(actionDetailPath(id));
 
   return (
     <div className={styles.landing}>
@@ -126,7 +123,7 @@ export function Landing() {
               <ul className={styles.upcomingList}>
                 {upcoming.map((action) => (
                   <li key={action.action_id}>
-                    <ActionCard action={action} selected={action.action_id === selectedId} onSelect={openOnMap} />
+                    <ActionCard action={action} selected={action.action_id === selectedId} onSelect={openAction} />
                   </li>
                 ))}
               </ul>

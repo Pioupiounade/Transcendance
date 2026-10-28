@@ -20,7 +20,7 @@ export type AgendaItem = {
   status: ActionStatus;
   scheduledAt: string;
   role: 'organiser' | 'participant';
-  /** Destination du titre : modifier (organisateur) ou voir sur la carte (participant). */
+  /** Destination du titre : modifier (organisateur) ou la fiche de l'action (participant). */
   to: string;
 };
 
