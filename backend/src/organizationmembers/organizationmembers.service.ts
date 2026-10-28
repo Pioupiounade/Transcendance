@@ -969,7 +969,6 @@ export class OrganizationmembersService {
         return updatedMembership;
     }
 
-
     // Leave an organization
     async leaveOrganization(userId: bigint, organizationId: bigint) {
         let organizationClosed: boolean;
