@@ -93,10 +93,12 @@ export const ActionDetailsView: React.FC<ActionDetailsViewProps> = ({
 
   const canJoin =
     currentUserId !== null &&
+    action.organizationActive !== false &&
     isPending &&
     !isCreator &&
     !isJoined &&
-    (!hasParticipantLimit || (availableSpots !== null && availableSpots > 0));
+    (!hasParticipantLimit ||
+      (availableSpots !== null && availableSpots > 0));
 
   const canLeave =
     isPending &&
@@ -172,6 +174,11 @@ export const ActionDetailsView: React.FC<ActionDetailsViewProps> = ({
             )}
           </div>
         </div>
+        {action.organizationActive === false && (
+          <p role="status">
+            Organization inactive — joining this action is unavailable.
+          </p>
+        )}
         {actionError && (
           <p role="alert" style={{ color: 'var(--danger, #b93832)' }}>
             {actionError}

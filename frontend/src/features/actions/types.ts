@@ -101,4 +101,5 @@ export type ActionDetailData = {
   organizationId?: string;
   participants?:ActionParticipant[];
   isJoined?: boolean;
+  organizationActive?: boolean;
 };
