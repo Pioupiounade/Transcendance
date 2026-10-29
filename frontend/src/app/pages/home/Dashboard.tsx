@@ -140,7 +140,7 @@ export function Dashboard({ user }: DashboardProps) {
 
       <div className={styles.layout}>
         <div className={styles.map}>
-          <NeighborhoodMap actions={open} selectedId={selectedId} onSelect={setSelectedId} />
+          <NeighborhoodMap actions={open} selectedId={selectedId} onSelect={setSelectedId} home={profile?.location} />
           <div className={styles.mapFooter}>
             <span className={styles.privacy}>
               <Icon name="lock" size={16} />
