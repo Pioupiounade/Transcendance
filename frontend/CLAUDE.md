@@ -300,7 +300,7 @@ features/       1 domaine métier = 1 module ; interface = index.ts
                 d'« ajouter un membre » côté UI (non demandé).
                 Création (#106) : CreateOrganizationPage `/organizations/new` (sous `RequireAuth` ; bouton « Create an
                 organization » dans l'en-tête de l'annuaire, connectés seulement) = NeighborhoodMap en simple sélecteur
-                de lieu (pin déplaçable, sans popup) + OrganizationForm (nom, description ≤ 500, adresse ; validation.ts,
+                de lieu (pin déplaçable, sans popup) + OrganizationForm (nom ≤ 80, description ≤ 500, adresse ≤ 200 ; validation.ts,
                 lieu réclamé à l'envoi comme ActionForm) → `POST /organizations` (api/organizationsApi
                 `createOrganization`). Le backend crée le membre `OWNER` depuis #135 (09/10/2026) : la fiche de la
                 nouvelle organisation affiche « You own this organization » et « Manage » dès l'arrivée, sans message.
