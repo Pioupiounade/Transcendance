@@ -11,6 +11,7 @@ export const AUTH_LABELS = {
   validation: {
     emailRequired: 'Enter your email address.',
     emailInvalid: 'Enter a full email address, like name@example.com.',
+    emailEnding: 'The address must end with letters, like .com or .fr.',
     emailNoSpaces: 'Remove the spaces from the email address.',
     emailTooLong: (max: number) => `An email address is ${max} characters at most.`,
     emailLocalTooLong: (max: number) => `The part before @ is ${max} characters at most.`,
