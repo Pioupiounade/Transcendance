@@ -1385,6 +1385,20 @@ export class OrganizationmembersService {
             }),
         ]);
 
+        this.realtimeGateway.emitOrganizationMembershipChanged(
+        currentOwner.user_id,
+        organizationId,
+        );
+
+        this.realtimeGateway.emitOrganizationMembershipChanged(
+        newOwnerId,
+        organizationId,
+        );
+
+        this.realtimeGateway.emitOrganizationUpdated(
+        organizationId.toString(),
+        );
+
         await this.notificationsService.notifyUser({
             userId: newOwnerId,
             type: NotificationType.ORGANIZATION_OWNERSHIP_TRANSFERRED,

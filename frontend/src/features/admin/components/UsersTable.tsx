@@ -118,6 +118,10 @@ export function UsersTable({ users, currentUserId, onAction, onEditProfile, onDe
                   (user.role === ROLE_APP.USER || user.role === ROLE_APP.ADMIN) && (
                     <Button
                       variant="secondary"
+                      disabled={
+                        user.role === ROLE_APP.USER &&
+                        user.account_status !== ACCOUNT_STATUS.ACTIVE
+                      }
                       aria-label={
                         user.role === ROLE_APP.ADMIN
                           ? `Make ${user.email} a user`
@@ -175,11 +179,24 @@ function RowAction({ user, own, onAction }: RowActionProps) {
         <Button
           variant="secondary"
           className={table.danger}
+          disabled={Boolean(user.blockingOwnershipOrganization)}
           aria-label={text.blockAccount(user.email)}
+          aria-describedby={
+            user.blockingOwnershipOrganization
+              ? `block-reason-${user.user_id}`
+              : undefined
+          }
           onClick={() => onAction('block', user)}
         >
           {text.block}
         </Button>
+
+        {user.blockingOwnershipOrganization && (
+          <span id={`block-reason-${user.user_id}`}>
+            Transfer ownership of “{user.blockingOwnershipOrganization}”
+            {' '}before blocking this account.
+          </span>
+        )}
       </span>
     );
   }
@@ -195,6 +212,5 @@ function RowAction({ user, own, onAction }: RowActionProps) {
       </span>
     );
   }
-  // `DEACTIVATED` : fermé par son propriétaire, l'API ne sait pas le rouvrir.
   return <span className={table.none}>{text.closedByOwner}</span>;
 }

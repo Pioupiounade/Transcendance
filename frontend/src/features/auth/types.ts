@@ -15,6 +15,7 @@ export type AuthUser = {
   created_at: string;
   updated_at: string;
   deletionBlockedByOwnership?: boolean;
+  blockingOwnershipOrganization?: string | null;
 };
 
 export type AuthStatus = 'loading' | 'anonymous' | 'authenticated';

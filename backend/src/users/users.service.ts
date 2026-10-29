@@ -58,16 +58,56 @@ export class UsersService {
             },
           },
         },
+        organization_members: {
+          where: {
+            role: RoleOrg.OWNER,
+            status: MemberStatus.ACTIVE,
+          },
+          select: {
+            organization: {
+              select: {
+                title: true,
+                members: {
+                  where: {
+                    status: MemberStatus.ACTIVE,
+                    user: {
+                      account_status: AccountStatus.ACTIVE,
+                    },
+                  },
+                  select: {
+                    user_id: true,
+                  },
+                },
+              },
+            },
+          },
+        },
       },
     });
-
     return users.map(
-      ({ password_hash, refresh_token, _count, ...user }) => ({
-        ...user,
-        user_id: user.user_id.toString(),
-        deletionBlockedByOwnership:
-          _count.organization_members > 0,
-      }),
+      ({
+        password_hash,
+        refresh_token,
+        _count,
+        organization_members,
+        ...user
+      }) => {
+        const blockingOwnership = organization_members.find(
+          (membership) =>
+            membership.organization.members.some(
+              (member) => member.user_id !== user.user_id,
+            ),
+        );
+
+        return {
+          ...user,
+          user_id: user.user_id.toString(),
+          deletionBlockedByOwnership:
+            _count.organization_members > 0,
+          blockingOwnershipOrganization:
+            blockingOwnership?.organization.title ?? null,
+        };
+      },
     );
   }
 
@@ -257,18 +297,84 @@ export class UsersService {
       ActionStatus.APPROVED,
     ];
 
-    // Actions à annuler et participants à prévenir après la transaction.
-    const cancelledActions = await tx.action.findMany({
+    const memberships = await tx.organizationMember.findMany({
+      where: { user_id: userId },
+      select: {
+        organization_id: true,
+        role: true,
+        status: true,
+        organization: {
+          select: {
+            title: true,
+            _count: {
+              select: {
+                members: {
+                  where: {
+                    user_id: { not: userId },
+                    status: MemberStatus.ACTIVE,
+                    user: {
+                      account_status: AccountStatus.ACTIVE,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    const ownerships = memberships.filter(
+      (membership) =>
+        membership.role === RoleOrg.OWNER &&
+        membership.status === MemberStatus.ACTIVE,
+    );
+
+    // Vérifier toutes les organisations avant le nettoyage.
+    const requiresTransfer = ownerships.find(
+      (membership) => membership.organization._count.members > 0,
+    );
+
+    if (requiresTransfer) {
+      throw new ConflictException(
+        `Transfer ownership of "${requiresTransfer.organization.title}" ` +
+        'before making this account inactive',
+      );
+    }
+
+    // Le compte est le seul membre actif de ces organisations.
+    const closingOrganizationIds = ownerships.map(
+      (membership) => membership.organization_id,
+    );
+
+    // Annuler les actions du compte ET celles des organisations fermées.
+    const cancelledRows = await tx.action.findMany({
       where: {
-        creator_id: userId,
         status: { in: openStatuses },
+        OR: [
+          { creator_id: userId },
+          {
+            organization_id: {
+              in: closingOrganizationIds,
+            },
+          },
+        ],
       },
       select: {
         action_id: true,
         title: true,
+        creator_id: true,
+        creator: {
+          select: {
+            account_status: true,
+          },
+        },
         participation: {
           where: {
             user_id: { not: userId },
+            user: {
+              account_status: AccountStatus.ACTIVE,
+            },
           },
           select: {
             user_id: true,
@@ -277,7 +383,6 @@ export class UsersService {
       },
     });
 
-    // Participations à retirer, en conservant l'historique terminé.
     const participations = await tx.participation.findMany({
       where: {
         user_id: userId,
@@ -290,26 +395,6 @@ export class UsersService {
       },
     });
 
-    const memberships = await tx.organizationMember.findMany({
-      where: {
-        user_id: userId,
-      },
-      select: {
-        organization_id: true,
-        role: true,
-        status: true,
-      },
-    });
-
-    const ownedOrganizationIds = memberships
-      .filter(
-        (membership) =>
-          membership.role === RoleOrg.OWNER &&
-          membership.status === MemberStatus.ACTIVE,
-      )
-      .map((membership) => membership.organization_id);
-
-    // Retirer les inscriptions avant de changer le statut des actions.
     await tx.participation.deleteMany({
       where: {
         user_id: userId,
@@ -321,36 +406,63 @@ export class UsersService {
 
     await tx.action.updateMany({
       where: {
-        creator_id: userId,
         status: { in: openStatuses },
+        OR: [
+          { creator_id: userId },
+          {
+            organization_id: {
+              in: closingOrganizationIds,
+            },
+          },
+        ],
       },
       data: {
         status: ActionStatus.CANCELLED,
       },
     });
 
-    // Ne pas transformer une organisation fermée en organisation suspendue.
     await tx.organization.updateMany({
       where: {
         organization_id: {
-          in: ownedOrganizationIds,
+          in: closingOrganizationIds,
         },
-        organization_status: OrganizationStatus.ACTIVE,
       },
       data: {
-        organization_status: OrganizationStatus.SUSPENDED,
+        organization_status: OrganizationStatus.CLOSED,
       },
     });
 
-    // Conserver la propriété pour permettre un transfert ultérieur.
-    // Retirer les autres adhésions et demandes.
+    // Retirer toutes ses adhésions et demandes.
+    // Son éventuelle organisation owner est maintenant fermée.
     await tx.organizationMember.deleteMany({
       where: {
         user_id: userId,
-        role: {
-          not: RoleOrg.OWNER,
-        },
       },
+    });
+
+    const cancelledActions = cancelledRows.map((action) => {
+      const recipients = new Set(
+        action.participation.map(
+          (participant) => participant.user_id,
+        ),
+      );
+
+      // Une action de l'organisation peut appartenir à un autre créateur.
+      if (
+        action.creator_id !== null &&
+        action.creator_id !== userId &&
+        action.creator?.account_status === AccountStatus.ACTIVE
+      ) {
+        recipients.add(action.creator_id);
+      }
+
+      return {
+        action_id: action.action_id,
+        title: action.title,
+        participation: [...recipients].map(
+          (user_id) => ({ user_id }),
+        ),
+      };
     });
 
     return {
@@ -406,9 +518,7 @@ export class UsersService {
           userId: participant.user_id,
           type: NotificationType.ACTION_STATUS_CHANGED,
           title: 'Action cancelled',
-          message:
-            `The action "${action.title}" was cancelled ` +
-            `because its creator's account is no longer active.`,
+          message: `The action "${action.title}" has been cancelled.`,
           link: `/actions/${action.action_id.toString()}`,
         });
       }
@@ -957,6 +1067,15 @@ export class UsersService {
 
             if (!target) {
               throw new NotFoundException('User not found');
+            }
+
+            if (
+              role === RoleApp.ADMIN &&
+              target.account_status !== AccountStatus.ACTIVE
+            ) {
+              throw new BadRequestException(
+                'Only an active account can be promoted to admin',
+              );
             }
 
             if (target.role === role) return;

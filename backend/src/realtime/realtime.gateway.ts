@@ -37,6 +37,8 @@ export class RealtimeGateway
       .emit('organization:membership-changed', {
         organizationId: organizationId.toString(),
       });
+
+    void this.emitAdminDirectoryChanged('users');
   }
 
   emitFriendshipChanged(recipientId: string, userId: string): void {
