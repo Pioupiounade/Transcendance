@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
+import { useMyProfile } from '@/features/profile';
 import { pageTitle } from '@/shared/lib/pageTitle';
 import { ActionEditor } from '../components/ActionEditor';
 import { DRAFT_PARAM, parseDraft } from '../draftParam';
@@ -23,6 +24,8 @@ export function CreateActionPage({ mapPath }: CreateActionPageProps) {
   const [searchParams] = useSearchParams();
   const draftParam = searchParams.get(DRAFT_PARAM);
   const initialLocation = useMemo(() => parseDraft(draftParam), [draftParam]);
+  // Sans `?at=`, la carte s'ouvre sur le quartier de l'utilisateur (sinon 42 Paris) ; aucun pin n'est posé pour lui.
+  const { profile } = useMyProfile();
 
   const onSaved = (action: ActionRecord, failedPhotos: string[]) =>
     navigate(`${mapPath}?${FOCUS_PARAM}=${action.action_id}`, {
@@ -44,7 +47,12 @@ export function CreateActionPage({ mapPath }: CreateActionPageProps) {
         <h1>{text.pageTitle}</h1>
         <p className={styles.lead}>{text.pageLead}</p>
       </header>
-      <ActionEditor initialLocation={initialLocation} onSaved={onSaved} onCancel={() => navigate(mapPath)} />
+      <ActionEditor
+        initialLocation={initialLocation}
+        home={profile?.location}
+        onSaved={onSaved}
+        onCancel={() => navigate(mapPath)}
+      />
     </section>
   );
 }

@@ -1,7 +1,10 @@
 import type { LatLng } from './types';
 
-/** Saint-Cyprien, Toulouse : le quartier de la maquette, affiché quand il n'y a ni action ni position. */
-export const DEFAULT_CENTER: LatLng = [43.5985, 1.4265];
+/**
+ * École 42 Paris (96 boulevard Bessières, 17e) : le quartier de référence du projet, affiché quand la carte n'a
+ * rien d'autre à montrer : ni action, ni brouillon, ni quartier connu de l'utilisateur (`home` de NeighborhoodMap).
+ */
+export const DEFAULT_CENTER: LatLng = [48.8966, 2.3183];
 export const DEFAULT_ZOOM = 14;
 /** Zoom d'une action ou de la position de l'utilisateur. */
 export const FOCUS_ZOOM = 16;
