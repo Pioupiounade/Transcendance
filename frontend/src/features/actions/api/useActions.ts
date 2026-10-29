@@ -19,7 +19,11 @@ export function useActions() {
   useEffect(() => {
     const controller = new AbortController();
     fetchActions(controller.signal)
-      .then((actions) => setResult({ attempt, actions, error: null }))
+      .then((actions) => {
+        if (!controller.signal.aborted) {
+          setResult({ attempt, actions, error: null });
+        }
+      })
       .catch((error: unknown) => {
         if (controller.signal.aborted) return;
         setResult({ attempt, actions: [], error: toApiError(error) });
@@ -28,6 +32,25 @@ export function useActions() {
   }, [attempt]);
 
   const reload = useCallback(() => setAttempt((n) => n + 1), []);
+
+  useEffect(() => {
+    const events = [
+      'action:updated',
+      'action:participants-changed',
+      'user:deleted',
+      'user:status-changed',
+    ];
+
+    for (const event of events) {
+      window.addEventListener(event, reload);
+    }
+
+    return () => {
+      for (const event of events) {
+        window.removeEventListener(event, reload);
+      }
+    };
+  }, [reload]);
 
   const loading = result === null || result.attempt !== attempt;
   return {
