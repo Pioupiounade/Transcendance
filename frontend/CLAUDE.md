@@ -200,8 +200,9 @@ features/       1 domaine métier = 1 module ; interface = index.ts
                 pendant la restauration de session, message d'attente au lieu d'une liste vide.
                 Création depuis la carte (Epic 7) : NeighborhoodMap accepte `draft` / `onDraftChange` / `draftContent`
                 (pin brouillon déplaçable, popup ; sans `draftContent` = simple sélecteur de lieu), `home` = quartier de
-                l'utilisateur (`profiles/me.location`). Cadrage (29/10/2026) : les actions, sinon le brouillon, sinon `home`,
-                sinon `DEFAULT_CENTER` = l'école 42 Paris (mapConfig.ts ; répété dans NeighbourhoodPicker). MapPage garde le
+                l'utilisateur (`profiles/me.location`). Vue (29/10/2026) : le brouillon s'il y en a un, sinon `home`, sinon
+                `DEFAULT_CENTER` = l'école 42 Paris (mapConfig.ts ; répété dans NeighbourhoodPicker), au zoom quartier ; les
+                pins ne recadrent jamais la carte, le bouton « recentrer » les cadre tous. MapPage garde le
                 lieu dans l'URL (`?at=lat,lng`, draftParam.ts), CreateActionDialog = Dialog + ActionForm, validation.ts,
                 errors.ts, api/useCreateAction.
                 Créer / modifier / annuler (#33, Epic 2) : ActionForm (deep : `{ location | null, action?, onSaved,
