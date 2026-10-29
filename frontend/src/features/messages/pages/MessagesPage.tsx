@@ -1,5 +1,5 @@
-import { useCallback, useMemo } from 'react';
-import { useParams } from 'react-router';
+import { useCallback, useEffect, useMemo } from 'react';
+import { useLocation, useNavigate, useParams } from 'react-router';
 import { useAuth } from '@/features/auth';
 import { friendsApi } from '@/features/friends';
 import { useResource } from '@/shared/hooks/useResource';
@@ -24,6 +24,14 @@ const text = MESSAGES_LABELS;
 /** Messagerie entre amis : conversations à gauche, fil à droite (`:friendId`), un volet à la fois sur téléphone. */
 export function MessagesPage({ listPath, threadPath, friendsPath, profilePath }: MessagesPageProps) {
   const { friendId = null } = useParams<{ friendId: string }>();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const notice =
+    typeof location.state?.message === 'string'
+      ? location.state.message
+      : null;
+
   const { user } = useAuth();
 
   const load = useCallback((signal: AbortSignal) => friendsApi.getMyFriends(signal), []);
@@ -34,10 +42,83 @@ export function MessagesPage({ listPath, threadPath, friendsPath, profilePath }:
   );
   const friend = friendId ? (sorted.find((item) => item.user_id === friendId) ?? null) : null;
 
+  useEffect(() => {
+    const handleUnavailable = (event: Event) => {
+      const { friendId: unavailableId } = (
+        event as CustomEvent<{ friendId: string }>
+      ).detail;
+
+      reload();
+
+      if (unavailableId === friendId) {
+        navigate(listPath, {
+          replace: true,
+          state: {
+            message: 'Messages unavailable for this user.',
+          },
+        });
+      }
+    };
+
+    window.addEventListener(
+      'conversation:unavailable',
+      handleUnavailable,
+    );
+
+    return () => {
+      window.removeEventListener(
+        'conversation:unavailable',
+        handleUnavailable,
+      );
+    };
+  }, [friendId, listPath, navigate, reload]);
+
+  useEffect(() => {
+    const handleUserStatusChanged = (event: Event) => {
+      const { userId, accountStatus } = (
+        event as CustomEvent<{
+          userId: string;
+          accountStatus: 'ACTIVE' | 'SUSPENDED' | 'DEACTIVATED';
+        }>
+      ).detail;
+
+      if (userId !== friendId || accountStatus === 'ACTIVE') {
+        return;
+      }
+
+      navigate(listPath, {
+        replace: true,
+        state: {
+          message:
+            accountStatus === 'SUSPENDED'
+              ? 'Blocked user — messages unavailable.'
+              : 'Messages unavailable for this user.',
+        },
+      });
+    };
+
+    window.addEventListener(
+      'user:status-changed',
+      handleUserStatusChanged,
+    );
+
+    return () => {
+      window.removeEventListener(
+        'user:status-changed',
+        handleUserStatusChanged,
+      );
+    };
+  }, [friendId, listPath, navigate]);
+
   return (
     <div className={styles.container}>
       <title>{pageTitle(text.title)}</title>
       <h1 className={styles.title}>{text.title}</h1>
+        {notice && (
+          <p className={styles.state} role="status">
+            {notice}
+          </p>
+        )}
 
       <div className={styles.panel} data-view={friendId ? 'thread' : 'list'}>
         <aside className={styles.side}>

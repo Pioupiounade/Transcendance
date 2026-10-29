@@ -233,98 +233,273 @@ export class UsersService {
     };
   }
 
+  private async detachInactiveAccount(
+    tx: Prisma.TransactionClient,
+    userId: bigint,
+  ) {
+    const openStatuses = [
+      ActionStatus.PENDING,
+      ActionStatus.APPROVED,
+    ];
+
+    // Actions à annuler et participants à prévenir après la transaction.
+    const cancelledActions = await tx.action.findMany({
+      where: {
+        creator_id: userId,
+        status: { in: openStatuses },
+      },
+      select: {
+        action_id: true,
+        title: true,
+        participation: {
+          where: {
+            user_id: { not: userId },
+          },
+          select: {
+            user_id: true,
+          },
+        },
+      },
+    });
+
+    // Participations à retirer, en conservant l'historique terminé.
+    const participations = await tx.participation.findMany({
+      where: {
+        user_id: userId,
+        action: {
+          status: { in: openStatuses },
+        },
+      },
+      select: {
+        action_id: true,
+      },
+    });
+
+    const memberships = await tx.organizationMember.findMany({
+      where: {
+        user_id: userId,
+      },
+      select: {
+        organization_id: true,
+        role: true,
+        status: true,
+      },
+    });
+
+    const ownedOrganizationIds = memberships
+      .filter(
+        (membership) =>
+          membership.role === RoleOrg.OWNER &&
+          membership.status === MemberStatus.ACTIVE,
+      )
+      .map((membership) => membership.organization_id);
+
+    // Retirer les inscriptions avant de changer le statut des actions.
+    await tx.participation.deleteMany({
+      where: {
+        user_id: userId,
+        action: {
+          status: { in: openStatuses },
+        },
+      },
+    });
+
+    await tx.action.updateMany({
+      where: {
+        creator_id: userId,
+        status: { in: openStatuses },
+      },
+      data: {
+        status: ActionStatus.CANCELLED,
+      },
+    });
+
+    // Ne pas transformer une organisation fermée en organisation suspendue.
+    await tx.organization.updateMany({
+      where: {
+        organization_id: {
+          in: ownedOrganizationIds,
+        },
+        organization_status: OrganizationStatus.ACTIVE,
+      },
+      data: {
+        organization_status: OrganizationStatus.SUSPENDED,
+      },
+    });
+
+    // Conserver la propriété pour permettre un transfert ultérieur.
+    // Retirer les autres adhésions et demandes.
+    await tx.organizationMember.deleteMany({
+      where: {
+        user_id: userId,
+        role: {
+          not: RoleOrg.OWNER,
+        },
+      },
+    });
+
+    return {
+      cancelledActions,
+      actionIds: [
+        ...new Set([
+          ...cancelledActions.map((action) => action.action_id),
+          ...participations.map(
+            (participation) => participation.action_id,
+          ),
+        ]),
+      ],
+      organizationIds: [
+        ...new Set(
+          memberships.map(
+            (membership) => membership.organization_id,
+          ),
+        ),
+      ],
+    };
+  }
+
+  private async publishInactiveAccountEffects(effects: {
+    actionIds: bigint[];
+    organizationIds: bigint[];
+    cancelledActions: {
+      action_id: bigint;
+      title: string;
+      participation: {
+        user_id: bigint;
+      }[];
+    }[];
+  }) {
+    for (const actionId of effects.actionIds) {
+      this.realtimeGateway.emitActionUpdated(
+        actionId.toString(),
+      );
+    }
+
+    for (const organizationId of effects.organizationIds) {
+      this.realtimeGateway.emitOrganizationUpdated(
+        organizationId.toString(),
+      );
+    }
+
+    await this.realtimeGateway.emitAdminDirectoryChanged('users');
+    await this.realtimeGateway.emitAdminDirectoryChanged('actions');
+    await this.realtimeGateway.emitAdminDirectoryChanged('organizations');
+
+    for (const action of effects.cancelledActions) {
+      for (const participant of action.participation) {
+        await this.notificationsService.notifyUser({
+          userId: participant.user_id,
+          type: NotificationType.ACTION_STATUS_CHANGED,
+          title: 'Action cancelled',
+          message:
+            `The action "${action.title}" was cancelled ` +
+            `because its creator's account is no longer active.`,
+          link: `/actions/${action.action_id.toString()}`,
+        });
+      }
+    }
+  }
+
 //6. desactiver un utilisateur
   async deactivate(id: string) {
     const userId = BigInt(id);
 
-    const user = await this.prisma.$transaction(async (tx) => {
-      const existingUser = await tx.user.findUnique({
-        where: { user_id: userId },
-      });
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      try {
+        const result = await this.prisma.$transaction(
+          async (tx) => {
+            const existingUser = await tx.user.findUnique({
+              where: {
+                user_id: userId,
+              },
+            });
 
-      if (!existingUser) {
-        throw new NotFoundException('User not found');
-      }
+            if (!existingUser) {
+              throw new NotFoundException('User not found');
+            }
 
-      const ownedActiveOrganization = await tx.organizationMember.findFirst({
-        where: {
-          user_id: userId,
-          role: RoleOrg.OWNER,
-          status: MemberStatus.ACTIVE,
-          organization: {
-            organization_status: OrganizationStatus.ACTIVE,
+            if (existingUser.account_status !== AccountStatus.ACTIVE) {
+              throw new BadRequestException(
+                'Only an active account can be deactivated',
+              );
+            }
+
+            if (existingUser.role === RoleApp.ADMIN) {
+              const activeAdminCount = await tx.user.count({
+                where: {
+                  role: RoleApp.ADMIN,
+                  account_status: AccountStatus.ACTIVE,
+                },
+              });
+
+              if (activeAdminCount <= 1) {
+                throw new ConflictException(
+                  'The last active admin cannot be deactivated',
+                );
+              }
+            }
+
+            const effects = await this.detachInactiveAccount(
+              tx,
+              userId,
+            );
+
+            const user = await tx.user.update({
+              where: {
+                user_id: userId,
+              },
+              data: {
+                account_status: AccountStatus.DEACTIVATED,
+                refresh_token: null,
+              },
+            });
+
+            await tx.authSession.deleteMany({
+              where: {
+                user_id: userId,
+              },
+            });
+
+            return { user, effects };
           },
-        },
-      });
-
-      if (ownedActiveOrganization) {
-        throw new BadRequestException(
-          'Transfer organization ownership before deactivating your account',
+          {
+            isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+          },
         );
+
+        this.realtimeGateway.emitAccountStatusChanged(
+          id,
+          'DEACTIVATED',
+        );
+
+        this.realtimeGateway.emitProfileUpdated(id);
+        await this.publishInactiveAccountEffects(result.effects);
+
+        const {
+          password_hash: _,
+          refresh_token: __,
+          ...safeUser
+        } = result.user;
+
+        return {
+          ...safeUser,
+          user_id: safeUser.user_id.toString(),
+        };
+      } catch (error) {
+        if (
+          error instanceof Prisma.PrismaClientKnownRequestError &&
+          error.code === 'P2034'
+        ) {
+          if (attempt < 2) continue;
+
+          throw new ConflictException(
+            'Another update conflicted with the deactivation. Please try again.',
+          );
+        }
+
+        throw error;
       }
-
-      await tx.organizationMember.deleteMany({
-        where: {
-          user_id: userId,
-          status: MemberStatus.ACTIVE,
-          role: {
-            in: [RoleOrg.MEMBER, RoleOrg.MANAGER],
-          },
-        },
-      });
-      // 1. Retirer l'utilisateur des actions encore ouvertes
-      await tx.participation.deleteMany({
-        where: {
-          user_id: userId,
-          action: {
-            status: {
-              in: [
-                ActionStatus.PENDING,
-                ActionStatus.APPROVED,
-              ],
-            },
-          },
-        },
-      });
-
-      // 2. Annuler les actions encore ouvertes qu'il a créées
-      await tx.action.updateMany({
-        where: {
-          creator_id: userId,
-          status: {
-            in: [
-              ActionStatus.PENDING,
-              ActionStatus.APPROVED,
-            ],
-          },
-        },
-        data: {
-          status: ActionStatus.CANCELLED,
-        },
-      });
-
-      // 3. Désactiver le compte
-      return tx.user.update({
-        where: {
-          user_id: userId,
-        },
-        data: {
-          account_status: AccountStatus.DEACTIVATED,
-          refresh_token: null,
-        },
-      });
-    });
-
-    const {
-      password_hash: _,
-      refresh_token: __,
-      ...safeUser
-    } = user;
-
-    return {
-      ...safeUser,
-      user_id: safeUser.user_id.toString(),
-    };
+    }
   }
 
 //7. suspendre un utilisateur
@@ -339,13 +514,18 @@ export class UsersService {
       throw new NotFoundException('User not found');
     }
 
-    if (currentUser.role !== RoleApp.ADMIN) {
-      throw new ForbiddenException('Only an admin can suspend a user');
-    }
+  if (
+    currentUser.role !== RoleApp.ADMIN ||
+    currentUser.account_status !== AccountStatus.ACTIVE
+  ) {
+    throw new ForbiddenException(
+      'Only an active admin can suspend a user',
+    );
+  }
 
     for (let attempt = 0; attempt < 3; attempt += 1) {
       try {
-        const updatedUser = await this.prisma.$transaction(
+        const result = await this.prisma.$transaction(
           async (tx) => {
             const targetUser = await tx.user.findUnique({
               where: {
@@ -365,6 +545,21 @@ export class UsersService {
               throw new BadRequestException('Deactivated users cannot be suspended');
             }
 
+            if (targetUser.role === RoleApp.ADMIN) {
+              const activeAdminCount = await tx.user.count({
+                where: {
+                  role: RoleApp.ADMIN,
+                  account_status: AccountStatus.ACTIVE,
+                },
+              });
+
+              if (activeAdminCount <= 1) {
+                throw new ConflictException(
+                  'The last active admin cannot be suspended',
+                );
+              }
+            }
+
             const suspendedUser = await tx.user.update({
               where: {
                 user_id: BigInt(targetUserId),
@@ -379,7 +574,15 @@ export class UsersService {
               tx,
             );
 
-            return suspendedUser;
+            const effects = await this.detachInactiveAccount(
+              tx,
+              BigInt(targetUserId),
+            );
+
+            return {
+              user: suspendedUser,
+              effects,
+            };
           },
           { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
         );
@@ -391,11 +594,13 @@ export class UsersService {
 
         this.realtimeGateway.emitProfileUpdated(targetUserId);
 
+        await this.publishInactiveAccountEffects(result.effects);
+
         const {
           password_hash: _,
           refresh_token: __,
           ...safeUser
-        } = updatedUser;
+        } = result.user;
 
         return {
           ...safeUser,
@@ -471,6 +676,8 @@ export class UsersService {
     );
 
     this.realtimeGateway.emitProfileUpdated(targetUserId);
+    
+    await this.realtimeGateway.emitAdminDirectoryChanged('users');
 
     const {
       password_hash: _,

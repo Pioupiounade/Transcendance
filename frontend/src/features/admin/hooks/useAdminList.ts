@@ -27,9 +27,11 @@ export function useAdminList<T, S extends string>(items: T[], { id, status, stat
 
   useEffect(() => {
     window.addEventListener('user:deleted', reset);
+    window.addEventListener('user:status-changed', reset);
 
     return () => {
       window.removeEventListener('user:deleted', reset);
+      window.removeEventListener('user:status-changed', reset);
     };
   }, [reset]);
 

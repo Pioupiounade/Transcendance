@@ -6,8 +6,21 @@ export const fetchUnreadMessageCount = (signal?: AbortSignal) =>
   http.get<{ count: number }>('/direct-messages/unread-count', { signal });
 
 /** Le fil avec un ami, du plus ancien au plus récent ; le backend marque lus les messages reçus (§18). */
-export const fetchThread = (friendId: string, signal?: AbortSignal) =>
-  http.get<DirectMessage[]>(`/direct-messages/${friendId}`, { signal });
+export type ThreadResult =
+  | DirectMessage[]
+  | {
+      available: false;
+      reason: 'CONVERSATION_UNAVAILABLE';
+    };
+
+export const fetchThread = (
+  friendId: string,
+  signal?: AbortSignal,
+) =>
+  http.get<ThreadResult>(
+    `/direct-messages/${friendId}`,
+    { signal },
+  );
 
 export const sendDirectMessage = (friendId: string, content: string) =>
   http.post<DirectMessage>(`/direct-messages/${friendId}`, { content });

@@ -108,7 +108,10 @@ export class DirectMessagesService {
 		});
 
 		if (!friendship) {
-			throw new ForbiddenException('You can only view messages with your active friends.');
+			return {
+				available: false as const,
+				reason: 'CONVERSATION_UNAVAILABLE' as const,
+			};
 		}
 
 		// Set messages readed
@@ -164,10 +167,13 @@ export class DirectMessagesService {
 
 	async countUnreadMessages(userId: bigint) {
 		const count = await this.prisma.directMessage.count({
-			where: {
+		where: {
 			receiver_id: userId,
 			is_read: false,
+			sender: {
+				account_status: 'ACTIVE',
 			},
+		},
 		});
 
 		return { count };

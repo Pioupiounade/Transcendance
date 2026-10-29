@@ -35,9 +35,11 @@ export function useResource<T>(load: Loader<T>) {
   
   useEffect(() => {
     window.addEventListener('user:deleted', reload);
+    window.addEventListener('user:status-changed', reload);
 
     return () => {
       window.removeEventListener('user:deleted', reload);
+      window.removeEventListener('user:status-changed', reload);
     };
   }, [reload]);
   

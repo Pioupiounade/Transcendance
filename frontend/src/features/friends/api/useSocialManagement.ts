@@ -49,11 +49,19 @@ export function useSocialManagement() {
 
     window.addEventListener('friendship:changed', handleFriendshipChanged);
     window.addEventListener('user:deleted', handleFriendshipChanged);
-  
+    window.addEventListener(
+      'user:status-changed',
+      handleFriendshipChanged,
+    );
+    
     return () => {
       window.removeEventListener('friendship:changed', handleFriendshipChanged);
       ++requestVersion.current;
       window.removeEventListener('user:deleted', handleFriendshipChanged);
+      window.removeEventListener(
+        'user:status-changed',
+        handleFriendshipChanged,
+      );
     };
   }, [fetchAll]);
 

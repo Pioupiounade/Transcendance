@@ -71,14 +71,21 @@ export class RealtimeGateway
 
   emitAccountStatusChanged(
     userId: string,
-    accountStatus: 'ACTIVE' | 'SUSPENDED',
+    accountStatus: 'ACTIVE' | 'SUSPENDED' | 'DEACTIVATED',
   ): void {
-    this.server
-      .to(`user:${userId}`)
-      .emit('account:status-changed', {
-        userId,
-        accountStatus,
-      });
+    const room = `user:${userId}`;
+
+    // Actualiser les sessions du compte concerné.
+    this.server.to(room).emit('account:status-changed', {
+      userId,
+      accountStatus,
+    });
+
+    // Actualiser les listes chez les autres utilisateurs.
+    this.server.except(room).emit('user:status-changed', {
+      userId,
+      accountStatus,
+    });
   }
 
   emitAccountDeleted(userId: string): void {

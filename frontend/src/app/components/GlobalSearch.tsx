@@ -17,6 +17,27 @@ export function GlobalSearch() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    const handleUserDeleted = (event: Event) => {
+      const { userId } = (
+        event as CustomEvent<{ userId: string }>
+      ).detail;
+
+      setResults((current) => ({
+        ...current,
+        users: current.users.filter((user) => user.user_id !== userId),
+      }));
+
+      setDeletionVersion((version) => version + 1);
+    };
+
+    window.addEventListener('user:deleted', handleUserDeleted);
+
+    return () => {
+      window.removeEventListener('user:deleted', handleUserDeleted);
+    };
+  }, []);
+
+  useEffect(() => {
     const trimmed = query.trim();
 
     if (trimmed.length < 2) {
@@ -53,26 +74,7 @@ export function GlobalSearch() {
         });
     }, 250);
 
-    useEffect(() => {
-      const handleUserDeleted = (event: Event) => {
-        const { userId } = (
-          event as CustomEvent<{ userId: string }>
-        ).detail;
-
-        setResults((current) => ({
-          ...current,
-          users: current.users.filter((user) => user.user_id !== userId),
-        }));
-
-        setDeletionVersion((version) => version + 1);
-      };
-
-      window.addEventListener('user:deleted', handleUserDeleted);
-
-      return () => {
-        window.removeEventListener('user:deleted', handleUserDeleted);
-      };
-    }, []);
+    
   
     return () => {
       window.clearTimeout(timeout);

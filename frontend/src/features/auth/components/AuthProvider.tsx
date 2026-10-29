@@ -220,11 +220,20 @@ export function AuthProvider({ children }: AuthProviderProps) {
       accountStatus,
     }: {
       userId: string;
-      accountStatus: 'ACTIVE' | 'SUSPENDED';
+      accountStatus: 'ACTIVE' | 'SUSPENDED' | 'DEACTIVATED';
     }) => {
+      if (userId !== session.userId) return;
+
       accountCheck?.abort();
+
+      if (accountStatus === 'DEACTIVATED') {
+        session.expire();
+        socket.disconnect();
+        return;
+      }
+
       setSnapshot((previous) => {
-        if (!previous.user || previous.user.user_id !== userId) {
+        if (previous.user?.user_id !== userId) {
           return previous;
         }
 
@@ -291,6 +300,20 @@ export function AuthProvider({ children }: AuthProviderProps) {
       });
     };
 
+    const handleUserStatusChanged = ({
+      userId,
+      accountStatus,
+    }: {
+      userId: string;
+      accountStatus: 'ACTIVE' | 'SUSPENDED' | 'DEACTIVATED';
+    }) => {
+      window.dispatchEvent(
+        new CustomEvent('user:status-changed', {
+          detail: { userId, accountStatus },
+        }),
+      );
+    };
+
     socket.on('presence:online', handleOnline);
     socket.on('presence:offline', handleOffline);
     socket.on('organization:membership-changed', handleMembershipChanged);
@@ -313,6 +336,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       handleAdminDirectoryChanged,
     );
     socket.on('account:role-changed', handleAccountRoleChanged);
+    socket.on('user:status-changed', handleUserStatusChanged);
 
     return () => {
       unsubscribe();
@@ -340,6 +364,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       );
       socket.off('account:role-changed', handleAccountRoleChanged);
       socket.disconnect();
+      socket.off('user:status-changed', handleUserStatusChanged);
     };
   }, [snapshot.status]);
 

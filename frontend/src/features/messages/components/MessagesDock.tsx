@@ -25,6 +25,7 @@ export function MessagesDock({ id, fullPagePath, profilePath, onClose }: Message
   const { user } = useAuth();
   const panel = useRef<HTMLElement>(null);
   const [friend, setFriend] = useState<FriendUserSummary | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
 
   const load = useCallback((signal: AbortSignal) => friendsApi.getMyFriends(signal), []);
   const { data: friends, error, loading, reload } = useResource(load);
@@ -55,11 +56,76 @@ export function MessagesDock({ id, fullPagePath, profilePath, onClose }: Message
     };
   }, []);
 
+  useEffect(() => {
+    const handleUserStatusChanged = (event: Event) => {
+      const { userId, accountStatus } = (
+        event as CustomEvent<{
+          userId: string;
+          accountStatus: 'ACTIVE' | 'SUSPENDED' | 'DEACTIVATED';
+        }>
+      ).detail;
+
+      if (accountStatus === 'ACTIVE') return;
+
+      if (friend?.user_id !== userId) return;
+
+      setNotice(
+        accountStatus === 'SUSPENDED'
+          ? 'Blocked user — messages unavailable.'
+          : 'Messages unavailable for this user.',
+      );
+
+      setFriend(null);
+    };
+
+    window.addEventListener(
+      'user:status-changed',
+      handleUserStatusChanged,
+    );
+
+    return () => {
+      window.removeEventListener(
+        'user:status-changed',
+        handleUserStatusChanged,
+      );
+    };
+  }, [friend?.user_id]);
+
   const handleKeyDown = (event: KeyboardEvent<HTMLElement>) => {
     if (event.key !== 'Escape') return;
     event.stopPropagation();
     onClose();
   };
+
+  useEffect(() => {
+    const handleUnavailable = (event: Event) => {
+      const { friendId } = (
+        event as CustomEvent<{ friendId: string }>
+      ).detail;
+
+      setFriend((current) =>
+        current?.user_id === friendId ? null : current,
+      );
+
+      setNotice((current) =>
+        current ?? 'Messages unavailable for this user.',
+      );
+
+      reload();
+    };
+
+    window.addEventListener(
+      'conversation:unavailable',
+      handleUnavailable,
+    );
+
+    return () => {
+      window.removeEventListener(
+        'conversation:unavailable',
+        handleUnavailable,
+      );
+    };
+  }, [reload]);
 
   return createPortal(
     <section
@@ -83,6 +149,11 @@ export function MessagesDock({ id, fullPagePath, profilePath, onClose }: Message
       </div>
 
       <div className={styles.body}>
+        {notice && (
+          <p className={styles.state} role="status">
+            {notice}
+          </p>
+        )}
         {friend && user ? (
           <ThreadPane
             key={friend.user_id}
@@ -107,7 +178,10 @@ export function MessagesDock({ id, fullPagePath, profilePath, onClose }: Message
                 <p>{text.noFriends.text}</p>
               </div>
             )}
-            {friends && friends.length > 0 && <ConversationList friends={sorted} activeId={null} onSelect={setFriend} />}
+            {friends && friends.length > 0 && <ConversationList friends={sorted} activeId={null} onSelect={(selected) => {
+              setNotice(null);
+              setFriend(selected);
+            }}/>}
           </>
         )}
       </div>

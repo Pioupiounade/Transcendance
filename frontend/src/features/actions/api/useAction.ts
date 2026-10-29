@@ -45,10 +45,21 @@ export function useAction(id: string) {
   }, []);
 
   useEffect(() => {
-    window.addEventListener('user:deleted', reload);
+    const events = [
+      'user:deleted',
+      'user:status-changed',
+      'action:updated',
+      'action:participants-changed',
+    ];
+
+    for (const event of events) {
+      window.addEventListener(event, reload);
+    }
 
     return () => {
-      window.removeEventListener('user:deleted', reload);
+      for (const event of events) {
+        window.removeEventListener(event, reload);
+      }
     };
   }, [reload]);
 

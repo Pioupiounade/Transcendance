@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/features/auth';
-import { isApiError } from '@/shared/api';
+import { isApiError, session } from '@/shared/api';
 import { useResource } from '@/shared/hooks/useResource';
 import { pageTitle } from '@/shared/lib/pageTitle';
 import { Button, Icon, Steps } from '@/shared/ui';
@@ -66,7 +66,7 @@ const syncInterests = async (current: readonly InterestCategory[], selected: rea
  * (onglet Overview) ou les réglages (onglet Settings), et l'édition en place.
  */
 export function ProfilePage({ organizationPath, actionPath, homePath }: ProfilePageProps) {
-  const { signOut, user } = useAuth();
+  const { user } = useAuth();
   const loaded = useResource(loadProfile);
   const loadedInterests = useResource(loadInterests);
   const activity = useResource(loadActivity);
@@ -136,15 +136,9 @@ export function ProfilePage({ organizationPath, actionPath, homePath }: ProfileP
 
   const deactivate = async () => {
     await deactivateAccount();
-    try {
-      await signOut();
-    } catch {
-      // Session déjà révoquée côté backend : on repart propre quand même.
-    } finally {
-      localStorage.clear();
-      sessionStorage.clear();
-      window.location.assign(homePath);
-    }
+
+    session.expire();
+    window.location.assign(homePath);
   };
 
   const cancelEdit = () => {

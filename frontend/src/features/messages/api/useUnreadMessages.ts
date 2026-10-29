@@ -27,6 +27,7 @@ export function useUnreadMessages(): number {
     window.addEventListener(MESSAGES_READ_EVENT, refresh);
     window.addEventListener('direct-message:new', refresh);
     window.addEventListener('user:deleted', refresh);
+    window.addEventListener('user:status-changed', refresh);
     return () => {
       disposed = true;
       latestRequest.current?.abort();
@@ -34,6 +35,7 @@ export function useUnreadMessages(): number {
       window.removeEventListener(MESSAGES_READ_EVENT, refresh);
       window.removeEventListener('direct-message:new', refresh);
       window.removeEventListener('user:deleted', refresh);
+      window.removeEventListener('user:status-changed', refresh);
     };
   }, []);
 
