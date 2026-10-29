@@ -76,6 +76,8 @@ type ApiPublicProfile = {
   visibility?: ProfileVisibility;
   isPrivate?: boolean;
   is_online?: boolean;
+  adminView?: boolean;
+  accountStatus?: 'ACTIVE' | 'SUSPENDED' | 'DEACTIVATED';
 };
 
 type ApiUnavailablePublicProfile = {
@@ -96,17 +98,27 @@ export function isUnavailablePublicProfile(data: PublicProfileResult): data is U
   return 'available' in data && data.available === false;
 }
 
-export async function getPublicProfile(userId: string, signal?: AbortSignal): Promise<PublicProfileResult> {
-  const data = await http.get<ApiPublicProfile | ApiUnavailablePublicProfile>(
+export async function getPublicProfile(
+  userId: string,
+  signal?: AbortSignal,
+): Promise<PublicProfileResult> {
+  const data = await http.get<
+    ApiPublicProfile | ApiUnavailablePublicProfile
+  >(
     `/profiles/${encodeURIComponent(userId)}`,
     { signal },
   );
 
   if ('available' in data && data.available === false) {
-    return { available: false, reason: data.reason, userId: data.user_id };
+    return {
+      available: false,
+      reason: data.reason,
+      userId: data.user_id,
+    };
   }
 
   const profile = data as ApiPublicProfile;
+
   return {
     userId: profile.user_id,
     username: profile.username,
@@ -117,6 +129,8 @@ export async function getPublicProfile(userId: string, signal?: AbortSignal): Pr
     visibility: profile.visibility,
     isPrivate: profile.isPrivate,
     is_online: profile.is_online,
+    adminView: profile.adminView,
+    accountStatus: profile.accountStatus,
   };
 }
 

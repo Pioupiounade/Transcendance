@@ -66,6 +66,36 @@ export class ProfilesService {
       };
     }
 
+    const viewer =
+      viewerId && /^[1-9]\d*$/.test(viewerId)
+        ? await this.prisma.user.findUnique({
+            where: {
+              user_id: BigInt(viewerId),
+            },
+            select: {
+              role: true,
+              account_status: true,
+            },
+          })
+        : null;
+
+    const isActiveAdmin =
+      viewer?.role === RoleApp.ADMIN &&
+      viewer.account_status === AccountStatus.ACTIVE;
+
+    if (isActiveAdmin) {
+      const { location, user, ...safeProfile } = profile;
+
+      return {
+        ...safeProfile,
+        user_id: safeProfile.user_id.toString(),
+        interests: user.interests.map(({ interest }) => interest),
+        is_online: this.realtimeGateway.isUserOnline(userId),
+        adminView: true,
+        accountStatus: user.account_status,
+      };
+    }
+
     if (profile.user.account_status === AccountStatus.DEACTIVATED) {
       return {
         available: false as const,
