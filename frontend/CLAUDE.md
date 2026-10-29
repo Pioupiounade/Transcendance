@@ -187,8 +187,8 @@ app/            composition root : seul endroit qui connaît tout
                 « How it works », carte vivante des actions ouvertes + 3 prochaines, catégories, bandeau
                 d'inscription) ou Dashboard (connecté :
                 carte compacte via NeighborhoodMap, MyActionsPanel = actions que j'organise + participations
-                ouvertes par date, NearbyActions = actions ouvertes des autres triées par distance depuis
-                `profiles/me.location` sinon 42 Paris). app compose les features par leurs index.
+                ouvertes par date (4 lignes, « +n more » → `/actions`), NearbyActions = actions ouvertes des autres triées par distance depuis
+                `profiles/me.location` sinon Saint-Cyprien). app compose les features par leurs index.
 features/       1 domaine métier = 1 module ; interface = index.ts
   auth/         session, RequireAuth, LoginPage, RegisterPage (#50), LoginForm (le formulaire seul, `{ onSignedIn? }`,
                 réutilisé là où un visiteur doit se connecter sur place : « My Actions » #107) ; validation.ts miroir des DTO, errors.ts
@@ -198,6 +198,9 @@ features/       1 domaine métier = 1 module ; interface = index.ts
                 Existant (#12) : MapPage, NeighborhoodMap, ActionCard, CategoryFilter, useActions, mapConfig.ts.
                 Depuis le 25/09/2026 (écart assumé avec la maquette) : carte pleine largeur, cartes en grille
                 dessous ; ActionCard a un fond très léger par catégorie (`--card-*-bg` dans tokens.css).
+                « My Actions » `/actions` connecté (ActionsListPage) : créées par moi ou rejointes, triées comme l'agenda de
+                l'accueil (ouvertes par date, puis terminées / annulées les plus récentes d'abord : `GET /actions` arrive sans
+                ordre), 6 par page, filtres catégorie / statut / texte.
                 « My Actions » `/actions` pour un visiteur (#107, décision d'équipe : onboarding + connexion sur place) :
                 MyActionsSignIn reprend la grammaire de l'accueil : hero (accroche, gages de confiance, StreetScene), « How it
                 works » sur `Steps`, puis la carte de connexion centrée (LoginForm) ; la liste apparaît au changement de statut ;
@@ -210,7 +213,9 @@ features/       1 domaine métier = 1 module ; interface = index.ts
                 lieu dans l'URL (`?at=lat,lng`, draftParam.ts), CreateActionDialog = Dialog + ActionForm, validation.ts,
                 errors.ts, api/useCreateAction.
                 Créer / modifier / annuler (#33, Epic 2) : ActionForm (deep : `{ location | null, action?, onSaved,
-                onCancel }`, création ou modification selon `action`), ActionEditor (carte sélecteur + formulaire),
+                onCancel }`, création ou modification selon `action` ; « Max participants » = champ texte
+                `inputMode="numeric"` filtré aux chiffres (`toDigits`) : un `type="number"` laissait passer e + - . et valait ""
+                sur saisie invalide, donc validé comme vide), ActionEditor (carte sélecteur + formulaire),
                 CreateActionPage `/actions/new` (`?at=` pré-place le pin), EditActionPage `/actions/:id/edit`
                 (permissions.ts : créateur ou ADMIN, PENDING/APPROVED ; CancelActionDialog = « suppression », l'API
                 n'a que `cancel`), api/useAction, useUpdateAction, useCancelAction. Les pages reçoivent les chemins
