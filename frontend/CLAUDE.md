@@ -184,7 +184,7 @@ app/            composition root : seul endroit qui connaît tout
                 d'inscription) ou Dashboard (connecté :
                 carte compacte via NeighborhoodMap, MyActionsPanel = actions que j'organise + participations
                 ouvertes par date, NearbyActions = actions ouvertes des autres triées par distance depuis
-                `profiles/me.location` sinon Saint-Cyprien). app compose les features par leurs index.
+                `profiles/me.location` sinon 42 Paris). app compose les features par leurs index.
 features/       1 domaine métier = 1 module ; interface = index.ts
   auth/         session, RequireAuth, LoginPage, RegisterPage (#50), LoginForm (le formulaire seul, `{ onSignedIn? }`,
                 réutilisé là où un visiteur doit se connecter sur place : « My Actions » #107) ; validation.ts miroir des DTO, errors.ts
@@ -199,7 +199,9 @@ features/       1 domaine métier = 1 module ; interface = index.ts
                 works » sur `Steps`, puis la carte de connexion centrée (LoginForm) ; la liste apparaît au changement de statut ;
                 pendant la restauration de session, message d'attente au lieu d'une liste vide.
                 Création depuis la carte (Epic 7) : NeighborhoodMap accepte `draft` / `onDraftChange` / `draftContent`
-                (pin brouillon déplaçable, popup ; sans `draftContent` = simple sélecteur de lieu), MapPage garde le
+                (pin brouillon déplaçable, popup ; sans `draftContent` = simple sélecteur de lieu), `home` = quartier de
+                l'utilisateur (`profiles/me.location`). Cadrage (29/10/2026) : les actions, sinon le brouillon, sinon `home`,
+                sinon `DEFAULT_CENTER` = l'école 42 Paris (mapConfig.ts ; répété dans NeighbourhoodPicker). MapPage garde le
                 lieu dans l'URL (`?at=lat,lng`, draftParam.ts), CreateActionDialog = Dialog + ActionForm, validation.ts,
                 errors.ts, api/useCreateAction.
                 Créer / modifier / annuler (#33, Epic 2) : ActionForm (deep : `{ location | null, action?, onSaved,
@@ -235,8 +237,8 @@ features/       1 domaine métier = 1 module ; interface = index.ts
                 `{ reason }`, ProfileSkeleton, RequireProfile `{ profilePath }` (garde : connecté sans profil →
                 `/profile`). Données via useResource ; ce qu'on vient d'enregistrer prime sur le chargement (pas de
                 rechargement après un envoi). Libellés dans labels.ts, familles d'intérêts dans interestLabels.ts
-                (libellés de catégorie répétés pour éviter le cycle). api/myProfile.ts (`useMyProfile`, 404 → null)
-                reste utilisé par le tableau de bord et l'annuaire.
+                (libellés de catégorie répétés pour éviter le cycle). api/myProfile.ts (`useMyProfile` sur useResource,
+                404 → null, visiteur : aucun appel) sert au tableau de bord et aux cartes (`home` de NeighborhoodMap).
   participations/ useMyParticipations (sur useResource ; visiteur : liste vide sans appel), fetchActionParticipants /
                 joinAction / leaveAction (#60), type MyParticipation
   messages/     messagerie entre amis (backend #155, api_contract §18), discrète : pas d'entrée de nav, une pastille

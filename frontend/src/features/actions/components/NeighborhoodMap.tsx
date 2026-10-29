@@ -31,6 +31,11 @@ type NeighborhoodMapProps = {
   onDraftChange?: (location: LatLng) => void;
   /** Boutons du popup du brouillon (le titre et l'aide sont fournis par la carte) ; absent = pin sans popup. */
   draftContent?: ReactNode;
+  /**
+   * Quartier de l'utilisateur (`profiles/me.location`, référence stable) : centre de la carte quand elle n'a ni action
+   * ni brouillon à montrer. Absent ou `null` (visiteur, profil sans lieu) : `DEFAULT_CENTER`, l'école 42 Paris.
+   */
+  home?: LatLng | null;
 };
 
 type Locating = 'idle' | 'pending' | 'failed';
@@ -79,7 +84,10 @@ const hereIcon = divIcon({
   iconAnchor: [YOU_SIZE / 2, YOU_SIZE / 2],
 });
 
-/** Carte Leaflet des actions : pins par catégorie, sélection synchronisée, recadrage, position à la demande. */
+/**
+ * Carte Leaflet des actions : pins par catégorie, sélection synchronisée, recadrage, position à la demande.
+ * Cadrage : les actions s'il y en a, sinon le brouillon, sinon `home`, sinon l'école 42 Paris.
+ */
 export function NeighborhoodMap({
   actions,
   selectedId,
@@ -87,6 +95,7 @@ export function NeighborhoodMap({
   draft = null,
   onDraftChange,
   draftContent,
+  home = null,
 }: NeighborhoodMapProps) {
   const [map, setMap] = useState<LeafletMap | null>(null);
   const markers = useRef(new Map<string, LeafletMarker>());
@@ -111,7 +120,7 @@ export function NeighborhoodMap({
   if (actions.length === 0) {
     const spot = draftRef.current;
     if (spot) map.setView(spot, FOCUS_ZOOM, { animate });
-    else map.setView(DEFAULT_CENTER, DEFAULT_ZOOM, { animate });
+    else map.setView(home ?? DEFAULT_CENTER, DEFAULT_ZOOM, { animate });
     return;
   }
 
@@ -127,7 +136,7 @@ export function NeighborhoodMap({
     maxZoom: FOCUS_ZOOM,
     animate,
   });
-}, [map, actions]);
+}, [map, actions, home]);
 
   useEffect(() => {
     fitToActions();
@@ -195,7 +204,7 @@ export function NeighborhoodMap({
       <MapContainer
         ref={setMap}
         className={styles.canvas}
-        center={DEFAULT_CENTER}
+        center={home ?? DEFAULT_CENTER}
         zoom={DEFAULT_ZOOM}
         zoomControl={false}
         attributionControl={false}

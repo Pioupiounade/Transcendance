@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useSearchParams, useNavigate } from 'react-router';
 import { AUTH_ROUTES, useAuth } from '@/features/auth';
 import { useMyParticipations } from '@/features/participations';
+import { useMyProfile } from '@/features/profile';
 import { pageTitle } from '@/shared/lib/pageTitle';
 import { prefersReducedMotion } from '@/shared/lib/prefersReducedMotion';
 import { Button, Icon } from '@/shared/ui';
@@ -28,6 +29,8 @@ type MapPageProps = {
 export function MapPage({ editPath }: MapPageProps) {
   const { actions, loading, error, reload } = useActions();
   const { status, user } = useAuth();
+  // Quartier de l'utilisateur : centre de la carte quand aucune action n'est à montrer (visiteur : aucun appel).
+  const { profile } = useMyProfile();
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const [category, setCategory] = useState<Category | null>(null);
@@ -133,6 +136,7 @@ export function MapPage({ editPath }: MapPageProps) {
           actions={visible}
           selectedId={selected}
           onSelect={setSelectedId}
+          home={profile?.location}
           draft={draft}
           onDraftChange={setDraft}
           draftContent={
