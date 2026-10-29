@@ -1,6 +1,12 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { AccountStatus, ActionStatus, Prisma, NotificationType } from '../../generated/prisma/client';
+import {
+  AccountStatus,
+  ActionStatus,
+  OrganizationStatus,
+  Prisma,
+  NotificationType,
+} from '../../generated/prisma/client';
 import { NotificationsService } from '../notifications/notifications.service';
 import { RealtimeGateway } from '../realtime/realtime.gateway';
 
@@ -39,10 +45,40 @@ export class ParticipationsService {
               where: {
                 action_id: actionIdBigInt,
               },
+              include: {
+                creator: {
+                  select: {
+                    account_status: true,
+                  },
+                },
+                organization: {
+                  select: {
+                    organization_status: true,
+                  },
+                },
+              },
             });
 
             if (!action) {
               throw new NotFoundException('Action not found');
+            }
+
+            if (
+              !action.creator ||
+              action.creator.account_status !== AccountStatus.ACTIVE
+            ) {
+              throw new BadRequestException(
+                'This action is unavailable because its creator is inactive',
+              );
+            }
+
+            if (
+              action.organization &&
+              action.organization.organization_status !== OrganizationStatus.ACTIVE
+            ) {
+              throw new BadRequestException(
+                'This action belongs to an inactive organization',
+              );
             }
 
             if (action.creator_id === userId) {

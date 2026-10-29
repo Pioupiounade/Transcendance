@@ -10,9 +10,10 @@ import { UpdateRoleDto } from './dto/update-role.dto';
 export class UsersController {
   constructor(private usersService: UsersService) {}
 
+  @UseGuards(JwtAuthGuard)
   @Get()
-  findAll() {
-    return this.usersService.findAll();
+  findAll(@Req() req: any) {
+    return this.usersService.findAll(req.user.id);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -27,9 +28,17 @@ export class UsersController {
     return this.usersService.updateLastSeen(req.user.id);
   }
   
+  @UseGuards(JwtAuthGuard)
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.usersService.findOneSafe(id);
+  findOne(
+    @Req() req: any,
+    @Param('id') id: string,
+  ) {
+    if (!/^[1-9]\d*$/.test(id)) {
+      throw new BadRequestException('Invalid user ID');
+    }
+
+    return this.usersService.findOneForViewer(id, req.user.id);
   }
 
   @UseGuards(JwtAuthGuard)

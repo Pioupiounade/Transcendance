@@ -30,7 +30,22 @@ export class UsersService {
 
 // Utllise this.prisma pour recuperer les Users dans PostgreSQL. Cette methode metier accede reellement a la BDD via Prisma
 //1. recuperer tous les utilisateurs
-  async findAll() {
+  async findAll(requesterId: string) {
+    const requester = await this.prisma.user.findUnique({
+      where: {
+        user_id: BigInt(requesterId),
+      },
+    });
+
+    if (
+      !requester ||
+      requester.role !== RoleApp.ADMIN ||
+      requester.account_status !== AccountStatus.ACTIVE
+    ) {
+      throw new ForbiddenException(
+        'Only an active admin can view all accounts',
+      );
+    }
     const users = await this.prisma.user.findMany({
       include: {
         _count: {
@@ -1044,5 +1059,34 @@ export class UsersService {
 
       throw error;
     }
+  }
+
+  async findOneForViewer(
+    targetUserId: string,
+    requesterId: string,
+  ) {
+    const requester = await this.prisma.user.findUnique({
+      where: {
+        user_id: BigInt(requesterId),
+      },
+    });
+
+    if (
+      !requester ||
+      requester.account_status !== AccountStatus.ACTIVE
+    ) {
+      throw new ForbiddenException('Your account is not active');
+    }
+
+    const isSelf = BigInt(targetUserId) === requester.user_id;
+    const isAdmin = requester.role === RoleApp.ADMIN;
+
+    if (!isSelf && !isAdmin) {
+      throw new ForbiddenException(
+        'You cannot view another user account',
+      );
+    }
+
+    return this.findOneSafe(targetUserId);
   }
 }
