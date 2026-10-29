@@ -8,6 +8,7 @@ import {
     OrganizationStatus,
     NotificationType,
     Prisma,
+    ActionStatus,
 } from '../../generated/prisma/client';
 import { PointtransactionService } from '../pointtransaction/pointtransaction.service';
 import { NotificationsService } from '../notifications/notifications.service';
@@ -974,10 +975,20 @@ export class OrganizationmembersService {
 
     // Leave an organization
     async leaveOrganization(userId: bigint, organizationId: bigint) {
-        let organizationClosed: boolean;
+        let result: {
+            organizationClosed: boolean;
+            cancelledActions: {
+                action_id: bigint;
+                title: string;
+                creator_id: bigint | null;
+                participation: {
+                user_id: bigint;
+                }[];
+            }[];
+        };
 
         try {
-            organizationClosed = await this.prisma.$transaction(
+            result = await this.prisma.$transaction(
                 async (tx) => {
                     const user = await tx.user.findUnique({
                         where: { user_id: userId },
@@ -1026,6 +1037,9 @@ export class OrganizationmembersService {
                                 organization_id: organizationId,
                                 status: MemberStatus.ACTIVE,
                                 user_id: { not: userId },
+                                user: {
+                                    account_status: AccountStatus.ACTIVE,
+                                },
                             },
                         });
 
@@ -1034,6 +1048,42 @@ export class OrganizationmembersService {
                                 'Transfer ownership before leaving the organization',
                             );
                         }
+                        const cancelledActions = await tx.action.findMany({
+                            where: {
+                                organization_id: organizationId,
+                                status: {
+                                    in: [
+                                        ActionStatus.PENDING,
+                                        ActionStatus.APPROVED,
+                                    ],
+                                },
+                            },
+                            select: {
+                                action_id: true,
+                                title: true,
+                                creator_id: true,
+                                participation: {
+                                    select: {
+                                        user_id: true,
+                                    },
+                                },
+                            },
+                        });
+
+                        await tx.action.updateMany({
+                            where: {
+                                organization_id: organizationId,
+                                status: {
+                                    in: [
+                                        ActionStatus.PENDING,
+                                        ActionStatus.APPROVED,
+                                    ],
+                                },
+                            },
+                            data: {
+                                status: ActionStatus.CANCELLED,
+                            },
+                        });
 
                         await tx.organization.update({
                             where: { organization_id: organizationId },
@@ -1049,7 +1099,10 @@ export class OrganizationmembersService {
                             },
                         });
 
-                        return true;
+                        return {
+                            organizationClosed: true,
+                            cancelledActions,
+                        };
                     }
 
                     await tx.organizationMember.delete({
@@ -1068,7 +1121,10 @@ export class OrganizationmembersService {
                         tx,
                     );
 
-                    return false;
+                    return {
+                        organizationClosed: false,
+                        cancelledActions: [],
+                    };
                 },
                 {
                     isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
@@ -1087,9 +1143,47 @@ export class OrganizationmembersService {
             throw error;
         }
 
+        const { organizationClosed, cancelledActions } = result;
+
         if (organizationClosed) {
             this.realtimeGateway.emitOrganizationUpdated(
                 organizationId.toString(),
+            );
+
+            for (const action of cancelledActions) {
+                this.realtimeGateway.emitActionUpdated(
+                    action.action_id.toString(),
+                );
+
+                const recipientIds = new Set(
+                    action.participation.map(
+                        (participant) => participant.user_id,
+                    ),
+                );
+
+                if (action.creator_id !== null) {
+                    recipientIds.add(action.creator_id);
+                }
+
+                for (const recipientId of recipientIds) {
+                    await this.notificationsService.notifyUser({
+                        userId: recipientId,
+                        type: NotificationType.ACTION_STATUS_CHANGED,
+                        title: 'Action cancelled',
+                        message:
+                            `The action "${action.title}" was cancelled ` +
+                            'because its organization was closed.',
+                        link: `/actions/${action.action_id.toString()}`,
+                    });
+                }
+            }
+
+            await this.realtimeGateway.emitAdminDirectoryChanged(
+                'organizations',
+            );
+
+            await this.realtimeGateway.emitAdminDirectoryChanged(
+                'actions',
             );
         }
 
