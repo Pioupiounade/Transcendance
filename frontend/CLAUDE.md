@@ -206,7 +206,9 @@ features/       1 domaine métier = 1 module ; interface = index.ts
                 lieu dans l'URL (`?at=lat,lng`, draftParam.ts), CreateActionDialog = Dialog + ActionForm, validation.ts,
                 errors.ts, api/useCreateAction.
                 Créer / modifier / annuler (#33, Epic 2) : ActionForm (deep : `{ location | null, action?, onSaved,
-                onCancel }`, création ou modification selon `action`), ActionEditor (carte sélecteur + formulaire),
+                onCancel }`, création ou modification selon `action` ; « Max participants » = champ texte
+                `inputMode="numeric"` filtré aux chiffres (`toDigits`) : un `type="number"` laissait passer e + - . et valait ""
+                sur saisie invalide, donc validé comme vide), ActionEditor (carte sélecteur + formulaire),
                 CreateActionPage `/actions/new` (`?at=` pré-place le pin), EditActionPage `/actions/:id/edit`
                 (permissions.ts : créateur ou ADMIN, PENDING/APPROVED ; CancelActionDialog = « suppression », l'API
                 n'a que `cancel`), api/useAction, useUpdateAction, useCancelAction. Les pages reçoivent les chemins

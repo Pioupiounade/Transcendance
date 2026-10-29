@@ -22,6 +22,7 @@ import {
   validateCategory,
   validateDescription,
   validateMaxParticipants,
+  toDigits,
   validateScheduledAt,
   validateTitle,
 } from '../validation';
@@ -242,17 +243,18 @@ export function ActionForm({ location, action, onSaved, onCancel }: ActionFormPr
           onBlur={() => form.touch('scheduledAt')}
           error={form.errorOf('scheduledAt')}
         />
+        {/* Texte filtré aux chiffres plutôt que `type="number"` : Chrome y accepte e + - . et renvoie "" dès que la
+            saisie est invalide, donc le champ passait pour vide (optionnel) et l'action partait sans limite. */}
         <FloatingField
           id="maxParticipants"
-          type="number"
+          type="text"
           inputMode="numeric"
-          min={MAX_PARTICIPANTS_MIN}
-          max={MAX_PARTICIPANTS_LIMIT}
-          step={1}
+          pattern="[0-9]*"
+          maxLength={String(MAX_PARTICIPANTS_LIMIT).length}
           label={text.maxParticipants}
           help={text.maxParticipantsHelp(MAX_PARTICIPANTS_MIN)}
           value={form.values.maxParticipants}
-          onChange={(event) => form.setValue('maxParticipants', event.target.value)}
+          onChange={(event) => form.setValue('maxParticipants', toDigits(event.target.value))}
           onBlur={() => form.touch('maxParticipants')}
           error={form.errorOf('maxParticipants')}
         />
