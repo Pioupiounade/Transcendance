@@ -114,7 +114,11 @@ Ce fichier est chargé automatiquement quand la session démarre dans `frontend/
   caractères, `location` = 2 nombres, champs obligatoires listés dans `docs/api_contract.md`). Le sujet impose la
   validation des deux côtés. Auth, plus strict que le DTO depuis le 28/10/2026 (`features/auth/validation.ts`) : mot de
   passe 8 à 64 caractères ASCII imprimables (ni espace, ni accent, ni emoji), e-mail sans espace, 254 au plus et 64
-  avant le `@` (limites de `@IsEmail()`, sinon 400 = erreur console) ; `maxLength` posé sur les champs.
+  avant le `@` (limites de `@IsEmail()`, sinon 400 = erreur console) ; `maxLength` posé sur les champs. Depuis le
+  29/10/2026 la forme de l'e-mail reproduit validator.js (`@IsEmail()` par défaut) : un seul `@`, partie locale sans
+  point en bord ni doublé, étiquettes de domaine de 63 au plus sans tiret en bord ni `_`, extension en lettres seules
+  (2 au moins) ou punycode ; `v1@v1.v1` est refusé avant l'envoi (message « must end with letters »). Vérifié contre
+  validator.js sur 54 adresses ; seul écart voulu : la partie locale entre guillemets, acceptée côté backend.
 - Accessibilité (`../Docs/DESIGN.md` §5 et sujet) : label visible pour chaque champ, erreur reliée par `aria-describedby`,
   focus visible, `prefers-reduced-motion` respecté, la couleur ne porte jamais seule une information (icône + libellé).
 - Chaque écran gère explicitement ses états : chargement, vide, erreur (les 404 de listes vides compris).
