@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
-import { useAuth } from '@/features/auth';
+import { ROLE_APP, useAuth } from '@/features/auth';
 import type { Organization } from '@/features/organizations';
 import { fetchActionParticipants, joinAction, leaveAction, type ActionParticipantApi } from '@/features/participations';
 import { getPublicProfile, isUnavailablePublicProfile, type PublicProfile } from '@/features/profile';
@@ -292,7 +292,23 @@ export const ActionDetailPage: React.FC<ActionDetailPageProps> = ({ editPath }) 
 
   const isCreator = currentUserId !== null && action.creator_id === currentUserId;
 
-  const canEdit = organizationActive && isCreator && action.status === 'PENDING';
+  const isActiveAdmin =
+    user?.role === ROLE_APP.ADMIN &&
+    user.account_status === 'ACTIVE';
+
+  const canEdit =
+    organizationActive &&
+    (
+      (isCreator && action.status === 'PENDING') ||
+      (
+        isActiveAdmin &&
+        (
+          action.status === 'PENDING' ||
+          action.status === 'APPROVED'
+        )
+      )
+    );
+
   const approvableParticipantCount = participants.filter((participant) => participant.userId !== action.creator_id).length;
 
   const canApprove = organizationActive && isCreator && action.status === 'PENDING' &&
