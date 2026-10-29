@@ -255,6 +255,42 @@ export function AuthProvider({ children }: AuthProviderProps) {
       );
     };
 
+    const handleAdminDirectoryChanged = ({
+      resource,
+    }: {
+      resource: 'users' | 'organizations' | 'actions';
+    }) => {
+      window.dispatchEvent(
+        new CustomEvent('admin:directory-changed', {
+          detail: { resource },
+        }),
+      );
+    };
+
+    const handleAccountRoleChanged = ({
+      userId,
+      role,
+    }: {
+      userId: string;
+      role: 'USER' | 'ADMIN';
+    }) => {
+      accountCheck?.abort();
+
+      setSnapshot((previous) => {
+        if (previous.user?.user_id !== userId) {
+          return previous;
+        }
+
+        return {
+          ...previous,
+          user: {
+            ...previous.user,
+            role,
+          },
+        };
+      });
+    };
+
     socket.on('presence:online', handleOnline);
     socket.on('presence:offline', handleOffline);
     socket.on('organization:membership-changed', handleMembershipChanged);
@@ -272,6 +308,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
     socket.on('disconnect', handleDisconnect);
     socket.on('account:deleted', handleAccountDeleted);
     socket.on('user:deleted', handleUserDeleted);
+    socket.on(
+      'admin:directory-changed',
+      handleAdminDirectoryChanged,
+    );
+    socket.on('account:role-changed', handleAccountRoleChanged);
 
     return () => {
       unsubscribe();
@@ -293,6 +334,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
       socket.off('disconnect', handleDisconnect);
       socket.off('account:deleted', handleAccountDeleted);
       socket.off('user:deleted', handleUserDeleted);
+      socket.off(
+        'admin:directory-changed',
+        handleAdminDirectoryChanged,
+      );
+      socket.off('account:role-changed', handleAccountRoleChanged);
       socket.disconnect();
     };
   }, [snapshot.status]);

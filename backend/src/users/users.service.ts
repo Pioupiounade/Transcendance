@@ -12,9 +12,11 @@ import {
   MemberStatus,
   RoleOrg,
   OrganizationStatus,
+  NotificationType,
 } from '../../generated/prisma/client';
 import { PointtransactionService } from '../pointtransaction/pointtransaction.service';
 import { RealtimeGateway } from '../realtime/realtime.gateway';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class UsersService {
@@ -23,17 +25,35 @@ export class UsersService {
     private prisma: PrismaService,
     private pointtransactionService: PointtransactionService,
     private realtimeGateway: RealtimeGateway,
+    private notificationsService: NotificationsService,
   ) {}
 
 // Utllise this.prisma pour recuperer les Users dans PostgreSQL. Cette methode metier accede reellement a la BDD via Prisma
 //1. recuperer tous les utilisateurs
   async findAll() {
-    const users = await this.prisma.user.findMany();
+    const users = await this.prisma.user.findMany({
+      include: {
+        _count: {
+          select: {
+            organization_members: {
+              where: {
+                role: RoleOrg.OWNER,
+                status: MemberStatus.ACTIVE,
+              },
+            },
+          },
+        },
+      },
+    });
 
-  return users.map(({ password_hash, refresh_token, ...user }) => ({
-    ...user,
-    user_id: user.user_id.toString(),
-  }));
+    return users.map(
+      ({ password_hash, refresh_token, _count, ...user }) => ({
+        ...user,
+        user_id: user.user_id.toString(),
+        deletionBlockedByOwnership:
+          _count.organization_members > 0,
+      }),
+    );
   }
 
   //2. hasher le mdp - creer le nouvel utilisateur - l'id se genere automatiquement
@@ -64,6 +84,8 @@ export class UsersService {
       refresh_token: __,
       ...user
     } = createdUser;
+
+    await this.realtimeGateway.emitAdminDirectoryChanged('users');
 
     return {
       ...user,
@@ -553,6 +575,38 @@ export class UsersService {
                 select: { organization_id: true },
               }),
             ]);
+            const cancelledActions = await tx.action.findMany({
+              where: {
+                creator_id: targetId,
+                status: {
+                  in: [ActionStatus.PENDING, ActionStatus.APPROVED],
+                },
+              },
+              select: {
+                action_id: true,
+                title: true,
+                participation: {
+                  where: {
+                    user_id: { not: targetId },
+                  },
+                  select: {
+                    user_id: true,
+                  },
+                },
+              },
+            });
+
+            await tx.action.updateMany({
+              where: {
+                creator_id: targetId,
+                status: {
+                  in: [ActionStatus.PENDING, ActionStatus.APPROVED],
+                },
+              },
+              data: {
+                status: ActionStatus.CANCELLED,
+              },
+            });
             await tx.friendRequest.deleteMany({
               where: {
                 OR: [
@@ -595,7 +649,7 @@ export class UsersService {
             await tx.user.delete({
               where: { user_id: targetId },
             });
-            return { actions, organizations };
+            return { actions, organizations, cancelledActions };
           },
           {
             isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
@@ -618,7 +672,19 @@ export class UsersService {
           this.realtimeGateway.emitOrganizationUpdated(organizationId);
           this.realtimeGateway.emitOrganizationCommentsChanged(organizationId);
         }
-
+        for (const action of affected.cancelledActions) {
+          for (const participant of action.participation) {
+            await this.notificationsService.notifyUser({
+              userId: participant.user_id,
+              type: NotificationType.ACTION_STATUS_CHANGED,
+              title: 'Action cancelled',
+              message:
+                `The action "${action.title}" was cancelled ` +
+                `because its creator's account was deleted.`,
+              link: `/actions/${action.action_id.toString()}`,
+            });
+          }
+        }
         return { deleted: true, user_id: targetUserId };
       } catch (error) {
         if (
@@ -634,6 +700,142 @@ export class UsersService {
 
         throw error;
       }
+    }
+  }
+
+  async updateRole(
+    targetUserId: string,
+    requesterId: string,
+    role: 'USER' | 'ADMIN',
+  ) {
+    const targetId = BigInt(targetUserId);
+    const adminId = BigInt(requesterId);
+
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      try {
+        await this.prisma.$transaction(
+          async (tx) => {
+            const requester = await tx.user.findUnique({
+              where: { user_id: adminId },
+            });
+
+            if (
+              !requester ||
+              requester.role !== RoleApp.ADMIN ||
+              requester.account_status !== AccountStatus.ACTIVE
+            ) {
+              throw new ForbiddenException(
+                'Only an active admin can change user roles',
+              );
+            }
+
+            const target = await tx.user.findUnique({
+              where: { user_id: targetId },
+            });
+
+            if (!target) {
+              throw new NotFoundException('User not found');
+            }
+
+            if (target.role === role) return;
+
+            if (
+              target.role === RoleApp.ADMIN &&
+              target.account_status === AccountStatus.ACTIVE &&
+              role === RoleApp.USER
+            ) {
+              const activeAdmins = await tx.user.count({
+                where: {
+                  role: RoleApp.ADMIN,
+                  account_status: AccountStatus.ACTIVE,
+                },
+              });
+
+              if (activeAdmins <= 1) {
+                throw new ConflictException(
+                  'The last active admin cannot be demoted',
+                );
+              }
+            }
+
+            await tx.user.update({
+              where: { user_id: targetId },
+              data: { role },
+            });
+          },
+          {
+            isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+          },
+        );
+      } catch (error) {
+        if (
+          error instanceof Prisma.PrismaClientKnownRequestError &&
+          error.code === 'P2034'
+        ) {
+          if (attempt < 2) continue;
+
+          throw new ConflictException(
+            'Another update conflicted with the role change. Please try again.',
+          );
+        }
+
+        throw error;
+      }
+
+      this.realtimeGateway.emitAccountRoleChanged(
+        targetUserId,
+        role,
+      );
+
+      await this.realtimeGateway.emitAdminDirectoryChanged('users');
+
+      return this.findOneSafe(targetUserId);
+    }
+  }
+
+  async createByAdmin(requesterId: string, data: CreateUserDto) {
+    const requester = await this.prisma.user.findUnique({
+      where: {
+        user_id: BigInt(requesterId),
+      },
+    });
+
+    if (
+      !requester ||
+      requester.role !== RoleApp.ADMIN ||
+      requester.account_status !== AccountStatus.ACTIVE
+    ) {
+      throw new ForbiddenException(
+        'Only an active admin can create a user',
+      );
+    }
+
+    try {
+      const user = await this.create(data);
+
+      return {
+        success: true as const,
+        user,
+      };
+    } catch (error) {
+      const emailAlreadyUsed =
+        (
+          error instanceof BadRequestException &&
+          error.message === 'Email is already used'
+        ) ||
+        (
+          error instanceof Prisma.PrismaClientKnownRequestError &&
+          error.code === 'P2002'
+        );
+
+      if (emailAlreadyUsed) {
+        return {
+          success: false as const,
+          reason: 'EMAIL_TAKEN' as const,
+        };
+      }
+
+      throw error;
     }
   }
 }

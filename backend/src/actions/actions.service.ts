@@ -306,6 +306,8 @@ export class ActionsService {
       },
     });
 
+    await this.realtimeGateway.emitAdminDirectoryChanged('actions');
+
     return createdAction;
   }
 

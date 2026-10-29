@@ -236,4 +236,44 @@ export class RealtimeGateway
       }
     }
   }
+
+  async emitAdminDirectoryChanged(
+    resource: 'users' | 'organizations' | 'actions',
+  ): Promise<void> {
+    try {
+      const admins = await this.prisma.user.findMany({
+        where: {
+          role: 'ADMIN',
+          account_status: 'ACTIVE',
+        },
+        select: {
+          user_id: true,
+        },
+      });
+
+      const rooms = admins.map(
+        (admin) => `user:${admin.user_id.toString()}`,
+      );
+
+      if (rooms.length > 0) {
+        this.server
+          .to(rooms)
+          .emit('admin:directory-changed', { resource });
+      }
+    } catch (error: unknown) {
+      console.error('Failed to refresh admin directory:', error);
+    }
+  }
+
+  emitAccountRoleChanged(
+    userId: string,
+    role: 'USER' | 'ADMIN',
+  ): void {
+    this.server
+      .to(`user:${userId}`)
+      .emit('account:role-changed', {
+        userId,
+        role,
+      });
+  }
 }

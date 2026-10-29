@@ -3,7 +3,7 @@ import { ACCOUNT_STATUS, useAuth, type AuthUser } from '@/features/auth';
 import { useResource } from '@/shared/hooks/useResource';
 import { pageTitle } from '@/shared/lib/pageTitle';
 import { Button, Chip, ConfirmDialog, FloatingField, Icon, type Confirmation } from '@/shared/ui';
-import { blockUser, fetchUsers, unblockUser, deleteUserAccount } from '../api/adminUsersApi';
+import { blockUser, fetchUsers, unblockUser, deleteUserAccount, changeUserRole } from '../api/adminUsersApi';
 import { UsersTable } from '../components/UsersTable';
 import { toAccountErrorMessage } from '../errors';
 import { useAdminList } from '../hooks/useAdminList';
@@ -11,6 +11,7 @@ import { ACCOUNT_STATUS_LABELS, ADMIN_LABELS } from '../labels';
 import type { AccountActionKind } from '../types';
 import styles from './AdminPage.module.css';
 import { AdminProfileEditor } from '../components/AdminProfileEditor';
+import { AdminAccountCreator } from '../components/AdminAccountCreator';
 
 const text = ADMIN_LABELS.users;
 const common = ADMIN_LABELS.list;
@@ -28,9 +29,37 @@ export function AdminUsersPage() {
   const { user: me } = useAuth();
   const { data, loading, error, reload } = useResource(fetchUsers);
   const list = useAdminList(data ?? NO_USERS, LIST);
+  const resetList = list.reset;
+
+  useEffect(() => {
+    const handleDirectoryChanged = (event: Event) => {
+      const { resource } = (
+        event as CustomEvent<{ resource: string }>
+      ).detail;
+
+      if (resource !== 'users') return;
+
+      resetList();
+      reload();
+    };
+
+    window.addEventListener(
+      'admin:directory-changed',
+      handleDirectoryChanged,
+    );
+
+    return () => {
+      window.removeEventListener(
+        'admin:directory-changed',
+        handleDirectoryChanged,
+      );
+    };
+  }, [reload, resetList]);
+
   const [confirmation, setConfirmation] = useState<Confirmation | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [editingUser, setEditingUser] = useState<AuthUser | null>(null);
+  const [creatingAccount, setCreatingAccount] = useState(false);
   // Le blocage coûte 50 points au compte : jamais en un clic.
   const ask = (kind: AccountActionKind, user: AuthUser) => {
     const copy = ADMIN_LABELS.dialog[kind];
@@ -43,11 +72,48 @@ export function AdminUsersPage() {
       danger: kind === 'block',
       run: async () => {
         const account = await REQUESTS[kind](user.user_id);
-        list.replace(account);
+        list.replace({ ...user, ...account });
         setNotice(kind === 'block' ? text.blocked(account.email) : text.unblocked(account.email));
       },
     });
   };
+
+  const askRoleChange = (
+    account: AuthUser,
+    role: 'USER' | 'ADMIN',
+  ) => {
+    const promoting = role === 'ADMIN';
+
+    setConfirmation({
+      title: promoting
+        ? 'Give administrator permissions?'
+        : 'Remove administrator permissions?',
+      body: promoting
+        ? `${account.email} will become an administrator.`
+        : `${account.email} will become a regular user.`,
+      effects: [
+        promoting
+          ? 'This account will be able to manage users, organizations and actions.'
+          : 'This account will lose access to the admin panel.',
+        'The change applies immediately to its open sessions.',
+      ],
+      confirmLabel: promoting ? 'Make admin' : 'Make user',
+      confirmingLabel: 'Updating role…',
+      danger: true,
+      run: async () => {
+        const updated = await changeUserRole(account.user_id, role);
+
+        list.replace({ ...account, ...updated });
+
+        setNotice(
+          promoting
+            ? `${updated.email} is now an administrator.`
+            : `${updated.email} is now a regular user.`,
+        );
+      },
+    });
+  };
+
   const askDelete = (account: AuthUser) => {
     setConfirmation({
       title: 'Permanently delete this account?',
@@ -105,7 +171,25 @@ export function AdminUsersPage() {
         <h1>{text.title}</h1>
         <p className={styles.lead}>{text.lead}</p>
       </header>
+      <Button
+        variant="secondary"
+        onClick={() => setCreatingAccount(true)}
+        disabled={creatingAccount}
+      >
+        Create account
+      </Button>
 
+      {creatingAccount && (
+        <AdminAccountCreator
+          onClose={() => setCreatingAccount(false)}
+          onCreated={(email) => {
+            setCreatingAccount(false);
+            list.reset();
+            reload();
+            setNotice(`Account created: ${email}`);
+          }}
+        />
+      )}
       <div className={styles.toolbar}>
         <form className={styles.search} role="search" onSubmit={(event) => event.preventDefault()}>
           <FloatingField
@@ -171,6 +255,7 @@ export function AdminUsersPage() {
           onAction={ask}
           onEditProfile={setEditingUser}
           onDeleteUser={askDelete}
+          onChangeRole={askRoleChange}
         />
       )}
       {list.hidden > 0 && (

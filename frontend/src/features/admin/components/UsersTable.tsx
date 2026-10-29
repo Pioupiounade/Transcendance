@@ -13,6 +13,7 @@ type UsersTableProps = {
   onAction: (kind: AccountActionKind, user: AuthUser) => void;
   onEditProfile: (user: AuthUser) => void;
   onDeleteUser: (user: AuthUser) => void;
+  onChangeRole: (user: AuthUser, role: 'USER' | 'ADMIN') => void;
 };
 
 const text = ADMIN_LABELS.users;
@@ -28,7 +29,7 @@ const STATUS_CLASSES: Record<AccountStatus, string> = {
  * Tableau des comptes. Sous 760 px chaque ligne devient une carte (CSS) ; les rôles ARIA explicites gardent
  * la sémantique de tableau quand `display` change.
  */
-export function UsersTable({ users, currentUserId, onAction, onEditProfile, onDeleteUser }: UsersTableProps) {
+export function UsersTable({ users, currentUserId, onAction, onEditProfile, onDeleteUser, onChangeRole}: UsersTableProps) {
   return (
     <table className={table.table} role="table">
       <caption className={table.caption}>{text.caption}</caption>
@@ -103,16 +104,48 @@ export function UsersTable({ users, currentUserId, onAction, onEditProfile, onDe
                   own={user.user_id === currentUserId}
                   onAction={onAction}
                 />
-
+                {user.user_id !== currentUserId &&
+                  (user.role === ROLE_APP.USER || user.role === ROLE_APP.ADMIN) && (
+                    <Button
+                      variant="secondary"
+                      aria-label={
+                        user.role === ROLE_APP.ADMIN
+                          ? `Make ${user.email} a user`
+                          : `Make ${user.email} an admin`
+                      }
+                      onClick={() =>
+                        onChangeRole(
+                          user,
+                          user.role === ROLE_APP.ADMIN ? 'USER' : 'ADMIN',
+                        )
+                      }
+                    >
+                      {user.role === ROLE_APP.ADMIN ? 'Make user' : 'Make admin'}
+                    </Button>
+                  )}
                 {user.user_id !== currentUserId && (
-                  <Button
-                    variant="secondary"
-                    className={table.danger}
-                    aria-label={`Delete account: ${user.email}`}
-                    onClick={() => onDeleteUser(user)}
-                  >
-                    Delete account
-                  </Button>
+                  <div>
+                    <Button
+                      variant="secondary"
+                      className={table.danger}
+                      disabled={user.deletionBlockedByOwnership === true}
+                      aria-label={`Delete account: ${user.email}`}
+                      aria-describedby={
+                        user.deletionBlockedByOwnership
+                          ? `delete-blocked-${user.user_id}`
+                          : undefined
+                      }
+                      onClick={() => onDeleteUser(user)}
+                    >
+                      Delete account
+                    </Button>
+
+                    {user.deletionBlockedByOwnership && (
+                      <p id={`delete-blocked-${user.user_id}`}>
+                        Transfer organization ownership before deleting this account.
+                      </p>
+                    )}
+                  </div>
                 )}
               </td>
           </tr>

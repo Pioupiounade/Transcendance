@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   ORGANIZATION_STATUS,
   ORGANIZATION_STATUS_LABELS,
@@ -51,19 +51,46 @@ const NOTICES = { suspend: text.suspended, close: text.closed, reactivate: text.
 export function AdminOrganizationsPage({ organizationPath }: AdminOrganizationsPageProps) {
   const { organizations, loading, error, reload } = useOrganizations();
   const list = useAdminList(organizations, LIST);
+  const resetList = list.reset;
+
+  useEffect(() => {
+    const handleDirectoryChanged = (event: Event) => {
+      const { resource } = (
+        event as CustomEvent<{ resource: string }>
+      ).detail;
+
+      if (resource !== 'organizations') return;
+
+      resetList();
+      reload();
+    };
+
+    window.addEventListener(
+      'admin:directory-changed',
+      handleDirectoryChanged,
+    );
+
+    return () => {
+      window.removeEventListener(
+        'admin:directory-changed',
+        handleDirectoryChanged,
+      );
+    };
+  }, [reload, resetList]);
+
   const [confirmation, setConfirmation] = useState<Confirmation | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
 
-const [ownerSelection, setOwnerSelection] = useState<Organization | null>(null);
-const [availableUsers, setAvailableUsers] = useState<AuthUser[]>([]);
-const [selectedOwnerId, setSelectedOwnerId] = useState('');
-const [ownerSelectionError, setOwnerSelectionError] = useState<string | null>(null);
-const [ownerSelectionLoading, setOwnerSelectionLoading] = useState(false);
+  const [ownerSelection, setOwnerSelection] = useState<Organization | null>(null);
+  const [availableUsers, setAvailableUsers] = useState<AuthUser[]>([]);
+  const [selectedOwnerId, setSelectedOwnerId] = useState('');
+  const [ownerSelectionError, setOwnerSelectionError] = useState<string | null>(null);
+  const [ownerSelectionLoading, setOwnerSelectionLoading] = useState(false);
 
-const prepareReopen = async (organization: Organization) => {
-  setOwnerSelectionLoading(true);
-  setOwnerSelectionError(null);
-  setNotice(null);
+  const prepareReopen = async (organization: Organization) => {
+    setOwnerSelectionLoading(true);
+    setOwnerSelectionError(null);
+    setNotice(null);
 
     try {
       const memberships = await fetchMemberships(organization.organization_id);

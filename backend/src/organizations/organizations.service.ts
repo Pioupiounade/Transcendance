@@ -174,6 +174,10 @@ export class OrganizationsService {
     return organization;
   });
 
+    await this.realtimeGateway.emitAdminDirectoryChanged(
+      'organizations',
+    );
+    
     return {
       ...createdOrganization,
       organization_id: createdOrganization.organization_id.toString(),

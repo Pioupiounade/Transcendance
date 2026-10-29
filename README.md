@@ -280,3 +280,15 @@ The project implements a total of **17 points** across the module categories:
 - **Challenges faced and how she overcome:**
   - *Sprint coordination and Gitflow as PM:* Standardized PR conventions (`Closes #<id>`), managed backlog boards in GitHub Projects.
   - *Lifecycle of github tickets:* Send message to the team telling them how we should handle them. 
+
+### Testing 
+- **Not possible to delete last remaining admin account**
+
+  ```
+    curl -i -X PATCH \
+    http://localhost:5173/api/users/USER_ID/role \
+    -H 'Authorization: Bearer ACCESS_TOKEN' \
+    -H 'Content-Type: application/json' \
+    --data '{"role":"USER"}'
+
+  ```

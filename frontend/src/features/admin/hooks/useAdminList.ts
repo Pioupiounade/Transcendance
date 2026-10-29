@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 export type AdminListOptions<T, S extends string> = {
   /** Identifiant (entier renvoyé en chaîne) : ordre de création et remplacement d'une ligne. */
@@ -23,6 +23,15 @@ export function useAdminList<T, S extends string>(items: T[], { id, status, stat
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<S | null>(null);
   const [visible, setVisible] = useState(PAGE_SIZE);
+  const reset = useCallback(() => setUpdated({}), []);
+
+  useEffect(() => {
+    window.addEventListener('user:deleted', reset);
+
+    return () => {
+      window.removeEventListener('user:deleted', reset);
+    };
+  }, [reset]);
 
   const all = useMemo(
     () => items.map((item) => updated[id(item)] ?? item).sort((a, b) => Number(id(a)) - Number(id(b))),
@@ -63,6 +72,6 @@ export function useAdminList<T, S extends string>(items: T[], { id, status, stat
     /** Remplace une ligne par sa version renvoyée par le backend. */
     replace: (item: T) => setUpdated((current) => ({ ...current, [id(item)]: item })),
     /** Oublie les remplacements, avant un rechargement complet. */
-    reset: () => setUpdated({}),
+    reset,
   };
 }

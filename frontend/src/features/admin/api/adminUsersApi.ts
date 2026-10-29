@@ -76,3 +76,25 @@ export const deleteUserAccount = (id: string) =>
   http.delete<{ deleted: boolean; user_id: string }>(
     `/users/${encodeURIComponent(id)}`,
   );
+
+export const changeUserRole = (
+  id: string,
+  role: 'USER' | 'ADMIN',
+) =>
+  http.patch<AuthUser>(
+    `/users/${encodeURIComponent(id)}/role`,
+    { role },
+  );
+
+type CreateAdminAccountResult =
+  | { success: true; user: AuthUser }
+  | { success: false; reason: 'EMAIL_TAKEN' };
+
+export const createAdminAccount = (
+  email: string,
+  password: string,
+) =>
+  http.post<CreateAdminAccountResult>('/users', {
+    email,
+    password,
+  });

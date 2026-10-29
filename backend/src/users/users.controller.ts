@@ -4,6 +4,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth-guard';
+import { UpdateRoleDto } from './dto/update-role.dto';
 
 @Controller('users')
 export class UsersController {
@@ -31,9 +32,13 @@ export class UsersController {
     return this.usersService.findOneSafe(id);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Post()
-  create(@Body() data: CreateUserDto) {
-    return this.usersService.create(data);
+  create(
+    @Req() req: any,
+    @Body() data: CreateUserDto,
+  ) {
+    return this.usersService.createByAdmin(req.user.id, data);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -104,4 +109,23 @@ export class UsersController {
 
     return this.usersService.deleteUser(id, req.user.id);
   }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch(':id/role')
+  updateRole(
+    @Req() req: any,
+    @Param('id') id: string,
+    @Body() data: UpdateRoleDto,
+  ) {
+    if (!/^[1-9]\d*$/.test(id)) {
+      throw new BadRequestException('Invalid user ID');
+    }
+
+    return this.usersService.updateRole(
+      id,
+      req.user.id,
+      data.role,
+    );
+  }
+
 }
