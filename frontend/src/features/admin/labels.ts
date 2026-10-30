@@ -217,6 +217,20 @@ export const ADMIN_LABELS = {
       confirm: 'Reactivate organization',
       confirming: 'Reactivating…',
     },
+    promote: {
+      title: 'Promote to administrator?',
+      body: (email: string) => `${email} will become an administrator.`,
+      effects: ['This user will gain full administrative privileges on the platform.'],
+      confirm: 'Promote user',
+      confirming: 'Promoting…',
+    },
+    demote: {
+      title: 'Demote to regular user?',
+      body: (email: string) => `${email} will become a regular user.`,
+      effects: ['This user will lose administrative privileges.'],
+      confirm: 'Demote user',
+      confirming: 'Demoting…',
+    },
   },
   errors: {
     network: 'The server cannot be reached. Check your connection and try again.',

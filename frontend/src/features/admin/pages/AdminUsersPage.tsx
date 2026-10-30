@@ -99,7 +99,7 @@ export function AdminUsersPage({ profilePath, ownProfilePath }: AdminUsersPagePr
     });
   };
 
-const askRoleChange = (account: AuthUser, role: 'USER' | 'ADMIN') => {
+  const askRoleChange = (account: AuthUser, role: 'USER' | 'ADMIN') => {
     const promoting = role === 'ADMIN';
     const copy = promoting ? ADMIN_LABELS.dialog.promote : ADMIN_LABELS.dialog.demote;
     setConfirmation({
@@ -252,15 +252,15 @@ const askRoleChange = (account: AuthUser, role: 'USER' | 'ADMIN') => {
 
       {list.rows.length > 0 && (
         <UsersTable
-    		users={list.rows}
-    		currentUserId={me?.user_id ?? ''}
-    		profilePath={(userId) => `/profile/${userId}`}
-    		ownProfilePath="/profile"
-    		onAction={ask}
-    		onEditProfile={setEditingUser}
-    		onDeleteUser={askDelete}
-    		onChangeRole={askRoleChange}
-  	/>
+          users={list.rows}
+          currentUserId={me?.user_id ?? ''}
+          profilePath={(userId) => `/profile/${userId}`}
+          ownProfilePath="/profile"
+          onAction={ask}
+          onEditProfile={setEditingUser}
+          onDeleteUser={askDelete}
+          onChangeRole={askRoleChange}
+        />
       )}
       {list.hidden > 0 && (
         <div className={styles.more}>
