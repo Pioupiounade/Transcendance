@@ -347,8 +347,11 @@ shared/         zéro connaissance métier, réutilisable ailleurs
   hooks/        hooks React sans métier, pas de barrel : useForm (valeurs, erreurs après blur/soumission, erreur
                 serveur via un mapper fourni, focus du 1er champ invalide dont l'`id` = son nom) ; useDisclosure (bouton qui déplie
                 un panneau : Échap, tap dehors, focus de retour ; menus de la barre basse et de l'en-tête) ; useResource
-                (`load` stable → `{ data, loading, error, reload }`, annulation, utilisé par organizations ;
-                candidat pour remplacer les hooks maison de actions/participations)
+                (`load` stable → `{ data, loading, error, reload }`, annulation, utilisé par organizations, profile,
+                participations, messages, admin ; candidat pour remplacer les hooks maison de actions). Aucun hook de
+                shared n'écoute un événement fenêtre métier (`user:*`, `organization:*`, `action:*`) : c'est la feature
+                qui écoute et appelle `reload` (OrganizationPage, useOrganizations, useMyMemberships,
+                useMyParticipations, messages/useFriendsList), filtrée par id quand l'événement en porte un
   lib/          fonctions pures, pas de barrel (test de suppression négatif) : pageTitle, formatDate, prefersReducedMotion
   config/       env.ts : lit et valide VITE_API_URL
 styles/         tokens.css (DESIGN.md), reset.css, global.css

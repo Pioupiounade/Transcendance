@@ -1,10 +1,10 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import { createPortal } from 'react-dom';
 import { Link } from 'react-router';
 import { useAuth } from '@/features/auth';
-import { friendsApi, type FriendUserSummary } from '@/features/friends';
-import { useResource } from '@/shared/hooks/useResource';
+import type { FriendUserSummary } from '@/features/friends';
 import { Button, Icon } from '@/shared/ui';
+import { useFriendsList } from '../api/useFriendsList';
 import { MESSAGES_LABELS } from '../labels';
 import { ConversationList } from './ConversationList';
 import { ThreadPane } from './ThreadPane';
@@ -27,8 +27,7 @@ export function MessagesDock({ id, fullPagePath, profilePath, onClose }: Message
   const [friend, setFriend] = useState<FriendUserSummary | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
 
-  const load = useCallback((signal: AbortSignal) => friendsApi.getMyFriends(signal), []);
-  const { data: friends, error, loading, reload } = useResource(load);
+  const { friends, error, loading, reload } = useFriendsList();
   const sorted = useMemo(
     () => [...(friends ?? [])].sort((a, b) => (a.username ?? '').localeCompare(b.username ?? '')),
     [friends],
