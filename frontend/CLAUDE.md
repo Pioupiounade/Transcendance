@@ -114,7 +114,11 @@ Ce fichier est chargé automatiquement quand la session démarre dans `frontend/
   caractères, `location` = 2 nombres, champs obligatoires listés dans `docs/api_contract.md`). Le sujet impose la
   validation des deux côtés. Auth, plus strict que le DTO depuis le 28/10/2026 (`features/auth/validation.ts`) : mot de
   passe 8 à 64 caractères ASCII imprimables (ni espace, ni accent, ni emoji), e-mail sans espace, 254 au plus et 64
-  avant le `@` (limites de `@IsEmail()`, sinon 400 = erreur console) ; `maxLength` posé sur les champs.
+  avant le `@` (limites de `@IsEmail()`, sinon 400 = erreur console) ; `maxLength` posé sur les champs. Depuis le
+  29/10/2026 la forme de l'e-mail reproduit validator.js (`@IsEmail()` par défaut) : un seul `@`, partie locale sans
+  point en bord ni doublé, étiquettes de domaine de 63 au plus sans tiret en bord ni `_`, extension en lettres seules
+  (2 au moins) ou punycode ; `v1@v1.v1` est refusé avant l'envoi (message « must end with letters »). Vérifié contre
+  validator.js sur 54 adresses ; seul écart voulu : la partie locale entre guillemets, acceptée côté backend.
 - Accessibilité (`../Docs/DESIGN.md` §5 et sujet) : label visible pour chaque champ, erreur reliée par `aria-describedby`,
   focus visible, `prefers-reduced-motion` respecté, la couleur ne porte jamais seule une information (icône + libellé).
 - Chaque écran gère explicitement ses états : chargement, vide, erreur (les 404 de listes vides compris).
@@ -184,7 +188,7 @@ app/            composition root : seul endroit qui connaît tout
                 « How it works », carte vivante des actions ouvertes + 3 prochaines, catégories, bandeau
                 d'inscription) ou Dashboard (connecté :
                 carte compacte via NeighborhoodMap, MyActionsPanel = actions que j'organise + participations
-                ouvertes par date, NearbyActions = actions ouvertes des autres triées par distance depuis
+                ouvertes par date (4 lignes, « +n more » → `/actions`), NearbyActions = actions ouvertes des autres triées par distance depuis
                 `profiles/me.location` sinon Saint-Cyprien). app compose les features par leurs index.
 features/       1 domaine métier = 1 module ; interface = index.ts
   auth/         session, RequireAuth, LoginPage, RegisterPage (#50), LoginForm (le formulaire seul, `{ onSignedIn? }`,
@@ -195,16 +199,24 @@ features/       1 domaine métier = 1 module ; interface = index.ts
                 Existant (#12) : MapPage, NeighborhoodMap, ActionCard, CategoryFilter, useActions, mapConfig.ts.
                 Depuis le 25/09/2026 (écart assumé avec la maquette) : carte pleine largeur, cartes en grille
                 dessous ; ActionCard a un fond très léger par catégorie (`--card-*-bg` dans tokens.css).
+                « My Actions » `/actions` connecté (ActionsListPage) : créées par moi ou rejointes, triées comme l'agenda de
+                l'accueil (ouvertes par date, puis terminées / annulées les plus récentes d'abord : `GET /actions` arrive sans
+                ordre), 6 par page, filtres catégorie / statut / texte.
                 « My Actions » `/actions` pour un visiteur (#107, décision d'équipe : onboarding + connexion sur place) :
                 MyActionsSignIn reprend la grammaire de l'accueil : hero (accroche, gages de confiance, StreetScene), « How it
                 works » sur `Steps`, puis la carte de connexion centrée (LoginForm) ; la liste apparaît au changement de statut ;
                 pendant la restauration de session, message d'attente au lieu d'une liste vide.
                 Création depuis la carte (Epic 7) : NeighborhoodMap accepte `draft` / `onDraftChange` / `draftContent`
-                (pin brouillon déplaçable, popup ; sans `draftContent` = simple sélecteur de lieu), MapPage garde le
+                (pin brouillon déplaçable, popup ; sans `draftContent` = simple sélecteur de lieu), `home` = quartier de
+                l'utilisateur (`profiles/me.location`). Vue (29/10/2026) : le brouillon s'il y en a un, sinon `home`, sinon
+                `DEFAULT_CENTER` = l'école 42 Paris (mapConfig.ts ; répété dans NeighbourhoodPicker), au zoom quartier ; les
+                pins ne recadrent jamais la carte, le bouton « recentrer » les cadre tous. MapPage garde le
                 lieu dans l'URL (`?at=lat,lng`, draftParam.ts), CreateActionDialog = Dialog + ActionForm, validation.ts,
                 errors.ts, api/useCreateAction.
                 Créer / modifier / annuler (#33, Epic 2) : ActionForm (deep : `{ location | null, action?, onSaved,
-                onCancel }`, création ou modification selon `action`), ActionEditor (carte sélecteur + formulaire),
+                onCancel }`, création ou modification selon `action` ; « Max participants » = champ texte
+                `inputMode="numeric"` filtré aux chiffres (`toDigits`) : un `type="number"` laissait passer e + - . et valait ""
+                sur saisie invalide, donc validé comme vide), ActionEditor (carte sélecteur + formulaire),
                 CreateActionPage `/actions/new` (`?at=` pré-place le pin), EditActionPage `/actions/:id/edit`
                 (permissions.ts : créateur ou ADMIN, PENDING/APPROVED ; CancelActionDialog = « suppression », l'API
                 n'a que `cancel`), api/useAction, useUpdateAction, useCancelAction. Les pages reçoivent les chemins
@@ -236,8 +248,8 @@ features/       1 domaine métier = 1 module ; interface = index.ts
                 `{ reason }`, ProfileSkeleton, RequireProfile `{ profilePath }` (garde : connecté sans profil →
                 `/profile`). Données via useResource ; ce qu'on vient d'enregistrer prime sur le chargement (pas de
                 rechargement après un envoi). Libellés dans labels.ts, familles d'intérêts dans interestLabels.ts
-                (libellés de catégorie répétés pour éviter le cycle). api/myProfile.ts (`useMyProfile`, 404 → null)
-                reste utilisé par le tableau de bord et l'annuaire.
+                (libellés de catégorie répétés pour éviter le cycle). api/myProfile.ts (`useMyProfile` sur useResource,
+                404 → null, visiteur : aucun appel) sert au tableau de bord et aux cartes (`home` de NeighborhoodMap).
   participations/ useMyParticipations (sur useResource ; visiteur : liste vide sans appel), fetchActionParticipants /
                 joinAction / leaveAction (#60), type MyParticipation
   messages/     messagerie entre amis (backend #155, api_contract §18), discrète : pas d'entrée de nav, une pastille
@@ -297,7 +309,7 @@ features/       1 domaine métier = 1 module ; interface = index.ts
                 d'« ajouter un membre » côté UI (non demandé).
                 Création (#106) : CreateOrganizationPage `/organizations/new` (sous `RequireAuth` ; bouton « Create an
                 organization » dans l'en-tête de l'annuaire, connectés seulement) = NeighborhoodMap en simple sélecteur
-                de lieu (pin déplaçable, sans popup) + OrganizationForm (nom, description ≤ 500, adresse ; validation.ts,
+                de lieu (pin déplaçable, sans popup) + OrganizationForm (nom ≤ 80, description ≤ 500, adresse ≤ 200 ; validation.ts,
                 lieu réclamé à l'envoi comme ActionForm) → `POST /organizations` (api/organizationsApi
                 `createOrganization`). Le backend crée le membre `OWNER` depuis #135 (09/10/2026) : la fiche de la
                 nouvelle organisation affiche « You own this organization » et « Manage » dès l'arrivée, sans message.

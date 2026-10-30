@@ -1,5 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useCallback } from 'react';
+import { useAuth } from '@/features/auth';
 import { http, isApiError } from '@/shared/api';
+import { useResource } from '@/shared/hooks/useResource';
 
 /** `GET /profiles/me` (docs/api_contract.md §7) : la seule route qui renvoie `location`. */
 export type MyProfile = {
@@ -22,19 +24,19 @@ export const fetchMyProfile = async (signal?: AbortSignal): Promise<MyProfile | 
   }
 };
 
-/** `profile` vaut `null` tant que le chargement n'est pas fini ou sans profil ; `loading` fait la différence. */
+const NO_PROFILE = Promise.resolve(null);
+
+/**
+ * `profile` vaut `null` tant que le chargement n'est pas fini ou sans profil ; `loading` fait la différence.
+ * Visiteur : aucun appel (`/profiles/me` répondrait 401, une erreur console) ; une session qui s'ouvre relance le chargement.
+ */
 export function useMyProfile() {
-  const [state, setState] = useState<{ profile: MyProfile | null; loading: boolean }>({ profile: null, loading: true });
-
-  useEffect(() => {
-    const controller = new AbortController();
-    fetchMyProfile(controller.signal)
-      .then((profile) => setState({ profile, loading: false }))
-      .catch(() => {
-        if (!controller.signal.aborted) setState({ profile: null, loading: false });
-      });
-    return () => controller.abort();
-  }, []);
-
-  return state;
+  const { status } = useAuth();
+  const authenticated = status === 'authenticated';
+  const load = useCallback(
+    (signal: AbortSignal) => (authenticated ? fetchMyProfile(signal) : NO_PROFILE),
+    [authenticated],
+  );
+  const { data, loading } = useResource(load);
+  return { profile: data, loading };
 }

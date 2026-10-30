@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router';
 import {
+  SEARCH_QUERY_MAX_LENGTH,
   globalSearch,
   type GlobalSearchResults,
 } from '../api/globalSearchApi';
@@ -89,6 +90,7 @@ export function GlobalSearch() {
       <input
         type="search"
         value={query}
+        maxLength={SEARCH_QUERY_MAX_LENGTH}
         onChange={(event) => setQuery(event.target.value)}
         placeholder="Search.."
         style={{

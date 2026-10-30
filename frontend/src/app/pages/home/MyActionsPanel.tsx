@@ -96,7 +96,7 @@ export function MyActionsPanel({ items, loading, error }: MyActionsPanelProps) {
         </ul>
       )}
       {hidden > 0 && (
-        <Link to={ROUTES.map} className={styles.more}>
+        <Link to={ROUTES.actions} className={styles.more}>
           {text.more(hidden)}
         </Link>
       )}

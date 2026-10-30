@@ -61,6 +61,9 @@ export const validateScheduledAt = (value: string): string | null => {
   return null;
 };
 
+/** Ne garde que les chiffres d'une saisie : le champ « participants » est un texte filtré, pas un `type="number"`. */
+export const toDigits = (value: string): string => value.replace(/\D/g, '');
+
 /** Optionnel ; sinon entier ≥ 3. */
 export const validateMaxParticipants = (value: string): string | null => {
   if (value.trim() === '') return null;

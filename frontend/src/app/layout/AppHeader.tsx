@@ -50,18 +50,14 @@ export function AppHeader() {
       {compact && search}
 
       <div className={styles.actions}>
-        {status === 'authenticated' && (
-          <div className={styles.search}>
-            <GlobalSearch />
-          </div>
-        )}
-        {user?.role === ROLE_APP.ADMIN && (
+        {!compact && search}
+        {status === 'authenticated' && !phone && admin && (
           <NavLink to={ROUTES.admin} className={styles.adminLink}>
             <Icon name="shield" size={18} />
             <span className={styles.adminLabel}>{APP_LABELS.admin}</span>
           </NavLink>
         )}
-        {status === 'authenticated' && <MessagesButton to={ROUTES.messages} profilePath={publicProfilePath} />}
+        {status === 'authenticated' && !phone && <MessagesButton to={ROUTES.messages} profilePath={publicProfilePath} />}
         {status === 'authenticated' && <NotificationBell />}
         {/* Téléphone : l'avatar déplie Messages, Admin et Sign out ; ailleurs, avatar → profil et bouton texte. */}
         {status === 'authenticated' && user && phone && (
@@ -77,12 +73,9 @@ export function AppHeader() {
             <Avatar name={user.email} />
           </Link>
         )}
-        {status === 'authenticated' && (
+        {status === 'authenticated' && !phone && (
           <Button variant="secondary" className={styles.signOut} onClick={() => void signOut()} title={APP_LABELS.signOut}>
-            <span className={styles.signOutIcon} aria-hidden="true">
-              <Icon name="logout" size={20} />
-            </span>
-            <span className={styles.signOutLabel}>{APP_LABELS.signOut}</span>
+            {APP_LABELS.signOut}
           </Button>
         )}
         {status === 'anonymous' && (

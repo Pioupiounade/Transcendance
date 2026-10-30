@@ -264,7 +264,7 @@ export class UsersService {
   }
 
   //5. mettre a jour le mdp
-  async updatePassword(id: string, data: UpdatePasswordDto) {
+async updatePassword(id: string, data: UpdatePasswordDto) {
     const password_hash = await argon2.hash(data.password);
 
     const user = await this.prisma.user.update({
@@ -323,6 +323,37 @@ export class UsersService {
         },
       },
     });
+
+    const ownerships = memberships.filter(
+      (membership) =>
+        membership.role === RoleOrg.OWNER &&
+        membership.status === MemberStatus.ACTIVE,
+    );
+
+    // Vérifier toutes les organisations avant le nettoyage.
+    const requiresTransfer = ownerships.find(
+      (membership) => membership.organization._count.members > 0,
+    );
+
+    if (requiresTransfer) {
+      throw new ConflictException(
+        `Transfer ownership of "${requiresTransfer.organization.title}" ` +
+        'before making this account inactive',
+      );
+    }
+
+    // Le compte est le seul membre actif de ces organisations.
+    const closingOrganizationIds = ownerships.map(
+      (membership) => membership.organization_id,
+    );
+
+    return closingOrganizationIds;
+  }
+
+  //6. desactiver un utilisateur
+  async deactivate(id: string) {
+    const userId = BigInt(id);
+    const affectedOrganizationIds = new Set<bigint>();
 
     const ownerships = memberships.filter(
       (membership) =>
@@ -464,6 +495,12 @@ export class UsersService {
         ),
       };
     });
+
+    for (const organizationId of affectedOrganizationIds) {
+      this.realtimeGateway.emitOrganizationUpdated(
+        organizationId.toString(),
+      );
+    }
 
     return {
       cancelledActions,

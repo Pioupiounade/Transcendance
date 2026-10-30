@@ -8,11 +8,20 @@ import { ActionCard } from '../components/ActionCard';
 import { CategoryFilter } from '../components/CategoryFilter';
 import { MyActionsSignIn } from '../components/MyActionsSignIn';
 import { ACTIONS_LABELS } from '../labels';
-import type { Category } from '../types';
+import { OPEN_STATUSES, type Action, type Category } from '../types';
 import styles from './ActionsListPage.module.css';
 
 const PAGE_SIZE = 6;
 const text = ACTIONS_LABELS.myActions;
+
+// Même ordre que l'agenda de l'accueil : les actions ouvertes d'abord, la plus proche en tête, puis les terminées et
+// annulées, la plus récente en tête. `GET /actions` arrive sans ordre : une action créée tombait en dernière page.
+const byAgenda = (a: Action, b: Action): number => {
+  const openA = OPEN_STATUSES.includes(a.status);
+  const openB = OPEN_STATUSES.includes(b.status);
+  if (openA !== openB) return openA ? -1 : 1;
+  return openA ? a.scheduled_at.localeCompare(b.scheduled_at) : b.scheduled_at.localeCompare(a.scheduled_at);
+};
 
 export function ActionsListPage() {
   const navigate = useNavigate();
@@ -49,7 +58,7 @@ export function ActionsListPage() {
       const matchesStatus = status === null || action.status === status;
 
       return isMine && matchesCategory && matchesStatus && matchesQuery;
-    });
+    }).sort(byAgenda);
   }, [
     actions,
     category,
