@@ -111,63 +111,61 @@
   /* mobile ≤ 760px · tablette 761–1100px · desktop > 1100px · large > 1500px */
 }
 
-/* Thème de l'espace d'administration (#22), inchangé dans la refonte : nuit de forêt, accent inversé (la terracotta
-   devient la couleur d'action, la sauge l'accent secondaire) pour qu'on sache toujours qu'on est côté admin. Posé sur
-   <html> par `AdminLayout` ; ne redéfinit que des couleurs. Contrastes vérifiés (texte ≥ 4.5:1). */
+/* Thème de l'espace d'administration (#22) : le noir des boutons du site devient le fond, les pilules d'action
+   s'inversent en blanc et le citron reste la couleur d'attention, pour qu'on sache toujours qu'on est côté admin tout
+   en restant dans la grammaire du site. Posé sur <html> par `AdminLayout` ; ne redéfinit que des couleurs. Le pin de
+   la marque garde ses couleurs. Contrastes vérifiés (texte ≥ 4.5:1 sur son fond). */
 :root[data-theme='admin'] {
   color-scheme: dark;
-  --brand: #e58a6b;
-  --brand-hover: #ee9c80;
-  --brand-press: #d97a5a;
-  --on-brand: #24130d;
-  --terra: #9fd3b5;
-  --accent: #f0c37a;
-  --accent-soft: #3a3120;
-  --on-accent: #24130d;
-  --logo-pin: #e58a6b;
-  --logo-flag: #9fd3b5;
-  --logo-dot: #1a2922;
-  --surface: #111c18;
-  --ground: #1a2922;
-  --ground-hover: #223429;
-  --ground-press: #2a3f33;
-  --field-bg: #131f1a;
-  --sage-soft: #223a2f;
-  --sage-ink: #9fd3b5;
-  --lavender-soft: #2a2a3f;
-  --lavender-ink: #c9c4ee;
-  --ice-soft: #1f3028;
-  --ice-ink: #b7c5b8;
-  --trust: #9fd3b5;
-  --trust-soft: #223a2f;
-  --ink: #f4f0e6;
-  --muted: #a8b7ad;
-  --muted-soft: #7f8f85;
-  --line: #344a40;
-  --danger: #f59a8f;
-  --danger-soft: #3d2320;
-  --pending: #f0c37a;
-  --pending-soft: #3a3120;
-  --hatch: repeating-linear-gradient(135deg, #4a5a50 0 1.5px, transparent 1.5px 7px);
-  --disabled-bg: #25342d;
-  --disabled-ink: #8a9a90;
-  --tag-culture-bg: #f6ebca;
-  --tag-culture-ink: #78551b;
-  --tag-social-bg: #f8e3d8;
-  --tag-social-ink: #a04b34;
-  --tag-environment-bg: #e5eedf;
-  --tag-environment-ink: #265c4b;
-  --avatar-bg: #3a4d43;
-  --avatar-ink: #f4f0e6;
-  --note-bg: #1f3028;
-  --note-ink: #b7c5b8;
-  --card-selected-bg: #20332a;
-  --cover-environment: linear-gradient(135deg, #223a2f 0%, #1c3026 100%);
-  --cover-social: linear-gradient(135deg, #3a2a35 0%, #2a2a3f 100%);
-  --cover-culture: linear-gradient(135deg, #3a3120 0%, #332a18 100%);
-  --shadow: 0 8px 30px #0000004d;
-  --shadow-float: 0 14px 36px #0000006b;
-  --focus-ring: 3px solid #9fd3b5;
+  --brand: #f4f4f4;
+  --brand-hover: #ffffff;
+  --brand-press: #dcdcdc;
+  --on-brand: #1c1c1c;
+  --terra: #f4f4f4;
+  --accent: #fff04d;
+  --accent-soft: #3a3614;
+  --on-accent: #1c1c1c;
+  --surface: #0e0e0e;
+  --ground: #171717;
+  --ground-hover: #202020;
+  --ground-press: #2a2a2a;
+  --field-bg: #121212;
+  --sage-soft: #1e2a27;
+  --sage-ink: #b7d9cc;
+  --lavender-soft: #26243a;
+  --lavender-ink: #cdc8f2;
+  --ice-soft: #1d262a;
+  --ice-ink: #b9cbd2;
+  --trust: #cdc8f2;
+  --trust-soft: #26243a;
+  --ink: #f4f4f4;
+  --muted: #a6a6a6;
+  --muted-soft: #7a7a7a;
+  --line: #2c2c2c;
+  --danger: #ff8f80;
+  --danger-soft: #3a1f1c;
+  --pending: #f0d36a;
+  --pending-soft: #35301a;
+  --hatch: repeating-linear-gradient(135deg, #3d3d3d 0 1.5px, transparent 1.5px 7px);
+  --disabled-bg: #262626;
+  --disabled-ink: #949494;
+  --tag-culture-bg: #3a3614;
+  --tag-culture-ink: #f3e7a0;
+  --tag-social-bg: #26243a;
+  --tag-social-ink: #cdc8f2;
+  --tag-environment-bg: #1e2a27;
+  --tag-environment-ink: #b7d9cc;
+  --avatar-bg: #2e2e2e;
+  --avatar-ink: #f4f4f4;
+  --note-bg: #1d1d1d;
+  --note-ink: #c9c9c9;
+  --card-selected-bg: #3a3614;
+  --cover-environment: linear-gradient(135deg, #1e2a27 0%, #182220 100%);
+  --cover-social: linear-gradient(135deg, #2a2435 0%, #26243a 100%);
+  --cover-culture: linear-gradient(135deg, #3a3614 0%, #2e2b12 100%);
+  --shadow: 0 8px 30px #00000059;
+  --shadow-float: 0 14px 36px #00000080;
+  --focus-ring: 3px solid #fff04d;
 }
 
 @media (prefers-reduced-motion: reduce) {

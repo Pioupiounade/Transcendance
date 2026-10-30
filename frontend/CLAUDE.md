@@ -152,8 +152,9 @@ Ce fichier est chargé automatiquement quand la session démarre dans `frontend/
   Identifiants de code en anglais. Textes UI centralisés (`app/labels.ts`, `features/<x>/labels.ts`).
 - Pages obligatoires (sujet, sous peine de rejet) : Politique de confidentialité et Conditions d'utilisation, accessibles
   depuis le footer, avec un contenu réel.
-- Thème : `styles/tokens.css` porte le thème clair (`:root`) et le thème sombre de l'espace admin
-  (`:root[data-theme='admin']`, accent inversé terracotta / sauge, contrastes vérifiés). Un composant ne code jamais
+- Thème : `styles/tokens.css` porte le thème clair (`:root`) et le thème noir de l'espace admin
+  (`:root[data-theme='admin']`, depuis le 30/10/2026 : fond noir comme les boutons du site, pilules d'action inversées
+  en blanc, citron pour l'attention et le focus, contrastes vérifiés ≥ 4.5:1). Un composant ne code jamais
   une couleur en dur : il lit un token (`--on-brand`, `--ground-hover`, `--field-bg`, `--disabled-*`…), sinon il casse
   dans le thème sombre.
 - Texte : `overflow-wrap: anywhere` est posé sur `body` (`global.css`, hérité) pour qu'un mot sans espace (URL,
