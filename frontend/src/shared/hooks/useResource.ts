@@ -33,6 +33,17 @@ export function useResource<T>(load: Loader<T>) {
   }, [load, attempt]);
 
   const reload = useCallback(() => setAttempt((n) => n + 1), []);
+  
+  useEffect(() => {
+    window.addEventListener('user:deleted', reload);
+    window.addEventListener('user:status-changed', reload);
+
+    return () => {
+      window.removeEventListener('user:deleted', reload);
+      window.removeEventListener('user:status-changed', reload);
+    };
+  }, [reload]);
+  
   const loading = result === null || result.load !== load || result.attempt !== attempt;
   return {
     data: loading ? null : result.data,

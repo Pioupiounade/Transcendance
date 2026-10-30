@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ACCOUNT_STATUS, useAuth, type AuthUser } from '@/features/auth';
 import { useResource } from '@/shared/hooks/useResource';
 import { pageTitle } from '@/shared/lib/pageTitle';
@@ -12,6 +12,8 @@ import { useAdminList } from '../hooks/useAdminList';
 import { ACCOUNT_STATUS_LABELS, ADMIN_LABELS } from '../labels';
 import type { AccountActionKind } from '../types';
 import styles from './AdminPage.module.css';
+import { AdminProfileEditor } from '../components/AdminProfileEditor';
+import { AdminAccountCreator } from '../components/AdminAccountCreator';
 
 type AdminUsersPageProps = {
   /** Fiche publique d'un compte et la mienne : la feature n'importe pas `app/`. */
@@ -40,16 +42,29 @@ export function AdminUsersPage({ profilePath, ownProfilePath }: AdminUsersPagePr
   const list = useAdminList(data ?? NO_USERS, LIST);
   const resetList = list.reset;
 
-  // Le backend prévient quand l'annuaire des comptes change (création, rôle, statut, suppression) : relecture.
   useEffect(() => {
     const handleDirectoryChanged = (event: Event) => {
-      const { resource } = (event as CustomEvent<{ resource: string }>).detail;
+      const { resource } = (
+        event as CustomEvent<{ resource: string }>
+      ).detail;
+
       if (resource !== 'users') return;
+
       resetList();
       reload();
     };
-    window.addEventListener('admin:directory-changed', handleDirectoryChanged);
-    return () => window.removeEventListener('admin:directory-changed', handleDirectoryChanged);
+
+    window.addEventListener(
+      'admin:directory-changed',
+      handleDirectoryChanged,
+    );
+
+    return () => {
+      window.removeEventListener(
+        'admin:directory-changed',
+        handleDirectoryChanged,
+      );
+    };
   }, [reload, resetList]);
 
   const [confirmation, setConfirmation] = useState<Confirmation | null>(null);
@@ -86,7 +101,7 @@ export function AdminUsersPage({ profilePath, ownProfilePath }: AdminUsersPagePr
     });
   };
 
-  const askRoleChange = (account: AuthUser, role: 'USER' | 'ADMIN') => {
+const askRoleChange = (account: AuthUser, role: 'USER' | 'ADMIN') => {
     const promoting = role === 'ADMIN';
     const copy = promoting ? ADMIN_LABELS.dialog.promote : ADMIN_LABELS.dialog.demote;
     setConfirmation({
@@ -128,6 +143,49 @@ export function AdminUsersPage({ profilePath, ownProfilePath }: AdminUsersPagePr
     reload();
   };
 
+  const askDelete = (account: AuthUser) => {
+    const copy = ADMIN_LABELS.dialog.deleteAccount;
+    setConfirmation({
+      title: copy.title,
+      body: copy.body(account.email),
+      effects: copy.effects,
+      confirmLabel: copy.confirm,
+      confirmingLabel: copy.confirming,
+      danger: true,
+      run: async () => {
+        await deleteUserAccount(account.user_id);
+        setEditingUser((current) => (current?.user_id === account.user_id ? null : current));
+        list.reset();
+        reload();
+        setNotice(text.deleted);
+      },
+    });
+  };
+
+  const retry = () => {
+    list.reset();
+    reload();
+  };
+
+  useEffect(() => {
+    const handleUserDeleted = (event: Event) => {
+      const { userId } = (
+        event as CustomEvent<{ userId: string }>
+      ).detail;
+
+      setEditingUser((current) =>
+        current?.user_id === userId ? null : current,
+      );
+      setConfirmation(null);
+    };
+
+    window.addEventListener('user:deleted', handleUserDeleted);
+
+    return () => {
+      window.removeEventListener('user:deleted', handleUserDeleted);
+    };
+  }, []);
+
   return (
     <section className={styles.page}>
       <title>{pageTitle(text.title)}</title>
@@ -141,7 +199,25 @@ export function AdminUsersPage({ profilePath, ownProfilePath }: AdminUsersPagePr
           {text.create}
         </Button>
       </header>
+      <Button
+        variant="secondary"
+        onClick={() => setCreatingAccount(true)}
+        disabled={creatingAccount}
+      >
+        Create account
+      </Button>
 
+      {creatingAccount && (
+        <AdminAccountCreator
+          onClose={() => setCreatingAccount(false)}
+          onCreated={(email) => {
+            setCreatingAccount(false);
+            list.reset();
+            reload();
+            setNotice(`Account created: ${email}`);
+          }}
+        />
+      )}
       <div className={styles.toolbar}>
         <form className={styles.search} role="search" onSubmit={(event) => event.preventDefault()}>
           <FloatingField
@@ -191,12 +267,19 @@ export function AdminUsersPage({ profilePath, ownProfilePath }: AdminUsersPagePr
         <p className={styles.state}>{list.total === 0 ? text.empty : text.noMatch}</p>
       )}
 
+      {editingUser && (
+        <AdminProfileEditor
+          key={editingUser.user_id}
+          userId={editingUser.user_id}
+          email={editingUser.email}
+          onClose={() => setEditingUser(null)}
+        />
+      )}
+
       {list.rows.length > 0 && (
         <UsersTable
           users={list.rows}
           currentUserId={me?.user_id ?? ''}
-          profilePath={profilePath}
-          ownProfilePath={ownProfilePath}
           onAction={ask}
           onEditProfile={setEditingUser}
           onDeleteUser={askDelete}

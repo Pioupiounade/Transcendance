@@ -170,38 +170,6 @@ export const ADMIN_LABELS = {
       confirm: 'Reactivate account',
       confirming: 'Reactivating…',
     },
-    promote: {
-      title: 'Give administrator permissions?',
-      body: (email: string) => `${email} will become an administrator.`,
-      effects: [
-        'This account will be able to manage users, organizations and actions.',
-        'The change applies immediately to its open sessions.',
-      ],
-      confirm: 'Make admin',
-      confirming: 'Updating role…',
-    },
-    demote: {
-      title: 'Remove administrator permissions?',
-      body: (email: string) => `${email} will become a regular user.`,
-      effects: [
-        'This account will lose access to the admin panel.',
-        'The change applies immediately to its open sessions.',
-      ],
-      confirm: 'Make user',
-      confirming: 'Updating role…',
-    },
-    deleteAccount: {
-      title: 'Permanently delete this account?',
-      body: (email: string) => `${email} will be permanently deleted.`,
-      effects: [
-        'This cannot be undone.',
-        'The profile, sessions and private messages will be deleted.',
-        'Actions and comments will remain with a deleted author.',
-        'Organization ownership must be transferred first.',
-      ],
-      confirm: 'Delete account permanently',
-      confirming: 'Deleting…',
-    },
     approve: {
       title: 'Approve this action?',
       body: (title: string) => `${title} will be confirmed.`,

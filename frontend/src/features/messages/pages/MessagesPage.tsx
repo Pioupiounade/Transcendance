@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router';
 import { useAuth } from '@/features/auth';
 import { pageTitle } from '@/shared/lib/pageTitle';

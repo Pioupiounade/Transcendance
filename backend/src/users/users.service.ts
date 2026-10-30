@@ -26,10 +26,10 @@ export class UsersService {
     private pointtransactionService: PointtransactionService,
     private realtimeGateway: RealtimeGateway,
     private notificationsService: NotificationsService,
-  ) { }
+  ) {}
 
-  // Utllise this.prisma pour recuperer les Users dans PostgreSQL. Cette methode metier accede reellement a la BDD via Prisma
-  //1. recuperer tous les utilisateurs
+// Utllise this.prisma pour recuperer les Users dans PostgreSQL. Cette methode metier accede reellement a la BDD via Prisma
+//1. recuperer tous les utilisateurs
   async findAll(requesterId: string) {
     const requester = await this.prisma.user.findUnique({
       where: {
@@ -486,172 +486,43 @@ export class UsersService {
   //6. desactiver un utilisateur
   async deactivate(id: string) {
     const userId = BigInt(id);
-    const affectedOrganizationIds = new Set<bigint>();
+    const result = await this.prisma.$transaction(async (tx) => {
+      const user = await tx.user.findUnique({
+        where: { user_id: userId },
+      });
 
-    const ownerships = memberships.filter(
-      (membership) =>
-        membership.role === RoleOrg.OWNER &&
-        membership.status === MemberStatus.ACTIVE,
-    );
-
-    // Vérifier toutes les organisations avant le nettoyage.
-    const requiresTransfer = ownerships.find(
-      (membership) => membership.organization._count.members > 0,
-    );
-
-    if (requiresTransfer) {
-      throw new ConflictException(
-        `Transfer ownership of "${requiresTransfer.organization.title}" ` +
-        'before making this account inactive',
-      );
-    }
-
-    // Le compte est le seul membre actif de ces organisations.
-    const closingOrganizationIds = ownerships.map(
-      (membership) => membership.organization_id,
-    );
-
-    // Annuler les actions du compte ET celles des organisations fermées.
-    const cancelledRows = await tx.action.findMany({
-      where: {
-        status: { in: openStatuses },
-        OR: [
-          { creator_id: userId },
-          {
-            organization_id: {
-              in: closingOrganizationIds,
-            },
-          },
-        ],
-      },
-      select: {
-        action_id: true,
-        title: true,
-        creator_id: true,
-        creator: {
-          select: {
-            account_status: true,
-          },
-        },
-        participation: {
-          where: {
-            user_id: { not: userId },
-            user: {
-              account_status: AccountStatus.ACTIVE,
-            },
-          },
-          select: {
-            user_id: true,
-          },
-        },
-      },
-    });
-
-    const participations = await tx.participation.findMany({
-      where: {
-        user_id: userId,
-        action: {
-          status: { in: openStatuses },
-        },
-      },
-      select: {
-        action_id: true,
-      },
-    });
-
-    await tx.participation.deleteMany({
-      where: {
-        user_id: userId,
-        action: {
-          status: { in: openStatuses },
-        },
-      },
-    });
-
-    await tx.action.updateMany({
-      where: {
-        status: { in: openStatuses },
-        OR: [
-          { creator_id: userId },
-          {
-            organization_id: {
-              in: closingOrganizationIds,
-            },
-          },
-        ],
-      },
-      data: {
-        status: ActionStatus.CANCELLED,
-      },
-    });
-
-    await tx.organization.updateMany({
-      where: {
-        organization_id: {
-          in: closingOrganizationIds,
-        },
-      },
-      data: {
-        organization_status: OrganizationStatus.CLOSED,
-      },
-    });
-
-    // Retirer toutes ses adhésions et demandes.
-    // Son éventuelle organisation owner est maintenant fermée.
-    await tx.organizationMember.deleteMany({
-      where: {
-        user_id: userId,
-      },
-    });
-
-    const cancelledActions = cancelledRows.map((action) => {
-      const recipients = new Set(
-        action.participation.map(
-          (participant) => participant.user_id,
-        ),
-      );
-
-      // Une action de l'organisation peut appartenir à un autre créateur.
-      if (
-        action.creator_id !== null &&
-        action.creator_id !== userId &&
-        action.creator?.account_status === AccountStatus.ACTIVE
-      ) {
-        recipients.add(action.creator_id);
+      if (!user) {
+        throw new NotFoundException('User not found');
       }
 
-      return {
-        action_id: action.action_id,
-        title: action.title,
-        participation: [...recipients].map(
-          (user_id) => ({ user_id }),
-        ),
-      };
+      if (user.account_status !== AccountStatus.ACTIVE) {
+        throw new BadRequestException(
+          'Only an active account can be deactivated',
+        );
+      }
+
+      const effects = await this.detachInactiveAccount(tx, userId);
+      const deactivatedUser = await tx.user.update({
+        where: { user_id: userId },
+        data: { account_status: AccountStatus.DEACTIVATED },
+      });
+
+      return { user: deactivatedUser, effects };
     });
 
-    for (const organizationId of affectedOrganizationIds) {
-      this.realtimeGateway.emitOrganizationUpdated(
-        organizationId.toString(),
-      );
-    }
+    this.realtimeGateway.emitAccountStatusChanged(id, 'DEACTIVATED');
+    this.realtimeGateway.emitProfileUpdated(id);
+    await this.publishInactiveAccountEffects(result.effects);
+
+    const {
+      password_hash: _,
+      refresh_token: __,
+      ...safeUser
+    } = result.user;
 
     return {
-      cancelledActions,
-      actionIds: [
-        ...new Set([
-          ...cancelledActions.map((action) => action.action_id),
-          ...participations.map(
-            (participation) => participation.action_id,
-          ),
-        ]),
-      ],
-      organizationIds: [
-        ...new Set(
-          memberships.map(
-            (membership) => membership.organization_id,
-          ),
-        ),
-      ],
+      ...safeUser,
+      user_id: safeUser.user_id.toString(),
     };
   }
 
@@ -869,7 +740,7 @@ export class UsersService {
     );
 
     this.realtimeGateway.emitProfileUpdated(targetUserId);
-
+    
     await this.realtimeGateway.emitAdminDirectoryChanged('users');
 
     const {
