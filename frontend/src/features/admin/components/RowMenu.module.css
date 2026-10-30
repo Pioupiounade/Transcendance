@@ -1,0 +1,135 @@
+/* Bouton « More » d'une ligne et son menu : même grammaire que le menu du compte de l'en-tête (pilule, panneau). */
+.root {
+  position: relative;
+  display: inline-block;
+}
+
+.trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 46px;
+  padding: 0 16px 0 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-btn);
+  background: var(--ground);
+  color: var(--ink);
+  font: inherit;
+  font-size: 14px;
+  font-weight: var(--btn-w);
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+  transition:
+    background-color var(--t-fast),
+    border-color var(--t-fast);
+}
+.trigger:hover {
+  background: var(--ground-hover);
+}
+.trigger[aria-expanded='true'] {
+  border-color: var(--brand);
+}
+
+/* Le chevron « gauche » du kit, tourné vers le bas ; vers le haut quand le menu est ouvert. */
+.caret {
+  display: inline-flex;
+  transform: rotate(-90deg);
+  transition: transform var(--t-fast);
+}
+.trigger[aria-expanded='true'] .caret {
+  transform: rotate(90deg);
+}
+
+.menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 50;
+  min-width: 230px;
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  display: grid;
+  gap: 2px;
+  background: var(--ground);
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  box-shadow: var(--shadow-float);
+  text-align: left;
+  white-space: normal;
+  animation: menu-in var(--t-fast) ease-out;
+}
+
+.item {
+  display: block;
+  width: 100%;
+  padding: 10px 14px;
+  border: 0;
+  border-radius: var(--r-btn);
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+.item:hover {
+  background: var(--ground-hover);
+}
+.item:focus-visible {
+  outline-offset: -2px;
+}
+
+/* Geste destructif : rouge, survol teinté. */
+.danger {
+  color: var(--danger);
+}
+.danger:hover {
+  background: var(--danger-soft);
+}
+
+.item:disabled,
+.item.danger:disabled {
+  background: none;
+  color: var(--disabled-ink);
+  cursor: default;
+}
+
+/* Pourquoi l'entrée est indisponible. */
+.hint {
+  margin: 0;
+  padding: 0 14px 8px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+@keyframes menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .menu {
+    animation: none;
+  }
+}
+
+@media (max-width: 760px) {
+  .root {
+    width: 100%;
+  }
+  .trigger {
+    width: 100%;
+    justify-content: center;
+  }
+  .menu {
+    left: 0;
+    right: 0;
+  }
+}

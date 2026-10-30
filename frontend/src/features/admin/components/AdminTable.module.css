@@ -8,7 +8,6 @@
   border-radius: var(--r-panel);
   background: var(--ground);
   font-size: 14px;
-  overflow: hidden;
 }
 
 .caption {
@@ -53,6 +52,19 @@
 .row:hover th,
 .row:hover td {
   background: var(--ground-hover);
+}
+/* Pas d'`overflow: hidden` sur le panneau (les menus de ligne en dépassent) : les cellules d'angle portent l'arrondi. */
+.table thead th:first-child {
+  border-top-left-radius: var(--r-panel);
+}
+.table thead th:last-child {
+  border-top-right-radius: var(--r-panel);
+}
+.row:last-child > :first-child {
+  border-bottom-left-radius: var(--r-panel);
+}
+.row:last-child > :last-child {
+  border-bottom-right-radius: var(--r-panel);
 }
 
 /* Première colonne : un nom (ou un lien vers la fiche publique) puis une ligne d'informations en petit. */

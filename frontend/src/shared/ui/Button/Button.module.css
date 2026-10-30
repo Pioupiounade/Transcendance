@@ -63,6 +63,18 @@
 .secondary:active {
   background: var(--ground-press);
 }
+/* Indisponible : texte grisé, sans relief (un geste refusé doit se voir avant le clic). */
+.secondary:disabled,
+.secondary[aria-disabled='true'] {
+  color: var(--disabled-ink);
+  box-shadow: none;
+  cursor: default;
+}
+.secondary:disabled:hover,
+.secondary[aria-disabled='true']:hover {
+  background: var(--ground);
+  border-color: var(--line);
+}
 
 .accent {
   background: var(--accent);
