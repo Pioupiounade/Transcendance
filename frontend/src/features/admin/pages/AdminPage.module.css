@@ -12,6 +12,15 @@
   gap: 7px;
 }
 
+/* En-tête avec un geste de création à droite du titre (Accounts) ; il passe dessous quand la place manque. */
+.introRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px 24px;
+}
+
 .lead {
   max-width: 640px;
   color: var(--muted);

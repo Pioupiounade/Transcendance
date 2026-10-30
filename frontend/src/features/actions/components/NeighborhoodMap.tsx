@@ -18,7 +18,7 @@ import type { Action, Category, LatLng } from '../types';
 import styles from './NeighborhoodMap.module.css';
 
 type NeighborhoodMapProps = {
-  /** Actions à afficher ; mémoïser la liste, elle pilote le recadrage. */
+  /** Actions à afficher ; mémoïser la liste, elle est dans les dépendances de la sélection. */
   actions: Action[];
   selectedId: string | null;
   onSelect: (id: string | null) => void;
@@ -31,6 +31,11 @@ type NeighborhoodMapProps = {
   onDraftChange?: (location: LatLng) => void;
   /** Boutons du popup du brouillon (le titre et l'aide sont fournis par la carte) ; absent = pin sans popup. */
   draftContent?: ReactNode;
+  /**
+   * Quartier de l'utilisateur (`profiles/me.location`, référence stable) : centre de la carte à l'ouverture, sauf
+   * brouillon à montrer. Absent ou `null` (visiteur, profil sans lieu) : `DEFAULT_CENTER`, l'école 42 Paris.
+   */
+  home?: LatLng | null;
 };
 
 type Locating = 'idle' | 'pending' | 'failed';
@@ -79,7 +84,11 @@ const hereIcon = divIcon({
   iconAnchor: [YOU_SIZE / 2, YOU_SIZE / 2],
 });
 
-/** Carte Leaflet des actions : pins par catégorie, sélection synchronisée, recadrage, position à la demande. */
+/**
+ * Carte Leaflet des actions : pins par catégorie, sélection synchronisée, position à la demande.
+ * Vue : le brouillon s'il y en a un, sinon `home`, sinon l'école 42 Paris, au zoom quartier. Les pins hors champ
+ * n'élargissent jamais la vue : le bouton « recentrer » les cadre tous.
+ */
 export function NeighborhoodMap({
   actions,
   selectedId,
@@ -87,6 +96,7 @@ export function NeighborhoodMap({
   draft = null,
   onDraftChange,
   draftContent,
+  home = null,
 }: NeighborhoodMapProps) {
   const [map, setMap] = useState<LeafletMap | null>(null);
   const markers = useRef(new Map<string, LeafletMarker>());
@@ -94,44 +104,42 @@ export function NeighborhoodMap({
   const [position, setPosition] = useState<LatLng | null>(null);
   const [locating, setLocating] = useState<Locating>('idle');
 
-  // Lu dans `fitToActions` sans en être une dépendance : déplacer le pin ne recadre pas la carte.
+  // Lu par la vue d'ouverture et le bouton « recentrer » sans en être une dépendance : poser ou déplacer le pin
+  // ne bouge pas la carte.
   const draftRef = useRef(draft);
   useEffect(() => {
     draftRef.current = draft;
   }, [draft]);
 
-  const fitToActions = useCallback(() => {
-  if (!map) return;
-  
-  // Sécurité : s'assurer que le conteneur de la carte existe toujours dans le DOM
-  const container = map.getContainer();
-  if (!container || !container.isConnected) return;
+  // Le brouillon s'il y en a un, sinon le quartier de l'utilisateur, sinon 42 Paris.
+  const showHome = useCallback(
+    (map: LeafletMap, animate: boolean) => {
+      const spot = draftRef.current;
+      if (spot) map.setView(spot, FOCUS_ZOOM, { animate });
+      else map.setView(home ?? DEFAULT_CENTER, DEFAULT_ZOOM, { animate });
+    },
+    [home],
+  );
 
-  const animate = !prefersReducedMotion();
-  if (actions.length === 0) {
-    const spot = draftRef.current;
-    if (spot) map.setView(spot, FOCUS_ZOOM, { animate });
-    else map.setView(DEFAULT_CENTER, DEFAULT_ZOOM, { animate });
-    return;
-  }
-
-  // Filtrer les localisations pour éviter les données corrompues ou incomplètes
-  const validLocations = actions
-    .map((action) => action.location)
-    .filter((loc): loc is [number, number] => Array.isArray(loc) && loc.length === 2);
-
-  if (validLocations.length === 0) return;
-
-  map.fitBounds(latLngBounds(validLocations), {
-    padding: FIT_PADDING,
-    maxZoom: FOCUS_ZOOM,
-    animate,
-  });
-}, [map, actions]);
-
+  // Vue d'ouverture, reprise quand `home` arrive (le profil se charge après la carte). Les pins n'y changent rien.
   useEffect(() => {
-    fitToActions();
-  }, [fitToActions]);
+    if (!map || !map.getContainer().isConnected) return;
+    showHome(map, !prefersReducedMotion());
+  }, [map, showHome]);
+
+  // Bouton « recentrer » : toutes les actions affichées, sinon la vue d'ouverture.
+  const fitToActions = () => {
+    if (!map || !map.getContainer().isConnected) return;
+    const animate = !prefersReducedMotion();
+    const locations = actions
+      .map((action) => action.location)
+      .filter((location): location is LatLng => Array.isArray(location) && location.length === 2);
+    if (locations.length === 0) {
+      showHome(map, animate);
+      return;
+    }
+    map.fitBounds(latLngBounds(locations), { padding: FIT_PADDING, maxZoom: FOCUS_ZOOM, animate });
+  };
 
   // Leaflet ne surveille que la fenêtre : quand l'hôte change la taille du conteneur (rangée qui grandit avec les
   // cartes voisines, panneau replié), la carte recalcule la sienne, sinon des tuiles manquent sur la zone gagnée.
@@ -195,7 +203,7 @@ export function NeighborhoodMap({
       <MapContainer
         ref={setMap}
         className={styles.canvas}
-        center={DEFAULT_CENTER}
+        center={home ?? DEFAULT_CENTER}
         zoom={DEFAULT_ZOOM}
         zoomControl={false}
         attributionControl={false}

@@ -3,7 +3,9 @@ import { ACCOUNT_STATUS, useAuth, type AuthUser } from '@/features/auth';
 import { useResource } from '@/shared/hooks/useResource';
 import { pageTitle } from '@/shared/lib/pageTitle';
 import { Button, Chip, ConfirmDialog, FloatingField, Icon, type Confirmation } from '@/shared/ui';
-import { blockUser, fetchUsers, unblockUser, deleteUserAccount, changeUserRole } from '../api/adminUsersApi';
+import { blockUser, changeUserRole, deleteUserAccount, fetchUsers, unblockUser } from '../api/adminUsersApi';
+import { AdminAccountCreator } from '../components/AdminAccountCreator';
+import { AdminProfileEditor } from '../components/AdminProfileEditor';
 import { UsersTable } from '../components/UsersTable';
 import { toAccountErrorMessage } from '../errors';
 import { useAdminList } from '../hooks/useAdminList';
@@ -12,6 +14,12 @@ import type { AccountActionKind } from '../types';
 import styles from './AdminPage.module.css';
 import { AdminProfileEditor } from '../components/AdminProfileEditor';
 import { AdminAccountCreator } from '../components/AdminAccountCreator';
+
+type AdminUsersPageProps = {
+  /** Fiche publique d'un compte et la mienne : la feature n'importe pas `app/`. */
+  profilePath: (userId: string) => string;
+  ownProfilePath: string;
+};
 
 const text = ADMIN_LABELS.users;
 const common = ADMIN_LABELS.list;
@@ -24,8 +32,11 @@ const LIST = {
 };
 const REQUESTS: Record<AccountActionKind, (id: string) => Promise<AuthUser>> = { block: blockUser, unblock: unblockUser };
 
-/** `/admin/users` (#22) : tous les comptes, recherche par e-mail, filtre par statut, bloquer / débloquer. */
-export function AdminUsersPage() {
+/**
+ * `/admin/users` (#22, #196) : tous les comptes, recherche par e-mail, filtre par statut ; bloquer / débloquer,
+ * créer un compte, modifier un profil, changer le rôle, supprimer. Chaque geste qui coûte passe par ConfirmDialog.
+ */
+export function AdminUsersPage({ profilePath, ownProfilePath }: AdminUsersPageProps) {
   const { user: me } = useAuth();
   const { data, loading, error, reload } = useResource(fetchUsers);
   const list = useAdminList(data ?? NO_USERS, LIST);
@@ -60,6 +71,18 @@ export function AdminUsersPage() {
   const [notice, setNotice] = useState<string | null>(null);
   const [editingUser, setEditingUser] = useState<AuthUser | null>(null);
   const [creatingAccount, setCreatingAccount] = useState(false);
+
+  // Un compte supprimé ailleurs : on referme ce qui le concernait.
+  useEffect(() => {
+    const handleUserDeleted = (event: Event) => {
+      const { userId } = (event as CustomEvent<{ userId: string }>).detail;
+      setEditingUser((current) => (current?.user_id === userId ? null : current));
+      setConfirmation(null);
+    };
+    window.addEventListener('user:deleted', handleUserDeleted);
+    return () => window.removeEventListener('user:deleted', handleUserDeleted);
+  }, []);
+
   // Le blocage coûte 50 points au compte : jamais en un clic.
   const ask = (kind: AccountActionKind, user: AuthUser) => {
     const copy = ADMIN_LABELS.dialog[kind];
@@ -78,68 +101,67 @@ export function AdminUsersPage() {
     });
   };
 
-  const askRoleChange = (
-    account: AuthUser,
-    role: 'USER' | 'ADMIN',
-  ) => {
+const askRoleChange = (account: AuthUser, role: 'USER' | 'ADMIN') => {
     const promoting = role === 'ADMIN';
-
+    const copy = promoting ? ADMIN_LABELS.dialog.promote : ADMIN_LABELS.dialog.demote;
     setConfirmation({
-      title: promoting
-        ? 'Give administrator permissions?'
-        : 'Remove administrator permissions?',
-      body: promoting
-        ? `${account.email} will become an administrator.`
-        : `${account.email} will become a regular user.`,
-      effects: [
-        promoting
-          ? 'This account will be able to manage users, organizations and actions.'
-          : 'This account will lose access to the admin panel.',
-        'The change applies immediately to its open sessions.',
-      ],
-      confirmLabel: promoting ? 'Make admin' : 'Make user',
-      confirmingLabel: 'Updating role…',
+      title: copy.title,
+      body: copy.body(account.email),
+      effects: copy.effects,
+      confirmLabel: copy.confirm,
+      confirmingLabel: copy.confirming,
       danger: true,
       run: async () => {
         const updated = await changeUserRole(account.user_id, role);
-
         list.replace({ ...account, ...updated });
-
-        setNotice(
-          promoting
-            ? `${updated.email} is now an administrator.`
-            : `${updated.email} is now a regular user.`,
-        );
+        setNotice(promoting ? text.promoted(updated.email) : text.demoted(updated.email));
       },
     });
   };
 
   const askDelete = (account: AuthUser) => {
+    const copy = ADMIN_LABELS.dialog.deleteAccount;
     setConfirmation({
-      title: 'Permanently delete this account?',
-      body: `${account.email} will be permanently deleted.`,
-      effects: [
-        'This cannot be undone.',
-        'The profile, sessions and private messages will be deleted.',
-        'Actions and comments will remain with a deleted author.',
-        'Organization ownership must be transferred first.',
-      ],
-      confirmLabel: 'Delete account permanently',
-      confirmingLabel: 'Deleting…',
+      title: copy.title,
+      body: copy.body(account.email),
+      effects: copy.effects,
+      confirmLabel: copy.confirm,
+      confirmingLabel: copy.confirming,
       danger: true,
       run: async () => {
         await deleteUserAccount(account.user_id);
-
-        if (editingUser?.user_id === account.user_id) {
-          setEditingUser(null);
-        }
-
+        setEditingUser((current) => (current?.user_id === account.user_id ? null : current));
         list.reset();
         reload();
-        setNotice('Account permanently deleted.');
+        setNotice(text.deleted);
       },
     });
   };
+
+  const retry = () => {
+    list.reset();
+    reload();
+  };
+
+  const askDelete = (account: AuthUser) => {
+    const copy = ADMIN_LABELS.dialog.deleteAccount;
+    setConfirmation({
+      title: copy.title,
+      body: copy.body(account.email),
+      effects: copy.effects,
+      confirmLabel: copy.confirm,
+      confirmingLabel: copy.confirming,
+      danger: true,
+      run: async () => {
+        await deleteUserAccount(account.user_id);
+        setEditingUser((current) => (current?.user_id === account.user_id ? null : current));
+        list.reset();
+        reload();
+        setNotice(text.deleted);
+      },
+    });
+  };
+
   const retry = () => {
     list.reset();
     reload();
@@ -167,9 +189,15 @@ export function AdminUsersPage() {
   return (
     <section className={styles.page}>
       <title>{pageTitle(text.title)}</title>
-      <header className={styles.intro}>
-        <h1>{text.title}</h1>
-        <p className={styles.lead}>{text.lead}</p>
+      <header className={styles.introRow}>
+        <div className={styles.intro}>
+          <h1>{text.title}</h1>
+          <p className={styles.lead}>{text.lead}</p>
+        </div>
+        <Button onClick={() => setCreatingAccount(true)}>
+          <Icon name="plus" size={16} strokeWidth={2.4} />
+          {text.create}
+        </Button>
       </header>
       <Button
         variant="secondary"
@@ -266,6 +294,17 @@ export function AdminUsersPage() {
         </div>
       )}
 
+      <AdminAccountCreator
+        open={creatingAccount}
+        onClose={() => setCreatingAccount(false)}
+        onCreated={(email) => {
+          setCreatingAccount(false);
+          list.reset();
+          reload();
+          setNotice(text.created(email));
+        }}
+      />
+      <AdminProfileEditor user={editingUser} onClose={() => setEditingUser(null)} />
       <ConfirmDialog
         confirmation={confirmation}
         onClose={() => setConfirmation(null)}

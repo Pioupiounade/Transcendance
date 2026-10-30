@@ -31,3 +31,28 @@
   color: var(--brand);
   font-weight: 700;
 }
+
+/* Pourquoi un geste est indisponible (owner d'une organisation) : une ligne discrète sous les boutons. */
+.hint {
+  margin: 6px 0 0 auto;
+  max-width: 280px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.4;
+  white-space: normal;
+  text-align: right;
+}
+
+@media (min-width: 761px) {
+  /* L'e-mail ne se replie pas lettre à lettre quand la colonne des gestes prend de la place. */
+  .account {
+    min-width: 240px;
+  }
+}
+
+@media (max-width: 760px) {
+  .hint {
+    max-width: none;
+    text-align: left;
+  }
+}

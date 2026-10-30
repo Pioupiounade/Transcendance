@@ -5,7 +5,14 @@ import { closeOrganization, reopenOrganization, updateOrganization } from '../ap
 import { toManageErrorMessage } from '../errors';
 import { ORGANIZATIONS_LABELS } from '../labels';
 import { ORGANIZATION_STATUS, type Organization } from '../types';
-import { DESCRIPTION_MAX_LENGTH, validateDescription, validateRequired } from '../validation';
+import {
+  ADDRESS_MAX_LENGTH,
+  DESCRIPTION_MAX_LENGTH,
+  TITLE_MAX_LENGTH,
+  validateAddress,
+  validateDescription,
+  validateTitle,
+} from '../validation';
 import styles from './ManagePanels.module.css';
 import own from './SettingsPanel.module.css';
 
@@ -25,7 +32,7 @@ const text = ORGANIZATIONS_LABELS.manage.settings;
 export function SettingsPanel({ organization, isAdmin, onChanged, onConfirm }: SettingsPanelProps) {
   const form = useForm(
     { title: organization.title, description: organization.description, address: organization.address },
-    { title: validateRequired, description: validateDescription, address: validateRequired },
+    { title: validateTitle, description: validateDescription, address: validateAddress },
     async (values) => {
       const updated = await updateOrganization(organization.organization_id, {
         title: values.title.trim(),
@@ -73,6 +80,7 @@ export function SettingsPanel({ organization, isAdmin, onChanged, onConfirm }: S
         <form className={own.form} noValidate onSubmit={form.handleSubmit}>
           <FloatingField
             id="title"
+            maxLength={TITLE_MAX_LENGTH}
             type="text"
             label={text.title}
             autoComplete="off"
@@ -96,6 +104,7 @@ export function SettingsPanel({ organization, isAdmin, onChanged, onConfirm }: S
           />
           <FloatingField
             id="address"
+            maxLength={ADDRESS_MAX_LENGTH}
             type="text"
             label={text.address}
             autoComplete="off"

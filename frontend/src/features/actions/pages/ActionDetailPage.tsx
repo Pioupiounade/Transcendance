@@ -308,7 +308,7 @@ export const ActionDetailPage: React.FC<ActionDetailPageProps> = ({ editPath }) 
         )
       )
     );
-
+  
   const approvableParticipantCount = participants.filter((participant) => participant.userId !== action.creator_id).length;
 
   const canApprove = organizationActive && isCreator && action.status === 'PENDING' &&

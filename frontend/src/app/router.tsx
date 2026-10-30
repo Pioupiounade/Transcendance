@@ -194,7 +194,7 @@ const router = createBrowserRouter([
                       },
                       {
                         path: ROUTES.adminUsers,
-                        element: <AdminUsersPage />,
+                        element: <AdminUsersPage profilePath={publicProfilePath} ownProfilePath={ROUTES.profile} />,
                       },
                       {
                         path: ROUTES.adminActions,

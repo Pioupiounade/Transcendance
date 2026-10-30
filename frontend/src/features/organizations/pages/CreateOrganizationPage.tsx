@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { NeighborhoodMap, type LatLng } from '@/features/actions';
+import { useMyProfile } from '@/features/profile';
 import { pageTitle } from '@/shared/lib/pageTitle';
 import { OrganizationForm } from '../components/OrganizationForm';
 import { ORGANIZATIONS_LABELS } from '../labels';
@@ -26,6 +27,8 @@ const noop = () => {};
 export function CreateOrganizationPage({ organizationPath, listPath }: CreateOrganizationPageProps) {
   const navigate = useNavigate();
   const [location, setLocation] = useState<LatLng | null>(null);
+  // Tant qu'aucun pin n'est posé, la carte s'ouvre sur le quartier de l'utilisateur (sinon 42 Paris).
+  const { profile } = useMyProfile();
 
   const onSaved = (organization: Organization) => navigate(organizationPath(organization.organization_id));
 
@@ -45,6 +48,7 @@ export function CreateOrganizationPage({ organizationPath, listPath }: CreateOrg
             onSelect={noop}
             draft={location}
             onDraftChange={setLocation}
+            home={profile?.location}
           />
         </div>
         <div className={styles.form}>

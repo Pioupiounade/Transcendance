@@ -13,11 +13,15 @@ export type GlobalSearchResults = {
   organizations: Organization[];
 };
 
+/** Longueur max d'une recherche : le backend ne borne pas `q`, mais au-delà de 16 Ko d'URL Node répond 431 ; un
+ * pseudo ou un titre d'organisation tient largement en 64 caractères. Le champ et l'appel partagent cette borne. */
+export const SEARCH_QUERY_MAX_LENGTH = 64;
+
 export async function globalSearch(
   query: string,
   signal?: AbortSignal,
 ): Promise<GlobalSearchResults> {
-  const q = query.trim();
+  const q = query.trim().slice(0, SEARCH_QUERY_MAX_LENGTH);
 
   if (!q) {
     return {

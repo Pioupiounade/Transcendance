@@ -1,10 +1,9 @@
 import { useCallback, useEffect, useMemo } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router';
 import { useAuth } from '@/features/auth';
-import { friendsApi } from '@/features/friends';
-import { useResource } from '@/shared/hooks/useResource';
 import { pageTitle } from '@/shared/lib/pageTitle';
 import { Button, ButtonLink, Icon } from '@/shared/ui';
+import { useFriendsList } from '../api/useFriendsList';
 import { ConversationList } from '../components/ConversationList';
 import { ThreadPane } from '../components/ThreadPane';
 import { MESSAGES_LABELS } from '../labels';
@@ -34,8 +33,7 @@ export function MessagesPage({ listPath, threadPath, friendsPath, profilePath }:
 
   const { user } = useAuth();
 
-  const load = useCallback((signal: AbortSignal) => friendsApi.getMyFriends(signal), []);
-  const { data: friends, error, loading, reload } = useResource(load);
+  const { friends, error, loading, reload } = useFriendsList();
   const sorted = useMemo(
     () => [...(friends ?? [])].sort((a, b) => (a.username ?? '').localeCompare(b.username ?? '')),
     [friends],

@@ -15,8 +15,8 @@ type NeighbourhoodPickerProps = {
 };
 
 /* Mêmes réglages que la carte des actions (`features/actions/mapConfig.ts`), répétés ici : `actions` importe déjà
-   `profile`, l'inverse ferait un cycle. Saint-Cyprien, Toulouse, quand rien n'est encore placé. */
-const DEFAULT_CENTER: PickedLocation = [43.5985, 1.4265];
+   `profile`, l'inverse ferait un cycle. L'école 42 Paris quand rien n'est encore placé. */
+const DEFAULT_CENTER: PickedLocation = [48.8966, 2.3183];
 const DEFAULT_ZOOM = 14;
 const FOCUS_ZOOM = 16;
 const TILE_URL = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';

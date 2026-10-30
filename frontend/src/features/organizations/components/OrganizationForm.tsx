@@ -6,7 +6,14 @@ import { createOrganization } from '../api/organizationsApi';
 import { toManageErrorMessage } from '../errors';
 import { ORGANIZATIONS_LABELS } from '../labels';
 import type { Organization } from '../types';
-import { DESCRIPTION_MAX_LENGTH, validateDescription, validateRequired } from '../validation';
+import {
+  ADDRESS_MAX_LENGTH,
+  DESCRIPTION_MAX_LENGTH,
+  TITLE_MAX_LENGTH,
+  validateAddress,
+  validateDescription,
+  validateTitle,
+} from '../validation';
 import styles from './OrganizationForm.module.css';
 
 type OrganizationFormProps = {
@@ -30,7 +37,7 @@ export function OrganizationForm({ location, onSaved, onCancel }: OrganizationFo
 
   const form = useForm<Values>(
     INITIAL,
-    { title: validateRequired, description: validateDescription, address: validateRequired },
+    { title: validateTitle, description: validateDescription, address: validateAddress },
     async (values) => {
       if (location === null) {
         setSpotMissing(true);
@@ -65,6 +72,7 @@ export function OrganizationForm({ location, onSaved, onCancel }: OrganizationFo
 
       <FloatingField
         id="title"
+        maxLength={TITLE_MAX_LENGTH}
         type="text"
         label={text.title}
         autoComplete="organization"
@@ -88,6 +96,7 @@ export function OrganizationForm({ location, onSaved, onCancel }: OrganizationFo
 
       <FloatingField
         id="address"
+        maxLength={ADDRESS_MAX_LENGTH}
         type="text"
         label={text.address}
         autoComplete="street-address"
