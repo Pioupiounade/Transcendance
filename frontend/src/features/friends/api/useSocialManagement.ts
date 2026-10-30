@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { friendsApi } from './friendsApi';
 import type { FriendUserSummary, FriendRequestItem } from '../types';
 
@@ -10,7 +10,10 @@ export function useSocialManagement() {
   const [error, setError] = useState<string | null>(null);
   const [blockedFriends, setBlockedFriends] = useState<FriendUserSummary[]>([]);
 
+  const requestVersion = useRef(0);
+
   const fetchAll = useCallback(async () => {
+    const version = ++requestVersion.current;
     setLoading(true);
     setError(null);
     try {
@@ -21,14 +24,19 @@ export function useSocialManagement() {
       friendsApi.getSentRequests(),
     ]);
 
+    if (version !== requestVersion.current) return;
     setFriends(friendsData);
     setBlockedFriends(blockedData);
     setReceivedRequests(receivedData);
     setSentRequests(sentData);
     } catch (err: any) {
-      setError(err?.message || 'Error loading social connections');
+      if (version === requestVersion.current) {
+        setError(err?.message || 'Error loading social connections');
+      }
     } finally {
-      setLoading(false);
+      if (version === requestVersion.current) {
+        setLoading(false);
+      }
     }
   }, []);
 
@@ -40,9 +48,20 @@ export function useSocialManagement() {
     };
 
     window.addEventListener('friendship:changed', handleFriendshipChanged);
-
+    window.addEventListener('user:deleted', handleFriendshipChanged);
+    window.addEventListener(
+      'user:status-changed',
+      handleFriendshipChanged,
+    );
+    
     return () => {
       window.removeEventListener('friendship:changed', handleFriendshipChanged);
+      ++requestVersion.current;
+      window.removeEventListener('user:deleted', handleFriendshipChanged);
+      window.removeEventListener(
+        'user:status-changed',
+        handleFriendshipChanged,
+      );
     };
   }, [fetchAll]);
 

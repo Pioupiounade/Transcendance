@@ -30,12 +30,14 @@ const readCooldownUntil = (actionId: string): number => {
 
 const toThreadComment = (comment: ActionComment, myUserId: string | null): ThreadComment => ({
   id: comment.comment_id,
-  authorId: comment.user_id,
-  author: comment.user.profile?.username ?? text.anonymousAuthor,
-  avatar: comment.user.profile?.profile_picture,
+  authorId: comment.user_id ?? undefined,
+  author: comment.user === null
+    ? 'Utilisateur supprimé'
+    : comment.user.profile?.username ?? text.anonymousAuthor,
+  avatar: comment.user?.profile?.profile_picture,
   createdAt: comment.created_at,
   content: comment.content,
-  mine: comment.user_id === myUserId,
+  mine: myUserId !== null && comment.user_id === myUserId,
 });
 
 /**

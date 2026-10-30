@@ -37,6 +37,8 @@ export class RealtimeGateway
       .emit('organization:membership-changed', {
         organizationId: organizationId.toString(),
       });
+
+    void this.emitAdminDirectoryChanged('users');
   }
 
   emitFriendshipChanged(recipientId: string, userId: string): void {
@@ -46,17 +48,7 @@ export class RealtimeGateway
   }
 
   emitProfileUpdated(userId: string): void {
-    void this.getFriendIds(userId)
-      .then((friendIds) => {
-        for (const friendId of friendIds) {
-          this.server
-            .to(`user:${friendId}`)
-            .emit('profile:updated', { userId });
-        }
-      })
-      .catch((error: unknown) => {
-        console.error('Failed to broadcast profile update:', error);
-      });
+    this.server.emit('profile:updated', { userId });
   }
 
   emitOrganizationUpdated(organizationId: string): void {
@@ -81,14 +73,33 @@ export class RealtimeGateway
 
   emitAccountStatusChanged(
     userId: string,
-    accountStatus: 'ACTIVE' | 'SUSPENDED',
+    accountStatus: 'ACTIVE' | 'SUSPENDED' | 'DEACTIVATED',
   ): void {
-    this.server
-      .to(`user:${userId}`)
-      .emit('account:status-changed', {
-        userId,
-        accountStatus,
-      });
+    const room = `user:${userId}`;
+
+    // Actualiser les sessions du compte concerné.
+    this.server.to(room).emit('account:status-changed', {
+      userId,
+      accountStatus,
+    });
+
+    // Actualiser les listes chez les autres utilisateurs.
+    this.server.except(room).emit('user:status-changed', {
+      userId,
+      accountStatus,
+    });
+  }
+
+  emitAccountDeleted(userId: string): void {
+    const room = `user:${userId}`;
+
+    // Déconnecter les sessions du compte supprimé.
+    this.server.to(room).emit('account:deleted', { userId });
+
+    // Prévenir les autres utilisateurs connectés.
+    this.server.except(room).emit('user:deleted', { userId });
+
+    this.server.in(room).disconnectSockets(true);
   }
 
   constructor(
@@ -143,9 +154,35 @@ export class RealtimeGateway
     try {
       const payload = await this.jwtService.verifyAsync<{
         id: string;
+        sessionId: string;
       }>(token, {
         secret: this.configService.get<string>('JWT_SECRET') || 'fallback-secret',
       });
+
+      if (
+        typeof payload.id !== 'string' ||
+        !/^[1-9]\d*$/.test(payload.id) ||
+        typeof payload.sessionId !== 'string' ||
+        !payload.sessionId
+      ) {
+        client.disconnect();
+        return;
+      }
+
+      const session = await this.prisma.authSession.findUnique({
+        where: {
+          session_id: payload.sessionId,
+        },
+      });
+
+      if (
+        !session ||
+        session.user_id !== BigInt(payload.id) ||
+        session.expires_at <= new Date()
+      ) {
+        client.disconnect();
+        return;
+      }
 
       client.data.userId = payload.id;
       client.join(`user:${payload.id}`);
@@ -207,5 +244,45 @@ export class RealtimeGateway
         console.error('Failed to broadcast offline presence:', error);
       }
     }
+  }
+
+  async emitAdminDirectoryChanged(
+    resource: 'users' | 'organizations' | 'actions',
+  ): Promise<void> {
+    try {
+      const admins = await this.prisma.user.findMany({
+        where: {
+          role: 'ADMIN',
+          account_status: 'ACTIVE',
+        },
+        select: {
+          user_id: true,
+        },
+      });
+
+      const rooms = admins.map(
+        (admin) => `user:${admin.user_id.toString()}`,
+      );
+
+      if (rooms.length > 0) {
+        this.server
+          .to(rooms)
+          .emit('admin:directory-changed', { resource });
+      }
+    } catch (error: unknown) {
+      console.error('Failed to refresh admin directory:', error);
+    }
+  }
+
+  emitAccountRoleChanged(
+    userId: string,
+    role: 'USER' | 'ADMIN',
+  ): void {
+    this.server
+      .to(`user:${userId}`)
+      .emit('account:role-changed', {
+        userId,
+        role,
+      });
   }
 }

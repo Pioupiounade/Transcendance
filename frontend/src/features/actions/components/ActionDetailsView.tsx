@@ -52,10 +52,8 @@ export const ActionDetailsView: React.FC<ActionDetailsViewProps> = ({
   const totalImages = images?.length || 0;
   const countOf = (phase: 'before' | 'after') => images.filter((photo) => photo.phase === phase).length;
 
-  const [isJoined, setIsJoined] = useState<boolean>(action.isJoined ?? false);
-  const [participantsCount, setParticipantsCount] = useState<number>(
-    action.currentParticipants
-  );
+  const isJoined = action.isJoined ?? false;
+  const participantsCount = action.currentParticipants;
   // La liste vient du parent, qui la relit après chaque rejoindre / quitter : pas d'état miroir.
   const participantsList = participants;
 
@@ -95,10 +93,12 @@ export const ActionDetailsView: React.FC<ActionDetailsViewProps> = ({
 
   const canJoin =
     currentUserId !== null &&
+    action.organizationActive !== false &&
     isPending &&
     !isCreator &&
     !isJoined &&
-    (!hasParticipantLimit || (availableSpots !== null && availableSpots > 0));
+    (!hasParticipantLimit ||
+      (availableSpots !== null && availableSpots > 0));
 
   const canLeave =
     isPending &&
@@ -113,12 +113,8 @@ export const ActionDetailsView: React.FC<ActionDetailsViewProps> = ({
     try {
       if (isJoined) {
         if (onLeave) await onLeave();
-        setIsJoined(false);
-        setParticipantsCount((prev) => Math.max(0, prev - 1));
       } else {
         if (onJoin) await onJoin();
-        setIsJoined(true);
-        setParticipantsCount((prev) => prev + 1);
       }
     } catch (error) {
       setActionError(toActionErrorMessage(error));
@@ -178,6 +174,11 @@ export const ActionDetailsView: React.FC<ActionDetailsViewProps> = ({
             )}
           </div>
         </div>
+        {action.organizationActive === false && (
+          <p role="status">
+            Organization inactive — joining this action is unavailable.
+          </p>
+        )}
         {actionError && (
           <p role="alert" style={{ color: 'var(--danger, #b93832)' }}>
             {actionError}
@@ -185,24 +186,40 @@ export const ActionDetailsView: React.FC<ActionDetailsViewProps> = ({
         )}
         <h2>{title}</h2>
         <div className="organizer" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <Link
-            to={
-              currentUserId && String(currentUserId) === String(organizer.userId)
-                ? '/profile'
-                : `/profiles/${organizer.userId}`
-            }
-            style={{
-              textDecoration: 'none',
-              color: 'inherit',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '12px',
-            }}
-          >
-            <Avatar src={organizer.avatarUrl} name={organizer.name} size={42} />
-            <span className="organizer-label">@{organizer.name}</span>
-          </Link>
-
+          {organizer.userId !== null ? (
+            <Link
+              to={
+                currentUserId === organizer.userId
+                  ? '/profile'
+                  : `/profiles/${organizer.userId}`
+              }
+              style={{
+                textDecoration: 'none',
+                color: 'inherit',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+              }}
+            >
+              <Avatar
+                src={organizer.avatarUrl}
+                name={organizer.name}
+                size={42}
+              />
+              <span className="organizer-label">@{organizer.name}</span>
+            </Link>
+          ) : (
+            <span
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+              }}
+            >
+              <Avatar name="Utilisateur supprimé" size={42} />
+              <span className="organizer-label">Utilisateur supprimé</span>
+            </span>
+          )}
           {organizer.organizationTitle && organizer.organizationId && (
             <div className="organizer-info" style={{ marginLeft: 'auto' }}>
               <Link

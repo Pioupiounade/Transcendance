@@ -191,6 +191,10 @@ export class PointtransactionService {
       throw new BadRequestException('Only a completed action can give points');
     }
 
+    if (action.creator_id === null) {
+      return null;
+    }
+
     await this.checkUserCanReceiveReward(
       action.creator_id,
       tx,
@@ -291,6 +295,10 @@ export class PointtransactionService {
 
     if (action.status !== ActionStatus.COMPLETED) {
       throw new BadRequestException('The action must be completed');
+    }
+
+    if (action.creator_id === null) {
+      return null;
     }
 
     await this.checkUserCanReceiveReward(

@@ -2,7 +2,7 @@ import { Injectable, NotFoundException, BadRequestException, ForbiddenException,
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateOrganizationDto } from './dto/create-organization.dto';
 import { UpdateOrganizationDto } from './dto/update-organization.dto';
-import { AccountStatus, RoleApp, RoleOrg, MemberStatus, OrganizationStatus, Prisma, NotificationType } from '../../generated/prisma/client';
+import { AccountStatus, RoleApp, RoleOrg, MemberStatus, OrganizationStatus, Prisma, NotificationType, ActionStatus } from '../../generated/prisma/client';
 import { NotificationsService } from '../notifications/notifications.service';
 import { RealtimeGateway } from '../realtime/realtime.gateway';
 
@@ -22,7 +22,7 @@ export class OrganizationsService {
     return organizations.map((organization) => ({
       ...organization,
       organization_id: organization.organization_id.toString(),
-      creator_id: organization.creator_id.toString(),
+      creator_id: organization.creator_id?.toString() ?? null,
     }));
   }
 
@@ -45,7 +45,7 @@ export class OrganizationsService {
     return {
       ...organization,
       organization_id: organization.organization_id.toString(),
-      creator_id: organization.creator_id.toString(),
+      creator_id: organization.creator_id?.toString() ?? null,
     };
   }
 
@@ -64,7 +64,7 @@ export class OrganizationsService {
     return organizations.map((organization) => ({
       ...organization,
       organization_id: organization.organization_id.toString(),
-      creator_id: organization.creator_id.toString(),
+      creator_id: organization.creator_id?.toString() ?? null,
     }));
   }
 
@@ -88,7 +88,7 @@ export class OrganizationsService {
     return nearbyOrganizations.map((organization) => ({
       ...organization,
       organization_id: organization.organization_id.toString(),
-      creator_id: organization.creator_id.toString(),
+      creator_id: organization.creator_id?.toString() ?? null,
     }));
   }
 
@@ -128,7 +128,7 @@ export class OrganizationsService {
     return organizations.map((organization) => ({
       ...organization,
       organization_id: organization.organization_id.toString(),
-      creator_id: organization.creator_id.toString(),
+      creator_id: organization.creator_id?.toString() ?? null,
     }));
   }
 
@@ -174,10 +174,14 @@ export class OrganizationsService {
     return organization;
   });
 
+    await this.realtimeGateway.emitAdminDirectoryChanged(
+      'organizations',
+    );
+    
     return {
       ...createdOrganization,
       organization_id: createdOrganization.organization_id.toString(),
-      creator_id: createdOrganization.creator_id.toString(),
+      creator_id: createdOrganization.creator_id?.toString() ?? null,
     };
   }
 
@@ -243,7 +247,7 @@ export class OrganizationsService {
     return {
       ...updatedOrganization,
       organization_id: updatedOrganization.organization_id.toString(),
-      creator_id: updatedOrganization.creator_id.toString(),
+      creator_id: updatedOrganization.creator_id?.toString() ?? null,
     };
   }
 
@@ -291,7 +295,7 @@ export class OrganizationsService {
     return {
       ...updatedOrganization,
       organization_id: updatedOrganization.organization_id.toString(),
-      creator_id: updatedOrganization.creator_id.toString(),
+      creator_id: updatedOrganization.creator_id?.toString() ?? null,
     };
   }
 
@@ -350,21 +354,98 @@ export class OrganizationsService {
       );
     }
 
-    const updatedOrganization = await this.prisma.organization.update({
-      where: {
-        organization_id: BigInt(id),
-      },
-      data: {
-        organization_status: OrganizationStatus.CLOSED,
-      },
+    const {
+      updatedOrganization,
+      cancelledActions,
+    } = await this.prisma.$transaction(async (tx) => {
+      const cancelledActions = await tx.action.findMany({
+        where: {
+          organization_id: BigInt(id),
+          status: {
+            in: [ActionStatus.PENDING, ActionStatus.APPROVED],
+          },
+        },
+        select: {
+          action_id: true,
+          title: true,
+          creator_id: true,
+          participation: {
+            select: {
+              user_id: true,
+            },
+          },
+        },
+      });
+
+      await tx.action.updateMany({
+        where: {
+          organization_id: BigInt(id),
+          status: {
+            in: [ActionStatus.PENDING, ActionStatus.APPROVED],
+          },
+        },
+        data: {
+          status: ActionStatus.CANCELLED,
+        },
+      });
+
+      const updatedOrganization = await tx.organization.update({
+        where: {
+          organization_id: BigInt(id),
+        },
+        data: {
+          organization_status: OrganizationStatus.CLOSED,
+        },
+      });
+
+      return {
+        updatedOrganization,
+        cancelledActions,
+      };
     });
 
     this.realtimeGateway.emitOrganizationUpdated(id);
 
+    for (const action of cancelledActions) {
+      this.realtimeGateway.emitActionUpdated(
+        action.action_id.toString(),
+      );
+
+      const recipientIds = new Set(
+        action.participation.map(
+          (participant) => participant.user_id,
+        ),
+      );
+
+      if (action.creator_id !== null) {
+        recipientIds.add(action.creator_id);
+      }
+
+      for (const recipientId of recipientIds) {
+        await this.notificationsService.notifyUser({
+          userId: recipientId,
+          type: NotificationType.ACTION_STATUS_CHANGED,
+          title: 'Action cancelled',
+          message:
+            `The action "${action.title}" was cancelled ` +
+            'because its organization was closed.',
+          link: `/actions/${action.action_id.toString()}`,
+        });
+      }
+    }
+
+    await this.realtimeGateway.emitAdminDirectoryChanged(
+      'organizations',
+    );
+
+    await this.realtimeGateway.emitAdminDirectoryChanged(
+      'actions',
+    );
+
     return {
       ...updatedOrganization,
       organization_id: updatedOrganization.organization_id.toString(),
-      creator_id: updatedOrganization.creator_id.toString(),
+      creator_id: updatedOrganization.creator_id?.toString() ?? null,
     };
   }
 
@@ -461,7 +542,7 @@ export class OrganizationsService {
     return {
       ...updatedOrganization,
       organization_id: updatedOrganization.organization_id.toString(),
-      creator_id: updatedOrganization.creator_id.toString(),
+      creator_id: updatedOrganization.creator_id?.toString() ?? null,
     };
   }
 
@@ -791,7 +872,10 @@ export class OrganizationsService {
       comment.organization_id.toString(),
     );
 
-    if (comment.user_id !== currentUserId) {
+    if (
+      comment.user_id !== null &&
+      comment.user_id !== currentUserId
+    ) {
       await this.notificationsService.notifyUser({
         userId: comment.user_id,
         type: NotificationType.ORGANIZATION_COMMENT_DELETED,

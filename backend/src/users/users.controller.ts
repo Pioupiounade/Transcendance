@@ -1,17 +1,19 @@
-import { Body, Controller, Get, Post, Param, Patch, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, Param, Patch, Req, UseGuards, Delete, BadRequestException } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth-guard';
+import { UpdateRoleDto } from './dto/update-role.dto';
 
 @Controller('users')
 export class UsersController {
   constructor(private usersService: UsersService) {}
 
+  @UseGuards(JwtAuthGuard)
   @Get()
-  findAll() {
-    return this.usersService.findAll();
+  findAll(@Req() req: any) {
+    return this.usersService.findAll(req.user.id);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -26,14 +28,26 @@ export class UsersController {
     return this.usersService.updateLastSeen(req.user.id);
   }
   
+  @UseGuards(JwtAuthGuard)
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.usersService.findOneSafe(id);
+  findOne(
+    @Req() req: any,
+    @Param('id') id: string,
+  ) {
+    if (!/^[1-9]\d*$/.test(id)) {
+      throw new BadRequestException('Invalid user ID');
+    }
+
+    return this.usersService.findOneForViewer(id, req.user.id);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Post()
-  create(@Body() data: CreateUserDto) {
-    return this.usersService.create(data);
+  create(
+    @Req() req: any,
+    @Body() data: CreateUserDto,
+  ) {
+    return this.usersService.createByAdmin(req.user.id, data);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -91,4 +105,36 @@ export class UsersController {
       req.user.id,
     );
   }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete(':id')
+  deleteUser(
+    @Req() req: any,
+    @Param('id') id: string,
+  ) {
+    if (!/^[1-9]\d*$/.test(id)) {
+      throw new BadRequestException('Invalid user ID');
+    }
+
+    return this.usersService.deleteUser(id, req.user.id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch(':id/role')
+  updateRole(
+    @Req() req: any,
+    @Param('id') id: string,
+    @Body() data: UpdateRoleDto,
+  ) {
+    if (!/^[1-9]\d*$/.test(id)) {
+      throw new BadRequestException('Invalid user ID');
+    }
+
+    return this.usersService.updateRole(
+      id,
+      req.user.id,
+      data.role,
+    );
+  }
+
 }

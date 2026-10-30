@@ -132,4 +132,38 @@ export class ProfilesController {
       });
     }
   }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch(':userId')
+  updateUserProfile(
+    @Req() req: any,
+    @Param('userId') userId: string,
+    @Body() data: UpdateProfileDto,
+  ) {
+    if (!/^[1-9]\d*$/.test(userId)) {
+      throw new BadRequestException('Invalid user ID');
+    }
+
+    return this.profilesService.updateProfile(
+      req.user.id,
+      data,
+      userId,
+    );
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('admin/:userId')
+  findProfileForAdmin(
+    @Req() req: any,
+    @Param('userId') userId: string,
+  ) {
+    if (!/^[1-9]\d*$/.test(userId)) {
+      throw new BadRequestException('Invalid user ID');
+    }
+
+    return this.profilesService.findProfileForAdmin(
+      req.user.id,
+      userId,
+    );
+  }
 }

@@ -22,7 +22,7 @@ export type Action = {
   action_id: string;
   title: string;
   description: string;
-  creator_id: string;
+  creator_id: string | null;
   organization_id: string | null;
   min_participants: number | null;
   max_participants: number | null;
@@ -52,9 +52,15 @@ export type ActionComment = {
   content: string;
   created_at: string;
   updated_at: string;
-  user_id: string;
+  user_id: string | null;
   action_id: string;
-  user: { user_id: string; profile: { username: string; profile_picture: string | null } | null };
+  user: {
+  user_id: string;
+    profile: {
+      username: string;
+      profile_picture: string | null;
+    } | null;
+  } | null;
 };
 
 /** Statuts visibles sur la carte et dans les listes publiques : à venir ou validées. */
@@ -69,7 +75,7 @@ export type ActionDetailStatus = 'pending' | 'approved' | 'rejected' | 'complete
 export type ActionPhoto = { src: string; phase: 'before' | 'after' };
 
 export type ActionOrganizer = {
-  userId: string;
+  userId: string | null;
   name: string;
   avatarUrl?: string;
   organizationTitle?: string;
@@ -95,4 +101,5 @@ export type ActionDetailData = {
   organizationId?: string;
   participants?:ActionParticipant[];
   isJoined?: boolean;
+  organizationActive?: boolean;
 };

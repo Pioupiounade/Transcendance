@@ -220,11 +220,20 @@ export function AuthProvider({ children }: AuthProviderProps) {
       accountStatus,
     }: {
       userId: string;
-      accountStatus: 'ACTIVE' | 'SUSPENDED';
+      accountStatus: 'ACTIVE' | 'SUSPENDED' | 'DEACTIVATED';
     }) => {
+      if (userId !== session.userId) return;
+
       accountCheck?.abort();
+
+      if (accountStatus === 'DEACTIVATED') {
+        session.expire();
+        socket.disconnect();
+        return;
+      }
+
       setSnapshot((previous) => {
-        if (!previous.user || previous.user.user_id !== userId) {
+        if (previous.user?.user_id !== userId) {
           return previous;
         }
 
@@ -236,6 +245,73 @@ export function AuthProvider({ children }: AuthProviderProps) {
           },
         };
       });
+    };
+
+    const handleAccountDeleted = ({ userId }: { userId: string }) => {
+      if (userId !== snapshot.user?.user_id) return;
+
+      accountCheck?.abort();
+      session.clear();
+      setSnapshot(ANONYMOUS);
+      socket.disconnect();
+    };
+
+    const handleUserDeleted = ({ userId }: { userId: string }) => {
+      window.dispatchEvent(
+        new CustomEvent('user:deleted', {
+          detail: { userId },
+        }),
+      );
+    };
+
+    const handleAdminDirectoryChanged = ({
+      resource,
+    }: {
+      resource: 'users' | 'organizations' | 'actions';
+    }) => {
+      window.dispatchEvent(
+        new CustomEvent('admin:directory-changed', {
+          detail: { resource },
+        }),
+      );
+    };
+
+    const handleAccountRoleChanged = ({
+      userId,
+      role,
+    }: {
+      userId: string;
+      role: 'USER' | 'ADMIN';
+    }) => {
+      accountCheck?.abort();
+
+      setSnapshot((previous) => {
+        if (previous.user?.user_id !== userId) {
+          return previous;
+        }
+
+        return {
+          ...previous,
+          user: {
+            ...previous.user,
+            role,
+          },
+        };
+      });
+    };
+
+    const handleUserStatusChanged = ({
+      userId,
+      accountStatus,
+    }: {
+      userId: string;
+      accountStatus: 'ACTIVE' | 'SUSPENDED' | 'DEACTIVATED';
+    }) => {
+      window.dispatchEvent(
+        new CustomEvent('user:status-changed', {
+          detail: { userId, accountStatus },
+        }),
+      );
     };
 
     socket.on('presence:online', handleOnline);
@@ -253,6 +329,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
     socket.on('account:status-changed', handleAccountStatusChanged);
     socket.on('connect', handleConnect);
     socket.on('disconnect', handleDisconnect);
+    socket.on('account:deleted', handleAccountDeleted);
+    socket.on('user:deleted', handleUserDeleted);
+    socket.on(
+      'admin:directory-changed',
+      handleAdminDirectoryChanged,
+    );
+    socket.on('account:role-changed', handleAccountRoleChanged);
+    socket.on('user:status-changed', handleUserStatusChanged);
 
     return () => {
       unsubscribe();
@@ -272,7 +356,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
       accountCheck?.abort();
       socket.off('connect', handleConnect);
       socket.off('disconnect', handleDisconnect);
+      socket.off('account:deleted', handleAccountDeleted);
+      socket.off('user:deleted', handleUserDeleted);
+      socket.off(
+        'admin:directory-changed',
+        handleAdminDirectoryChanged,
+      );
+      socket.off('account:role-changed', handleAccountRoleChanged);
       socket.disconnect();
+      socket.off('user:status-changed', handleUserStatusChanged);
     };
   }, [snapshot.status]);
 

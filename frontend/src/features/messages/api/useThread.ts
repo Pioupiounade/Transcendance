@@ -17,20 +17,41 @@ export function useThread(friendId: string) {
   const [snapshot, setSnapshot] = useState<Snapshot | null>(null);
   const [error, setError] = useState<ApiError | null>(null);
   const latestRequest = useRef<AbortController | null>(null);
+  const deletedPeers = useRef(new Set<string>());
 
   const refresh = useCallback(() => {
+    if (deletedPeers.current.has(friendId)) {
+      return Promise.resolve();
+    }
     latestRequest.current?.abort();
     const controller = new AbortController();
     latestRequest.current = controller;
 
     return fetchThread(friendId, controller.signal)
-      .then((messages) => {
+      .then((result) => {
         if (controller.signal.aborted) return;
-        setSnapshot({ friendId, messages });
+
+        if (!Array.isArray(result)) {
+          deletedPeers.current.add(friendId);
+          setSnapshot(null);
+          setError(
+            new ApiError(403, ['This conversation is no longer available.']),
+          );
+
+          window.dispatchEvent(
+            new CustomEvent('conversation:unavailable', {
+              detail: { friendId },
+            }),
+          );
+
+          return;
+        }
+
+        setSnapshot({ friendId, messages: result });
         setError(null);
         window.dispatchEvent(new Event(MESSAGES_READ_EVENT));
       })
-      .catch((cause: unknown) => {
+            .catch((cause: unknown) => {
         if (!controller.signal.aborted) setError(toApiError(cause));
       });
   }, [friendId]);
@@ -59,12 +80,51 @@ export function useThread(friendId: string) {
       if (document.visibilityState === 'visible') void refresh();
     }, POLL_INTERVAL_MS);
 
+    const handleUserDeleted = (event: Event) => {
+      const { userId } = (
+        event as CustomEvent<{ userId: string }>
+      ).detail;
+
+      if (userId !== friendId) return;
+
+      deletedPeers.current.add(userId);
+      latestRequest.current?.abort();
+      setSnapshot({ friendId, messages: [] });
+      setError(null);
+    };
+
+    const handleUserStatusChanged = (event: Event) => {
+    const { userId, accountStatus } = (
+      event as CustomEvent<{
+        userId: string;
+        accountStatus: 'ACTIVE' | 'SUSPENDED' | 'DEACTIVATED';
+      }>
+    ).detail;
+
+    if (userId !== friendId) return;
+
+    if (accountStatus === 'ACTIVE') {
+      deletedPeers.current.delete(userId);
+      void refresh();
+      return;
+    }
+
+    deletedPeers.current.add(userId);
+    latestRequest.current?.abort();
+    setSnapshot({ friendId, messages: [] });
+    setError(null);
+  };
+
+    window.addEventListener('user:deleted', handleUserDeleted);
     window.addEventListener('direct-message:new', handleNewMessage);
+    window.addEventListener('user:status-changed', handleUserStatusChanged);
 
     return () => {
       latestRequest.current?.abort();
       window.clearInterval(timer);
       window.removeEventListener('direct-message:new', handleNewMessage);
+      window.removeEventListener('user:deleted', handleUserDeleted);
+      window.removeEventListener('user:status-changed', handleUserStatusChanged);
     };
   }, [friendId, refresh]);
 

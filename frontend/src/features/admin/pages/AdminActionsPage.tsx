@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   ACTION_STATUS,
   ACTION_STATUS_LABELS,
@@ -41,6 +41,33 @@ const DIALOGS = { approve: ADMIN_LABELS.dialog.approve, hide: ADMIN_LABELS.dialo
 export function AdminActionsPage({ actionPath }: AdminActionsPageProps) {
   const { actions, loading, error, reload } = useActions();
   const list = useAdminList(actions, LIST);
+  const resetList = list.reset;
+
+  useEffect(() => {
+    const handleDirectoryChanged = (event: Event) => {
+      const { resource } = (
+        event as CustomEvent<{ resource: string }>
+      ).detail;
+
+      if (resource !== 'actions') return;
+
+      resetList();
+      reload();
+    };
+
+    window.addEventListener(
+      'admin:directory-changed',
+      handleDirectoryChanged,
+    );
+
+    return () => {
+      window.removeEventListener(
+        'admin:directory-changed',
+        handleDirectoryChanged,
+      );
+    };
+  }, [reload, resetList]);
+
   const [confirmation, setConfirmation] = useState<Confirmation | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
 

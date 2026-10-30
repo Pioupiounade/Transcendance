@@ -156,8 +156,9 @@ Ce fichier est chargé automatiquement quand la session démarre dans `frontend/
   Identifiants de code en anglais. Textes UI centralisés (`app/labels.ts`, `features/<x>/labels.ts`).
 - Pages obligatoires (sujet, sous peine de rejet) : Politique de confidentialité et Conditions d'utilisation, accessibles
   depuis le footer, avec un contenu réel.
-- Thème : `styles/tokens.css` porte le thème clair (`:root`) et le thème sombre de l'espace admin
-  (`:root[data-theme='admin']`, accent inversé terracotta / sauge, contrastes vérifiés). Un composant ne code jamais
+- Thème : `styles/tokens.css` porte le thème clair (`:root`) et le thème noir de l'espace admin
+  (`:root[data-theme='admin']`, depuis le 30/10/2026 : fond noir comme les boutons du site, pilules d'action inversées
+  en blanc, citron pour l'attention et le focus, contrastes vérifiés ≥ 4.5:1). Un composant ne code jamais
   une couleur en dur : il lit un token (`--on-brand`, `--ground-hover`, `--field-bg`, `--disabled-*`…), sinon il casse
   dans le thème sombre.
 - Texte : `overflow-wrap: anywhere` est posé sur `body` (`global.css`, hérité) pour qu'un mot sans espace (URL,
@@ -312,7 +313,7 @@ features/       1 domaine métier = 1 module ; interface = index.ts
                 lieu réclamé à l'envoi comme ActionForm) → `POST /organizations` (api/organizationsApi
                 `createOrganization`). Le backend crée le membre `OWNER` depuis #135 (09/10/2026) : la fiche de la
                 nouvelle organisation affiche « You own this organization » et « Manage » dès l'arrivée, sans message.
-  admin/          Epic 8, réservé au rôle ADMIN. AdminLayout (route parente `/admin/*`) pose le thème sombre
+  admin/          Epic 8, réservé au rôle ADMIN. AdminLayout (route parente `/admin/*`) pose le thème noir
                 `data-theme="admin"` sur <html> le temps de la visite et porte la barre d'onglets Accounts / Actions /
                 Organizations : des NavLink (une URL par section, `aria-current`), chemins reçus en props. Trois pages
                 sœurs sur le même squelette : AdminPage.module.css, hooks/useAdminList (lignes remplacées par la
@@ -321,7 +322,14 @@ features/       1 domaine métier = 1 module ; interface = index.ts
                 `--pending`), confirmation par ConfirmDialog de shared/ui, erreurs traduites par errors.ts.
                 #22 AdminUsersPage `/admin/users` : tous les comptes via `GET /users`, bloquer / débloquer =
                 `suspend` / `reactivate` (jamais sur soi ni sur un `DEACTIVATED` ; `blockUser` relit le compte, la
-                réponse de `suspend` porte les points d'avant la pénalité de 50). #23 AdminActionsPage
+                réponse de `suspend` porte les points d'avant la pénalité de 50). #196 (30/10/2026) : en bout de ligne,
+                le geste de modération puis RowMenu « More » (motif disclosure sur useDisclosure : View profile, Edit
+                profile, Make admin / Make user, Delete account ; une entrée indisponible reste visible avec sa raison) ;
+                AdminAccountCreator (Dialog : e-mail + mot de passe initial, `POST /users`) et AdminProfileEditor
+                (Dialog : pseudo, description, visibilité en puces radio, `GET /profiles/admin/:id` puis
+                `PATCH /profiles/:id`) sur AdminForm.module.css ; chemins des fiches (`profilePath`, `ownProfilePath`)
+                en props ; AdminTable sans `overflow: hidden` (les menus dépassent du panneau), arrondis portés par les
+                cellules d'angle. #23 AdminActionsPage
                 `/admin/actions` : toutes les actions (`useActions`), « Approve » = `approve`, proposé seulement dès
                 `min_participants` inscrits (sinon le texte « n of 3 needed to approve » : le backend refuserait),
                 « Hide » = `cancel` (l'API n'a ni rejet ni suppression, irréversible) ; AdminOrganizationsPage
@@ -359,8 +367,11 @@ shared/         zéro connaissance métier, réutilisable ailleurs
   hooks/        hooks React sans métier, pas de barrel : useForm (valeurs, erreurs après blur/soumission, erreur
                 serveur via un mapper fourni, focus du 1er champ invalide dont l'`id` = son nom) ; useDisclosure (bouton qui déplie
                 un panneau : Échap, tap dehors, focus de retour ; menus de la barre basse et de l'en-tête) ; useResource
-                (`load` stable → `{ data, loading, error, reload }`, annulation, utilisé par organizations ;
-                candidat pour remplacer les hooks maison de actions/participations)
+                (`load` stable → `{ data, loading, error, reload }`, annulation, utilisé par organizations, profile,
+                participations, messages, admin ; candidat pour remplacer les hooks maison de actions). Aucun hook de
+                shared n'écoute un événement fenêtre métier (`user:*`, `organization:*`, `action:*`) : c'est la feature
+                qui écoute et appelle `reload` (OrganizationPage, useOrganizations, useMyMemberships,
+                useMyParticipations, messages/useFriendsList), filtrée par id quand l'événement en porte un
   lib/          fonctions pures, pas de barrel (test de suppression négatif) : pageTitle, formatDate, prefersReducedMotion
   config/       env.ts : lit et valide VITE_API_URL
 styles/         tokens.css (DESIGN.md), reset.css, global.css

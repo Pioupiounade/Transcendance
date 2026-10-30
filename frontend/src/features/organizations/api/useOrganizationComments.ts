@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 import { useResource } from '@/shared/hooks/useResource';
 import type { OrganizationComment } from '../types';
 import { fetchOrganizationComments } from './organizationsApi';
@@ -34,6 +34,14 @@ export function useOrganizationComments(organizationId: string) {
     setLocal({ organizationId, added: [], removed: [] });
     reloadResource();
   }, [organizationId, reloadResource]);
+
+    useEffect(() => {
+    window.addEventListener('user:deleted', reload);
+
+    return () => {
+      window.removeEventListener('user:deleted', reload);
+    };
+  }, [reload]);
 
   const current = local.organizationId === organizationId ? local : null;
   const added = current?.added ?? [];

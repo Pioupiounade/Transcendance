@@ -40,6 +40,8 @@ export interface PublicProfile {
   visibility?: 'PUBLIC' | 'PRIVATE' | 'FRIENDS_ONLY';
   isPrivate?: boolean;
   is_online?: boolean;
+  adminView?: boolean;
+  accountStatus?: 'ACTIVE' | 'SUSPENDED' | 'DEACTIVATED';
 }
 
 export interface ProfileOrganization {

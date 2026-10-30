@@ -14,7 +14,7 @@ import styles from './OrganizationComments.module.css';
 type OrganizationCommentsProps = {
   organizationId: string;
   /** Créateur de l'organisation : il peut supprimer n'importe quel commentaire (règle du backend). */
-  creatorId: string;
+  creatorId: string | null;
   canComment: boolean;
 };
 
@@ -77,11 +77,13 @@ export function OrganizationComments({ organizationId, creatorId, canComment }: 
   const myUserId = user?.user_id ?? null;
   const toThreadComment = (comment: OrganizationComment): ThreadComment => ({
     id: comment.comment_id,
-    author: comment.user.profile?.username ?? text.anonymousAuthor,
-    avatar: comment.user.profile?.profile_picture,
+    author: comment.user === null
+      ? 'Utilisateur supprimé'
+      : comment.user.profile?.username ?? text.anonymousAuthor,
+    avatar: comment.user?.profile?.profile_picture,
     createdAt: comment.created_at,
     content: comment.content,
-    mine: comment.user_id === myUserId,
+    mine: myUserId !== null && comment.user_id === myUserId,
     canDelete: myUserId !== null && (comment.user_id === myUserId || creatorId === myUserId),
   });
   const items = comments.map(toThreadComment);

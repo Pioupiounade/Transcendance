@@ -1,31 +1,73 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { ApiError } from '@/shared/api';
 import type { Action } from '../types';
 import { fetchAction } from './actionsApi';
 
-type Result = { id: string; action: Action | null; error: ApiError | null };
+type Result = {
+  attempt: number;
+  id: string;
+  action: Action | null;
+  error: ApiError | null;
+};
 
-const toApiError = (error: unknown): ApiError => (error instanceof ApiError ? error : new ApiError(0, []));
+const toApiError = (error: unknown): ApiError =>
+  error instanceof ApiError ? error : new ApiError(0, []);
 
-/**
- * Une action par id, avec ses états : `loading`, `notFound` (404), `error` (autre), `action`.
- * Remplaçable par TanStack Query sans toucher aux pages.
- */
 export function useAction(id: string) {
+  const [attempt, setAttempt] = useState(0);
   const [result, setResult] = useState<Result | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
+
     fetchAction(id, controller.signal)
-      .then((action) => setResult({ id, action, error: null }))
+      .then((action) => {
+        if (!controller.signal.aborted) {
+          setResult({ id, attempt, action, error: null });
+        }
+      })
       .catch((error: unknown) => {
         if (controller.signal.aborted) return;
-        setResult({ id, action: null, error: toApiError(error) });
-      });
-    return () => controller.abort();
-  }, [id]);
 
-  const loading = result === null || result.id !== id;
+        setResult({
+          id,
+          attempt,
+          action: null,
+          error: toApiError(error),
+        });
+      });
+
+    return () => controller.abort();
+  }, [id, attempt]);
+
+  const reload = useCallback(() => {
+    setAttempt((value) => value + 1);
+  }, []);
+
+  useEffect(() => {
+    const events = [
+      'user:deleted',
+      'user:status-changed',
+      'action:updated',
+      'action:participants-changed',
+    ];
+
+    for (const event of events) {
+      window.addEventListener(event, reload);
+    }
+
+    return () => {
+      for (const event of events) {
+        window.removeEventListener(event, reload);
+      }
+    };
+  }, [reload]);
+
+  const loading =
+    result === null ||
+    result.id !== id ||
+    result.attempt !== attempt;
+
   const current = loading ? null : result;
   const error = current?.error ?? null;
 
@@ -34,8 +76,10 @@ export function useAction(id: string) {
     loading,
     notFound:
       current !== null &&
-      (current.error?.status === 404 ||
-        (current.error === null && current.action === null)),
+      (
+        current.error?.status === 404 ||
+        (current.error === null && current.action === null)
+      ),
     error: error && error.status !== 404 ? error : null,
   };
 }

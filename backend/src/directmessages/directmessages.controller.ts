@@ -42,6 +42,10 @@ export class DirectMessagesController {
 
 		const messages = await this.dmService.getMessages(userId, targetUserId);
 
+		if (!Array.isArray(messages)) {
+			return messages;
+		}
+
 		return messages.map((message) => ({
 			...message,
 			message_id: message.message_id.toString(),

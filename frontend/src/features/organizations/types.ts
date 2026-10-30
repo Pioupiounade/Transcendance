@@ -16,7 +16,7 @@ export type Organization = {
   address: string;
   /** `[latitude, longitude]`. */
   location: [number, number];
-  creator_id: string;
+  creator_id: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -34,7 +34,11 @@ export type OrganizationMember = {
   user: {
     user_id: string;
     account_status: string;
-    profile: { username: string; description: string | null; profile_picture: string | null } | null;
+    profile: {
+      username: string;
+      description: string | null;
+      profile_picture: string | null;
+    } | null;
   };
 };
 
@@ -50,7 +54,13 @@ export type OrganizationComment = {
   content: string;
   created_at: string;
   updated_at: string;
-  user_id: string;
+  user_id: string | null;
   organization_id: string;
-  user: { user_id: string; profile: { username: string; profile_picture: string | null } | null };
+  user: {
+    user_id: string;
+    profile: {
+      username: string;
+      profile_picture: string | null;
+    } | null;
+  } | null;
 };

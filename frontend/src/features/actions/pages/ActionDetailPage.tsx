@@ -25,6 +25,9 @@ currentUserId: string | null): ActionDetailData => ({
   
   category: action.category.toLowerCase() as ActionDetailData['category'],
   status: action.status.toLowerCase() as ActionDetailData['status'],
+  organizationActive:
+  action.organization_id === null ||
+  organization?.organization_status === 'ACTIVE',
 
   locationName: `${action.location[0]}, ${action.location[1]}`,
 
@@ -41,7 +44,9 @@ currentUserId: string | null): ActionDetailData => ({
 
   organizer: {
     userId: action.creator_id,
-    name: creatorProfile?.username ?? `user-${action.creator_id}`,
+    name: action.creator_id === null
+      ? 'Utilisateur supprimé'
+      : creatorProfile?.username ?? `user-${action.creator_id}`,
     avatarUrl: creatorProfile?.profilePicture ?? undefined,
     organizationTitle: organization?.title,
     organizationId: action.organization_id ?? undefined,
@@ -88,13 +93,15 @@ const loadDetail = async (
   const [participantRows, creatorProfileResult, organization] =
     await Promise.all([
       fetchActionParticipants(id, signal),
-      getPublicProfile(action.creator_id).catch(() => null),
-      action.organization_id === null
-        ? null
-        : fetchActionOrganization(
-            action.organization_id,
-            signal,
-          ).catch(() => null),
+        action.creator_id === null
+          ? null
+          : getPublicProfile(action.creator_id).catch(() => null),
+        action.organization_id === null
+          ? null
+          : fetchActionOrganization(
+              action.organization_id,
+              signal,
+            ).catch(() => null),
     ]);
 
   const creatorProfile =
@@ -119,6 +126,36 @@ export const ActionDetailPage: React.FC<ActionDetailPageProps> = ({ editPath }) 
   const navigate = useNavigate();
   const [loaded, setLoaded] = useState<Loaded | null>(null);
   const [refreshVersion, setRefreshVersion] = useState(0);
+  const organizationId =
+  loaded !== null && loaded.id === id
+    ? loaded.detail?.action.organization_id ?? null
+    : null;
+
+  useEffect(() => {
+    if (!organizationId) return;
+
+    const handleOrganizationUpdated = (event: Event) => {
+      const { organizationId: changedId } = (
+        event as CustomEvent<{ organizationId: string }>
+      ).detail;
+
+      if (changedId !== organizationId) return;
+
+      setRefreshVersion((version) => version + 1);
+    };
+
+    window.addEventListener(
+      'organization:updated',
+      handleOrganizationUpdated,
+    );
+
+    return () => {
+      window.removeEventListener(
+        'organization:updated',
+        handleOrganizationUpdated,
+      );
+    };
+  }, [organizationId]);
 
   useEffect(() => {
     const handleParticipantsChanged = (event: Event) => {
@@ -192,7 +229,14 @@ export const ActionDetailPage: React.FC<ActionDetailPageProps> = ({ editPath }) 
   };
 
   const handleJoin = async () => {
-    if (!id) return;
+    if (!id || !detail) return;
+
+    const organizationAvailable =
+      detail.action.organization_id === null ||
+      detail.organization?.organization_status === 'ACTIVE';
+
+    if (!organizationAvailable) return;
+
     await joinAction(id);
     await refresh(id, true);
   };
@@ -219,7 +263,7 @@ export const ActionDetailPage: React.FC<ActionDetailPageProps> = ({ editPath }) 
   const addPhotos = (upload: (actionId: string, file: File) => Promise<ActionRecord>) => async (files: File[]) => {
     if (!id) return;
     try {
-      for (const file of files) await upload(id, file);
+      for (const file of files) await upload(id, file)
     } finally {
       await refresh(id, false);
     }
@@ -244,17 +288,19 @@ export const ActionDetailPage: React.FC<ActionDetailPageProps> = ({ editPath }) 
 
   const { action, creatorProfile, organization, participants } = detail;
 
+  const organizationActive = action.organization_id === null || organization?.organization_status === 'ACTIVE';
+
   const isCreator = currentUserId !== null && action.creator_id === currentUserId;
 
-  const canEdit = isCreator && action.status === 'PENDING';
+  const canEdit = organizationActive && isCreator && action.status === 'PENDING';
   const approvableParticipantCount = participants.filter((participant) => participant.userId !== action.creator_id).length;
 
-  const canApprove = isCreator && action.status === 'PENDING' &&
+  const canApprove = organizationActive && isCreator && action.status === 'PENDING' &&
   approvableParticipantCount >= (action.min_participants ?? 0);
   
-  const canComplete = isCreator && action.status === 'APPROVED';
+  const canComplete = organizationActive && isCreator && action.status === 'APPROVED';
   
-  const canComment = action.status !== 'CANCELLED' &&
+  const canComment = organizationActive && action.status !== 'CANCELLED' &&
   currentUserId !== null &&
   (
     action.creator_id === currentUserId ||
@@ -264,7 +310,7 @@ export const ActionDetailPage: React.FC<ActionDetailPageProps> = ({ editPath }) 
   );
 
   // Rôles comme le backend (avant : créateur ; après : créateur ou participant) ; PENDING/COMPLETED n'est vérifié que côté UI.
-  const canAddBeforePhotos = isCreator && action.status === 'PENDING';
+  const canAddBeforePhotos = organizationActive && isCreator && action.status === 'PENDING';
   const canAddAfterPhotos = canComment && action.status === 'COMPLETED';
 
   return (

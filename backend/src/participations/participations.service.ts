@@ -1,6 +1,12 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { AccountStatus, ActionStatus, Prisma, NotificationType } from '../../generated/prisma/client';
+import {
+  AccountStatus,
+  ActionStatus,
+  OrganizationStatus,
+  Prisma,
+  NotificationType,
+} from '../../generated/prisma/client';
 import { NotificationsService } from '../notifications/notifications.service';
 import { RealtimeGateway } from '../realtime/realtime.gateway';
 
@@ -39,10 +45,40 @@ export class ParticipationsService {
               where: {
                 action_id: actionIdBigInt,
               },
+              include: {
+                creator: {
+                  select: {
+                    account_status: true,
+                  },
+                },
+                organization: {
+                  select: {
+                    organization_status: true,
+                  },
+                },
+              },
             });
 
             if (!action) {
               throw new NotFoundException('Action not found');
+            }
+
+            if (
+              !action.creator ||
+              action.creator.account_status !== AccountStatus.ACTIVE
+            ) {
+              throw new BadRequestException(
+                'This action is unavailable because its creator is inactive',
+              );
+            }
+
+            if (
+              action.organization &&
+              action.organization.organization_status !== OrganizationStatus.ACTIVE
+            ) {
+              throw new BadRequestException(
+                'This action belongs to an inactive organization',
+              );
             }
 
             if (action.creator_id === userId) {
@@ -113,40 +149,41 @@ export class ParticipationsService {
         } = result;
 
         this.realtimeGateway.emitActionParticipantsChanged(actionId);
-
-        await this.notificationsService.notifyUser({
-          userId: action.creator_id,
-          type: NotificationType.ACTION_PARTICIPATION_CHANGED,
-          title: 'New participant',
-          message: `Someone joined your action "${action.title}".`,
-          link: `/actions/${action.action_id.toString()}`,
-        });
-
-        if (
-          beforeCount < action.min_participants &&
-          afterCount >= action.min_participants
-        ) {
+        if (action.creator_id !== null) {
           await this.notificationsService.notifyUser({
             userId: action.creator_id,
-            type: NotificationType.ACTION_MIN_REACHED,
-            title: 'Minimum participants reached',
-            message: `Your action "${action.title}" has reached its minimum number of participants.`,
+            type: NotificationType.ACTION_PARTICIPATION_CHANGED,
+            title: 'New participant',
+            message: `Someone joined your action "${action.title}".`,
             link: `/actions/${action.action_id.toString()}`,
           });
-        }
 
-        if (
-          action.max_participants !== null &&
-          beforeCount < action.max_participants &&
-          afterCount >= action.max_participants
-        ) {
-          await this.notificationsService.notifyUser({
-            userId: action.creator_id,
-            type: NotificationType.ACTION_MAX_REACHED,
-            title: 'Maximum participants reached',
-            message: `Your action "${action.title}" has reached its maximum number of participants.`,
-            link: `/actions/${action.action_id.toString()}`,
-          });
+          if (
+            beforeCount < action.min_participants &&
+            afterCount >= action.min_participants
+          ) {
+            await this.notificationsService.notifyUser({
+              userId: action.creator_id,
+              type: NotificationType.ACTION_MIN_REACHED,
+              title: 'Minimum participants reached',
+              message: `Your action "${action.title}" has reached its minimum number of participants.`,
+              link: `/actions/${action.action_id.toString()}`,
+            });
+          }
+
+          if (
+            action.max_participants !== null &&
+            beforeCount < action.max_participants &&
+            afterCount >= action.max_participants
+          ) {
+            await this.notificationsService.notifyUser({
+              userId: action.creator_id,
+              type: NotificationType.ACTION_MAX_REACHED,
+              title: 'Maximum participants reached',
+              message: `Your action "${action.title}" has reached its maximum number of participants.`,
+              link: `/actions/${action.action_id.toString()}`,
+            });
+          }
         }
         return {
           ...participation,
@@ -176,7 +213,7 @@ export class ParticipationsService {
     throw new BadRequestException('Participation could not be created, please try again');
   }
 
-  //annuler sa participation
+//annuler sa participation
   async cancelParticipation(currentUserId: string, actionId: string) {
     const userId = BigInt(currentUserId);
     const actionIdBigInt = BigInt(actionId);
@@ -248,13 +285,15 @@ export class ParticipationsService {
 
         this.realtimeGateway.emitActionParticipantsChanged(actionId);
 
-        await this.notificationsService.notifyUser({
-          userId: action.creator_id,
-          type: NotificationType.ACTION_PARTICIPATION_CHANGED,
-          title: 'Participant left',
-          message: `Someone left your action "${action.title}".`,
-          link: `/actions/${action.action_id.toString()}`,
-        });
+        if (action.creator_id !== null) {
+          await this.notificationsService.notifyUser({
+            userId: action.creator_id,
+            type: NotificationType.ACTION_PARTICIPATION_CHANGED,
+            title: 'Participant left',
+            message: `Someone left your action "${action.title}".`,
+            link: `/actions/${action.action_id.toString()}`,
+          });
+        }
 
         return {
           ...participation,

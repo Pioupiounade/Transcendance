@@ -32,8 +32,21 @@ const toView = async (userId: string, signedIn: boolean, signal: AbortSignal): P
   try {
     const data = await getPublicProfile(userId, signal);
     if (isUnavailablePublicProfile(data)) return { kind: 'unavailable', reason: data.reason };
-    if (data.isPrivate || data.visibility === 'PRIVATE') return { kind: 'unavailable', reason: 'PRIVATE' };
-    const friendship = signedIn ? await getFriendshipStatus(userId, signal).catch((): FriendshipStatus => 'NONE') : 'NONE';
+    if (
+      !data.adminView &&
+      (data.isPrivate || data.visibility === 'PRIVATE')
+    ) {
+      return { kind: 'unavailable', reason: 'PRIVATE' };
+    }
+    const targetIsActive =
+      data.accountStatus === undefined ||
+      data.accountStatus === 'ACTIVE';
+
+    const friendship =
+      signedIn && targetIsActive
+        ? await getFriendshipStatus(userId, signal)
+            .catch((): FriendshipStatus => 'NONE')
+        : 'NONE';
     return { kind: 'profile', profile: data, friendship };
   } catch (error) {
     if (isApiError(error) && (error.status === 403 || error.status === 404)) {
@@ -118,7 +131,9 @@ export function PublicProfilePage({ ownProfilePath, messagePath }: PublicProfile
     const { profile } = view.data;
     const status = friendship?.userId === userId ? friendship.status : view.data.friendship;
     const online = presence?.userId === userId ? presence.online : profile.is_online;
-
+    const profileEyebrow = profile.adminView
+      ? `Admin view · ${profile.accountStatus ?? 'ACTIVE'}`
+      : text.neighbour;
     content = (
       <ProfileView
         profile={{
@@ -129,12 +144,16 @@ export function PublicProfilePage({ ownProfilePath, messagePath }: PublicProfile
           visibility: profile.visibility ?? 'PUBLIC',
           location: null,
         }}
-        eyebrow={text.neighbour}
+        eyebrow={profileEyebrow}
         own={false}
         interests={{ data: profile.interests, loading: false, error: null }}
         online={online}
         actions={
-          currentUserId !== null && (
+          currentUserId !== null &&
+          (
+            profile.accountStatus === undefined ||
+            profile.accountStatus === 'ACTIVE'
+          ) && (
             <>
               {status === 'ACCEPTED' && (
                 <ButtonLink to={messagePath(userId)}>
