@@ -12,8 +12,6 @@ import { useAdminList } from '../hooks/useAdminList';
 import { ACCOUNT_STATUS_LABELS, ADMIN_LABELS } from '../labels';
 import type { AccountActionKind } from '../types';
 import styles from './AdminPage.module.css';
-import { AdminProfileEditor } from '../components/AdminProfileEditor';
-import { AdminAccountCreator } from '../components/AdminAccountCreator';
 
 type AdminUsersPageProps = {
   /** Fiche publique d'un compte et la mienne : la feature n'importe pas `app/`. */
@@ -117,30 +115,6 @@ const askRoleChange = (account: AuthUser, role: 'USER' | 'ADMIN') => {
         setNotice(promoting ? text.promoted(updated.email) : text.demoted(updated.email));
       },
     });
-  };
-
-  const askDelete = (account: AuthUser) => {
-    const copy = ADMIN_LABELS.dialog.deleteAccount;
-    setConfirmation({
-      title: copy.title,
-      body: copy.body(account.email),
-      effects: copy.effects,
-      confirmLabel: copy.confirm,
-      confirmingLabel: copy.confirming,
-      danger: true,
-      run: async () => {
-        await deleteUserAccount(account.user_id);
-        setEditingUser((current) => (current?.user_id === account.user_id ? null : current));
-        list.reset();
-        reload();
-        setNotice(text.deleted);
-      },
-    });
-  };
-
-  const retry = () => {
-    list.reset();
-    reload();
   };
 
   const askDelete = (account: AuthUser) => {
@@ -278,13 +252,15 @@ const askRoleChange = (account: AuthUser, role: 'USER' | 'ADMIN') => {
 
       {list.rows.length > 0 && (
         <UsersTable
-          users={list.rows}
-          currentUserId={me?.user_id ?? ''}
-          onAction={ask}
-          onEditProfile={setEditingUser}
-          onDeleteUser={askDelete}
-          onChangeRole={askRoleChange}
-        />
+    		users={list.rows}
+    		currentUserId={me?.user_id ?? ''}
+    		profilePath={(userId) => `/profile/${userId}`}
+    		ownProfilePath="/profile"
+    		onAction={ask}
+    		onEditProfile={setEditingUser}
+    		onDeleteUser={askDelete}
+    		onChangeRole={askRoleChange}
+  	/>
       )}
       {list.hidden > 0 && (
         <div className={styles.more}>
