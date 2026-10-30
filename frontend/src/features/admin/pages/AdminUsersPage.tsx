@@ -255,7 +255,7 @@ export function AdminUsersPage({ profilePath, ownProfilePath }: AdminUsersPagePr
           users={list.rows}
           currentUserId={me?.user_id ?? ''}
           profilePath={(userId) => `/profiles/${userId}`}
-          ownProfilePath="/profiles"
+          ownProfilePath="/profile"
           onAction={ask}
           onEditProfile={setEditingUser}
           onDeleteUser={askDelete}
