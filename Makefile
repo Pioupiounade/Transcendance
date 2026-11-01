@@ -68,7 +68,7 @@ seed:
 certs:
 	@if [ ! -f $(KEY_FILE) ] || [ ! -f $(CERT_FILE) ]; then \
 		printf "$(YELLOW)🔒 Generating SSL certificates (OpenSSL)...$(RESET)\n"; \
-		printf "$(CYAN)This will show some characters on the screen, that's to create randomness.$(RESET)\n"; \
+		printf "$(CYAN)This will show some characters on the screen.$(RESET)\n"; \
 		mkdir -p $(CERT_DIR); \
 		openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
 			-keyout $(KEY_FILE) -out $(CERT_FILE) \

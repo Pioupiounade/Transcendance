@@ -1,30 +1,3 @@
-// import { NestFactory } from '@nestjs/core';
-// import { AppModule } from './app.module';
-// import { ValidationPipe } from '@nestjs/common';
-
-// async function bootstrap() {
-
-//   (BigInt.prototype as any).toJSON = function () {
-//     return this.toString();
-//   };
-
-//   const app = await NestFactory.create(AppModule);
-
-//   app.useGlobalPipes(
-//     new ValidationPipe({
-//       whitelist: true,
-//       forbidNonWhitelisted: true,
-//       transform: true,
-//   }),
-
-//   );
-
-//   await app.listen(process.env.PORT ?? 3000);
-
-// }
-
-// bootstrap();
-
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import * as fs from 'fs';
@@ -47,7 +20,17 @@ async function bootstrap() {
 		}
 	});
 
-	const app = await NestFactory.create(AppModule);
+	const keyPath = process.env.SSL_KEY_PATH ?? path.join(process.cwd(), 'certs/key.pem');
+	const certPath = process.env.SSL_CERT_PATH ?? path.join(process.cwd(), 'certs/cert.pem');
+
+	const httpsOptions = {
+		key: fs.readFileSync(keyPath),
+		cert: fs.readFileSync(certPath),
+	};
+
+	const app = await NestFactory.create(AppModule, {
+		httpsOptions,
+	});
 
 	app.useGlobalPipes(
 		new ValidationPipe({
