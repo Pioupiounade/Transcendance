@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react';
+import { EMAIL_MAX_LENGTH, PASSWORD_MAX_LENGTH, validateEmail, validatePassword } from '@/features/auth';
 import { Button, Dialog, FloatingField } from '@/shared/ui';
 import { createAdminAccount } from '../api/adminUsersApi';
 import { toAccountErrorMessage } from '../errors';
@@ -12,10 +13,6 @@ type AdminAccountCreatorProps = {
 };
 
 const text = ADMIN_LABELS.createAccount;
-const PASSWORD_MIN = 8;
-// Mêmes bornes que l'inscription : limites de `@IsEmail()` et du mot de passe (features/auth/validation.ts).
-const EMAIL_MAX = 254;
-const PASSWORD_MAX = 64;
 
 /** Boîte « Create account » : e-mail + mot de passe initial, rôle User. Repart vide à chaque ouverture (Dialog). */
 export function AdminAccountCreator({ open, onCreated, onClose }: AdminAccountCreatorProps) {
@@ -38,9 +35,10 @@ function CreateForm({ onCreated, onClose }: Omit<AdminAccountCreatorProps, 'open
     event.preventDefault();
     if (saving) return;
 
+    // Mêmes règles que l'inscription (`@IsEmail()`, mot de passe 8 à 64 caractères) : un refus ici évite un 400.
     const cleanEmail = email.trim();
-    const emailProblem = cleanEmail === '' ? text.emailRequired : null;
-    const passwordProblem = password.length < PASSWORD_MIN ? text.passwordTooShort : null;
+    const emailProblem = cleanEmail === '' ? text.emailRequired : validateEmail(cleanEmail);
+    const passwordProblem = password === '' ? text.passwordRequired : validatePassword(password);
     setEmailError(emailProblem);
     setPasswordError(passwordProblem);
     setError(null);
@@ -71,7 +69,7 @@ function CreateForm({ onCreated, onClose }: Omit<AdminAccountCreatorProps, 'open
         label={text.email}
         value={email}
         error={emailError}
-        maxLength={EMAIL_MAX}
+        maxLength={EMAIL_MAX_LENGTH}
         autoComplete="off"
         disabled={saving}
         onChange={(event) => {
@@ -88,7 +86,7 @@ function CreateForm({ onCreated, onClose }: Omit<AdminAccountCreatorProps, 'open
         revealLabels={text.reveal}
         value={password}
         error={passwordError}
-        maxLength={PASSWORD_MAX}
+        maxLength={PASSWORD_MAX_LENGTH}
         autoComplete="new-password"
         disabled={saving}
         onChange={(event) => {
