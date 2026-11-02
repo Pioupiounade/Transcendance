@@ -170,6 +170,18 @@ export const ADMIN_LABELS = {
       confirm: 'Reactivate account',
       confirming: 'Reactivating…',
     },
+    deleteAccount: {
+      title: 'Permanently delete this account?',
+      body: (email: string) => `${email} will be permanently deleted.`,
+      effects: [
+        'This cannot be undone.',
+        'The profile, sessions and private messages will be deleted.',
+        'Actions and comments will remain with a deleted author.',
+        'Organization ownership must be transferred first.',
+      ],
+      confirm: 'Delete account permanently',
+      confirming: 'Deleting…',
+    },
     approve: {
       title: 'Approve this action?',
       body: (title: string) => `${title} will be confirmed.`,

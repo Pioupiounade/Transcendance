@@ -34,7 +34,7 @@ const REQUESTS: Record<AccountActionKind, (id: string) => Promise<AuthUser>> = {
  * `/admin/users` (#22, #196) : tous les comptes, recherche par e-mail, filtre par statut ; bloquer / débloquer,
  * créer un compte, modifier un profil, changer le rôle, supprimer. Chaque geste qui coûte passe par ConfirmDialog.
  */
-export function AdminUsersPage({ profilePath, ownProfilePath }: AdminUsersPageProps) {
+export function AdminUsersPage(_props: AdminUsersPageProps) {
   const { user: me } = useAuth();
   const { data, loading, error, reload } = useResource(fetchUsers);
   const list = useAdminList(data ?? NO_USERS, LIST);
@@ -181,17 +181,16 @@ export function AdminUsersPage({ profilePath, ownProfilePath }: AdminUsersPagePr
         Create account
       </Button>
 
-      {creatingAccount && (
-        <AdminAccountCreator
-          onClose={() => setCreatingAccount(false)}
-          onCreated={(email) => {
-            setCreatingAccount(false);
-            list.reset();
-            reload();
-            setNotice(`Account created: ${email}`);
-          }}
-        />
-      )}
+      <AdminAccountCreator
+        open={creatingAccount}
+        onClose={() => setCreatingAccount(false)}
+        onCreated={(email) => {
+          setCreatingAccount(false);
+          list.reset();
+          reload();
+          setNotice(`Account created: ${email}`);
+        }}
+      />
       <div className={styles.toolbar}>
         <form className={styles.search} role="search" onSubmit={(event) => event.preventDefault()}>
           <FloatingField
@@ -242,12 +241,7 @@ export function AdminUsersPage({ profilePath, ownProfilePath }: AdminUsersPagePr
       )}
 
       {editingUser && (
-        <AdminProfileEditor
-          key={editingUser.user_id}
-          userId={editingUser.user_id}
-          email={editingUser.email}
-          onClose={() => setEditingUser(null)}
-        />
+        <AdminProfileEditor user={editingUser} onClose={() => setEditingUser(null)} />
       )}
 
       {list.rows.length > 0 && (

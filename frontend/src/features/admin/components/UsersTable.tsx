@@ -1,6 +1,6 @@
 import { ACCOUNT_STATUS, ROLE_APP, type AccountStatus, type AuthUser } from '@/features/auth';
 import { formatFullDate } from '@/shared/lib/formatDate';
-import { Avatar, Button, Icon, ButtonLink, type IconName } from '@/shared/ui';
+import { Avatar, Button, Icon, type IconName } from '@/shared/ui';
 import { ACCOUNT_STATUS_LABELS, ADMIN_LABELS, ROLE_APP_LABELS } from '../labels';
 import type { AccountActionKind } from '../types';
 import { RowMenu, type RowMenuItem } from './RowMenu';
