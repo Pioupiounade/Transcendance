@@ -96,7 +96,7 @@ export function OrganizationsPage({ organizationPath, createPath }: Organization
 
   return (
     <section className={styles.page}>
-      <title>{pageTitle(text.title)}</title>
+      <title>{pageTitle(text.pageName)}</title>
       <header className={styles.intro}>
         <div>
           <p className={styles.eyebrow}>{text.eyebrow}</p>

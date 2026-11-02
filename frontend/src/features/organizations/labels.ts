@@ -17,6 +17,8 @@ export const DIRECTORY_SORT_LABELS: Record<DirectorySort, string> = {
 
 export const ORGANIZATIONS_LABELS = {
   list: {
+    /** Titre d'onglet : le nom de la page, pas la phrase d'accroche. */
+    pageName: 'Organizations',
     eyebrow: 'Around you',
     title: 'The organizations of the neighbourhood.',
     lead: 'Associations, shops and collectives that organise actions near you.',

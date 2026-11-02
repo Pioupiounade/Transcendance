@@ -2,6 +2,7 @@ import { useMemo, useState, type ChangeEvent } from 'react';
 import { useNavigate } from 'react-router';
 import { useAuth } from '@/features/auth';
 import { useMyParticipations } from '@/features/participations';
+import { pageTitle } from '@/shared/lib/pageTitle';
 import { Button } from '@/shared/ui/Button/Button';
 import { useActions } from '../api/useActions';
 import { ActionCard } from '../components/ActionCard';
@@ -76,10 +77,21 @@ export function ActionsListPage() {
     return filteredActions.slice(start, start + PAGE_SIZE);
   }, [filteredActions, currentPage]);
 
-  if (authStatus === 'anonymous') return <MyActionsSignIn />;
+  // Titre d'onglet « My Actions · pioupiounades » dans les trois états (visiteur, restauration de session, liste).
+  const tabTitle = <title>{pageTitle(text.eyebrow)}</title>;
+
+  if (authStatus === 'anonymous') {
+    return (
+      <>
+        {tabTitle}
+        <MyActionsSignIn />
+      </>
+    );
+  }
   if (authStatus === 'loading') {
     return (
       <div className={styles.container}>
+        {tabTitle}
         <div className={styles.statusMessage} role="status">
           {text.loading}
         </div>
@@ -103,6 +115,7 @@ export function ActionsListPage() {
 
   return (
     <div className={styles.container}>
+      {tabTitle}
       <header className={styles.header}>
         <div className={styles.headerRow}>
           <h1 className={styles.title}>{text.listTitle}</h1>

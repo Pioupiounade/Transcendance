@@ -122,6 +122,8 @@ Ce fichier est chargé automatiquement quand la session démarre dans `frontend/
 - Accessibilité (`../Docs/DESIGN.md` §5 et sujet) : label visible pour chaque champ, erreur reliée par `aria-describedby`,
   focus visible, `prefers-reduced-motion` respecté, la couleur ne porte jamais seule une information (icône + libellé).
 - Chaque écran gère explicitement ses états : chargement, vide, erreur (les 404 de listes vides compris).
+- Titre d'onglet : chaque page pose `<title>{pageTitle(nom)}</title>` (`shared/lib/pageTitle`) avec le nom court de la page
+  (eyebrow ou entrée de nav : « My Actions », « Organizations »), jamais la phrase d'accroche du `<h1>`.
 
 ## Appels API
 - URL de base dans `import.meta.env.VITE_API_URL` : `frontend/.env` (ignoré par `frontend/.gitignore`) +
@@ -325,7 +327,8 @@ features/       1 domaine métier = 1 module ; interface = index.ts
                 réponse de `suspend` porte les points d'avant la pénalité de 50). #196 (30/10/2026) : en bout de ligne,
                 le geste de modération puis RowMenu « More » (motif disclosure sur useDisclosure : View profile, Edit
                 profile, Make admin / Make user, Delete account ; une entrée indisponible reste visible avec sa raison) ;
-                AdminAccountCreator (Dialog : e-mail + mot de passe initial, `POST /users`) et AdminProfileEditor
+                AdminAccountCreator (Dialog : e-mail + mot de passe initial, mêmes règles que l'inscription via `validateEmail` /
+                `validatePassword` exportés par l'index de `features/auth`, sinon 400 ; `POST /users`) et AdminProfileEditor
                 (Dialog : pseudo, description, visibilité en puces radio, `GET /profiles/admin/:id` puis
                 `PATCH /profiles/:id`) sur AdminForm.module.css ; chemins des fiches (`profilePath`, `ownProfilePath`)
                 en props ; AdminTable sans `overflow: hidden` (les menus dépassent du panneau), arrondis portés par les
