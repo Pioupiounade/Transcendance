@@ -1,0 +1,47 @@
+Title	URL	Assignees	Status	Linked pull requests	Sub-issues progress	Sprint
+[Epic 7] Search, filter, and localize actions on the map	https://github.com/Pioupiounade/Transcendance/issues/14		Backlog			Sprint 3
+[Epic 1][Epic 3][UI] Display user joined actions & engagements list (in Profile)	https://github.com/Pioupiounade/Transcendance/issues/57	kobetoto	Backlog			
+A public API	https://github.com/Pioupiounade/Transcendance/issues/126		Backlog			
+SSO	https://github.com/Pioupiounade/Transcendance/issues/129	NekoTintin	Backlog			
+Bug - User points balances should not drop below zero	https://github.com/Pioupiounade/Transcendance/issues/158		Backlog			
+Bug - Organization  User does not looses points when he is removed from an organization	https://github.com/Pioupiounade/Transcendance/issues/157		Backlog			
+Bug - [Actions] unable to delete an action	https://github.com/Pioupiounade/Transcendance/issues/139		Backlog			
+[notifications] Friend request and join request notifications should link to the page where the user acts	https://github.com/Pioupiounade/Transcendance/issues/170	NekoTintin	Ready (Sprint)			
+[Bug][Notifications] Intermittent 401 Unauthorized console error from GET /api/notifications/me	https://github.com/Pioupiounade/Transcendance/issues/186	kobetoto	Ready (Sprint)			
+HTTPS	https://github.com/Pioupiounade/Transcendance/issues/125	NekoTintin	Ready (Sprint)			
+Bug - Clicking an action card in Home page should navigate to Action Details page	https://github.com/Pioupiounade/Transcendance/issues/179	kobetoto	In Progress			
+Bug - [organization] Console error while creating an action for an inactive organization	https://github.com/Pioupiounade/Transcendance/issues/184	kobetoto	In Progress			
+Feat/83 auth session integration	https://github.com/Pioupiounade/Transcendance/pull/85		In Review			
+dataseed ok	https://github.com/Pioupiounade/Transcendance/pull/86		In Review			
+196 crud user management   update user	https://github.com/Pioupiounade/Transcendance/pull/207		Ready for QA			
+notifs en live ok / statut on/offline	https://github.com/Pioupiounade/Transcendance/pull/164		Ready for QA			
+fix: handle unavailable resources and public profiles	https://github.com/Pioupiounade/Transcendance/pull/173		Ready for QA			
+166 clean	https://github.com/Pioupiounade/Transcendance/pull/174		Ready for QA			
+correction bugs gestions des users bannis / suspendus	https://github.com/Pioupiounade/Transcendance/pull/187		Ready for QA			
+127 notifications for deletion check notification settings	https://github.com/Pioupiounade/Transcendance/pull/194		Ready for QA			
+demande d'adhesion d'un compte desactive est supprimee + suppression …	https://github.com/Pioupiounade/Transcendance/pull/200		Ready for QA			
+Bug - WebP avatar uploads trigger 400 Bad Request and print console error	https://github.com/Pioupiounade/Transcendance/issues/145	lenyllanos	Done			
+Bug -  Profile : Bad request error message at console while entering a duplicated username	https://github.com/Pioupiounade/Transcendance/issues/161	Maluluzelle	Done	https://github.com/Pioupiounade/Transcendance/pull/175		
+162 bug   profile is not shown for friend only	https://github.com/Pioupiounade/Transcendance/pull/165		Done			
+161 bug   profile bad request error message at console while entering a duplicated username	https://github.com/Pioupiounade/Transcendance/pull/175		Done			
+[Epic 4] Direct 1-to-1 messaging between users	https://github.com/Pioupiounade/Transcendance/issues/17	NekoTintin	Done	https://github.com/Pioupiounade/Transcendance/pull/155		Sprint 4
+[QA] End-to-end testing, responsive mobile UI polish, and demo rehearsal	https://github.com/Pioupiounade/Transcendance/issues/26	kobetoto, lenyllanos, Maluluzelle, NekoTintin	Done	https://github.com/Pioupiounade/Transcendance/pull/141		Sprint 4
+[Integration] Connect Action detail view UI with Backend API & Prisma endpoints	https://github.com/Pioupiounade/Transcendance/issues/60	Maluluzelle	Done	https://github.com/Pioupiounade/Transcendance/pull/102		Sprint 4
+[Organizations][UI] Organizations directory list page	https://github.com/Pioupiounade/Transcendance/issues/63	kobetoto	Done	https://github.com/Pioupiounade/Transcendance/pull/100		Sprint 4
+[Integration] Connect Organizations UI with Backend API & Prisma endpoints	https://github.com/Pioupiounade/Transcendance/issues/97		Done			Sprint 4
+[Organizations][UI] Organization dashboard, membership requests & member management	https://github.com/Pioupiounade/Transcendance/issues/62	kobetoto	Done	https://github.com/Pioupiounade/Transcendance/pull/99		Sprint 4
+132 bug   browser console logs http 404 error during new user onboarding	https://github.com/Pioupiounade/Transcendance/pull/154	Maluluzelle	Done			
+Bug - Browser console logs HTTP 404 error during new user onboarding	https://github.com/Pioupiounade/Transcendance/issues/132	Maluluzelle	Done	https://github.com/Pioupiounade/Transcendance/pull/136, https://github.com/Pioupiounade/Transcendance/pull/154		
+[Epic 2][UI] Create, Edit, and Delete an Action / Suggestion	https://github.com/Pioupiounade/Transcendance/issues/33	kobetoto	Done	https://github.com/Pioupiounade/Transcendance/pull/76		Sprint 4
+[Epic 5] Photo upload handling (Profile avatar, Before/After action photos)	https://github.com/Pioupiounade/Transcendance/issues/19	NekoTintin	Done	https://github.com/Pioupiounade/Transcendance/pull/82		Sprint 2
+[Epic 2][UI] Action comments thread section	https://github.com/Pioupiounade/Transcendance/issues/70	kobetoto	Done	https://github.com/Pioupiounade/Transcendance/pull/87		Sprint 3
+[Epic 2][UI] Organizations comments thread and community discussion section	https://github.com/Pioupiounade/Transcendance/issues/71	kobetoto	Done	https://github.com/Pioupiounade/Transcendance/pull/91		Sprint 4
+[Setup] Docker Compose for Backend, Frontend, and PostgreSQL	https://github.com/Pioupiounade/Transcendance/issues/2	Maluluzelle	Done			Sprint 1
+[Epic 4][Backend] Action group discussion / comment section on action page	https://github.com/Pioupiounade/Transcendance/issues/16	NekoTintin	Done	https://github.com/Pioupiounade/Transcendance/pull/49		Sprint 2
+[DB] Prisma models for Actions, Suggestions, Categories, and Locations	https://github.com/Pioupiounade/Transcendance/issues/9	NekoTintin	Done	https://github.com/Pioupiounade/Transcendance/pull/40		Sprint 2
+[Epic 2][UI] Browse & View Action details page	https://github.com/Pioupiounade/Transcendance/issues/34	NekoTintin	Done	https://github.com/Pioupiounade/Transcendance/pull/46		Sprint 2
+[Epic 4][Backend] Action group discussion / comment section on action page	https://github.com/Pioupiounade/Transcendance/issues/52	NekoTintin	Done			Sprint 3
+Bug - My Actions tabs for logged out users	https://github.com/Pioupiounade/Transcendance/issues/107	kobetoto	Done	https://github.com/Pioupiounade/Transcendance/pull/117		
+Bug - Console error when consulting action page when logged out	https://github.com/Pioupiounade/Transcendance/issues/172	Maluluzelle	Done	https://github.com/Pioupiounade/Transcendance/pull/173		
+Bug - Profile view should be same from Actions, friends or other pages	https://github.com/Pioupiounade/Transcendance/issues/120	lenyllanos	Done	https://github.com/Pioupiounade/Transcendance/pull/121		
+Bug - [Router/Friends] Placeholder page is showed instead of FriendsPage	https://github.com/Pioupiounade/Transcendance/issues/110	lenyllanos	Done	https://github.com/Pioupiounade/Transcendance/pull/111		
