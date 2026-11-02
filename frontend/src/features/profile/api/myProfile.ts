@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 import { useAuth } from '@/features/auth';
 import { http, isApiError } from '@/shared/api';
 import { useResource } from '@/shared/hooks/useResource';
@@ -31,12 +31,24 @@ const NO_PROFILE = Promise.resolve(null);
  * Visiteur : aucun appel (`/profiles/me` répondrait 401, une erreur console) ; une session qui s'ouvre relance le chargement.
  */
 export function useMyProfile() {
-  const { status } = useAuth();
+  const { status, user } = useAuth();
   const authenticated = status === 'authenticated';
+  const userId = user?.user_id ?? null;
   const load = useCallback(
     (signal: AbortSignal) => (authenticated ? fetchMyProfile(signal) : NO_PROFILE),
     [authenticated],
   );
-  const { data, loading } = useResource(load);
+  const { data, loading, reload } = useResource(load);
+
+  // Mon profil change ailleurs (photo envoyée, retouche par un admin) : relecture, filtrée sur mon id.
+  useEffect(() => {
+    if (userId === null) return;
+    const handleProfileUpdated = (event: Event) => {
+      if ((event as CustomEvent<{ userId: string }>).detail.userId === userId) reload();
+    };
+    window.addEventListener('profile:updated', handleProfileUpdated);
+    return () => window.removeEventListener('profile:updated', handleProfileUpdated);
+  }, [userId, reload]);
+
   return { profile: data, loading };
 }

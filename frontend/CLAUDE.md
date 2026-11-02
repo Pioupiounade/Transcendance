@@ -251,7 +251,8 @@ features/       1 domaine métier = 1 module ; interface = index.ts
                 `/profile`). Données via useResource ; ce qu'on vient d'enregistrer prime sur le chargement (pas de
                 rechargement après un envoi). Libellés dans labels.ts, familles d'intérêts dans interestLabels.ts
                 (libellés de catégorie répétés pour éviter le cycle). api/myProfile.ts (`useMyProfile` sur useResource,
-                404 → null, visiteur : aucun appel) sert au tableau de bord et aux cartes (`home` de NeighborhoodMap).
+                404 → null, visiteur : aucun appel ; relit sur l'événement fenêtre `profile:updated` filtré sur mon id) sert au
+                tableau de bord, aux cartes (`home` de NeighborhoodMap) et à l'avatar de l'en-tête (photo de profil sinon initiales).
   participations/ useMyParticipations (sur useResource ; visiteur : liste vide sans appel), fetchActionParticipants /
                 joinAction / leaveAction (#60), type MyParticipation
   messages/     messagerie entre amis (backend #155, api_contract §18), discrète : pas d'entrée de nav, une pastille
@@ -374,7 +375,7 @@ shared/         zéro connaissance métier, réutilisable ailleurs
                 participations, messages, admin ; candidat pour remplacer les hooks maison de actions). Aucun hook de
                 shared n'écoute un événement fenêtre métier (`user:*`, `organization:*`, `action:*`) : c'est la feature
                 qui écoute et appelle `reload` (OrganizationPage, useOrganizations, useMyMemberships,
-                useMyParticipations, messages/useFriendsList), filtrée par id quand l'événement en porte un
+                useMyParticipations, messages/useFriendsList, profile/useMyProfile), filtrée par id quand l'événement en porte un
   lib/          fonctions pures, pas de barrel (test de suppression négatif) : pageTitle, formatDate, prefersReducedMotion
   config/       env.ts : lit et valide VITE_API_URL
 styles/         tokens.css (DESIGN.md), reset.css, global.css

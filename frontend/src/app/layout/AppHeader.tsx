@@ -2,6 +2,7 @@ import { Link, NavLink, useLocation } from 'react-router';
 import { ROLE_APP, useAuth } from '@/features/auth';
 import { MessagesButton } from '@/features/messages';
 import { NotificationBell } from '@/features/notifications';
+import { useMyProfile } from '@/features/profile';
 import { useMediaQuery } from '@/shared/hooks/useMediaQuery';
 import { Avatar, Button, ButtonLink, Icon } from '@/shared/ui';
 import { APP_LABELS } from '../labels';
@@ -19,6 +20,9 @@ const PHONE_QUERY = '(max-width: 760px)';
 
 export function AppHeader() {
   const { status, user, signOut } = useAuth();
+  // La photo de profil remplace les initiales ; `null` tant que le profil n'est pas chargé ou sans photo.
+  const { profile } = useMyProfile();
+  const picture = profile?.profile_picture ?? null;
   const location = useLocation();
   const compact = useMediaQuery(COMPACT_QUERY);
   const phone = useMediaQuery(PHONE_QUERY);
@@ -63,6 +67,7 @@ export function AppHeader() {
         {status === 'authenticated' && user && phone && (
           <HeaderMenu
             name={user.email}
+            picture={picture}
             messagesPath={ROUTES.messages}
             adminPath={admin ? ROUTES.admin : undefined}
             onSignOut={() => void signOut()}
@@ -70,7 +75,7 @@ export function AppHeader() {
         )}
         {status === 'authenticated' && user && !phone && (
           <Link to={ROUTES.profile} className={styles.profileLink} aria-label={APP_LABELS.myProfile}>
-            <Avatar name={user.email} />
+            <Avatar name={user.email} src={picture} />
           </Link>
         )}
         {status === 'authenticated' && !phone && (

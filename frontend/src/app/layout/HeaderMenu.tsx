@@ -9,6 +9,8 @@ import styles from './HeaderMenu.module.css';
 type HeaderMenuProps = {
   /** Nom du compte, pour les initiales de l'avatar. */
   name: string;
+  /** Photo de profil, à la place des initiales quand il y en a une. */
+  picture?: string | null;
   messagesPath: string;
   /** Espace d'administration : fourni pour les seuls admins. */
   adminPath?: string;
@@ -21,7 +23,7 @@ const text = APP_LABELS.accountMenu;
  * Téléphone : l'avatar de l'en-tête déplie Messages, Admin (admins) et Sign out, au lieu d'aligner trois pastilles.
  * Point citron sur l'avatar et compte dans le menu quand des messages attendent. Même motif que la barre basse.
  */
-export function HeaderMenu({ name, messagesPath, adminPath, onSignOut }: HeaderMenuProps) {
+export function HeaderMenu({ name, picture, messagesPath, adminPath, onSignOut }: HeaderMenuProps) {
   const { open, toggle, close, root, trigger, onKeyDown } = useDisclosure();
   const unread = useUnreadMessages();
   const menuId = useId();
@@ -39,7 +41,7 @@ export function HeaderMenu({ name, messagesPath, adminPath, onSignOut }: HeaderM
         aria-controls={menuId}
         onClick={toggle}
       >
-        <Avatar name={name} size={42} />
+        <Avatar name={name} src={picture} size={42} />
         {unread > 0 && <span className={styles.dot} aria-hidden="true" />}
       </button>
       {open && (
