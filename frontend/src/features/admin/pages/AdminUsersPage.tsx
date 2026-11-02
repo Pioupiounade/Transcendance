@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { ACCOUNT_STATUS, useAuth, type AuthUser } from '@/features/auth';
 import { useResource } from '@/shared/hooks/useResource';
 import { pageTitle } from '@/shared/lib/pageTitle';
@@ -34,35 +34,22 @@ const REQUESTS: Record<AccountActionKind, (id: string) => Promise<AuthUser>> = {
  * `/admin/users` (#22, #196) : tous les comptes, recherche par e-mail, filtre par statut ; bloquer / débloquer,
  * créer un compte, modifier un profil, changer le rôle, supprimer. Chaque geste qui coûte passe par ConfirmDialog.
  */
-export function AdminUsersPage(_props: AdminUsersPageProps) {
+export function AdminUsersPage({ profilePath, ownProfilePath }: AdminUsersPageProps) {
   const { user: me } = useAuth();
   const { data, loading, error, reload } = useResource(fetchUsers);
   const list = useAdminList(data ?? NO_USERS, LIST);
   const resetList = list.reset;
 
+  // Le backend prévient quand l'annuaire des comptes change (création, rôle, statut, suppression) : relecture.
   useEffect(() => {
     const handleDirectoryChanged = (event: Event) => {
-      const { resource } = (
-        event as CustomEvent<{ resource: string }>
-      ).detail;
-
+      const { resource } = (event as CustomEvent<{ resource: string }>).detail;
       if (resource !== 'users') return;
-
       resetList();
       reload();
     };
-
-    window.addEventListener(
-      'admin:directory-changed',
-      handleDirectoryChanged,
-    );
-
-    return () => {
-      window.removeEventListener(
-        'admin:directory-changed',
-        handleDirectoryChanged,
-      );
-    };
+    window.addEventListener('admin:directory-changed', handleDirectoryChanged);
+    return () => window.removeEventListener('admin:directory-changed', handleDirectoryChanged);
   }, [reload, resetList]);
 
   const [confirmation, setConfirmation] = useState<Confirmation | null>(null);
@@ -141,25 +128,6 @@ export function AdminUsersPage(_props: AdminUsersPageProps) {
     reload();
   };
 
-  useEffect(() => {
-    const handleUserDeleted = (event: Event) => {
-      const { userId } = (
-        event as CustomEvent<{ userId: string }>
-      ).detail;
-
-      setEditingUser((current) =>
-        current?.user_id === userId ? null : current,
-      );
-      setConfirmation(null);
-    };
-
-    window.addEventListener('user:deleted', handleUserDeleted);
-
-    return () => {
-      window.removeEventListener('user:deleted', handleUserDeleted);
-    };
-  }, []);
-
   return (
     <section className={styles.page}>
       <title>{pageTitle(text.title)}</title>
@@ -173,24 +141,7 @@ export function AdminUsersPage(_props: AdminUsersPageProps) {
           {text.create}
         </Button>
       </header>
-      <Button
-        variant="secondary"
-        onClick={() => setCreatingAccount(true)}
-        disabled={creatingAccount}
-      >
-        Create account
-      </Button>
 
-      <AdminAccountCreator
-        open={creatingAccount}
-        onClose={() => setCreatingAccount(false)}
-        onCreated={(email) => {
-          setCreatingAccount(false);
-          list.reset();
-          reload();
-          setNotice(`Account created: ${email}`);
-        }}
-      />
       <div className={styles.toolbar}>
         <form className={styles.search} role="search" onSubmit={(event) => event.preventDefault()}>
           <FloatingField
@@ -240,16 +191,12 @@ export function AdminUsersPage(_props: AdminUsersPageProps) {
         <p className={styles.state}>{list.total === 0 ? text.empty : text.noMatch}</p>
       )}
 
-      {editingUser && (
-        <AdminProfileEditor user={editingUser} onClose={() => setEditingUser(null)} />
-      )}
-
       {list.rows.length > 0 && (
         <UsersTable
           users={list.rows}
           currentUserId={me?.user_id ?? ''}
-          profilePath={(userId) => `/profiles/${userId}`}
-          ownProfilePath="/profile"
+          profilePath={profilePath}
+          ownProfilePath={ownProfilePath}
           onAction={ask}
           onEditProfile={setEditingUser}
           onDeleteUser={askDelete}

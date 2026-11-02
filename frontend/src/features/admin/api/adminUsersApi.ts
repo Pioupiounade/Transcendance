@@ -3,7 +3,7 @@ import { http } from '@/shared/api';
 import type {
   ProfileVisibility,
   UserProfile,
-} from '@/features/profile/types';
+} from '@/features/profile';
 
 // Routes `/users` réservées à l'administration (docs/api_contract.md §6). Le backend revérifie le rôle ADMIN.
 

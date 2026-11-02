@@ -86,7 +86,7 @@ function EditorForm({ userId, initialData, onClose }: EditorFormProps) {
     }
 
     setSaving(true);
- try {
+    try {
       await updateAdminProfile(userId, { username, description, visibility });
       setSaved(true);
     } catch {
