@@ -97,7 +97,7 @@ export function UsersTable({
           </th>
         </tr>
       </thead>
-<tbody role="rowgroup">
+      <tbody role="rowgroup">
         {users.map((user) => {
           const own = user.user_id === currentUserId;
           const blockReason =

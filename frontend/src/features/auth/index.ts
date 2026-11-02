@@ -11,3 +11,5 @@ export { ROLE_APP, ACCOUNT_STATUS } from './types';
 export type { AuthUser, AuthStatus, RoleApp, AccountStatus } from './types';
 export { AccountSuspendedPage } from './pages/AccountSuspendedPage';
 export { RequireActiveAccount } from './components/RequireActiveAccount';
+// Règles d'e-mail et de mot de passe (miroir des DTO) : réutilisées par l'admin qui crée un compte.
+export { validateEmail, validatePassword, EMAIL_MAX_LENGTH, PASSWORD_MAX_LENGTH } from './validation';
