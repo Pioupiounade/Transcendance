@@ -26,8 +26,10 @@
 1. Clone the repository
    cd Transcendance
 
-2. Configure environment variables:
-   cp .env.example .env
+2. Configure environment variables (the .env files are ignored by git, as the subject requires):
+   cp docker/.env.example docker/.env
+   cp backend/.env.example backend/.env
+   Edit both files: choose the database password and generate the two JWT secrets (openssl rand -hex 32).
 
 3. Run the application (Single Command):
    make
