@@ -2,8 +2,7 @@ import type { MembershipWithOrganization, Organization, RoleOrg } from '@/featur
 import { http } from '@/shared/api';
 
 // Lectures d'organisation dont la feature actions a besoin (fiche, formulaire). Elles ne passent pas par
-// `features/organizations`, qui importe déjà `features/actions` : l'import inverse ferait un cycle (CLAUDE.md,
-// « Dépendances »). Les types, eux, viennent de l'index de la feature propriétaire (effacés à la compilation).
+// `features/organizations`, qui importe déjà `features/actions` : l'import inverse ferait un cycle. Les types, eux, viennent de l'index de la feature propriétaire (effacés à la compilation).
 
 /** L'organisation liée à une action (`GET /organizations/:id`, api_contract §12) ; 404 → `ApiError`. */
 export const fetchActionOrganization = (id: string, signal?: AbortSignal) =>

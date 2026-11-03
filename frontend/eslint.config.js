@@ -5,7 +5,7 @@ import reactRefresh from 'eslint-plugin-react-refresh'
 import tseslint from 'typescript-eslint'
 import { defineConfig, globalIgnores } from 'eslint/config'
 
-// Frontières de modules (frontend/CLAUDE.md, « Structure des dossiers »).
+// Frontières de modules.
 // Sens unique : app → features → shared. Une feature n'est importable que par son index.ts.
 const featureInternals = {
   group: ['@/features/*/*', '**/features/*/*'],

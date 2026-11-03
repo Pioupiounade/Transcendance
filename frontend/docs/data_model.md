@@ -4,7 +4,7 @@
 Sources de vérité, dans l'ordre : `backend/prisma/schema.prisma` (la base) → `docs/api_contract.md` (ce que l'API
 fait réellement, régénéré et vérifié par sondes le 24/09, resondé le 01/10) → `features/<x>/types.ts` (ce que le front en voit).
 Ce document ne duplique pas le contrat : il dit **où vit chaque donnée côté front, par quel module deep elle passe,
-et ce qu'un appelant doit savoir**. Les termes Module / Interface / Deep / Seam sont ceux de `CLAUDE.md`.
+et ce qu'un appelant doit savoir**. Les termes Module / Interface / Deep / Seam sont ceux de « A Philosophy of Software Design » (J. Ousterhout).
 
 Légende des états : ✅ fait et branché sur l'API · 🟡 fait en mock ou partiel · 🔜 en PR / en branche non mergée · ❌ absent.
 

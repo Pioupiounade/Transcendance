@@ -40,7 +40,7 @@ Pioupiounades (nom, pin, structure des pages). L'espace admin garde son thème s
 ## Non traité (à décider ensemble)
 
 - Pages coéquipiers (friends, profile, fiche d'action `ActionDetailsView`) : héritent des tokens, pas de la grammaire.
-- `Docs/DESIGN.md` et `frontend/CLAUDE.md` décrivent encore forêt + terracotta : à réécrire si la direction est adoptée.
+- `Docs/DESIGN.md` décrit encore forêt + terracotta : à réécrire si la direction est adoptée.
 - Photos d'action (#148, LeNy) : le bandeau pastel est prévu pour accueillir la photo quand elle existe.
 - Recherche globale (`app/components/GlobalSearch.tsx`, Marie, 200 px) : elle garde ses 200 px jusqu'à 760 px ; sur
   téléphone elle se rétracte (120 px min.) et prend la place du nom de la marque sous 520 px (570 px pour un admin,

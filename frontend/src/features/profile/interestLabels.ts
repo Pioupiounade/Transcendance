@@ -30,7 +30,7 @@ export const INTEREST_FAMILY: Record<InterestCategory, InterestFamily> = {
   CULTURAL_DO: 'cultural',
 };
 
-/* Libellés des catégories (CLAUDE.md « Appels API ») ; `features/actions` les possède mais importe déjà `profile` :
+/* Libellés des catégories ; `features/actions` les possède mais importe déjà `profile` :
    les répéter ici évite un cycle. */
 export const INTEREST_FAMILY_LABELS: Record<InterestFamily, string> = {
   environment: 'Environment',

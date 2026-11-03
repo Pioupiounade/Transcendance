@@ -2,7 +2,7 @@ import { env } from '@/shared/config/env';
 import { ApiError } from './ApiError';
 import { session, type SessionTokens } from './session';
 
-// Client HTTP unique (frontend/CLAUDE.md, « Appels API »). Caché ici, et nulle part ailleurs :
+// Client HTTP unique. Caché ici, et nulle part ailleurs :
 // base URL, JSON, Bearer, 401 → refresh → rejeu, normalisation des erreurs.
 
 type Method = 'GET' | 'POST' | 'PATCH' | 'DELETE';

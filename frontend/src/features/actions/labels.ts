@@ -1,7 +1,7 @@
 import type { IconName } from '@/shared/ui';
 import type { ActionStatus, Category } from './types';
 
-// Seul endroit qui traduit les enums de l'API (frontend/CLAUDE.md, « Appels API »).
+// Seul endroit qui traduit les enums de l'API.
 export const CATEGORY_LABELS: Record<Category, string> = {
   ENVIRONMENT: 'Environment',
   SOCIAL: 'Social',

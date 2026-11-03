@@ -75,7 +75,7 @@ modules `/organization-members` (14 routes) et `/point-transactions` (1 route ad
 
 - **Base URL** : `http://localhost:3000` (port NestJS, exposé par `docker/docker-compose.yml`).
   Aucun préfixe `/api`, aucun versionnement, pas de Swagger.
-- **CORS** : toujours **non activé** dans `backend/src/main.ts`. Proxy Vite obligatoire en dev (`frontend/CLAUDE.md`).
+- **CORS** : toujours **non activé** dans `backend/src/main.ts`. Proxy Vite obligatoire en dev (`frontend/vite.config.ts`).
 - **Format** : JSON en entrée (`Content-Type: application/json`) et en sortie. Dates en chaînes ISO 8601.
   Exception : les trois routes d'upload attendent du `multipart/form-data` avec un champ **`file`** (§7, §15).
 - **Validation** : `ValidationPipe` global avec `whitelist`, `forbidNonWhitelisted`, `transform`.
