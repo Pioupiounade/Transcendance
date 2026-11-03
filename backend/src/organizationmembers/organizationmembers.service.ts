@@ -912,34 +912,20 @@ export class OrganizationmembersService {
                 },
             },
             include: {
-              user: {
-                select: {
-                    account_status: true,
+                organization: {
+                    select: {
+                        title: true,
+                    },
                 },
-              },
-              organization: {
-                select: {
-                    title: true,
-                },
-              },
             },
         });
 
         if (!membership) {
-            throw new NotFoundException('Membership not found');
+            throw new NotFoundException('Membership request not found');
         }
 
-        if (
-            membership.status !== MemberStatus.REJECTED &&
-            membership.status !== MemberStatus.BANNED
-        ) {
-            throw new BadRequestException(
-                'Only rejected or banned memberships can be reactivated',
-            );
-        }
-
-        if (membership.user.account_status !== AccountStatus.ACTIVE) {
-            throw new BadRequestException('Target user is not active');
+        if (membership.status !== MemberStatus.PENDING) {
+            throw new BadRequestException('Membership request is not pending');
         }
 
         const updatedMembership = await this.prisma.organizationMember.update({
@@ -950,9 +936,8 @@ export class OrganizationmembersService {
                 },
             },
             data: {
-                status: MemberStatus.ACTIVE,
-                role: RoleOrg.MEMBER,
-                validated_by_org_man: true,
+                status: MemberStatus.REJECTED,
+                validated_by_org_man: false,
                 validated_at: new Date(),
             },
         });
