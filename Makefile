@@ -15,9 +15,8 @@ all: up
 
 up: certs
 	@printf "$(BLUE)🚀 Creating and starting containers, please wait...$(RESET)\n"
-	@$(COMPOSE) up -d
+	@$(COMPOSE) up -d --build
 	@printf "$(GREEN)✨ Containers are up and running.$(RESET)\n"
-	@$(MAKE) -s db-update
 	@printf "$(GREEN)✔ All services are ready!$(RESET)\n"
 
 down:
@@ -30,8 +29,6 @@ re: certs
 	@$(COMPOSE) down -v
 	@$(COMPOSE) up -d --build
 	@printf "$(BLUE)✔ Rebuilt and started containers.$(RESET)\n"
-	@sleep 5
-	@$(MAKE) -s db-update
 	@printf "$(GREEN)✔ All services are ready!$(RESET)\n"
 
 db-update:
